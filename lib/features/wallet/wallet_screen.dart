@@ -14,7 +14,7 @@ class WalletScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.bgLightGrey,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -131,13 +131,24 @@ class WalletScreen extends StatelessWidget {
             Container(
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.03),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: Column(
                 children: [
                   _buildTransactionItem('General Service - Hyundai Creta', 'Today, 10:45 AM', '-₹2,419', true),
+                  const Divider(height: 1, indent: 70, endIndent: 20, color: AppColors.borderLight),
                   _buildTransactionItem('Wallet Top up (HDFC Bank)', 'Yesterday, 02:30 PM', '+₹5,000', false),
+                  const Divider(height: 1, indent: 70, endIndent: 20, color: AppColors.borderLight),
                   _buildTransactionItem('Ride Fare - Bandra to Andheri', '24 Oct, 09:15 AM', '-₹350', true),
+                  const Divider(height: 1, indent: 70, endIndent: 20, color: AppColors.borderLight),
                   _buildTransactionItem('Cashback Received', '24 Oct, 09:15 AM', '+₹17', false),
                 ],
               ),

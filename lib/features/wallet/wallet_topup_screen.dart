@@ -21,7 +21,7 @@ class _WalletTopupScreenState extends State<WalletTopupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.bgLightGrey,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -41,34 +41,48 @@ class _WalletTopupScreenState extends State<WalletTopupScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Enter Amount', style: TextStyle(fontSize: 14, color: AppColors.textSecondary)),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _amountController,
-              keyboardType: TextInputType.number,
-              style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-              decoration: const InputDecoration(
-                prefixText: '₹ ',
-                prefixStyle: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                border: InputBorder.none,
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
               ),
-            ),
-            const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: _quickAmounts.map((amt) {
-                return GestureDetector(
-                  onTap: () => setState(() => _amountController.text = amt.toString()),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: AppColors.bgLightGrey,
-                      borderRadius: BorderRadius.circular(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Enter Amount', style: TextStyle(fontSize: 14, color: AppColors.textSecondary)),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _amountController,
+                    keyboardType: TextInputType.number,
+                    style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                    decoration: const InputDecoration(
+                      prefixText: '₹ ',
+                      prefixStyle: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                      border: InputBorder.none,
                     ),
-                    child: Text('+₹$amt', style: const TextStyle(fontWeight: FontWeight.w600)),
                   ),
-                );
-              }).toList(),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: _quickAmounts.map((amt) {
+                      return GestureDetector(
+                        onTap: () => setState(() => _amountController.text = amt.toString()),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: AppColors.bgLightGrey,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: _amountController.text == amt.toString() ? AppColors.primaryBlue : Colors.transparent),
+                          ),
+                          child: Text('+₹$amt', style: TextStyle(fontWeight: FontWeight.w600, color: _amountController.text == amt.toString() ? AppColors.primaryBlue : AppColors.textPrimary)),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 48),
             const Text('Select Payment Method', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
@@ -99,9 +113,13 @@ class _WalletTopupScreenState extends State<WalletTopupScreen> {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primaryBlue.withValues(alpha: 0.05) : Colors.white,
+          color: isSelected ? AppColors.primaryBlue.withValues(alpha: 0.05) : AppColors.bgWhite,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: isSelected ? AppColors.primaryBlue : AppColors.border),
+          border: Border.all(color: isSelected ? AppColors.primaryBlue : AppColors.border.withValues(alpha: 0.5)),
+          boxShadow: [
+            if (isSelected) 
+              BoxShadow(color: AppColors.primaryBlue.withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, 4))
+          ],
         ),
         child: Row(
           children: [
