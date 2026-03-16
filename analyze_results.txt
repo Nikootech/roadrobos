@@ -1,0 +1,15 @@
+Analyzing admin...                                              
+
+  error - Arguments of a constant creation must be constant expressions - lib\features\admin\super_admin_screen.dart:108:26 - const_with_non_constant_argument
+   info - Use 'const' with the constructor to improve performance - lib\features\admin\super_admin_screen.dart:130:11 - prefer_const_constructors
+  error - Expected to find ';' - lib\features\admin\super_admin_screen.dart:145:7 - expected_token
+warning - Dead code - lib\features\admin\super_admin_screen.dart:145:8 - dead_code
+  error - Expected an identifier - lib\features\admin\super_admin_screen.dart:145:8 - missing_identifier
+  error - Expected to find ';' - lib\features\admin\super_admin_screen.dart:145:8 - expected_token
+  error - Unexpected text ';' - lib\features\admin\super_admin_screen.dart:145:8 - unexpected_token
+  error - Expected an identifier - lib\features\admin\super_admin_screen.dart:146:5 - missing_identifier
+  error - Unexpected text ';' - lib\features\admin\super_admin_screen.dart:146:5 - unexpected_token
+  error - This requires the 'dot-shorthands' language feature to be enabled - lib\features\admin\super_admin_screen.dart:146:6 - experiment_not_enabled
+  error - The static method or constructor 'animate' isn't defined for the context type '_' - lib\features\admin\super_admin_screen.dart:146:7 - dot_shorthand_undefined_member
+
+11 issues found. (ran in 2.2s)

@@ -1,0 +1,65 @@
+name: roadrobos
+description: "RoadRobos - Vehicle Service & Ride Booking App"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.3.4 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.6
+  # Navigation
+  go_router: ^13.0.0
+  # State Management
+  flutter_riverpod: ^2.5.0
+  # Animations
+  flutter_animate: ^4.5.0
+  # UI Components
+  google_fonts: 8.0.2
+  cached_network_image: ^3.3.1
+  shimmer: ^3.0.0
+  smooth_page_indicator: ^1.1.0
+  carousel_slider: ^5.0.0
+  # Icons
+  flutter_svg: ^2.0.10
+  iconsax: ^0.0.8
+  # Utils
+  gap: ^3.0.1
+  fl_chart: ^0.68.0
+  intl: ^0.19.0
+  url_launcher: ^6.3.0
+  image_picker: ^1.1.2
+  lottie: ^3.1.2
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.1
+  http: ^1.2.1
+  geolocator: ^11.0.0
+  confetti: ^0.7.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+  flutter_launcher_icons: ^0.14.3
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: false
+  image_path: "assets/app_icon.png"
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/app_icon.png"
+  web:
+    generate: true
+    image_path: "assets/app_icon.png"
+    background_color: "#FFFFFF"
+    theme_color: "#2E7D32"
+
+# No overlaps needed
+
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/

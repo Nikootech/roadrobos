@@ -1,0 +1,6 @@
+Analyzing admin...                                              
+
+  error - Arguments of a constant creation must be constant expressions - lib\features\admin\super_admin_screen.dart:108:26 - const_with_non_constant_argument
+   info - Use 'const' with the constructor to improve performance - lib\features\admin\super_admin_screen.dart:130:11 - prefer_const_constructors
+
+2 issues found. (ran in 2.2s)
