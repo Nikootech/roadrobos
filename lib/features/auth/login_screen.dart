@@ -23,14 +23,17 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController(); // For Employee
   final _phoneController = TextEditingController(); // For Customer
+  final _otpController = TextEditingController(); // For Customer OTP
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   bool _isCustomer = true; // Toggle between Customer and Employee
+  bool _isOtpSent = false; // Phase of Customer Login
 
   @override
   void dispose() {
     _emailController.dispose();
     _phoneController.dispose();
+    _otpController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -87,11 +90,21 @@ class _LoginScreenState extends State<LoginScreen> {
   void _handleLogin() {
     if (_formKey.currentState?.validate() ?? false) {
       setState(() => _isLoading = true);
+      
+      // Simulate API call
       Future.delayed(const Duration(seconds: 1), () {
         if (mounted) {
           setState(() => _isLoading = false);
+          
           if (_isCustomer) {
-            context.go('/main/home');
+            if (!_isOtpSent) {
+              // Phase 1: OTP Sent
+              setState(() => _isOtpSent = true);
+              NavHelpers.showSuccess(context, 'OTP sent to ${_phoneController.text}');
+            } else {
+              // Phase 2: Verify OTP and Login
+              context.go('/main/home');
+            }
           } else {
             _showRoleSelection(); // Employee roles selection
           }
@@ -256,7 +269,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     children: [
                       Expanded(
                         child: GestureDetector(
-                          onTap: () => setState(() => _isCustomer = true),
+                        onTap: () => setState(() {
+                            _isCustomer = true;
+                            _isOtpSent = false; // Reset OTP phase
+                          }),
                           child: Container(
                             decoration: BoxDecoration(
                               color: _isCustomer ? AppColors.primaryBlue : Colors.transparent,
@@ -308,73 +324,117 @@ class _LoginScreenState extends State<LoginScreen> {
                   key: _formKey,
                   child: Column(
                     children: [
-                      CustomTextField(
-                        label: _isCustomer ? 'Mobile Number' : 'Employee ID / Email',
-                        hint: _isCustomer ? 'Enter 10-digit number' : 'Enter employee credentials',
-                        prefixIcon: _isCustomer ? Iconsax.mobile : Iconsax.personalcard,
-                        controller: _isCustomer ? _phoneController : _emailController,
-                        keyboardType: _isCustomer ? TextInputType.phone : TextInputType.emailAddress,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return _isCustomer ? 'Mobile number is required' : 'Credential is required';
-                          }
-                          if (_isCustomer) {
-                            if (value.length != 10 || !RegExp(r'^[0-9]+$').hasMatch(value)) {
-                              return 'Enter a valid 10-digit number';
+                      if (!_isOtpSent)
+                        CustomTextField(
+                          label: _isCustomer ? 'Mobile Number' : 'Employee ID / Email',
+                          hint: _isCustomer ? 'Enter 10-digit number' : 'Enter employee credentials',
+                          prefixIcon: _isCustomer ? Iconsax.mobile : Iconsax.personalcard,
+                          controller: _isCustomer ? _phoneController : _emailController,
+                          keyboardType: _isCustomer ? TextInputType.phone : TextInputType.emailAddress,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return _isCustomer ? 'Mobile number is required' : 'Credential is required';
                             }
-                          } else {
-                            if (!value.contains('@') && value.length < 4) {
-                              return 'Enter a valid email or ID';
+                            if (_isCustomer) {
+                              if (value.length != 10 || !RegExp(r'^[0-9]+$').hasMatch(value)) {
+                                return 'Enter a valid 10-digit number';
+                              }
+                            } else {
+                              if (!value.contains('@') && value.length < 4) {
+                                return 'Enter a valid email or ID';
+                              }
                             }
-                          }
-                          return null;
-                        },
-                      )
-                          .animate(delay: 300.ms)
-                          .fadeIn(duration: 400.ms)
-                          .slideY(begin: 0.1, end: 0),
+                            return null;
+                          },
+                        )
+                            .animate(delay: 300.ms)
+                            .fadeIn(duration: 400.ms)
+                            .slideY(begin: 0.1, end: 0),
+
+                      if (_isCustomer && _isOtpSent)
+                        CustomTextField(
+                          label: 'Verification Code',
+                          hint: 'Enter 4-digit OTP',
+                          prefixIcon: Iconsax.password_check,
+                          controller: _otpController,
+                          keyboardType: TextInputType.number,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'OTP is required';
+                            }
+                            if (value.length != 4) {
+                              return 'Enter 4-digit code';
+                            }
+                            return null;
+                          },
+                        )
+                            .animate()
+                            .fadeIn(duration: 400.ms)
+                            .slideX(begin: 0.1, end: 0),
+
                       const SizedBox(height: 16),
-                      CustomTextField(
-                        label: AppStrings.password,
-                        hint: 'Enter your password',
-                        prefixIcon: Iconsax.lock,
-                        isPassword: true,
-                        controller: _passwordController,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Password is required';
-                          }
-                          if (value.length < 6) {
-                            return 'Password must be at least 6 characters';
-                          }
-                          return null;
-                        },
-                      )
-                          .animate(delay: 400.ms)
-                          .fadeIn(duration: 400.ms)
-                          .slideY(begin: 0.1, end: 0),
+
+                      if (!_isCustomer)
+                        CustomTextField(
+                          label: AppStrings.password,
+                          hint: 'Enter your password',
+                          prefixIcon: Iconsax.lock,
+                          isPassword: true,
+                          controller: _passwordController,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Password is required';
+                            }
+                            if (value.length < 6) {
+                              return 'Password must be at least 6 characters';
+                            }
+                            return null;
+                          },
+                        )
+                            .animate(delay: 400.ms)
+                            .fadeIn(duration: 400.ms)
+                            .slideY(begin: 0.1, end: 0),
 
                       // Forgot password
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          onPressed: () => NavHelpers.showSuccess(context, 'Reset password email sent to your inbox!'),
-                          child: const Text(
-                            AppStrings.forgotPassword,
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.primaryBlue,
+                      if (!_isCustomer)
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () => NavHelpers.showSuccess(context, 'Reset password email sent to your inbox!'),
+                            child: const Text(
+                              AppStrings.forgotPassword,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.primaryBlue,
+                              ),
                             ),
                           ),
                         ),
-                      ),
+                      
+                      if (_isCustomer && _isOtpSent)
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () => setState(() => _isOtpSent = false),
+                            child: const Text(
+                              'Change Number?',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.primaryBlue,
+                              ),
+                            ),
+                          ),
+                        ),
 
                       const SizedBox(height: 8),
 
                       // Login button (matches Figma: 340x, primary action)
                       CustomButton(
-                        label: AppStrings.login,
+                        label: _isCustomer 
+                            ? (_isOtpSent ? 'Verify OTP' : 'Send OTP') 
+                            : AppStrings.login,
                         onPressed: _handleLogin,
                         isLoading: _isLoading,
                         backgroundColor: AppColors.primaryBlue,

@@ -44,11 +44,11 @@ class TechnicianDashboardScreen extends StatelessWidget {
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Expanded(child: _buildActionCard('New Job', Iconsax.add_square, const Color(0xFF5E6AD2), () => context.push('/tech-create-job'))),
+                  Expanded(child: _buildActionCard('Add Vehicle', Iconsax.add_square, const Color(0xFF5E6AD2), () => context.push('/tech-create-job'))),
                   const SizedBox(width: 12),
                   Expanded(child: _buildActionCard('Inventory', Iconsax.box, const Color(0xFFFF9F43), () => context.push('/tech-spare-parts'))),
                   const SizedBox(width: 12),
-                  Expanded(child: _buildActionCard('Performance', Iconsax.chart_21, const Color(0xFF28C76F), () => {})),
+                  Expanded(child: _buildActionCard('Progress', Iconsax.chart_21, const Color(0xFF28C76F), () => context.push('/tech-tasks'))),
                 ],
               ),
 
@@ -73,6 +73,12 @@ class TechnicianDashboardScreen extends StatelessWidget {
             ],
           ),
         ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => context.push('/tech-create-job'),
+        backgroundColor: const Color(0xFF1A237E),
+        icon: const Icon(Iconsax.add, color: Colors.white),
+        label: const Text('Create Job Card', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
     );
   }

@@ -114,6 +114,11 @@ class TaskListScreen extends StatelessWidget {
         ),
       ),
       bottomNavigationBar: _buildBottomNav(context),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => context.push('/tech-create-job'),
+        backgroundColor: const Color(0xFF1A237E),
+        child: const Icon(Iconsax.add, color: Colors.white),
+      ),
     );
   }
 
