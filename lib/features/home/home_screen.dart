@@ -6,22 +6,27 @@ import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
 import '../../shared/widgets/glass_card.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/constants/app_assets.dart';
+import '../profile/user_provider.dart';
+import '../rentals/rental_providers.dart';
+import '../technician/technician_provider.dart';
 
 /// Home Screen matching Figma Screens [59]: "Customer Home (Dark Mode)"
 /// Header with avatar + greeting, selected vehicle card, search bar,
 /// quick action services grid, offers carousel, bottom nav
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen> {
   final List<Map<String, dynamic>> _services = [
     {'icon': Icons.build_rounded, 'label': 'Service', 'color': const Color(0xFF3B82F6), 'route': '/select-service'},
     {'icon': Icons.car_rental_rounded, 'label': 'Rentals', 'color': const Color(0xFF8B5CF6), 'route': '/rentals'},
@@ -30,7 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
     {'icon': Icons.location_on_rounded, 'label': 'Track', 'color': const Color(0xFF6366F1), 'route': '/live-vehicle-tracking'},
     {'icon': Icons.star_rounded, 'label': 'Reviews', 'color': const Color(0xFFEF4444), 'route': '/service-feedback'},
     {'icon': Icons.inventory_2_rounded, 'label': 'Parts', 'color': const Color(0xFFF59E0B), 'route': '/tech-spare-parts'},
-    {'icon': Icons.receipt_long_rounded, 'label': 'Invoices', 'color': const Color(0xFF10B981), 'route': '/billing-invoice'},
+    {'icon': Icons.receipt_long_rounded, 'label': 'Invoices', 'color': const Color(0xFF10B981), 'route': '/wallet/billing-invoice'},
   ];
 
   final List<Map<String, String>> _offers = [
@@ -46,23 +51,25 @@ class _HomeScreenState extends State<HomeScreen> {
       body: RefreshIndicator(
         color: AppColors.primaryBlue,
         onRefresh: () async {
+          // Refresh user data or providers if needed
           await Future.delayed(const Duration(seconds: 1));
+          ref.invalidate(userProvider);
         },
         child: CustomScrollView(
           slivers: [
             // Header section (390x94 from Figma)
             SliverToBoxAdapter(
-              child: _buildHeader(),
+              child: _buildHeader(ref),
             ),
 
             // Greeting & Vehicle Selection (390x162 from Figma)
             SliverToBoxAdapter(
-              child: _buildGreetingSection(),
+              child: _buildGreetingSection(ref),
             ),
 
             // Wallet Balance Card (NEW)
             SliverToBoxAdapter(
-              child: _buildWalletBalanceCard(),
+              child: _buildWalletBalanceCard(ref),
             ),
 
             // Search bar
@@ -72,7 +79,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
             // Live Status Card (frosted glass, 350x163, radius:32)
             SliverToBoxAdapter(
-              child: _buildLiveStatusCard(),
+              child: _buildLiveStatusCard(ref),
             ),
 
             // Quick Actions Grid (Refined to be more compact)
@@ -150,7 +157,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildHeader() {
+
+
+  Widget _buildHeader(WidgetRef ref) {
+    final user = ref.watch(userProvider);
     return SafeArea(
       bottom: false,
       child: Padding(
@@ -158,80 +168,91 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Row(
           children: [
             // Avatar
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: AppColors.primaryBlue, width: 2),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(22),
-                child: CachedNetworkImage(
-                  imageUrl: AppAssets.avatarPlaceholder,
-                  fit: BoxFit.cover,
-                  placeholder: (context, url) => Shimmer.fromColors(
-                    baseColor: AppColors.bgDarkSurface,
-                    highlightColor: AppColors.bgDarkCard,
-                    child: Container(color: AppColors.bgDarkSurface),
-                  ),
-                  errorWidget: (context, url, error) => const Icon(
-                    Icons.person,
-                    color: AppColors.textPrimary,
+            GestureDetector(
+              onTap: () => context.push('/main/profile'),
+              child: Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.primaryBlue, width: 2),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(22),
+                  child: CachedNetworkImage(
+                    imageUrl: user.profileImageUrl,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => Shimmer.fromColors(
+                      baseColor: AppColors.bgLightGrey,
+                      highlightColor: Colors.white,
+                      child: Container(color: AppColors.bgLightGrey),
+                    ),
+                    errorWidget: (context, url, error) => const Icon(
+                      Icons.person,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
                 ),
               ),
-            )
-                .animate()
-                .fadeIn(duration: 500.ms)
-                .scale(begin: const Offset(0.8, 0.8), end: const Offset(1.0, 1.0)),
+            ).animate()
+             .fadeIn(duration: 500.ms)
+             .scale(begin: const Offset(0.8, 0.8), end: const Offset(1.0, 1.0)),
 
             const Spacer(),
 
-            // Notification bell
+            // Notification Bell
             GestureDetector(
-              onTap: () => context.push('/notifications'),
+              onTap: () {
+                HapticFeedback.lightImpact();
+                context.push('/notifications');
+              },
               child: Container(
-                width: 40,
-                height: 40,
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
-                  color: AppColors.bgSkyLight,
-                  borderRadius: BorderRadius.circular(12),
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.border),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 child: Stack(
+                  alignment: Alignment.center,
                   children: [
-                    const Center(
-                      child: Icon(
-                        Iconsax.notification,
-                        color: AppColors.textPrimary,
-                        size: 20,
-                      ),
-                    ),
+                    const Icon(Iconsax.notification, size: 22, color: AppColors.textPrimary),
                     Positioned(
-                      right: 10,
-                      top: 10,
+                      top: 12,
+                      right: 12,
                       child: Container(
                         width: 8,
                         height: 8,
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           color: AppColors.dangerRed,
                           shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 1.5),
                         ),
                       ),
                     ),
                   ],
                 ),
               ),
-            ),
+            )
+            .animate()
+            .fadeIn(duration: 500.ms, delay: 100.ms)
+            .scale(begin: const Offset(0.8, 0.8), end: const Offset(1.0, 1.0)),
           ],
         ),
       ),
-    )
-        .animate()
-        .fadeIn(duration: 400.ms);
+    );
   }
 
-  Widget _buildGreetingSection() {
+  Widget _buildGreetingSection(WidgetRef ref) {
+    final user = ref.watch(userProvider);
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
       child: Column(
@@ -248,9 +269,9 @@ class _HomeScreenState extends State<HomeScreen> {
               .animate()
               .fadeIn(duration: 400.ms),
           const SizedBox(height: 4),
-          const Text(
-            'Rahul',
-            style: TextStyle(
+          Text(
+            user.name.split(' ')[0],
+            style: const TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.w800,
               color: AppColors.textPrimary,
@@ -342,7 +363,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildWalletBalanceCard() {
+  Widget _buildWalletBalanceCard(WidgetRef ref) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
       child: Container(
@@ -423,25 +444,28 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildSearchBar() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-      child: Container(
-        height: 48,
-        decoration: BoxDecoration(
-          color: AppColors.bgSkyLight,
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: const Row(
-          children: [
-            SizedBox(width: 16),
-            Icon(Iconsax.search_normal, size: 18, color: AppColors.textMuted),
-            SizedBox(width: 12),
-            Text(
-              AppStrings.searchServices,
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.textMuted,
+      child: GestureDetector(
+        onTap: () => context.push('/main/explore'),
+        child: Container(
+          height: 48,
+          decoration: BoxDecoration(
+            color: AppColors.bgSkyLight,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: const Row(
+            children: [
+              SizedBox(width: 16),
+              Icon(Iconsax.search_normal, size: 18, color: AppColors.textMuted),
+              SizedBox(width: 12),
+              Text(
+                AppStrings.searchServices,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppColors.textMuted,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     )
@@ -450,10 +474,26 @@ class _HomeScreenState extends State<HomeScreen> {
         .slideY(begin: 0.1, end: 0);
   }
 
-  Widget _buildLiveStatusCard() {
+  Widget _buildLiveStatusCard(WidgetRef ref) {
+    final activeRental = ref.watch(activeRentalProvider);
+    final activeJob = ref.watch(technicianProvider);
+    
+    // Only show if there's an actual active item
+    if (activeRental == null && activeJob == null) {
+      return const SizedBox.shrink();
+    }
+
+    final isRental = activeRental != null;
+    final title = isRental ? activeRental.vehicle['name'] : 'Job Card: ${activeJob!.id}';
+    final subtitle = isRental ? activeRental.status.name.toUpperCase() : activeJob!.status;
+    final statusColor = isRental 
+        ? (activeRental.status == RentalStatus.active ? AppColors.successGreen : AppColors.accentOrange)
+        : AppColors.primaryBlue;
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
       child: GlassCard(
+        onTap: () => context.push(isRental ? '/delivery-logistics' : '/tech-job-card-details'),
         padding: const EdgeInsets.all(20),
         borderRadius: 32,
         opacity: 0.08,
@@ -466,26 +506,26 @@ class _HomeScreenState extends State<HomeScreen> {
                 Container(
                   width: 10,
                   height: 10,
-                  decoration: const BoxDecoration(
-                    color: AppColors.successGreen,
+                  decoration: BoxDecoration(
+                    color: statusColor,
                     shape: BoxShape.circle,
                   ),
                 ),
                 const SizedBox(width: 8),
-                const Text(
-                  'Service in Progress',
+                Text(
+                  isRental ? 'Active Rental' : 'Service in Progress',
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.successGreen,
+                    color: statusColor,
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 12),
-            const Text(
-              'General Service - Hyundai Creta',
-              style: TextStyle(
+            Text(
+              title,
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: AppColors.textPrimary,
@@ -495,17 +535,17 @@ class _HomeScreenState extends State<HomeScreen> {
             // Progress bar
             ClipRRect(
               borderRadius: BorderRadius.circular(4),
-              child: const LinearProgressIndicator(
+              child: LinearProgressIndicator(
                 value: 0.65,
                 backgroundColor: AppColors.bgSkyLight,
-                valueColor: AlwaysStoppedAnimation(AppColors.successGreen),
+                valueColor: AlwaysStoppedAnimation(statusColor),
                 minHeight: 6,
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Estimated: 2 hours remaining',
-              style: TextStyle(
+            Text(
+              subtitle,
+              style: const TextStyle(
                 fontSize: 12,
                 color: AppColors.textSecondary,
               ),
@@ -525,10 +565,10 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
+              const Text(
                 AppStrings.quickActions,
                 style: TextStyle(
                   fontSize: 18,
@@ -536,12 +576,18 @@ class _HomeScreenState extends State<HomeScreen> {
                   color: AppColors.textPrimary,
                 ),
               ),
-              Text(
-                AppStrings.viewAll,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.primaryBlue,
+              GestureDetector(
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  context.go('/main/explore');
+                },
+                child: const Text(
+                  AppStrings.viewAll,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.primaryBlue,
+                  ),
                 ),
               ),
             ],
@@ -613,12 +659,18 @@ class _HomeScreenState extends State<HomeScreen> {
                     color: AppColors.textPrimary,
                   ),
                 ),
-                const Text(
-                  AppStrings.viewAll,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.primaryBlue,
+                GestureDetector(
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    context.push('/loyalty');
+                  },
+                  child: const Text(
+                    AppStrings.viewAll,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.primaryBlue,
+                    ),
                   ),
                 ),
               ],
@@ -634,70 +686,85 @@ class _HomeScreenState extends State<HomeScreen> {
                 [const Color(0xFF065F46), const Color(0xFF10B981)],
                 [AppColors.accentOrange, AppColors.accentAmber],
               ];
-              return Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: colors[index % 3],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+              return InkWell(
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  Clipboard.setData(ClipboardData(text: offer['code']!));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Offer code ${offer['code']} copied!'),
+                      behavior: SnackBarBehavior.floating,
+                      backgroundColor: colors[index % 3][0],
+                    ),
+                  );
+                },
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: colors[index % 3],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(32),
+                    boxShadow: [
+                      BoxShadow(
+                        color: colors[index % 3][0].withValues(alpha: 0.3),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
                   ),
-                  borderRadius: BorderRadius.circular(32),
-                  boxShadow: [
-                    BoxShadow(
-                      color: colors[index % 3][0].withValues(alpha: 0.3),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      offer['title']!,
-                      style: GoogleFonts.outfit(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      offer['desc']!,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w400,
-                        color: Colors.white.withValues(alpha: 0.9),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.25),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
-                      ),
-                      child: Text(
-                        'USE CODE: ${offer['code']}',
-                        style: GoogleFonts.outfit(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                          letterSpacing: 1.0,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          offer['title']!,
+                          style: GoogleFonts.outfit(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                            letterSpacing: 0.5,
+                          ),
                         ),
-                      ),
+                        const SizedBox(height: 8),
+                        Text(
+                          offer['desc']!,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w400,
+                            color: Colors.white.withValues(alpha: 0.9),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.25),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                          ),
+                          child: Text(
+                            'USE CODE: ${offer['code']}',
+                            style: GoogleFonts.outfit(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                              letterSpacing: 1.0,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               );
             }).toList(),

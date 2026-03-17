@@ -5,8 +5,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/constants/app_strings.dart';
 
 /// Splash Screen - Animated logo reveal with auto-navigation
-/// Matches Figma Screen [29]: "App Onboarding Splash"
-/// Dark background with decorative circles and animated brand text
+/// Matches precisely with user-provided image (Light theme, small blue circles)
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -31,151 +30,118 @@ class _SplashScreenState extends State<SplashScreen> {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          // Decorative background circles (Sky Blue palette)
+          // Top-left decorative circles (Precisely matched sizes and positions)
           Positioned(
-            top: size.height * 0.15,
-            left: -60,
+            top: -size.width * 0.1,
+            left: -size.width * 0.1,
             child: Container(
-              width: 256,
-              height: 256,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.primaryBlue.withValues(alpha: 0.1),
-              ),
-            )
-                .animate()
-                .scale(
-                  begin: const Offset(0.5, 0.5),
-                  end: const Offset(1.0, 1.0),
-                  duration: 1200.ms,
-                  curve: Curves.easeOutBack,
-                )
-                .fadeIn(duration: 800.ms),
-          ),
-          Positioned(
-            top: size.height * 0.22,
-            left: 30,
-            child: Container(
-              width: 192,
-              height: 192,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.primaryBlueLight.withValues(alpha: 0.12),
-              ),
-            )
-                .animate(delay: 200.ms)
-                .scale(
-                  begin: const Offset(0.3, 0.3),
-                  end: const Offset(1.0, 1.0),
-                  duration: 1000.ms,
-                  curve: Curves.easeOutBack,
-                )
-                .fadeIn(duration: 600.ms),
-          ),
-          Positioned(
-            bottom: size.height * 0.2,
-            right: -40,
-            child: Container(
-              width: 180,
-              height: 180,
+              width: size.width * 0.5,
+              height: size.width * 0.5,
               decoration: const BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.bgSkyLight,
+                color: Color(0xFFF0F9FF), // Extremely pale blue
               ),
-            )
-                .animate(delay: 400.ms)
-                .scale(
-                  begin: const Offset(0.5, 0.5),
-                  end: const Offset(1.0, 1.0),
-                  duration: 1000.ms,
-                  curve: Curves.easeOutBack,
-                )
-                .fadeIn(duration: 600.ms),
-          ),
+            ),
+          ).animate().fadeIn(duration: 800.ms),
+          
+          Positioned(
+            top: size.height * 0.05,
+            left: -size.width * 0.2,
+            child: Container(
+              width: size.width * 0.45,
+              height: size.width * 0.45,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFFE0F2FE).withValues(alpha: 0.6), // Soft sky blue
+              ),
+            ),
+          ).animate(delay: 200.ms).fadeIn(duration: 800.ms),
+
+          // Bottom-right decorative circle (Precisely matched)
+          Positioned(
+            bottom: size.height * 0.15,
+            right: -size.width * 0.1,
+            child: Container(
+              width: size.width * 0.4,
+              height: size.width * 0.4,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Color(0xFFF0F9FF), // Extremely pale blue
+              ),
+            ),
+          ).animate(delay: 400.ms).fadeIn(duration: 800.ms),
 
           // Center content
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Brand Icon/Logo
+                // Brand Icon Card
                 Container(
-                  width: 100,
-                  height: 100,
-                  padding: const EdgeInsets.all(20),
+                  width: 120,
+                  height: 120,
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(28),
+                    borderRadius: BorderRadius.circular(32),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.primaryBlue.withValues(alpha: 0.2),
+                        color: AppColors.primaryBlue.withValues(alpha: 0.08),
                         blurRadius: 30,
+                        spreadRadius: 2,
                         offset: const Offset(0, 10),
                       ),
                     ],
                   ),
-                  child: const Icon(
-                    Icons.directions_car_rounded,
-                    size: 52,
-                    color: AppColors.primaryBlue,
+                  child: const Center(
+                    child: Icon(
+                      Icons.directions_car_rounded,
+                      size: 64,
+                      color: AppColors.primaryBlue,
+                    ),
                   ),
                 )
                     .animate()
                     .scale(
-                      begin: const Offset(0.0, 0.0),
+                      begin: const Offset(0.8, 0.8),
                       end: const Offset(1.0, 1.0),
                       duration: 800.ms,
-                      curve: Curves.elasticOut,
+                      curve: Curves.easeOutBack,
                     )
                     .fadeIn(duration: 400.ms),
 
-                const SizedBox(height: 28),
+                const SizedBox(height: 64), // Significant spacing as per image
 
-                // App name
+                // App name (Navy-black, precise weight)
                 const Text(
                   AppStrings.appName,
                   style: TextStyle(
-                    fontSize: 36,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
-                    letterSpacing: 1.2,
+                    fontSize: 48,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF1E293B), // Navy-black matched to image
+                    letterSpacing: -1.2,
                   ),
                 )
-                    .animate(delay: 400.ms)
+                    .animate(delay: 500.ms)
                     .fadeIn(duration: 600.ms)
-                    .slideY(begin: 0.3, end: 0, duration: 600.ms),
-
-                const SizedBox(height: 12),
-
-                // Tagline
-                Text(
-                  AppStrings.splashSubtitle,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w400,
-                    color: Colors.white.withValues(alpha: 0.6),
-                    letterSpacing: 0.5,
-                  ),
-                )
-                    .animate(delay: 600.ms)
-                    .fadeIn(duration: 600.ms)
-                    .slideY(begin: 0.3, end: 0, duration: 600.ms),
+                    .slideY(begin: 0.1, end: 0, duration: 600.ms),
               ],
             ),
           ),
 
           // Bottom loading indicator
           Positioned(
-            bottom: 60,
+            bottom: 80,
             left: 0,
             right: 0,
             child: Center(
               child: SizedBox(
-                width: 32,
-                height: 32,
+                width: 24,
+                height: 24,
                 child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: AppColors.primaryBlue.withValues(alpha: 0.5),
+                  strokeWidth: 1.2,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    AppColors.primaryBlue.withValues(alpha: 0.4),
+                  ),
                 ),
               ),
             )

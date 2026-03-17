@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../core/theme/app_colors.dart';
+import 'rental_providers.dart';
 
 /// Rentals - Vehicle Selection Screen matching Figma Screen [3] & [4]
-class VehicleSelectionScreen extends StatefulWidget {
+class VehicleSelectionScreen extends ConsumerStatefulWidget {
   const VehicleSelectionScreen({super.key});
 
   @override
-  State<VehicleSelectionScreen> createState() => _VehicleSelectionScreenState();
+  ConsumerState<VehicleSelectionScreen> createState() => _VehicleSelectionScreenState();
 }
 
-class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
+class _VehicleSelectionScreenState extends ConsumerState<VehicleSelectionScreen> {
   final List<String> _filters = ['All', 'Sedan', 'SUV', 'Popular', 'Luxury'];
   int _selectedFilterIndex = 0;
 
@@ -109,7 +112,10 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
               itemBuilder: (context, index) {
                 final isSelected = _selectedFilterIndex == index;
                 return GestureDetector(
-                  onTap: () => setState(() => _selectedFilterIndex = index),
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    setState(() => _selectedFilterIndex = index);
+                  },
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     alignment: Alignment.center,
@@ -292,7 +298,11 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton(
-                  onPressed: () => context.push('/rental-detail'),
+                  onPressed: () {
+                    HapticFeedback.mediumImpact();
+                    ref.read(selectedVehicleProvider.notifier).state = vehicle;
+                    context.push('/rental-detail');
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryBlue,
                     minimumSize: const Size(double.infinity, 56),

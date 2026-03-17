@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../core/theme/app_colors.dart';
-import '../../navigation/nav_helpers.dart';
-import '../../shared/widgets/glass_card.dart';
 
 /// Wallet & Transactions Screen matching Figma Screen [7]
 class WalletScreen extends StatelessWidget {
@@ -14,179 +13,248 @@ class WalletScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.bgLightGrey,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: GestureDetector(
-          onTap: () => context.pop(),
-          child: const Center(
-            child: Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: AppColors.textPrimary),
-          ),
-        ),
-        title: Text(
-          'Wallet',
-          style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Iconsax.clock, color: AppColors.textPrimary),
-            onPressed: () => NavHelpers.showComingSoon(context, 'Transaction filters'),
-          )
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Balance Card (358x220 from Figma)
-            GlassCard(
-              padding: const EdgeInsets.all(24),
-              borderRadius: 32,
-              opacity: 0.1,
-              blur: 20,
-              child: Container(
-                width: double.infinity,
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [AppColors.primaryBlue, AppColors.primaryBlueDark],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('Available Balance', style: GoogleFonts.inter(fontSize: 14, color: Colors.white70)),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(8)),
-                          child: const Text('RoAdRoBos Pay', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.white)),
-                        )
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text('₹4,500.00', style: GoogleFonts.outfit(fontSize: 40, fontWeight: FontWeight.w800, color: Colors.white)),
-                    const SizedBox(height: 32),
-                    Row(
-                      children: [
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () => context.push('/wallet/topup'),
-                          child: _buildWalletAction(Iconsax.add, 'Top Up', AppColors.primaryBlue),
-                        ),
-                      ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _buildWalletAction(Iconsax.send_2, 'Transfer', AppColors.successGreen),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ).animate().fadeIn(duration: 500.ms).slideY(begin: 0.1, end: 0),
-
-            const SizedBox(height: 24),
-
-            // Cashback Banner (358x104)
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.warningAmber.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.warningAmber.withValues(alpha: 0.3)),
-              ),
-              child: Row(
+      backgroundColor: Colors.white,
+      body: CustomScrollView(
+        slivers: [
+          // Premium Header with Mesh-style Gradient
+          SliverAppBar(
+            expandedHeight: 220,
+            pinned: true,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: Colors.white),
+              onPressed: () => context.pop(),
+            ),
+            backgroundColor: AppColors.primaryBlue,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Stack(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                    child: const Icon(Iconsax.ticket_discount, color: AppColors.warningAmber),
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [AppColors.primaryBlue, AppColors.primaryBlueDark],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
+                  // Background Pattern/Blur for "Mesh" effect
+                  Positioned(
+                    right: -50,
+                    top: -50,
+                    child: Container(
+                      width: 200,
+                      height: 200,
+                      decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    ),
+                  ),
+                  Positioned(
+                    left: 20,
+                    bottom: 40,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text('Get 5% Cashback!', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
-                        const SizedBox(height: 4),
-                        Text('Top up ₹2,000 or more to avail', style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w500)),
+                        Text(
+                          'Available Balance',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                          color: Colors.white.withValues(alpha: 0.8),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '₹4,500.00',
+                          style: GoogleFonts.outfit(
+                            fontSize: 42,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                          ),
+                        ),
                       ],
                     ),
-                  )
-                ],
-              ),
-            ).animate(delay: 200.ms).fadeIn(),
-
-            const SizedBox(height: 24),
-            Text('Recent Transactions', style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
-            const SizedBox(height: 16),
-
-            // Transaction History
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.03),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
+                  ).animate().fadeIn(duration: 600.ms).slideX(begin: -0.1, end: 0),
+                  Positioned(
+                    right: 20,
+                    bottom: 40,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.verified_user_rounded, color: Colors.white, size: 16),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Verified',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),
+            ),
+          ),
+
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildTransactionItem('General Service - Hyundai Creta', 'Today, 10:45 AM', '-₹2,419', true),
-                  const Divider(height: 1, indent: 70, endIndent: 20, color: AppColors.borderLight),
-                  _buildTransactionItem('Wallet Top up (HDFC Bank)', 'Yesterday, 02:30 PM', '+₹5,000', false),
-                  const Divider(height: 1, indent: 70, endIndent: 20, color: AppColors.borderLight),
-                  _buildTransactionItem('Ride Fare - Bandra to Andheri', '24 Oct, 09:15 AM', '-₹350', true),
-                  const Divider(height: 1, indent: 70, endIndent: 20, color: AppColors.borderLight),
-                  _buildTransactionItem('Cashback Received', '24 Oct, 09:15 AM', '+₹17', false),
+                  const SizedBox(height: 24),
+                  
+                  // Primary Actions
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildActionTile(
+                          context,
+                          'Top Up',
+                          Iconsax.add,
+                          AppColors.primaryBlue,
+                          '/wallet/topup',
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _buildActionTile(
+                          context,
+                          'Transfer',
+                          Iconsax.send_2,
+                          AppColors.successGreen,
+                          null,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _buildActionTile(
+                          context,
+                          'Rewards',
+                          Iconsax.medal_star,
+                          AppColors.accentOrange,
+                          null,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  // Recent Transactions Header
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Recent Transactions',
+                        style: GoogleFonts.outfit(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const Icon(Iconsax.setting_4, color: AppColors.textSecondary, size: 20),
+                    ],
+                  ),
+                  
+                  const SizedBox(height: 16),
+
+                  // Transaction List
+                  ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    padding: EdgeInsets.zero,
+                    itemCount: 5,
+                    separatorBuilder: (_, __) => const SizedBox(height: 16),
+                    itemBuilder: (context, index) {
+                      final transactions = [
+                        {'title': 'General Service', 'subtitle': 'Hyundai Creta', 'amount': '-₹2,419', 'isDebit': true, 'time': '10:45 AM'},
+                        {'title': 'Wallet Top up', 'subtitle': 'HDFC Bank', 'amount': '+₹5,000', 'isDebit': false, 'time': 'Yesterday'},
+                        {'title': 'Ride Fare', 'subtitle': 'Airport Drop', 'amount': '-₹350', 'isDebit': true, 'time': '24 Oct'},
+                        {'title': 'Cashback', 'subtitle': 'Promotional Reward', 'amount': '+₹17', 'isDebit': false, 'time': '24 Oct'},
+                        {'title': 'EV Charging', 'subtitle': 'Fast Charge Station', 'amount': '-₹120', 'isDebit': true, 'time': '22 Oct'},
+                      ];
+                      final data = transactions[index % transactions.length];
+                      return _buildTransactionCard(data);
+                    },
+                  ),
+                  
+                  const SizedBox(height: 100),
                 ],
               ),
-            ).animate(delay: 400.ms).fadeIn().slideY(begin: 0.1, end: 0)
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildWalletAction(IconData icon, String label, Color bgColor) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 18, color: bgColor),
-          const SizedBox(width: 8),
-          Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildTransactionItem(String title, String subtitle, String amount, bool isDebit) {
-    return Padding(
+  Widget _buildActionTile(BuildContext context, String label, IconData icon, Color color, String? route) {
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        if (route != null) context.push(route);
+      },
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: color.withValues(alpha: 0.15)),
+            ),
+            child: Icon(icon, color: color, size: 26),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            label,
+            style: GoogleFonts.outfit(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTransactionCard(Map<String, dynamic> data) {
+    final bool isDebit = data['isDebit'] as bool;
+    return Container(
       padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: isDebit ? AppColors.dangerRed.withValues(alpha: 0.1) : AppColors.successGreen.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
+              borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(
               isDebit ? Iconsax.arrow_down : Iconsax.arrow_up_3,
@@ -199,19 +267,50 @@ class WalletScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary), maxLines: 1, overflow: TextOverflow.ellipsis),
+                Text(
+                  data['title'] as String,
+                  style: GoogleFonts.outfit(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
                 const SizedBox(height: 4),
-                Text(subtitle, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                Text(
+                  data['subtitle'] as String,
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ],
             ),
           ),
-          Text(
-            amount,
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: isDebit ? AppColors.textPrimary : AppColors.successGreen),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                data['amount'] as String,
+                style: GoogleFonts.outfit(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w800,
+                  color: isDebit ? AppColors.textPrimary : AppColors.successGreen,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                data['time'] as String,
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  color: AppColors.textMuted,
+                ),
+              ),
+            ],
           ),
         ],
       ),
-    );
+    ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.05, end: 0);
   }
 }
 

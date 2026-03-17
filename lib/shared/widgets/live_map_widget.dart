@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_map_cancellable_tile_provider/flutter_map_cancellable_tile_provider.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:iconsax/iconsax.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../core/theme/app_colors.dart';
 import '../../features/rides/taxi_provider.dart';
 import '../../features/rentals/map_controller.dart';
+import 'glass_card.dart';
 
 class LiveMapWidget extends ConsumerStatefulWidget {
   final double height;
@@ -22,19 +27,35 @@ class LiveMapWidget extends ConsumerStatefulWidget {
   ConsumerState<LiveMapWidget> createState() => _LiveMapWidgetState();
 }
 
-class _LiveMapWidgetState extends ConsumerState<LiveMapWidget> {
+class _LiveMapWidgetState extends ConsumerState<LiveMapWidget> with SingleTickerProviderStateMixin {
   late final MapController _mapController;
+  late final AnimationController _pulseController;
+  LatLng? _selectedPoint;
+  String? _selectedLabel;
 
   @override
   void initState() {
     super.initState();
     _mapController = MapController();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat();
   }
 
   @override
   void dispose() {
     _mapController.dispose();
+    _pulseController.dispose();
     super.dispose();
+  }
+
+  void _onMarkerTap(LatLng point, String label) {
+    setState(() {
+      _selectedPoint = point;
+      _selectedLabel = label;
+    });
+    _mapController.move(point, 17);
   }
 
   void _fitBounds(LatLng p1, LatLng p2) {
@@ -69,7 +90,7 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget> {
         point: taxiState.pickupLocation ?? mapState.userLocation,
         width: 60,
         height: 60,
-        child: _buildLocationPin(isPickup: true),
+        child: _buildLocationPin(isPickup: true, point: taxiState.pickupLocation ?? mapState.userLocation, label: 'Pickup Point'),
       ),
     ];
 
@@ -79,7 +100,7 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget> {
           point: taxiState.dropoffLocation!,
           width: 60,
           height: 60,
-          child: _buildLocationPin(isPickup: false),
+          child: _buildLocationPin(isPickup: false, point: taxiState.dropoffLocation!, label: 'Drop-off Point'),
         ),
       );
     }
@@ -117,14 +138,27 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget> {
             options: MapOptions(
               initialCenter: taxiState.pickupLocation ?? mapState.userLocation,
               initialZoom: 15,
+              onTap: (_, __) => setState(() {
+                _selectedPoint = null;
+                _selectedLabel = null;
+              }),
+              onLongPress: (tapPosition, point) {
+                HapticFeedback.heavyImpact();
+                ref.read(mapControllerProvider.notifier).selectDestination(point);
+                setState(() {
+                  _selectedPoint = point;
+                  _selectedLabel = 'Selected Destination';
+                });
+              },
               interactionOptions: const InteractionOptions(
                 flags: InteractiveFlag.all,
               ),
             ),
             children: [
               TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                urlTemplate: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
                 userAgentPackageName: 'com.roadrobos.app',
+                tileProvider: CancellableNetworkTileProvider(),
               ),
               PolylineLayer(polylines: polylines.isNotEmpty ? polylines : mapState.polylines),
               MarkerLayer(
@@ -143,6 +177,14 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget> {
               child: _buildLiveIndicator(),
             ),
             
+          if (_selectedPoint != null)
+            Positioned(
+              bottom: 20,
+              left: 20,
+              right: 20,
+              child: _buildMarkerCallout(),
+            ),
+
           if (mapState.isLoading)
             const Center(child: CircularProgressIndicator(color: AppColors.primaryBlue)),
         ],
@@ -150,38 +192,96 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget> {
     );
   }
 
-  Widget _buildCaptainPin() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        shape: BoxShape.circle,
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 10, offset: const Offset(0, 4))],
-        border: Border.all(color: AppColors.primaryBlue, width: 2),
-      ),
-      child: const Center(
-        child: Icon(Icons.delivery_dining_rounded, color: AppColors.primaryBlue, size: 30),
+  Widget _buildMarkerCallout() {
+    return GlassCard(
+      padding: const EdgeInsets.all(16),
+      opacity: 0.8,
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(color: AppColors.primaryBlue.withValues(alpha: 0.1), shape: BoxShape.circle),
+            child: const Icon(Iconsax.location, color: AppColors.primaryBlue, size: 20),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(_selectedLabel ?? 'Location Details', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                const Text('Arriving in 4 mins', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.close, size: 20, color: AppColors.textMuted),
+            onPressed: () => setState(() {
+              _selectedPoint = null;
+              _selectedLabel = null;
+            }),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildLocationPin({required bool isPickup}) {
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: (isPickup ? Colors.green : Colors.red).withValues(alpha: 0.2),
-            shape: BoxShape.circle,
+  Widget _buildCaptainPin() {
+    return AnimatedBuilder(
+      animation: _pulseController,
+      builder: (context, child) {
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            Container(
+              width: 50 * _pulseController.value,
+              height: 50 * _pulseController.value,
+              decoration: BoxDecoration(
+                color: AppColors.primaryBlue.withValues(alpha: 0.3 * (1 - _pulseController.value)),
+                shape: BoxShape.circle,
+              ),
+            ),
+            GestureDetector(
+              onTap: () => _onMarkerTap(widget.captainLocation!, 'Captain Location'),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 10, offset: const Offset(0, 4))],
+                  border: Border.all(color: AppColors.primaryBlue, width: 2),
+                ),
+                child: const Center(
+                  child: Icon(Icons.delivery_dining_rounded, color: AppColors.primaryBlue, size: 30),
+                ),
+              ),
+            ),
+          ],
+        ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack).fadeIn();
+      },
+    );
+  }
+
+  Widget _buildLocationPin({required bool isPickup, LatLng? point, required String label}) {
+    return GestureDetector(
+      onTap: point != null ? () => _onMarkerTap(point, label) : null,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: (isPickup ? Colors.green : Colors.red).withValues(alpha: 0.2),
+              shape: BoxShape.circle,
+            ),
           ),
-        ),
-        Icon(
-          isPickup ? Icons.radio_button_checked : Icons.location_on_rounded,
-          color: isPickup ? Colors.green : Colors.red,
-          size: 28,
-        ),
-      ],
+          Icon(
+            isPickup ? Icons.radio_button_checked : Icons.location_on_rounded,
+            color: isPickup ? Colors.green : Colors.red,
+            size: 28,
+          ),
+        ],
+      ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack).fadeIn(),
     );
   }
 
@@ -190,8 +290,13 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget> {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10)],
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 10,
+          ),
+        ],
         border: Border.all(color: AppColors.border),
       ),
       child: Row(

@@ -143,8 +143,11 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> with Si
             child: CircleAvatar(
               backgroundColor: Colors.white,
               child: IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.black),
-                onPressed: () => context.pop(),
+                icon: const Icon(Icons.close, color: Colors.black),
+                onPressed: () {
+                  ref.read(taxiProvider.notifier).reset();
+                  context.go('/taxi/home');
+                },
               ),
             ),
           ),
@@ -168,7 +171,7 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> with Si
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.flash_on, color: AppColors.primaryBlue, size: 18),
+          const Icon(Icons.flash_on, color: AppColors.primaryBlue, size: 18).animate(onPlay: (c) => c.repeat()).shimmer(),
           const SizedBox(width: 12),
           Text(
             statusStr,
@@ -245,13 +248,14 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> with Si
               ElevatedButton(
                 onPressed: () => context.push('/taxi/complete'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.bgLightAlt,
-                  foregroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  backgroundColor: AppColors.primaryBlue,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                  elevation: 8,
+                  shadowColor: AppColors.primaryBlue.withValues(alpha: 0.4),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
-                child: const Text('Finish trip', style: TextStyle(fontWeight: FontWeight.bold)),
+                child: const Text('Finish trip', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
               ),
             ],
           ),

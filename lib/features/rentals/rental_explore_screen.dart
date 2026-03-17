@@ -1,12 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:iconsax/iconsax.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
-import 'package:iconsax/iconsax.dart';
 import '../../core/theme/app_colors.dart';
 
 /// Screen [96]: Rental Exploration / Landing Page
-class RentalExploreScreen extends StatelessWidget {
-  RentalExploreScreen({super.key});
+class RentalExploreScreen extends ConsumerStatefulWidget {
+  const RentalExploreScreen({super.key});
+
+  @override
+  ConsumerState<RentalExploreScreen> createState() => _RentalExploreScreenState();
+}
+
+class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
+  String _selectedCategory = 'Recent';
+
+  final List<String> _categories = ['Recent', 'Popular', 'SUV', 'Sedan'];
 
   final List<Map<String, dynamic>> _topVehicles = [
     {
@@ -46,6 +57,11 @@ class RentalExploreScreen extends StatelessWidget {
       'category': 'Popular',
     },
   ];
+
+  List<Map<String, dynamic>> get _filteredVehicles {
+    if (_selectedCategory == 'Recent') return _topVehicles;
+    return _topVehicles.where((v) => v['category'] == _selectedCategory || v['type'] == _selectedCategory).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -90,23 +106,29 @@ class RentalExploreScreen extends StatelessWidget {
                     style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
                   ),
                   const SizedBox(height: 20),
-                  Container(
-                    height: 52,
-                    decoration: BoxDecoration(
-                      color: AppColors.bgLightGrey,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppColors.border),
-                    ),
-                    child: const Row(
-                      children: [
-                        SizedBox(width: 16),
-                        Icon(Iconsax.search_normal, size: 20, color: AppColors.textMuted),
-                        SizedBox(width: 12),
-                        Text(
-                          'Search by car name, type...',
-                          style: TextStyle(fontSize: 14, color: AppColors.textMuted),
-                        ),
-                      ],
+                  GestureDetector(
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                      // Show search overlay or focus a real field
+                    },
+                    child: Container(
+                      height: 52,
+                      decoration: BoxDecoration(
+                        color: AppColors.bgLightGrey,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: const Row(
+                        children: [
+                          SizedBox(width: 16),
+                          Icon(Iconsax.search_normal, size: 20, color: AppColors.textMuted),
+                          SizedBox(width: 12),
+                          Text(
+                            'Search by car name, type...',
+                            style: TextStyle(fontSize: 14, color: AppColors.textMuted),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -121,13 +143,10 @@ class RentalExploreScreen extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
                 children: [
-                  _buildTab('Recent', true),
-                  const SizedBox(width: 12),
-                  _buildTab('Popular', false),
-                  const SizedBox(width: 12),
-                  _buildTab('SUV', false),
-                  const SizedBox(width: 12),
-                  _buildTab('Sedan', false),
+                  ..._categories.map((cat) => Padding(
+                    padding: const EdgeInsets.only(right: 12),
+                    child: _buildTab(cat, _selectedCategory == cat),
+                  )),
                 ],
               ),
             ),
@@ -141,7 +160,7 @@ class RentalExploreScreen extends StatelessWidget {
             const SizedBox(height: 32),
 
             // Section 2: Recently Viewed (Figma [96]: FRAME: "list")
-            _buildSectionHeader('Recently Viewed'),
+            _buildSectionHeader('Top Recommendations', () => context.push('/rentals-selection')),
             _buildRecentList(context),
 
             const SizedBox(height: 100),
@@ -158,7 +177,10 @@ class RentalExploreScreen extends StatelessWidget {
           ],
         ),
         child: ElevatedButton(
-          onPressed: () => context.push('/rentals-selection'),
+          onPressed: () {
+            HapticFeedback.mediumImpact();
+            context.push('/rentals-selection');
+          },
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primaryBlue,
             minimumSize: const Size(double.infinity, 56),
@@ -175,24 +197,31 @@ class RentalExploreScreen extends StatelessWidget {
   }
 
   Widget _buildTab(String label, bool isSelected) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-      decoration: BoxDecoration(
-        color: isSelected ? AppColors.primaryBlue : AppColors.bgLightGrey,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: isSelected ? Colors.white : AppColors.textPrimary,
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        setState(() => _selectedCategory = label);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primaryBlue : AppColors.bgLightGrey,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: isSelected ? [BoxShadow(color: AppColors.primaryBlue.withValues(alpha: 0.2), blurRadius: 10, offset: const Offset(0, 4))] : null,
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: isSelected ? Colors.white : AppColors.textPrimary,
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _buildSectionHeader(String title, [VoidCallback? onSeeAll]) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       child: Row(
@@ -202,9 +231,12 @@ class RentalExploreScreen extends StatelessWidget {
             title,
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
           ),
-          const Text(
-            'See All',
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.primaryBlue),
+          GestureDetector(
+            onTap: onSeeAll,
+            child: const Text(
+              'See All',
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.primaryBlue),
+            ),
           ),
         ],
       ),
@@ -217,12 +249,15 @@ class RentalExploreScreen extends StatelessWidget {
       child: ListView.separated(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         scrollDirection: Axis.horizontal,
-        itemCount: _topVehicles.length,
+        itemCount: _filteredVehicles.length,
         separatorBuilder: (_, __) => const SizedBox(width: 16),
         itemBuilder: (context, index) {
-          final vehicle = _topVehicles[index];
+          final vehicle = _filteredVehicles[index];
           return GestureDetector(
-            onTap: () => context.push('/rental-detail'),
+            onTap: () {
+              HapticFeedback.lightImpact();
+              context.push('/rental-detail');
+            },
             child: Container(
               width: 300,
               decoration: BoxDecoration(
@@ -355,7 +390,10 @@ class RentalExploreScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 20),
                         ElevatedButton(
-                          onPressed: () => context.push('/rental-detail'),
+                          onPressed: () {
+                            HapticFeedback.mediumImpact();
+                            context.push('/rental-detail');
+                          },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primaryBlue,
                             minimumSize: const Size(double.infinity, 48),
@@ -393,36 +431,42 @@ class RentalExploreScreen extends StatelessWidget {
       itemCount: 2,
       separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
-        return Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.border),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 80,
-                height: 60,
-                decoration: BoxDecoration(
-                  color: AppColors.bgLightGrey,
-                  borderRadius: BorderRadius.circular(12),
+        return GestureDetector(
+          onTap: () {
+            HapticFeedback.lightImpact();
+            context.push('/rental-detail');
+          },
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 80,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: AppColors.bgLightGrey,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.car_rental_rounded, color: AppColors.primaryBlue),
                 ),
-                child: const Icon(Icons.car_rental_rounded, color: AppColors.primaryBlue),
-              ),
-              const SizedBox(width: 16),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Hyundai Venue', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-                    Text('Compact SUV', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-                  ],
+                const SizedBox(width: 16),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Hyundai Venue', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                      Text('Compact SUV', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                    ],
+                  ),
                 ),
-              ),
-              const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.textMuted),
-            ],
+                const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.textMuted),
+              ],
+            ),
           ),
         ).animate().fadeIn(delay: (index * 100).ms);
       },

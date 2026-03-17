@@ -40,7 +40,16 @@ class RentalConfirmedScreen extends ConsumerWidget {
                   const SizedBox(height: 48),
                   CustomButton(
                     label: 'TRACK BOOKING',
-                    onPressed: () => context.push('/delivery-logistics'),
+                    onPressed: () {
+                      // Trigger a mock rental of 30 seconds for demonstration
+                      if (selectedVehicle != null) {
+                        ref.read(activeRentalProvider.notifier).startRental(
+                          selectedVehicle,
+                          const Duration(seconds: 30),
+                        );
+                      }
+                      context.push('/delivery-logistics');
+                    },
                   ),
                   const SizedBox(height: 16),
                   TextButton(

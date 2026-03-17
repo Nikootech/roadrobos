@@ -1,19 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/constants/app_strings.dart';
-import '../../core/constants/app_assets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'user_provider.dart';
 
 /// Profile Screen matching Figma Screen [55]: "User Profile & Loyalty Rewards"
 /// Dark theme, membership card, loyalty benefits, profile action list
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(userProvider);
+
     return Scaffold(
       backgroundColor: AppColors.bgDarkProfile,
       body: CustomScrollView(
@@ -35,17 +39,20 @@ class ProfileScreen extends StatelessWidget {
                         color: AppColors.textOnDark,
                       ),
                     ),
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.bgDarkSurface,
-                      ),
-                      child: const Icon(
-                        Iconsax.setting_2,
-                        color: AppColors.textOnDark,
-                        size: 20,
+                    GestureDetector(
+                      onTap: () => context.push('/account-settings'),
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.bgDarkSurface,
+                        ),
+                        child: const Icon(
+                          Iconsax.setting_2,
+                          color: AppColors.textOnDark,
+                          size: 20,
+                        ),
                       ),
                     ),
                   ],
@@ -91,9 +98,9 @@ class ProfileScreen extends StatelessWidget {
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(32),
                           child: CachedNetworkImage(
-                            imageUrl: AppAssets.avatarPlaceholder,
+                            imageUrl: user.profileImageUrl,
                             fit: BoxFit.cover,
-                            errorWidget: (_, __, ___) => const Icon(
+                            errorWidget: (context, url, error) => const Icon(
                               Icons.person,
                               color: AppColors.textOnDark,
                               size: 32,
@@ -102,20 +109,20 @@ class ProfileScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 16),
-                      const Expanded(
+                      Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Rahul Sharma',
-                              style: TextStyle(
+                              user.name,
+                              style: const TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w700,
                                 color: AppColors.textOnDark,
                               ),
                             ),
-                            SizedBox(height: 4),
-                            Row(
+                            const SizedBox(height: 4),
+                            const Row(
                               children: [
                                 Icon(
                                   Icons.star_rounded,
@@ -136,20 +143,6 @@ class ProfileScreen extends StatelessWidget {
                           ],
                         ),
                       ),
-                      // Edit button
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.bgDarkSurface,
-                        ),
-                        child: const Icon(
-                          Iconsax.edit_2,
-                          size: 16,
-                          color: AppColors.textOnDark,
-                        ),
-                      ),
                     ],
                   ),
 
@@ -162,44 +155,44 @@ class ProfileScreen extends StatelessWidget {
                       color: AppColors.bgDarkProfile.withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
+                            const Text(
                               AppStrings.loyaltyPoints,
                               style: TextStyle(
                                 fontSize: 12,
                                 color: AppColors.textOnDarkMuted,
                               ),
                             ),
-                            SizedBox(height: 4),
+                            const SizedBox(height: 4),
                             Row(
                               children: [
                                 Text(
-                                  '1,250',
-                                  style: TextStyle(
+                                  user.points.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},'),
+                                  style: const TextStyle(
                                     fontSize: 28,
                                     fontWeight: FontWeight.w700,
                                     color: AppColors.warningAmber,
                                   ),
                                 ),
-                                SizedBox(width: 4),
-                                Text(
-                                  'pts',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: AppColors.textOnDarkMuted,
-                                  ),
-                                ),
+                                const SizedBox(width: 4),
+                                 const Text(
+                                   'pts',
+                                   style: TextStyle(
+                                     fontSize: 14,
+                                     color: AppColors.textOnDarkMuted,
+                                   ),
+                                 ),
                               ],
                             ),
                           ],
                         ),
                         // Progress ring
-                        SizedBox(
+                        const SizedBox(
                           width: 56,
                           height: 56,
                           child: Stack(
@@ -277,6 +270,7 @@ class ProfileScreen extends StatelessWidget {
                   _buildMenuItem(Iconsax.car, 'My Garage', 'Manage your vehicles', () => context.push('/my-vehicles')),
                   _buildMenuItem(Iconsax.location, 'Saved Locations', 'Add/edit addresses', () => context.push('/saved-locations')),
                   _buildMenuItem(Iconsax.calendar, 'Ride History', 'View past trips', () => context.push('/ride-history')),
+                  _buildMenuItem(Iconsax.clock, 'Service Reminders', 'Upcoming maintenance alerts', () => context.push('/service-reminders')),
                   _buildMenuItem(Iconsax.clipboard_text, 'Service History', 'Maintenance logs & invoices', () => context.push('/service-history')),
                   _buildMenuItem(Iconsax.notification, 'Notifications', 'Manage alerts', () => context.push('/notifications')),
                   _buildMenuItem(Iconsax.gift, 'Refer & Earn', 'Invite friends & earn', () => context.push('/referral')),
@@ -284,7 +278,10 @@ class ProfileScreen extends StatelessWidget {
                   const SizedBox(height: 12),
                   // Logout button
                   GestureDetector(
-                    onTap: () => context.go('/auth/login'),
+                    onTap: () {
+                      HapticFeedback.mediumImpact();
+                      context.go('/auth/login');
+                    },
                     child: Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
@@ -364,7 +361,10 @@ class ProfileScreen extends StatelessWidget {
 
   Widget _buildMenuItem(IconData icon, String title, String subtitle, VoidCallback onTap) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onTap();
+      },
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(16),

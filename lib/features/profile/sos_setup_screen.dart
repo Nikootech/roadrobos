@@ -1,15 +1,67 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
 import '../../navigation/nav_helpers.dart';
+import 'sos_provider.dart';
 
-class SosSetupScreen extends StatelessWidget {
+class SosSetupScreen extends ConsumerStatefulWidget {
   const SosSetupScreen({super.key});
 
   @override
+  ConsumerState<SosSetupScreen> createState() => _SosSetupScreenState();
+}
+
+class _SosSetupScreenState extends ConsumerState<SosSetupScreen> {
+  final _nameController = TextEditingController();
+  final _phoneController = TextEditingController();
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _phoneController.dispose();
+    super.dispose();
+  }
+
+  void _showAddContactDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Add Trusted Contact'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(controller: _nameController, decoration: const InputDecoration(labelText: 'Name')),
+            TextField(controller: _phoneController, decoration: const InputDecoration(labelText: 'Phone'), keyboardType: TextInputType.phone),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('CANCEL')),
+          TextButton(
+            onPressed: () {
+              if (_nameController.text.isNotEmpty && _phoneController.text.isNotEmpty) {
+                ref.read(sosProvider.notifier).addContact(
+                  SosContact(name: _nameController.text, phone: _phoneController.text)
+                );
+                _nameController.clear();
+                _phoneController.clear();
+                Navigator.pop(context);
+                HapticFeedback.lightImpact();
+              }
+            },
+            child: const Text('ADD'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final contacts = ref.watch(sosProvider);
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -38,21 +90,30 @@ class SosSetupScreen extends StatelessWidget {
              const Text('Add trusted contacts who can be notified instantly in case of an emergency.', textAlign: TextAlign.center, style: TextStyle(color: AppColors.textSecondary, height: 1.5)),
              
              const SizedBox(height: 40),
-             Container(
-               padding: const EdgeInsets.all(16),
-               decoration: BoxDecoration(color: AppColors.bgLightGrey, borderRadius: BorderRadius.circular(20)),
-               child: Column(
-                 children: [
-                   _buildContactTile('Mom', '+91 98765 43210', context),
-                   const Divider(height: 32),
-                   _buildContactTile('Brother', '+91 87654 32109', context),
-                 ],
+             if (contacts.isEmpty)
+               Container(
+                 padding: const EdgeInsets.all(32),
+                 child: const Text('No contacts added yet', style: TextStyle(color: AppColors.textMuted)),
+               )
+             else
+               Container(
+                 padding: const EdgeInsets.all(16),
+                 decoration: BoxDecoration(color: AppColors.bgLightGrey, borderRadius: BorderRadius.circular(20)),
+                 child: ListView.separated(
+                   shrinkWrap: true,
+                   physics: const NeverScrollableScrollPhysics(),
+                   itemCount: contacts.length,
+                   separatorBuilder: (_, __) => const Divider(height: 32),
+                   itemBuilder: (context, index) => _buildContactTile(contacts[index], context),
+                 ),
                ),
-             ),
              
              const SizedBox(height: 32),
              ElevatedButton.icon(
-                onPressed: () => NavHelpers.showComingSoon(context, 'Add contact'),
+                onPressed: () {
+                  HapticFeedback.lightImpact();
+                  _showAddContactDialog();
+                },
                icon: const Icon(Iconsax.user_add, size: 20),
                label: const Text('ADD TRUSTED CONTACT'),
                style: ElevatedButton.styleFrom(
@@ -68,7 +129,7 @@ class SosSetupScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildContactTile(String name, String phone, BuildContext context) {
+  Widget _buildContactTile(SosContact contact, BuildContext context) {
     return Row(
       children: [
         const CircleAvatar(backgroundColor: Colors.white, child: Icon(Icons.person, color: AppColors.textSecondary, size: 20)),
@@ -77,19 +138,25 @@ class SosSetupScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-              Text(phone, style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
+              Text(contact.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+              Text(contact.phone, style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
             ],
           ),
         ),
         IconButton(
           icon: const Icon(Icons.remove_circle_outline, color: AppColors.dangerRed, size: 20),
-          onPressed: () => NavHelpers.showConfirmDialog(
-            context,
-            title: 'Remove Contact',
-            message: 'Are you sure you want to remove $name from your SOS list?',
-            onConfirm: () => NavHelpers.showSuccess(context, '$name removed.'),
-          ),
+          onPressed: () {
+            HapticFeedback.selectionClick();
+            NavHelpers.showConfirmDialog(
+              context,
+              title: 'Remove Contact',
+              message: 'Are you sure you want to remove ${contact.name} from your SOS list?',
+              onConfirm: () {
+                ref.read(sosProvider.notifier).removeContact(contact.phone);
+                NavHelpers.showSuccess(context, '${contact.name} removed.');
+              },
+            );
+          },
         ),
       ],
     );

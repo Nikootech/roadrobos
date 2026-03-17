@@ -10,6 +10,7 @@ class GlassCard extends StatelessWidget {
   final EdgeInsetsGeometry padding;
   final Border? border;
   final List<BoxShadow>? shadow;
+  final VoidCallback? onTap;
 
   const GlassCard({
     super.key,
@@ -20,6 +21,7 @@ class GlassCard extends StatelessWidget {
     this.padding = const EdgeInsets.all(20),
     this.border,
     this.shadow,
+    this.onTap,
   });
 
   @override
@@ -33,25 +35,22 @@ class GlassCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(borderRadius),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
-          child: Container(
-            padding: padding,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: opacity),
+            child: InkWell(
+              onTap: onTap,
               borderRadius: BorderRadius.circular(borderRadius),
-              border: border ?? Border.all(
-                color: AppColors.primaryBlue.withValues(alpha: 0.1),
-                width: 1.5,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
+              child: Container(
+                padding: padding,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: opacity),
+                  borderRadius: BorderRadius.circular(borderRadius),
+                  border: border ?? Border.all(
+                    color: AppColors.primaryBlue.withValues(alpha: 0.1),
+                    width: 1.5,
+                  ),
                 ),
-              ],
+                child: child,
+              ),
             ),
-            child: child,
-          ),
         ),
       ),
     );

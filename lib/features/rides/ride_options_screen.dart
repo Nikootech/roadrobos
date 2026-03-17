@@ -87,46 +87,49 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
               ),
               const Spacer(),
               // Pickup Pill
-              _buildAddressPill(state.pickupAddress ?? 'Pick-up', isPickup: true),
+              _buildAddressPill(context, state.pickupAddress ?? 'Pick-up', isPickup: true),
             ],
           ),
           const SizedBox(height: 12),
           Align(
             alignment: Alignment.centerRight,
-            child: _buildAddressPill(state.dropoffAddress ?? 'Destination', isPickup: false),
+            child: _buildAddressPill(context, state.dropoffAddress ?? 'Destination', isPickup: false),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildAddressPill(String address, {bool isPickup = true}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            isPickup ? Icons.circle : Icons.location_on,
-            color: isPickup ? Colors.green : Colors.red,
-            size: 14,
-          ),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Text(
-              address,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+  Widget _buildAddressPill(BuildContext context, String address, {bool isPickup = true}) {
+    return GestureDetector(
+      onTap: () => context.pop(), // Go back to edit
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              isPickup ? Icons.circle : Icons.location_on,
+              color: isPickup ? Colors.green : Colors.red,
+              size: 14,
             ),
-          ),
-          const Icon(Icons.chevron_right, size: 16, color: Colors.grey),
-        ],
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                address,
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const Icon(Icons.edit_location_alt_rounded, size: 16, color: AppColors.primaryBlue),
+          ],
+        ),
       ),
     );
   }

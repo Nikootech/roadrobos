@@ -52,6 +52,7 @@ import '../features/profile/notification_center_screen.dart';
 import '../features/profile/notification_settings_screen.dart';
 import '../features/profile/language_screen.dart';
 import '../features/profile/sos_setup_screen.dart';
+import '../features/profile/service_reminders_screen.dart';
 import '../features/support/help_center_screen.dart';
 
 // Screens — Driver & Technician
@@ -63,9 +64,12 @@ import '../features/driver/driver_verification_pending_screen.dart';
 import '../features/driver/driver_verification_success_screen.dart';
 import '../features/driver/driver_ride_request_screen.dart';
 import '../features/driver/driver_bank_withdrawal_screen.dart';
+import '../features/driver/driver_profile_screen.dart';
+import '../features/driver/driver_document_upload_screen.dart';
 import '../features/technician/task_list_screen.dart';
 import '../features/technician/job_card_screen.dart';
 import '../features/technician/job_card_details_screen.dart';
+import '../features/technician/tech_profile_screen.dart';
 import '../features/technician/technician_dashboard_screen.dart';
 import '../features/technician/create_job_card_screen.dart';
 import '../features/shared/chat/in_app_chat_screen.dart';
@@ -361,7 +365,7 @@ class AppRouter {
       GoRoute(
         path: '/rentals',
         pageBuilder: (context, state) => AppTransitions.slideRight(
-          child: RentalExploreScreen(),
+          child: const RentalExploreScreen(),
           state: state,
         ),
       ),
@@ -485,6 +489,13 @@ class AppRouter {
         ),
       ),
       GoRoute(
+        path: '/service-reminders',
+        pageBuilder: (context, state) => AppTransitions.slideUp(
+          child: const ServiceRemindersScreen(),
+          state: state,
+        ),
+      ),
+      GoRoute(
         path: '/referral',
         pageBuilder: (context, state) => AppTransitions.slideRight(
           child: const ReferralScreen(),
@@ -559,6 +570,20 @@ class AppRouter {
         ),
       ),
       GoRoute(
+        path: '/driver/documents',
+        pageBuilder: (context, state) => AppTransitions.slideUp(
+          child: const DriverDocumentUploadScreen(),
+          state: state,
+        ),
+      ),
+      GoRoute(
+        path: '/driver-profile',
+        pageBuilder: (context, state) => AppTransitions.slideRight(
+          child: const DriverProfileScreen(),
+          state: state,
+        ),
+      ),
+      GoRoute(
         path: '/tech-dashboard',
         pageBuilder: (context, state) => AppTransitions.fade(
           child: const TechnicianDashboardScreen(),
@@ -597,6 +622,13 @@ class AppRouter {
         path: '/tech-spare-parts',
         pageBuilder: (context, state) => AppTransitions.slideRight(
           child: const SparePartsScreen(),
+          state: state,
+        ),
+      ),
+      GoRoute(
+        path: '/tech-profile',
+        pageBuilder: (context, state) => AppTransitions.fade(
+          child: const TechProfileScreen(),
           state: state,
         ),
       ),

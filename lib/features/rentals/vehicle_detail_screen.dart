@@ -1,16 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/custom_button.dart';
 import '../../shared/widgets/live_map_widget.dart';
+import 'rental_providers.dart';
 
-class RentalVehicleDetailScreen extends StatelessWidget {
+class RentalVehicleDetailScreen extends ConsumerWidget {
   const RentalVehicleDetailScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final vehicle = ref.watch(selectedVehicleProvider);
+    
+    // Default placeholder vehicle if none selected
+    final displayVehicle = vehicle ?? {
+      'name': 'Maruti Baleno',
+      'image': 'assets/images/baleno.png',
+      'price': '₹1,200/day',
+      'rating': '4.9',
+      'seats': '5 Seats',
+    };
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: CustomScrollView(
@@ -28,7 +41,7 @@ class RentalVehicleDetailScreen extends StatelessWidget {
                 fit: StackFit.expand,
                 children: [
                   Image.asset(
-                    'assets/images/baleno.png',
+                    displayVehicle['image'],
                     fit: BoxFit.cover,
                   ),
                   // Animated Premium Badge
@@ -76,19 +89,19 @@ class RentalVehicleDetailScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                   const Row(
+                   Row(
                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                      children: [
-                       Text('Maruti Baleno', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800)),
-                       Text('₹1,200/day', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.primaryBlue)),
+                       Text(displayVehicle['name'], style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800)),
+                       Text(displayVehicle['price'] ?? '₹1,200/day', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.primaryBlue)),
                      ],
                    ).animate().fadeIn().slideX(begin: -0.1, end: 0),
                    const SizedBox(height: 8),
-                   const Row(
+                   Row(
                      children: [
-                       Icon(Iconsax.star1, color: Colors.amber, size: 16),
-                       SizedBox(width: 4),
-                       Text('4.9 (124 reviews)', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                       const Icon(Iconsax.star1, color: Colors.amber, size: 16),
+                       const SizedBox(width: 4),
+                       Text('${displayVehicle['rating']} (124 reviews)', style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
                      ],
                    ).animate().fadeIn(delay: 200.ms),
                    
@@ -100,7 +113,7 @@ class RentalVehicleDetailScreen extends StatelessWidget {
                      children: [
                        _buildSpecCard(Iconsax.gas_station, 'Petrol'),
                        _buildSpecCard(Iconsax.setting_4, 'Manual'),
-                       _buildSpecCard(Iconsax.user, '5 Seats'),
+                       _buildSpecCard(Iconsax.user, displayVehicle['seats'] ?? '5 Seats'),
                      ],
                    ),
                    

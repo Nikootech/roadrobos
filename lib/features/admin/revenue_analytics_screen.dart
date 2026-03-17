@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
@@ -9,8 +10,16 @@ import '../../shared/widgets/custom_button.dart';
 import '../../shared/widgets/glass_card.dart';
 
 /// Admin Revenue Analytics matching Figma Screen [90]
-class RevenueAnalyticsScreen extends StatelessWidget {
+class RevenueAnalyticsScreen extends StatefulWidget {
   const RevenueAnalyticsScreen({super.key});
+
+  @override
+  State<RevenueAnalyticsScreen> createState() => _RevenueAnalyticsScreenState();
+}
+
+class _RevenueAnalyticsScreenState extends State<RevenueAnalyticsScreen> {
+  String _activeFilter = 'Weekly';
+  final List<String> _filters = ['Daily', 'Weekly', 'Monthly', 'Yearly'];
 
   @override
   Widget build(BuildContext context) {
@@ -41,15 +50,12 @@ class RevenueAnalyticsScreen extends StatelessWidget {
           children: [
             // Time Filter Row
             Row(
-              children: [
-                _buildFilterChip('Daily', false),
-                const SizedBox(width: 8),
-                _buildFilterChip('Weekly', true),
-                const SizedBox(width: 8),
-                _buildFilterChip('Monthly', false),
-                const SizedBox(width: 8),
-                _buildFilterChip('Yearly', false),
-              ],
+              children: _filters.map((filter) {
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: _buildFilterChip(filter, _activeFilter == filter),
+                );
+              }).toList(),
             ),
             const SizedBox(height: 24),
 
@@ -183,19 +189,25 @@ class RevenueAnalyticsScreen extends StatelessWidget {
   }
 
   Widget _buildFilterChip(String label, bool isSelected) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: isSelected ? AppColors.primaryBlue : Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isSelected ? AppColors.primaryBlue : AppColors.border),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 13,
-          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-          color: isSelected ? Colors.white : AppColors.textPrimary,
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        setState(() => _activeFilter = label);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primaryBlue : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: isSelected ? AppColors.primaryBlue : AppColors.border),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+            color: isSelected ? Colors.white : AppColors.textPrimary,
+          ),
         ),
       ),
     );

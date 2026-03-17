@@ -5,9 +5,17 @@ import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../core/theme/app_colors.dart';
 import '../../navigation/nav_helpers.dart';
+import '../../shared/widgets/live_map_widget.dart';
 
-class ActiveRidesScreen extends StatelessWidget {
+class ActiveRidesScreen extends StatefulWidget {
   const ActiveRidesScreen({super.key});
+
+  @override
+  State<ActiveRidesScreen> createState() => _ActiveRidesScreenState();
+}
+
+class _ActiveRidesScreenState extends State<ActiveRidesScreen> {
+  bool _isMapMode = false;
 
   @override
   Widget build(BuildContext context) {
@@ -25,37 +33,84 @@ class ActiveRidesScreen extends StatelessWidget {
           style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
         ),
         actions: [
-           IconButton(icon: const Icon(Iconsax.filter, color: AppColors.primaryBlue), onPressed: () => NavHelpers.showComingSoon(context, 'Ride filters')),
+          IconButton(
+            icon: Icon(_isMapMode ? Iconsax.menu : Iconsax.map, color: AppColors.primaryBlue),
+            onPressed: () => setState(() => _isMapMode = !_isMapMode),
+          ),
+          IconButton(
+            icon: const Icon(Iconsax.filter, color: AppColors.primaryBlue),
+            onPressed: () => NavHelpers.showComingSoon(context, 'Ride filters'),
+          ),
         ],
       ),
-      body: Column(
-        children: [
-          // Summary bar
-          Container(
-            color: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildSummaryItem('Total Active', '42'),
-                _buildSummaryItem('In Transit', '28'),
-                _buildSummaryItem('Pending', '14'),
+      body: _isMapMode ? _buildMapView() : _buildListView(),
+    );
+  }
+
+  Widget _buildListView() {
+    return Column(
+      children: [
+        // Summary bar
+        Container(
+          color: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildSummaryItem('Total Active', '42'),
+              _buildSummaryItem('In Transit', '28'),
+              _buildSummaryItem('Pending', '14'),
+            ],
+          ),
+        ),
+        
+        Expanded(
+          child: ListView.separated(
+            padding: const EdgeInsets.all(20),
+            itemCount: 5,
+            separatorBuilder: (_, __) => const SizedBox(height: 16),
+            itemBuilder: (context, index) {
+              return _buildRideCard(index, context);
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMapView() {
+    return Stack(
+      children: [
+        const LiveMapWidget(
+          height: double.infinity,
+          showLiveIndicator: true,
+        ),
+        Positioned(
+          top: 20,
+          left: 20,
+          right: 20,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.9),
+              borderRadius: const BorderRadius.all(Radius.circular(16)),
+              boxShadow: [
+                BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10),
               ],
             ),
-          ),
-          
-          Expanded(
-            child: ListView.separated(
-              padding: const EdgeInsets.all(20),
-              itemCount: 5,
-              separatorBuilder: (_, __) => const SizedBox(height: 16),
-              itemBuilder: (context, index) {
-                return _buildRideCard(index, context);
-              },
+            child: Row(
+              children: [
+                const Icon(Iconsax.radar, color: AppColors.primaryBlue, size: 20),
+                const SizedBox(width: 12),
+                Text(
+                  'Tracking 42 Live Rides',
+                  style: GoogleFonts.outfit(fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                ),
+              ],
             ),
-          ),
-        ],
-      ),
+          ).animate().slideY(begin: -0.5, end: 0).fadeIn(),
+        ),
+      ],
     );
   }
 

@@ -5,15 +5,12 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../core/theme/app_colors.dart';
 
 final mapControllerProvider = StateNotifierProvider<AppMapController, AppMapState>((ref) {
   return AppMapController();
 });
-
-class AppState {
-  // Base class for any other state if needed
-}
 
 class AppMapState {
   final MapController? controller; // from flutter_map
@@ -88,6 +85,7 @@ class AppMapController extends StateNotifier<AppMapState> {
       );
       
       addMockVehicles();
+      addRentalHubs();
     } catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }
@@ -119,17 +117,12 @@ class AppMapController extends StateNotifier<AppMapState> {
     return [];
   }
 
-  void selectDestination(LatLng location) {
-    state = state.copyWith(destination: location);
-    _updateRoute();
-  }
-
   void _updateRoute() {
     if (state.destination == null) return;
     
     final route = Polyline(
       points: [state.userLocation, state.destination!],
-      color: AppColors.textPrimary.withAlpha(180),
+      color: AppColors.textPrimary.withValues(alpha: 0.7),
       strokeWidth: 5,
     );
     state = state.copyWith(polylines: [route]);
@@ -149,10 +142,10 @@ class AppMapController extends StateNotifier<AppMapState> {
             height: 45,
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
+                color: Colors.white.withValues(alpha: 0.9),
+                borderRadius: const BorderRadius.all(Radius.circular(16)),
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withAlpha(30), blurRadius: 10, offset: const Offset(0, 4))
+                  BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10),
                 ],
               ),
               child: const Icon(Icons.electric_rickshaw_rounded, color: AppColors.accentOrange, size: 28),
@@ -161,6 +154,57 @@ class AppMapController extends StateNotifier<AppMapState> {
         );
     }
     state = state.copyWith(markers: vehicleMarkers);
+  }
+
+  void addRentalHubs() {
+    final center = state.userLocation;
+    final List<Marker> hubMarkers = [...state.markers];
+    
+    final locations = [
+      LatLng(center.latitude + 0.008, center.longitude + 0.008),
+      LatLng(center.latitude - 0.007, center.longitude - 0.012),
+      LatLng(center.latitude + 0.015, center.longitude - 0.005),
+    ];
+
+    for (var loc in locations) {
+      hubMarkers.add(
+        Marker(
+          point: loc,
+          width: 50,
+          height: 50,
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppColors.primaryBlue,
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 3),
+              boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 10)],
+            ),
+            child: const Icon(Icons.hub_rounded, color: Colors.white, size: 24),
+          ),
+        ),
+      );
+    }
+    state = state.copyWith(markers: hubMarkers);
+  }
+
+  void selectDestination(LatLng location) {
+    state = state.copyWith(
+      destination: location,
+      markers: [
+        ...state.markers.where((m) => m.key != const Key('destination_marker')),
+        Marker(
+          key: const Key('destination_marker'),
+          point: location,
+          width: 50,
+          height: 50,
+          child: const Icon(Icons.location_on_rounded, color: AppColors.dangerRed, size: 40)
+              .animate()
+              .slideY(begin: -0.5, end: 0)
+              .fadeIn(),
+        ),
+      ],
+    );
+    _updateRoute();
   }
 
   void addMarker(Marker marker) {

@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../core/theme/app_colors.dart';
+import '../../shared/widgets/live_map_widget.dart';
 
 /// Live Vehicle Tracking Screen matching Figma Screen [67]: "Live Vehicle Tracking"
 /// Shows precise vehicle location, battery/fuel status, and speed.
@@ -15,49 +16,11 @@ class LiveVehicleTrackingScreen extends StatelessWidget {
       backgroundColor: AppColors.bgLightGrey,
       body: Stack(
         children: [
-          // Detailed Map Background
+          // Real Live Map Background
           Positioned.fill(
-            child: Container(
-              color: const Color(0xFFF1F5F9), // Lighter map base
-              child: Stack(
-                children: [
-                   // Simulated Route
-                  Center(
-                    child: CustomPaint(
-                      size: const Size(double.infinity, double.infinity),
-                      painter: _RoutePainter(),
-                    ),
-                  ),
-                  // Vehicle Marker with Pulse
-                  Positioned(
-                    top: 300,
-                    left: 180,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Container(
-                          width: 80,
-                          height: 80,
-                          decoration: BoxDecoration(
-                            color: AppColors.primaryBlue.withValues(alpha: 0.1),
-                            shape: BoxShape.circle,
-                          ),
-                        ).animate(onPlay: (c) => c.repeat()).scale(begin: const Offset(1, 1), end: const Offset(1.5, 1.5), duration: 2000.ms).fadeOut(),
-                        Container(
-                          width: 24,
-                          height: 24,
-                          decoration: BoxDecoration(
-                            color: AppColors.primaryBlue,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 3),
-                          ),
-                          child: const Icon(Icons.directions_car, color: Colors.white, size: 10),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+            child: LiveMapWidget(
+              height: MediaQuery.of(context).size.height,
+              showLiveIndicator: true,
             ),
           ),
 
@@ -191,24 +154,4 @@ class LiveVehicleTrackingScreen extends StatelessWidget {
   }
 }
 
-class _RoutePainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = AppColors.primaryBlue.withValues(alpha: 0.2)
-      ..strokeWidth = 6
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    final path = Path()
-      ..moveTo(100, 500)
-      ..lineTo(180, 320)
-      ..lineTo(300, 250);
-    
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
 

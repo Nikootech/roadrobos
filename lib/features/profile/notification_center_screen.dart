@@ -2,14 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
 import '../../navigation/nav_helpers.dart';
+import 'notification_provider.dart';
+import 'package:intl/intl.dart';
 
-class NotificationCenterScreen extends StatelessWidget {
+class NotificationCenterScreen extends ConsumerWidget {
   const NotificationCenterScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final notifications = ref.watch(notificationProvider);
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -21,46 +26,74 @@ class NotificationCenterScreen extends StatelessWidget {
         ),
         title: const Text('Notifications', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
         actions: [
-          TextButton(onPressed: () => NavHelpers.showSuccess(context, 'All notifications marked as read'), child: const Text('Mark all as read', style: TextStyle(color: AppColors.primaryBlue, fontSize: 12))),
+          if (notifications.isNotEmpty)
+            TextButton(
+              onPressed: () {
+                ref.read(notificationProvider.notifier).markAllAsRead();
+                NavHelpers.showSuccess(context, 'All notifications marked as read');
+              }, 
+              child: const Text('Mark all as read', style: TextStyle(color: AppColors.primaryBlue, fontSize: 12))
+            ),
         ],
       ),
-      body: ListView.separated(
-        padding: const EdgeInsets.all(20),
-        itemCount: 6,
-        separatorBuilder: (_, __) => const Divider(height: 32),
-        itemBuilder: (context, index) {
-          return _buildNotificationTile(index);
-        },
+      body: notifications.isEmpty 
+        ? _buildEmptyState()
+        : ListView.separated(
+            padding: const EdgeInsets.all(20),
+            itemCount: notifications.length,
+            separatorBuilder: (_, __) => const Divider(height: 32),
+            itemBuilder: (context, index) {
+              return _buildNotificationTile(ref, notifications[index]);
+            },
+          ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Iconsax.notification_status, size: 80, color: AppColors.textMuted.withValues(alpha: 0.2)),
+          const SizedBox(height: 16),
+          const Text('No notifications yet', style: TextStyle(color: AppColors.textSecondary, fontSize: 16, fontWeight: FontWeight.w500)),
+        ],
       ),
     );
   }
 
-  Widget _buildNotificationTile(int index) {
-    final titles = ['Ride Confirmed', 'Special Offer Unlocked', 'Maintenance Alert', 'Points Earned', 'New Feature!', 'Safety Check'];
-    final descs = ['Your ride with Ravi is confirmed.', 'Get 20% off on your next car rental.', 'Your Baleno service is due in 5 days.', 'You earned 500 loyalty points!', 'Try our new live vehicle tracking.', 'Emergency contact added successfully.'];
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(color: AppColors.bgLightGrey, borderRadius: BorderRadius.circular(12)),
-          child: Icon(index.isEven ? Iconsax.notification : Iconsax.ticket_discount, color: AppColors.primaryBlue, size: 20),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(titles[index], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-              const SizedBox(height: 4),
-              Text(descs[index], style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.4)),
-              const SizedBox(height: 8),
-              const Text('2 hours ago', style: TextStyle(color: AppColors.textMuted, fontSize: 10)),
-            ],
+  Widget _buildNotificationTile(WidgetRef ref, AppNotification notification) {
+    final timeStr = DateFormat('h:mm a').format(notification.timestamp);
+    
+    return GestureDetector(
+      onTap: () => ref.read(notificationProvider.notifier).markAsRead(notification.id),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: notification.isRead ? AppColors.bgLightGrey : AppColors.primaryBlue.withValues(alpha: 0.1), 
+              borderRadius: BorderRadius.circular(12)
+            ),
+            child: Icon(notification.icon, color: AppColors.primaryBlue, size: 20),
           ),
-        ),
-        if(index < 2) const CircleAvatar(radius: 4, backgroundColor: AppColors.primaryBlue),
-      ],
-    ).animate().fadeIn().slideX(begin: 0.05, end: 0);
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(notification.title, style: TextStyle(fontWeight: notification.isRead ? FontWeight.w600 : FontWeight.w800, fontSize: 14)),
+                const SizedBox(height: 4),
+                Text(notification.description, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.4)),
+                const SizedBox(height: 8),
+                Text(timeStr, style: const TextStyle(color: AppColors.textMuted, fontSize: 10)),
+              ],
+            ),
+          ),
+          if(!notification.isRead) const CircleAvatar(radius: 4, backgroundColor: AppColors.primaryBlue),
+        ],
+      ).animate().fadeIn().slideX(begin: 0.05, end: 0),
+    );
   }
 }
