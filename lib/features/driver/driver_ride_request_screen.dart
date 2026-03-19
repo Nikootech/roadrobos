@@ -98,8 +98,7 @@ class _DriverRideRequestScreenState extends State<DriverRideRequestScreen> with 
                     child: CustomButton(
                       label: 'Accept',
                       onPressed: () {
-                        context.pop();
-                        // Navigate to active trip in a real app
+                        context.pushReplacement('/driver-assigned');
                       },
                       backgroundColor: AppColors.successGreen,
                     ),

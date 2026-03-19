@@ -4,6 +4,17 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
+  // ── Brand Greens (RoAdRoBo's Logo Palette) ──
+  static const Color brandGreen = Color(0xFF006241);      // Deep forest green — main logo color
+  static const Color brandGreenMid = Color(0xFF1B8A5A);   // Mid green — swirl accent
+  static const Color brandGreenLight = Color(0xFF10B981); // Bright green — electric bolt
+  static const Color brandGreenBg = Color(0xFFF0FBF5);    // Soft green tint background
+  static const LinearGradient brandGreenGradient = LinearGradient(
+    colors: [brandGreen, brandGreenMid],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
   // ── Primary Blues (Vibrant Sky/Premium palette) ──
   static const Color primaryBlue = Color(0xFF38BDF8); // Vibrant Sky Blue
   static const Color primaryBlueDark = Color(0xFF0EA5E9);

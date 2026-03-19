@@ -130,67 +130,62 @@ class _CreateJobCardScreenState extends ConsumerState<CreateJobCardScreen> {
               children: [
                 const SizedBox(height: 16),
                 // 1. Vehicle Context (Editable)
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 16),
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(colors: [Color(0xFF1A237E), Color(0xFF3949AB)]),
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [BoxShadow(color: const Color(0xFF1A237E).withValues(alpha: 0.15), blurRadius: 15, offset: const Offset(0, 8))],
-                  ),
-                  child: Row(
+                _buildCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: const BoxDecoration(color: Colors.white24, shape: BoxShape.circle),
-                        child: const Icon(Icons.directions_car_filled_rounded, color: Colors.white, size: 24),
+                      Row(
+                        children: [
+                          const Icon(Iconsax.car, size: 18, color: AppColors.primaryNavy),
+                          const SizedBox(width: 12),
+                          Text('Vehicle Details', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
+                        ],
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('VEHICLE CONTEXT', style: GoogleFonts.outfit(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1)),
-                            TextField(
-                              controller: _vehicleModelController,
-                              style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
-                              decoration: const InputDecoration(
-                                isDense: true,
-                                contentPadding: EdgeInsets.symmetric(vertical: 4),
-                                border: InputBorder.none,
-                                hintText: 'Model Name',
-                                hintStyle: TextStyle(color: Colors.white38),
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(Icons.confirmation_number_rounded, size: 14, color: Colors.white70),
-                                  const SizedBox(width: 8),
-                                  Flexible(
-                                    child: TextField(
-                                      controller: _regNoController,
-                                      style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 12),
-                                      decoration: const InputDecoration(
-                                        isDense: true,
-                                        contentPadding: EdgeInsets.zero,
-                                        border: InputBorder.none,
-                                        hintText: 'Reg No.',
-                                        hintStyle: TextStyle(color: Colors.white38),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: _vehicleModelController,
+                        style: const TextStyle(fontWeight: FontWeight.w500),
+                        decoration: InputDecoration(
+                          hintText: 'e.g. 2021 Hyundai Creta SX',
+                          hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 14),
+                          labelText: 'Vehicle Model',
+                          labelStyle: const TextStyle(color: AppColors.textSecondary),
+                          prefixIcon: const Icon(Iconsax.car5, color: AppColors.textTertiary, size: 20),
+                          filled: true,
+                          fillColor: AppColors.bgLightAlt,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide.none,
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: const BorderSide(color: AppColors.primaryBlueLight, width: 2),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: _regNoController,
+                        style: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1),
+                        textCapitalization: TextCapitalization.characters,
+                        decoration: InputDecoration(
+                          hintText: 'e.g. MH 12 AB 1234',
+                          hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 14, letterSpacing: 0),
+                          labelText: 'Registration Number',
+                          labelStyle: const TextStyle(color: AppColors.textSecondary, letterSpacing: 0),
+                          prefixIcon: const Icon(Iconsax.note_text4, color: AppColors.textTertiary, size: 20),
+                          filled: true,
+                          fillColor: AppColors.bgLightAlt,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide.none,
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: const BorderSide(color: AppColors.primaryBlueLight, width: 2),
+                          ),
                         ),
                       ),
                     ],
@@ -317,7 +312,7 @@ class _CreateJobCardScreenState extends ConsumerState<CreateJobCardScreen> {
                                 children: [
                                   const Icon(Icons.add, color: Color(0xFF1A237E), size: 18),
                                   const SizedBox(width: 8),
-                                  Text('Add Service Item', style: GoogleFonts.outfit(color: Color(0xFF1A237E), fontWeight: FontWeight.bold)),
+                                  Text('Add Service Item', style: GoogleFonts.outfit(color: const Color(0xFF1A237E), fontWeight: FontWeight.bold)),
                                 ],
                               ),
                             ),

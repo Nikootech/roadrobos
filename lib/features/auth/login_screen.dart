@@ -10,8 +10,7 @@ import '../../core/constants/app_strings.dart';
 import '../../shared/widgets/custom_button.dart';
 import '../../shared/widgets/custom_text_field.dart';
 
-/// Login Screen matching Figma Screen [38]: "Login & Authentication"
-/// Hero image, phone/email input, primary CTA, social login, footer
+/// Login Screen — Re-themed to RoAdRoBo's Forest Green Brand Palette
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -21,13 +20,13 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController(); // For Employee
-  final _phoneController = TextEditingController(); // For Customer
-  final _otpController = TextEditingController(); // For Customer OTP
+  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _otpController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
-  bool _isCustomer = true; // Toggle between Customer and Employee
-  bool _isOtpSent = false; // Phase of Customer Login
+  bool _isCustomer = true;
+  bool _isOtpSent = false;
 
   @override
   void dispose() {
@@ -51,6 +50,16 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Handle bar
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                  color: AppColors.border,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
               const Text(
                 'Select Your Role',
                 style: TextStyle(
@@ -60,26 +69,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              ListTile(
-                leading: const Icon(Iconsax.user, color: AppColors.primaryBlue),
-                title: const Text('Customer', style: TextStyle(fontWeight: FontWeight.w600)),
-                onTap: () => context.go('/main/home'),
-              ),
-              ListTile(
-                leading: const Icon(Iconsax.car, color: AppColors.accentOrange),
-                title: const Text('Driver', style: TextStyle(fontWeight: FontWeight.w600)),
-                onTap: () => context.go('/driver-home'),
-              ),
-              ListTile(
-                leading: const Icon(Iconsax.setting_2, color: AppColors.successDark),
-                title: const Text('Technician', style: TextStyle(fontWeight: FontWeight.w600)),
-                onTap: () => context.go('/tech-tasks'),
-              ),
-              ListTile(
-                leading: const Icon(Iconsax.shield_tick, color: AppColors.deepNavy),
-                title: const Text('Admin', style: TextStyle(fontWeight: FontWeight.w600)),
-                onTap: () => context.go('/admin-home'),
-              ),
+              _buildRoleTile(context, 'Customer', Iconsax.user, AppColors.brandGreen, '/main/home'),
+              _buildRoleTile(context, 'Driver', Iconsax.car, AppColors.accentOrange, '/driver-home'),
+              _buildRoleTile(context, 'Technician', Iconsax.setting_2, AppColors.brandGreenMid, '/tech-tasks'),
+              _buildRoleTile(context, 'Admin', Iconsax.shield_tick, AppColors.deepNavy, '/admin-home'),
+              const SizedBox(height: 8),
             ],
           ),
         );
@@ -87,26 +81,38 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  Widget _buildRoleTile(BuildContext context, String label, IconData icon, Color color, String route) {
+    return ListTile(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      leading: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(icon, color: color, size: 20),
+      ),
+      title: Text(label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+      trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.textMuted),
+      onTap: () => context.go(route),
+    );
+  }
+
   void _handleLogin() {
     if (_formKey.currentState?.validate() ?? false) {
       setState(() => _isLoading = true);
-      
-      // Simulate API call
       Future.delayed(const Duration(seconds: 1), () {
         if (mounted) {
           setState(() => _isLoading = false);
-          
           if (_isCustomer) {
             if (!_isOtpSent) {
-              // Phase 1: OTP Sent
               setState(() => _isOtpSent = true);
               NavHelpers.showSuccess(context, 'OTP sent to ${_phoneController.text}');
             } else {
-              // Phase 2: Verify OTP and Login
               context.go('/main/home');
             }
           } else {
-            _showRoleSelection(); // Employee roles selection
+            _showRoleSelection();
           }
         }
       });
@@ -116,30 +122,37 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.bgLightAlt,
+      backgroundColor: AppColors.brandGreenBg,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
             children: [
-              // Header area with top bar (matches Figma: 388x64 header)
+              // ── Top Bar ───────────────────────────────────────────────────
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Row(
                   children: [
                     GestureDetector(
                       onTap: () => context.go('/onboarding'),
                       child: Container(
-                        width: 40,
-                        height: 40,
+                        width: 42,
+                        height: 42,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: AppColors.bgWhite,
-                          border: Border.all(color: AppColors.border),
+                          border: Border.all(color: AppColors.brandGreen.withValues(alpha: 0.2)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.brandGreen.withValues(alpha: 0.08),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
                         child: const Icon(
                           Icons.arrow_back_ios_new_rounded,
                           size: 16,
-                          color: AppColors.textPrimary,
+                          color: AppColors.brandGreen,
                         ),
                       ),
                     ),
@@ -150,66 +163,123 @@ class _LoginScreenState extends State<LoginScreen> {
                         style: TextStyle(
                           fontSize: 20,
                           fontFamily: 'Outfit',
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w700,
                           color: AppColors.textPrimary,
                         ),
                       ),
                     ),
+                    const SizedBox(width: 42), // Balance back button
                   ],
                 ),
               ),
 
-              // Hero illustration area (matches Figma: 340x295 hero image)
-              GlassCard(
-                padding: EdgeInsets.zero,
-                borderRadius: 32,
-                opacity: 0.1,
-                blur: 20,
-                child: Container(
-                  height: 200,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        AppColors.primaryBlue.withValues(alpha: 0.15),
-                        AppColors.primaryBlue.withValues(alpha: 0.05),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+              // ── Hero / Brand Showcase ─────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: GlassCard(
+                  padding: EdgeInsets.zero,
+                  borderRadius: 28,
+                  opacity: 0.08,
+                  blur: 20,
+                  child: Container(
+                    height: 220,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(28),
+                      gradient: LinearGradient(
+                        colors: [
+                          AppColors.brandGreen.withValues(alpha: 0.12),
+                          AppColors.brandGreenMid.withValues(alpha: 0.06),
+                          AppColors.brandGreenLight.withValues(alpha: 0.04),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
                     ),
-                  ),
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    child: Stack(
                       children: [
-                        Container(
-                          width: 80,
-                          height: 80,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(24),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.primaryBlue.withValues(alpha: 0.3),
-                                blurRadius: 20,
-                                offset: const Offset(0, 8),
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.directions_car_rounded,
-                            size: 44,
-                            color: AppColors.primaryBlue,
+                        // Decorative circles
+                        Positioned(
+                          top: -20,
+                          right: -20,
+                          child: Container(
+                            width: 120,
+                            height: 120,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: AppColors.brandGreen.withValues(alpha: 0.06),
+                            ),
                           ),
                         ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'RoAdRoBos',
-                          style: GoogleFonts.outfit(
-                            fontSize: 26,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.primaryBlue,
-                            letterSpacing: 0.5,
+                        Positioned(
+                          bottom: -30,
+                          left: -15,
+                          child: Container(
+                            width: 100,
+                            height: 100,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: AppColors.brandGreenLight.withValues(alpha: 0.08),
+                            ),
+                          ),
+                        ),
+                        // Center content
+                        Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              // Logo image with bright white background and clean glow
+                              Container(
+                                width: 130,
+                                height: 130,
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(36),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.brandGreen.withValues(alpha: 0.15),
+                                      blurRadius: 30,
+                                      spreadRadius: 2,
+                                      offset: const Offset(0, 10),
+                                    ),
+                                    BoxShadow(
+                                      color: Colors.white.withValues(alpha: 0.8),
+                                      blurRadius: 10,
+                                      spreadRadius: -5,
+                                    ),
+                                  ],
+                                ),
+                                padding: EdgeInsets.zero,
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(36),
+                                  child: Image.asset(
+                                    'assets/signin_icon.png',
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 14),
+                              // Brand name
+                              Text(
+                                'RoAd RoBo\'s',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.brandGreen,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'SebChris Mobility Pvt Ltd',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppColors.brandGreenMid,
+                                  letterSpacing: 0.8,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
@@ -219,11 +289,11 @@ class _LoginScreenState extends State<LoginScreen> {
               )
                   .animate()
                   .fadeIn(duration: 600.ms)
-                  .slideY(begin: -0.1, end: 0, duration: 600.ms),
+                  .slideY(begin: -0.08, end: 0, duration: 600.ms, curve: Curves.easeOut),
 
               const SizedBox(height: 24),
 
-              // Header text (matches Figma: 340x102 header text area)
+              // ── Welcome Text ──────────────────────────────────────────────
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Column(
@@ -232,17 +302,17 @@ class _LoginScreenState extends State<LoginScreen> {
                     Text(
                       AppStrings.welcomeBack,
                       style: GoogleFonts.outfit(
-                        fontSize: 32,
+                        fontSize: 30,
                         fontWeight: FontWeight.w800,
                         color: AppColors.textPrimary,
                         letterSpacing: -0.5,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     Text(
                       AppStrings.loginSubtitle,
                       style: TextStyle(
-                        fontSize: 15,
+                        fontSize: 14,
                         color: AppColors.textSecondary.withValues(alpha: 0.8),
                       ),
                     ),
@@ -253,30 +323,49 @@ class _LoginScreenState extends State<LoginScreen> {
                   .fadeIn(duration: 500.ms)
                   .slideX(begin: -0.05, end: 0, duration: 500.ms),
 
-              const SizedBox(height: 28),
+              const SizedBox(height: 24),
 
-              // Role Toggle (Customer vs Employee)
+              // ── Customer / Employee Toggle ─────────────────────────────────
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Container(
                   height: 52,
+                  padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
                     color: AppColors.bgWhite,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.border),
+                    border: Border.all(color: AppColors.brandGreen.withValues(alpha: 0.15)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.brandGreen.withValues(alpha: 0.06),
+                        blurRadius: 12,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: Row(
                     children: [
                       Expanded(
                         child: GestureDetector(
-                        onTap: () => setState(() {
+                          onTap: () => setState(() {
                             _isCustomer = true;
-                            _isOtpSent = false; // Reset OTP phase
+                            _isOtpSent = false;
                           }),
-                          child: Container(
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 250),
+                            curve: Curves.easeInOut,
                             decoration: BoxDecoration(
-                              color: _isCustomer ? AppColors.primaryBlue : Colors.transparent,
-                              borderRadius: BorderRadius.circular(14),
+                              color: _isCustomer ? AppColors.brandGreen : Colors.transparent,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: _isCustomer
+                                  ? [
+                                      BoxShadow(
+                                        color: AppColors.brandGreen.withValues(alpha: 0.30),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
+                                      )
+                                    ]
+                                  : null,
                             ),
                             alignment: Alignment.center,
                             child: Text(
@@ -293,10 +382,21 @@ class _LoginScreenState extends State<LoginScreen> {
                       Expanded(
                         child: GestureDetector(
                           onTap: () => setState(() => _isCustomer = false),
-                          child: Container(
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 250),
+                            curve: Curves.easeInOut,
                             decoration: BoxDecoration(
-                              color: !_isCustomer ? AppColors.primaryBlue : Colors.transparent,
-                              borderRadius: BorderRadius.circular(14),
+                              color: !_isCustomer ? AppColors.brandGreen : Colors.transparent,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: !_isCustomer
+                                  ? [
+                                      BoxShadow(
+                                        color: AppColors.brandGreen.withValues(alpha: 0.30),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
+                                      )
+                                    ]
+                                  : null,
                             ),
                             alignment: Alignment.center,
                             child: Text(
@@ -317,7 +417,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
               const SizedBox(height: 24),
 
-              // Form fields
+              // ── Form Fields ───────────────────────────────────────────────
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Form(
@@ -359,12 +459,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           controller: _otpController,
                           keyboardType: TextInputType.number,
                           validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'OTP is required';
-                            }
-                            if (value.length != 4) {
-                              return 'Enter 4-digit code';
-                            }
+                            if (value == null || value.isEmpty) return 'OTP is required';
+                            if (value.length != 4) return 'Enter 4-digit code';
                             return null;
                           },
                         )
@@ -382,12 +478,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           isPassword: true,
                           controller: _passwordController,
                           validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Password is required';
-                            }
-                            if (value.length < 6) {
-                              return 'Password must be at least 6 characters';
-                            }
+                            if (value == null || value.isEmpty) return 'Password is required';
+                            if (value.length < 6) return 'Password must be at least 6 characters';
                             return null;
                           },
                         )
@@ -395,23 +487,22 @@ class _LoginScreenState extends State<LoginScreen> {
                             .fadeIn(duration: 400.ms)
                             .slideY(begin: 0.1, end: 0),
 
-                      // Forgot password
                       if (!_isCustomer)
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
-                            onPressed: () => NavHelpers.showSuccess(context, 'Reset password email sent to your inbox!'),
+                            onPressed: () => NavHelpers.showSuccess(context, 'Reset password email sent!'),
                             child: const Text(
                               AppStrings.forgotPassword,
                               style: TextStyle(
                                 fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                                color: AppColors.primaryBlue,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.brandGreen,
                               ),
                             ),
                           ),
                         ),
-                      
+
                       if (_isCustomer && _isOtpSent)
                         Align(
                           alignment: Alignment.centerRight,
@@ -421,8 +512,8 @@ class _LoginScreenState extends State<LoginScreen> {
                               'Change Number?',
                               style: TextStyle(
                                 fontSize: 13,
-                                fontWeight: FontWeight.w500,
-                                color: AppColors.primaryBlue,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.brandGreen,
                               ),
                             ),
                           ),
@@ -430,14 +521,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
                       const SizedBox(height: 8),
 
-                      // Login button (matches Figma: 340x, primary action)
+                      // ── CTA Button ──────────────────────────────────────
                       CustomButton(
-                        label: _isCustomer 
-                            ? (_isOtpSent ? 'Verify OTP' : 'Send OTP') 
+                        label: _isCustomer
+                            ? (_isOtpSent ? 'Verify OTP' : 'Send OTP')
                             : AppStrings.login,
                         onPressed: _handleLogin,
                         isLoading: _isLoading,
-                        backgroundColor: AppColors.primaryBlue,
+                        backgroundColor: AppColors.brandGreen,
                       )
                           .animate(delay: 500.ms)
                           .fadeIn(duration: 400.ms)
@@ -448,25 +539,22 @@ class _LoginScreenState extends State<LoginScreen> {
                       // Divider
                       Row(
                         children: [
-                          Expanded(child: Divider(color: AppColors.border.withValues(alpha: 0.5))),
+                          Expanded(child: Divider(color: AppColors.border.withValues(alpha: 0.6))),
                           const Padding(
                             padding: EdgeInsets.symmetric(horizontal: 16),
                             child: Text(
                               AppStrings.orContinueWith,
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: AppColors.textMuted,
-                              ),
+                              style: TextStyle(fontSize: 13, color: AppColors.textMuted),
                             ),
                           ),
-                          Expanded(child: Divider(color: AppColors.border.withValues(alpha: 0.5))),
+                          Expanded(child: Divider(color: AppColors.border.withValues(alpha: 0.6))),
                         ],
                       ),
 
                       const SizedBox(height: 20),
 
                       // Google sign-in
-                      const GoogleSignInButton()
+                      _GoogleSignInButton()
                           .animate(delay: 600.ms)
                           .fadeIn(duration: 400.ms),
 
@@ -478,10 +566,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         children: [
                           const Text(
                             AppStrings.dontHaveAccount,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: AppColors.textSecondary,
-                            ),
+                            style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
                           ),
                           GestureDetector(
                             onTap: () => context.go('/auth/register'),
@@ -489,37 +574,70 @@ class _LoginScreenState extends State<LoginScreen> {
                               AppStrings.signUp,
                               style: TextStyle(
                                 fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.primaryBlue,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.brandGreen,
                               ),
                             ),
                           ),
                         ],
                       ),
-                      
+
                       const SizedBox(height: 32),
 
-                      // Quick Demo Access
-                      const Text(
-                        'Quick Demo Access',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textSecondary,
+                      // ── Quick Demo Access ──────────────────────────────
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: AppColors.bgWhite,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: AppColors.brandGreen.withValues(alpha: 0.12)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.brandGreen.withValues(alpha: 0.05),
+                              blurRadius: 16,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          _buildDemoButton(context, 'Customer', Iconsax.user, AppColors.primaryBlue, '/main/home'),
-                          _buildDemoButton(context, 'Driver', Iconsax.car, AppColors.accentOrange, '/driver-home'),
-                          _buildDemoButton(context, 'Tech', Iconsax.setting_2, AppColors.successDark, '/tech-tasks'),
-                          _buildDemoButton(context, 'Admin', Iconsax.shield_tick, AppColors.deepNavy, '/admin-home'),
-                        ],
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  width: 4,
+                                  height: 16,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.brandGreen,
+                                    borderRadius: BorderRadius.circular(2),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  'Quick Demo Access',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.textPrimary,
+                                    letterSpacing: 0.3,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                _buildDemoButton(context, 'Customer', Iconsax.user, AppColors.brandGreen, '/main/home'),
+                                _buildDemoButton(context, 'Driver', Iconsax.car, AppColors.accentOrange, '/driver-home'),
+                                _buildDemoButton(context, 'Tech', Iconsax.setting_2, AppColors.brandGreenMid, '/tech-tasks'),
+                                _buildDemoButton(context, 'Admin', Iconsax.shield_tick, AppColors.deepNavy, '/admin-home'),
+                              ],
+                            ),
+                          ],
+                        ),
                       ).animate(delay: 700.ms).fadeIn().slideY(begin: 0.1, end: 0),
 
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 20),
                     ],
                   ),
                 ),
@@ -537,19 +655,19 @@ class _LoginScreenState extends State<LoginScreen> {
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.1),
               shape: BoxShape.circle,
-              border: Border.all(color: color.withValues(alpha: 0.3)),
+              border: Border.all(color: color.withValues(alpha: 0.25)),
             ),
-            child: Icon(icon, color: color, size: 28),
+            child: Icon(icon, color: color, size: 24),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Text(
             label,
             style: TextStyle(
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: FontWeight.w700,
               color: color,
             ),
@@ -560,3 +678,62 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
+/// Inline Google Sign-In button (no external class dependency)
+class _GoogleSignInButton extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      height: 52,
+      decoration: BoxDecoration(
+        color: AppColors.bgWhite,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: () {},
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Google G icon rendered via Text
+              Container(
+                width: 24,
+                height: 24,
+                decoration: const BoxDecoration(shape: BoxShape.circle),
+                child: const Text(
+                  'G',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF4285F4),
+                    height: 1.4,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              const Text(
+                'Continue with Google',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

@@ -156,7 +156,7 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget> with SingleTicker
             ),
             children: [
               TileLayer(
-                urlTemplate: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
+                urlTemplate: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
                 userAgentPackageName: 'com.roadrobos.app',
                 tileProvider: CancellableNetworkTileProvider(),
               ),

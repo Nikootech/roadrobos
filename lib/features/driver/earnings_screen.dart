@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../core/theme/app_colors.dart';
+import '../../shared/widgets/bottom_nav_bar.dart';
 
 /// Driver Earnings History matching Figma Screen [17]
 class EarningsScreen extends StatelessWidget {
@@ -15,10 +16,7 @@ class EarningsScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: AppColors.deepNavy,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: Colors.white),
-          onPressed: () => context.pop(),
-        ),
+        automaticallyImplyLeading: false,
         title: const Text(
           'Earnings Overview',
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),
@@ -48,12 +46,15 @@ class EarningsScreen extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 32),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
-                  child: const Text('Cash Out to Bank', style: TextStyle(color: AppColors.deepNavy, fontWeight: FontWeight.w700, fontSize: 16)),
+                GestureDetector(
+                  onTap: () => context.push('/driver-bank-withdrawal'),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                    child: const Text('Cash Out to Bank', style: TextStyle(color: AppColors.deepNavy, fontWeight: FontWeight.w700, fontSize: 16)),
+                  ),
                 )
               ],
             ),
@@ -101,6 +102,21 @@ class EarningsScreen extends StatelessWidget {
             ),
           )
         ],
+      ),
+      bottomNavigationBar: CustomBottomNavBar(
+        currentIndex: 2,
+        items: const [
+          NavItemData(icon: Iconsax.home, activeIcon: Iconsax.home5, label: 'Home'),
+          NavItemData(icon: Iconsax.car, activeIcon: Iconsax.car5, label: 'Rides'),
+          NavItemData(icon: Iconsax.wallet, activeIcon: Iconsax.wallet5, label: 'Earnings'),
+          NavItemData(icon: Iconsax.user, activeIcon: Iconsax.user, label: 'Profile'),
+        ],
+        onTap: (index) {
+          if (index == 0) context.pushReplacement('/driver-home');
+          if (index == 1) context.pushReplacement('/driver-rides');
+          if (index == 2) return;
+          if (index == 3) context.pushReplacement('/driver-profile');
+        },
       ),
     );
   }

@@ -57,15 +57,15 @@ import '../features/support/help_center_screen.dart';
 
 // Screens — Driver & Technician
 import '../features/driver/driver_home_screen.dart';
+import '../features/driver/driver_rides_screen.dart';
 import '../features/driver/driver_assigned_screen.dart';
 import '../features/driver/earnings_screen.dart';
-import '../features/driver/driver_license_upload_screen.dart';
-import '../features/driver/driver_verification_pending_screen.dart';
+import '../features/driver/documents_upload_screen.dart';
+import '../features/driver/verification_pending_screen.dart';
 import '../features/driver/driver_verification_success_screen.dart';
 import '../features/driver/driver_ride_request_screen.dart';
 import '../features/driver/driver_bank_withdrawal_screen.dart';
 import '../features/driver/driver_profile_screen.dart';
-import '../features/driver/driver_document_upload_screen.dart';
 import '../features/technician/task_list_screen.dart';
 import '../features/technician/job_card_screen.dart';
 import '../features/technician/job_card_details_screen.dart';
@@ -521,6 +521,13 @@ class AppRouter {
         ),
       ),
       GoRoute(
+        path: '/driver-rides',
+        pageBuilder: (context, state) => AppTransitions.fade(
+          child: const DriverRidesScreen(),
+          state: state,
+        ),
+      ),
+      GoRoute(
         path: '/driver-assigned',
         pageBuilder: (context, state) => AppTransitions.slideUp(
           child: const DriverAssignedScreen(),
@@ -530,14 +537,14 @@ class AppRouter {
       GoRoute(
         path: '/driver-license-upload',
         pageBuilder: (context, state) => AppTransitions.slideUp(
-          child: const DriverLicenseUploadScreen(),
+          child: const DocumentsUploadScreen(),
           state: state,
         ),
       ),
       GoRoute(
         path: '/driver-verification-pending',
         pageBuilder: (context, state) => AppTransitions.fade(
-          child: const DriverVerificationPendingScreen(),
+          child: const VerificationPendingScreen(),
           state: state,
         ),
       ),
@@ -572,7 +579,7 @@ class AppRouter {
       GoRoute(
         path: '/driver/documents',
         pageBuilder: (context, state) => AppTransitions.slideUp(
-          child: const DriverDocumentUploadScreen(),
+          child: const DocumentsUploadScreen(),
           state: state,
         ),
       ),

@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:latlong2/latlong.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/custom_button.dart';
+import '../../shared/widgets/live_map_widget.dart';
 
 /// Driver Assigned Screen matching Figma Screen [9]
 class DriverAssignedScreen extends StatefulWidget {
@@ -21,40 +23,13 @@ class _DriverAssignedScreenState extends State<DriverAssignedScreen> {
     return Scaffold(
       backgroundColor: AppColors.bgLightGrey,
       body: Stack(
+        fit: StackFit.expand,
         children: [
           // Map Background Section
           Positioned.fill(
-            child: Container(
-              color: const Color(0xFFE2E8F0),
-              child: Stack(
-                children: [
-                  // Abstract route
-                  Positioned(
-                    top: 250,
-                    left: 100,
-                    child: Container(
-                      width: 150,
-                      height: 6,
-                      decoration: BoxDecoration(color: AppColors.primaryBlue.withValues(alpha: 0.6), borderRadius: BorderRadius.circular(3)),
-                    ),
-                  ),
-                   const Positioned(
-                    top: 236,
-                    left: 236,
-                    child: Icon(Icons.location_on, size: 40, color: AppColors.dangerRed),
-                  ),
-                   Positioned(
-                    top: 236,
-                    left: 80,
-                    child: Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(color: AppColors.primaryBlue, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 3)),
-                      child: const Icon(Icons.directions_car, color: Colors.white, size: 16),
-                    ),
-                  ),
-                ],
-              ),
+            child: LiveMapWidget(
+              height: MediaQuery.of(context).size.height,
+              captainLocation: const LatLng(12.9716, 77.5946),
             ),
           ),
 
