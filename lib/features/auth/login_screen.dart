@@ -71,7 +71,7 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 24),
               _buildRoleTile(context, 'Customer', Iconsax.user, AppColors.brandGreen, '/main/home'),
               _buildRoleTile(context, 'Driver', Iconsax.car, AppColors.accentOrange, '/driver-home'),
-              _buildRoleTile(context, 'Technician', Iconsax.setting_2, AppColors.brandGreenMid, '/tech-tasks'),
+              _buildRoleTile(context, 'Technician', Iconsax.setting_2, AppColors.brandGreenMid, '/tech-dashboard'),
               _buildRoleTile(context, 'Admin', Iconsax.shield_tick, AppColors.deepNavy, '/admin-home'),
               const SizedBox(height: 8),
             ],
@@ -629,7 +629,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               children: [
                                 _buildDemoButton(context, 'Customer', Iconsax.user, AppColors.brandGreen, '/main/home'),
                                 _buildDemoButton(context, 'Driver', Iconsax.car, AppColors.accentOrange, '/driver-home'),
-                                _buildDemoButton(context, 'Tech', Iconsax.setting_2, AppColors.brandGreenMid, '/tech-tasks'),
+                                _buildDemoButton(context, 'Tech', Iconsax.setting_2, AppColors.brandGreenMid, '/tech-dashboard'),
                                 _buildDemoButton(context, 'Admin', Iconsax.shield_tick, AppColors.deepNavy, '/admin-home'),
                               ],
                             ),

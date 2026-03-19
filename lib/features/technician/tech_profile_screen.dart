@@ -80,9 +80,20 @@ class TechProfileScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 24),
             // Menu
-            _buildMenuItem(Iconsax.book, 'Service Manuals', 'Browse technical guides'),
-            _buildMenuItem(Iconsax.wallet, 'Earnings', 'View your payouts & incentives'),
-            _buildMenuItem(Iconsax.support, 'Technical Support', 'Contact admin desk'),
+            _buildMenuItem(Iconsax.book, 'Service Manuals', 'Browse technical guides', () {
+              HapticFeedback.lightImpact();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Service Manuals coming soon!'), backgroundColor: Color(0xFF1A237E)),
+              );
+            }),
+            _buildMenuItem(Iconsax.wallet, 'Earnings', 'View your payouts & incentives', () {
+              HapticFeedback.lightImpact();
+              context.push('/tech-earnings');
+            }),
+            _buildMenuItem(Iconsax.support, 'Technical Support', 'Contact admin desk', () {
+              HapticFeedback.lightImpact();
+              context.push('/chat');
+            }),
             
             const SizedBox(height: 32),
             SizedBox(
@@ -123,25 +134,28 @@ class TechProfileScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildMenuItem(IconData icon, String title, String subtitle) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
-      child: Row(
-        children: [
-          Icon(icon, color: AppColors.textPrimary, size: 22),
-          const SizedBox(width: 16),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-              Text(subtitle, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-            ],
-          ),
-          const Spacer(),
-          const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.textSecondary),
-        ],
+  Widget _buildMenuItem(IconData icon, String title, String subtitle, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+        child: Row(
+          children: [
+            Icon(icon, color: AppColors.textPrimary, size: 22),
+            const SizedBox(width: 16),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(subtitle, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+              ],
+            ),
+            const Spacer(),
+            const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.textSecondary),
+          ],
+        ),
       ),
     );
   }

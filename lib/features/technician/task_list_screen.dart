@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../profile/user_provider.dart';
+// import '../profile/user_provider.dart'; // Removed unused import
 import 'technician_provider.dart';
 
 /// Technician Task List matching Figma Screen [86] & [78]
@@ -75,7 +75,7 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final userState = ref.watch(userProvider);
+    // final userState = ref.watch(userProvider); // Removed unused variable
     final activeJob = ref.watch(technicianProvider);
     final today = DateFormat('EEEE, d MMM').format(DateTime.now());
 
@@ -95,7 +95,7 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
                     children: [
                       Text(today, style: const TextStyle(color: Colors.grey, fontSize: 13, fontWeight: FontWeight.w500)),
                       const SizedBox(height: 4),
-                      Text('Good Morning, ${userState.name}', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Color(0xFF1A237E))),
+                      const Text('Service Tasks', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Color(0xFF1A237E))),
                     ],
                   ),
                   GestureDetector(

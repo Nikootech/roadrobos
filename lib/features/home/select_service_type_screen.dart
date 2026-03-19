@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
@@ -67,7 +68,7 @@ class SelectServiceTypeScreen extends StatelessWidget {
                 '/car-service-booking',
               ),
               const SizedBox(height: 16),
-              _buildServiceCategoryCard(
+              _buildEmergencyServiceCard(
                 context,
                 'Emergency Help',
                 'Roadside assistance 24/7',
@@ -88,6 +89,51 @@ class SelectServiceTypeScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Widget _buildEmergencyServiceCard(BuildContext context, String title, String desc, IconData icon, Color color, String route) {
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.heavyImpact();
+        context.push('/emergency-help');
+      },
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: AppColors.dangerRed.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: AppColors.dangerRed.withValues(alpha: 0.1)),
+          boxShadow: [
+            BoxShadow(color: color.withValues(alpha: 0.05), blurRadius: 20, offset: const Offset(0, 8)),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(icon, color: color, size: 28),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                  const SizedBox(height: 4),
+                  Text(desc, style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                ],
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios_rounded, size: 16, color: color.withValues(alpha: 0.5)),
+          ],
+        ),
+      ),
+    ).animate().fadeIn(duration: 400.ms).slideX(begin: 0.1, end: 0);
   }
 
   Widget _buildServiceCategoryCard(BuildContext context, String title, String desc, IconData icon, Color color, String route) {

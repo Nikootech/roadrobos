@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/bottom_nav_bar.dart';
 
+/// Driver Profile Screen — Premium Overhaul
 class DriverProfileScreen extends StatelessWidget {
   const DriverProfileScreen({super.key});
 
@@ -12,93 +15,139 @@ class DriverProfileScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.bgLightGrey,
       appBar: AppBar(
-        title: const Text('Captain Profile', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+        title: const Text(
+          'Captain Profile',
+          style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppColors.deepNavy, letterSpacing: -0.5),
+        ),
         backgroundColor: Colors.white,
         elevation: 0,
         automaticallyImplyLeading: false,
         actions: [
-          IconButton(
-            icon: const Icon(Iconsax.setting, color: AppColors.textPrimary),
-            onPressed: () => context.push('/account-settings'),
+          Container(
+            margin: const EdgeInsets.only(right: 8),
+            child: IconButton(
+              icon: const Icon(Iconsax.setting, color: AppColors.textPrimary),
+              onPressed: () {
+                HapticFeedback.lightImpact();
+                context.push('/account-settings');
+              },
+            ),
           ),
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
         child: Column(
           children: [
-            // Profile Header
+            // Profile Card (Premium)
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)],
+                borderRadius: BorderRadius.circular(32),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 20,
+                    offset: Offset(0, 10),
+                  )
+                ],
               ),
               child: Column(
                 children: [
-                   CircleAvatar(
-                    radius: 50,
-                    backgroundColor: AppColors.primaryBlue.withValues(alpha: 0.1),
-                    child: const Icon(Iconsax.user, size: 50, color: AppColors.primaryBlue),
+                  Stack(
+                    alignment: Alignment.bottomRight,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.2), width: 2),
+                        ),
+                        child: const CircleAvatar(
+                          radius: 54,
+                          backgroundColor: AppColors.bgLightGrey,
+                          backgroundImage: NetworkImage('https://i.pravatar.cc/150?u=captain'),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: const BoxDecoration(color: AppColors.successGreen, shape: BoxShape.circle),
+                        child: const Icon(Icons.check, color: Colors.white, size: 14),
+                      ),
+                    ],
                   ),
+                  const SizedBox(height: 20),
+                  const Text('Rajesh Kumar', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: AppColors.textPrimary)),
+                  const SizedBox(height: 4),
+                  const Text('Senior Captain • ID: BLR-49281', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600, fontSize: 13)),
                   const SizedBox(height: 16),
-                  const Text('Rajesh Kumar', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-                  const Text('Senior Captain • ID: BLR-49281', style: TextStyle(color: AppColors.textSecondary)),
-                  const SizedBox(height: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    decoration: BoxDecoration(color: AppColors.successGreen.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
-                    child: const Text('ACTIVE', style: TextStyle(color: AppColors.successGreen, fontSize: 12, fontWeight: FontWeight.bold)),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: AppColors.successGreen.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(width: 8, height: 8, decoration: const BoxDecoration(color: AppColors.successGreen, shape: BoxShape.circle)),
+                        const SizedBox(width: 8),
+                        const Text('ONLINE & ACTIVE', style: TextStyle(color: AppColors.successGreen, fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 0.5)),
+                      ],
+                    ),
                   ),
                 ],
               ),
-            ),
+            ).animate().fadeIn().slideY(begin: 0.1, end: 0),
+            
             const SizedBox(height: 24),
-            // Stats
+            
+            // Stats Grid
             Row(
               children: [
-                _buildStat('Total Rides', '1.2k', Iconsax.car),
+                _buildStat('Rides', '1.2k', Iconsax.car, AppColors.primaryBlue),
                 const SizedBox(width: 12),
-                _buildStat('Rating', '4.8', Iconsax.star),
+                _buildStat('Rating', '4.8', Iconsax.star, Colors.orange),
                 const SizedBox(width: 12),
-                _buildStat('Acceptance', '98%', Iconsax.task_square),
+                _buildStat('Exp', '3y', Iconsax.award, AppColors.successGreen),
               ],
-            ),
+            ).animate().fadeIn(delay: 200.ms),
+
             const SizedBox(height: 24),
-            // Menu
-            InkWell(
-              onTap: () => context.push('/driver/documents'),
-              child: _buildMenuItem(Iconsax.setting_4, 'Documents & Verification', 'Manage DL, RC, and proofs'),
-            ),
-            InkWell(
-              onTap: () => context.pushReplacement('/driver-rides'),
-              child: _buildMenuItem(Iconsax.clock, 'Ride History', 'View past trips and logs'),
-            ),
-            InkWell(
-              onTap: () => context.pushReplacement('/driver-earnings'),
-              child: _buildMenuItem(Iconsax.wallet, 'Earnings', 'View your payouts & incentives'),
-            ),
-            InkWell(
-              onTap: () => context.push('/help-center'),
-              child: _buildMenuItem(Iconsax.support, 'Help Center', 'Contact admin desk'),
-            ),
+            
+            // Menu Section
+            _buildSectionHeader('Management'),
+            const SizedBox(height: 12),
+            _buildPremiumMenuItem(Iconsax.document_text, 'Documents & Verification', 'DL, RC, Insurance', () => context.push('/driver/documents')),
+            _buildPremiumMenuItem(Iconsax.wallet, 'Wallet & Payments', 'Balance, History, Payouts', () => context.pushReplacement('/driver-earnings')),
+            
+            const SizedBox(height: 16),
+            _buildSectionHeader('Performance'),
+            const SizedBox(height: 12),
+            _buildPremiumMenuItem(Iconsax.chart_2, 'Analytics', 'Weekly reports & stats', () => _showAnalyticsBottomSheet(context)),
+            _buildPremiumMenuItem(Iconsax.star, 'Reviews', 'Passenger feedback', () => _showReviewsBottomSheet(context)),
+            _buildPremiumMenuItem(Iconsax.message_question, 'Help & Support', 'FAQs & Contact Support', () => context.push('/help-center')),
             
             const SizedBox(height: 32),
+            
+            // Sign Out
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => context.go('/auth/login'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.dangerRed.withValues(alpha: 0.1),
-                  foregroundColor: AppColors.dangerRed,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              child: TextButton(
+                onPressed: () {
+                  HapticFeedback.heavyImpact();
+                  context.go('/auth/login');
+                },
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  backgroundColor: AppColors.dangerRed.withValues(alpha: 0.08),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                 ),
-                child: const Text('Sign Out', style: TextStyle(fontWeight: FontWeight.bold)),
+                child: const Text('Sign Out', style: TextStyle(color: AppColors.dangerRed, fontWeight: FontWeight.w900, fontSize: 16)),
               ),
             ),
+            const SizedBox(height: 100), // Space for bottom nav
           ],
         ),
       ),
@@ -106,59 +155,307 @@ class DriverProfileScreen extends StatelessWidget {
         currentIndex: 3,
         items: const [
           NavItemData(icon: Iconsax.home, activeIcon: Iconsax.home5, label: 'Home'),
-          NavItemData(icon: Iconsax.car, activeIcon: Iconsax.car5, label: 'Rides'),
           NavItemData(icon: Iconsax.wallet, activeIcon: Iconsax.wallet5, label: 'Earnings'),
-          NavItemData(icon: Iconsax.user, activeIcon: Iconsax.user, label: 'Profile'),
+          NavItemData(icon: Iconsax.star, activeIcon: Iconsax.star5, label: 'Ratings'),
+          NavItemData(icon: Iconsax.user, activeIcon: Iconsax.user, label: 'Account'),
         ],
         onTap: (index) {
           if (index == 0) context.pushReplacement('/driver-home');
-          if (index == 1) context.pushReplacement('/driver-rides');
-          if (index == 2) context.pushReplacement('/driver-earnings');
+          if (index == 1) context.pushReplacement('/driver-earnings');
+          if (index == 2) context.pushReplacement('/driver-rides');
           if (index == 3) return;
         },
       ),
     );
   }
 
-  Widget _buildStat(String label, String value, IconData icon) {
+  Widget _buildSectionHeader(String title) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Text(
+        title.toUpperCase(),
+        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.textSecondary, letterSpacing: 1.5),
+      ),
+    );
+  }
+
+  Widget _buildStat(String label, String value, IconData icon, Color color) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10)],
+        ),
         child: Column(
           children: [
-            Icon(icon, color: AppColors.primaryBlue, size: 20),
+            Icon(icon, color: color, size: 20),
             const SizedBox(height: 8),
-            Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-            Text(label, style: const TextStyle(fontSize: 10, color: AppColors.textSecondary)),
+            Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.textPrimary)),
+            Text(label, style: const TextStyle(fontSize: 10, color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildMenuItem(IconData icon, String title, String subtitle) {
+  Widget _buildPremiumMenuItem(IconData icon, String title, String subtitle, VoidCallback onTap) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10)],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            HapticFeedback.lightImpact();
+            onTap();
+          },
+          borderRadius: BorderRadius.circular(20),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(color: AppColors.bgLightGrey, borderRadius: BorderRadius.circular(12)),
+                  child: Icon(icon, color: AppColors.deepNavy, size: 22),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title, style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.textPrimary, fontSize: 15)),
+                      Text(subtitle, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w500)),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.textMuted),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showAnalyticsBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.75,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Weekly Analytics', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: AppColors.deepNavy)),
+                  IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Iconsax.close_circle, color: Colors.grey)),
+                ],
+              ),
+              const SizedBox(height: 24),
+              // Custom Chart
+              Container(
+                height: 200,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.bgLightGrey,
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    _buildBar('Mon', 0.4),
+                    _buildBar('Tue', 0.7),
+                    _buildBar('Wed', 0.55),
+                    _buildBar('Thu', 0.9),
+                    _buildBar('Fri', 0.6),
+                    _buildBar('Sat', 0.8),
+                    _buildBar('Sun', 0.3),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 32),
+              _buildStatRow(Iconsax.timer_1, 'Online Hours', '42.5h', '+12% from last week'),
+              const SizedBox(height: 16),
+              _buildStatRow(Iconsax.car, 'Total Rides', '142', '+8% from last week'),
+              const SizedBox(height: 16),
+              _buildStatRow(Iconsax.wallet_2, 'Net Earnings', '₹12,450', '₹850/avg daily'),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showReviewsBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.75,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        ),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Passenger Reviews', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: AppColors.deepNavy)),
+                IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Iconsax.close_circle, color: Colors.grey)),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                const Text('4.8', style: TextStyle(fontSize: 48, fontWeight: FontWeight.w900, color: AppColors.textPrimary)),
+                const SizedBox(width: 16),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: List.generate(5, (index) => Icon(Iconsax.star1, color: index < 4 ? Colors.orange : Colors.grey[300], size: 20)),
+                    ),
+                    const Text('Based on 1,240 reviews', style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            Expanded(
+              child: ListView(
+                children: [
+                  _buildReviewItem('Ankit Sharma', '4.5', '2 hours ago', 'Great driver, reached on time and the car was very clean.'),
+                  _buildReviewItem('Priya Patel', '5.0', 'Yesterday', 'Very polite behavior and safe driving. Highly recommended!'),
+                  _buildReviewItem('Suresh Raina', '4.0', '2 days ago', 'Good experience but traffic was bad. Driver handled it well.'),
+                  _buildReviewItem('Amit Mishra', '5.0', '3 days ago', 'Excellent service!'),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBar(String label, double percentage) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        Container(
+          width: 24,
+          height: 140 * percentage,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [AppColors.primaryBlue, AppColors.primaryBlue.withValues(alpha: 0.6)],
+            ),
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ).animate().scaleY(begin: 0, end: 1, duration: 800.ms, curve: Curves.easeOutBack),
+        const SizedBox(height: 8),
+        Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
+      ],
+    );
+  }
+
+  Widget _buildStatRow(IconData icon, String label, String value, String trend) {
+    return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(
+        color: AppColors.bgLightGrey,
+        borderRadius: BorderRadius.circular(20),
+      ),
       child: Row(
         children: [
-          Icon(icon, color: AppColors.textPrimary, size: 22),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+            child: Icon(icon, color: AppColors.primaryBlue, size: 20),
+          ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-                Text(subtitle, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
+                Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.textPrimary)),
               ],
             ),
           ),
-          const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.textSecondary),
+          Text(trend, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.successGreen)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReviewItem(String name, String rating, String time, String comment) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        border: Border.all(color: AppColors.bgLightGrey),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(name, style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.textPrimary, fontSize: 15)),
+              Text(time, style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              const Icon(Iconsax.star1, color: Colors.orange, size: 14),
+              const SizedBox(width: 4),
+              Text(rating, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: AppColors.textPrimary)),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(comment, style: const TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.4)),
         ],
       ),
     );
   }
 }
-

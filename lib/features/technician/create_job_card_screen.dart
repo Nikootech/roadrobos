@@ -107,9 +107,16 @@ class _CreateJobCardScreenState extends ConsumerState<CreateJobCardScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
-        leading: TextButton(
+        leading: IconButton(
           onPressed: () => context.pop(),
-          child: const Text('Cancel', style: TextStyle(color: Colors.grey, fontSize: 16)),
+          icon: Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: Colors.grey.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.close_rounded, color: Colors.grey, size: 18),
+          ),
         ),
         title: Text(
           'Create Job Card', 

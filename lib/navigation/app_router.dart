@@ -54,12 +54,14 @@ import '../features/profile/language_screen.dart';
 import '../features/profile/sos_setup_screen.dart';
 import '../features/profile/service_reminders_screen.dart';
 import '../features/support/help_center_screen.dart';
+import '../features/home/emergency_help_screen.dart';
 
 // Screens — Driver & Technician
 import '../features/driver/driver_home_screen.dart';
 import '../features/driver/driver_rides_screen.dart';
 import '../features/driver/driver_assigned_screen.dart';
 import '../features/driver/earnings_screen.dart';
+import '../features/technician/tech_earnings_screen.dart';
 import '../features/driver/documents_upload_screen.dart';
 import '../features/driver/verification_pending_screen.dart';
 import '../features/driver/driver_verification_success_screen.dart';
@@ -87,6 +89,8 @@ import '../features/admin/admin_management_screen.dart';
 import '../features/admin/service_feedback_analytics_screen.dart';
 import '../features/admin/manage_offers_screen.dart';
 import '../features/admin/customer_database_screen.dart';
+import '../features/admin/driver_database_screen.dart';
+import '../features/admin/technician_database_screen.dart';
 import '../features/admin/export_reports_screen.dart';
 import '../features/admin/manage_reminders_screen.dart';
 import '../features/admin/manpower_supply_screen.dart';
@@ -285,6 +289,13 @@ class AppRouter {
         path: '/live-tracking',
         pageBuilder: (context, state) => AppTransitions.slideUp(
           child: const LiveTrackingScreen(),
+          state: state,
+        ),
+      ),
+      GoRoute(
+        path: '/emergency-help',
+        pageBuilder: (context, state) => AppTransitions.slideUp(
+          child: const EmergencyHelpScreen(),
           state: state,
         ),
       ),
@@ -598,6 +609,13 @@ class AppRouter {
         ),
       ),
       GoRoute(
+        path: '/tech-earnings',
+        pageBuilder: (context, state) => AppTransitions.slideRight(
+          child: const TechEarningsScreen(),
+          state: state,
+        ),
+      ),
+      GoRoute(
         path: '/tech-tasks',
         pageBuilder: (context, state) => AppTransitions.scaleIn(
           child: const TaskListScreen(),
@@ -703,6 +721,20 @@ class AppRouter {
         path: '/admin-customer-database',
         pageBuilder: (context, state) => AppTransitions.slideRight(
           child: const CustomerDatabaseScreen(),
+          state: state,
+        ),
+      ),
+      GoRoute(
+        path: '/admin-driver-database',
+        pageBuilder: (context, state) => AppTransitions.slideRight(
+          child: const DriverDatabaseScreen(),
+          state: state,
+        ),
+      ),
+      GoRoute(
+        path: '/admin-technician-database',
+        pageBuilder: (context, state) => AppTransitions.slideRight(
+          child: const TechnicianDatabaseScreen(),
           state: state,
         ),
       ),

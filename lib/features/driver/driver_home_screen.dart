@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:latlong2/latlong.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../shared/widgets/glass_card.dart';
-import '../../shared/widgets/live_map_widget.dart';
 import '../../shared/widgets/bottom_nav_bar.dart';
 import 'providers/driver_state_provider.dart';
 import 'widgets/ride_request_overlay.dart';
@@ -20,7 +18,6 @@ class DriverHomeScreen extends ConsumerStatefulWidget {
 }
 
 class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
-
   @override
   Widget build(BuildContext context) {
     final earnings = ref.watch(earningsProvider);
@@ -28,144 +25,436 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
     final rideRequests = ref.watch(rideRequestsProvider);
 
     return Scaffold(
-      extendBody: true, // For bottom nav bar to float over map
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          // 85% screen = LiveMapWidget
-          Positioned.fill(
-            child: LiveMapWidget(
-              height: MediaQuery.of(context).size.height,
-              captainLocation: const LatLng(12.9716, 77.5946),
-            ),
-          ),
-          
-          // Offline overlay or Incoming Ride Cards
-          if (!isOnline)
-            Positioned.fill(
-              child: Container(
-                color: Colors.black.withValues(alpha: 0.7),
-                child: Center(
-                  child: const GlassCard(
-                    blur: 20,
-                    opacity: 0.1,
-                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                    child: Text('You are offline.\nGo online to start receiving rides', textAlign: TextAlign.center, style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.w600)),
-                  ).animate().fadeIn().scale(),
-                ),
-              ),
-            ),
-            
-          // Gradient to fade map at top
-          Positioned(
-            top: 0, left: 0, right: 0, height: 140,
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter, end: Alignment.bottomCenter,
-                  colors: [Colors.black.withValues(alpha: 0.6), Colors.transparent]
-                )
-              ),
-            ),
-          ),
-
-          // Top: Earnings & Bonus
-          Positioned(
-            top: 0, left: 0, right: 0,
-            child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: GlassCard(
-                blur: 20,
-                opacity: 0.85,
-                border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.3)),
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      flex: 4,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Text('Earnings Today', style: TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w600)),
-                          FittedBox(fit: BoxFit.scaleDown, child: Text('₹${earnings.todayEarnings.toInt()}', style: const TextStyle(color: AppColors.deepNavy, fontSize: 24, fontWeight: FontWeight.w900))),
-                        ],
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Stack(
+          children: [
+            Column(
+              children: [
+                // Header (Profile & Notification)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                  child: Row(
+                    children: [
+                      InkWell(
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          context.pushReplacement('/driver-profile');
+                        },
+                        borderRadius: BorderRadius.circular(12),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.1), width: 2),
+                                image: const DecorationImage(
+                                  image: NetworkImage('https://i.pravatar.cc/150?u=driver'),
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 14),
+                            const Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('GOOD MORNING', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: AppColors.textSecondary, letterSpacing: 1)),
+                                Text('Rahul Sharma', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: AppColors.deepNavy, letterSpacing: -0.5)),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    Container(width: 1, height: 40, color: AppColors.border),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      flex: 4,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Text('Bonus Target', style: TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w600)),
-                          FittedBox(fit: BoxFit.scaleDown, child: Text('₹${(earnings.bonusTarget - earnings.bonusAchieved).toInt()} left', style: const TextStyle(color: AppColors.warningAmber, fontSize: 18, fontWeight: FontWeight.w800))),
-                        ],
+                      const Spacer(),
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: const BoxDecoration(color: AppColors.bgLightGrey, shape: BoxShape.circle),
+                        child: InkWell(
+                          onTap: () {
+                            HapticFeedback.lightImpact();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('You have no new notifications'), behavior: SnackBarBehavior.floating),
+                            );
+                          },
+                          child: Stack(
+                            children: [
+                              const Icon(Iconsax.notification, color: AppColors.deepNavy, size: 24),
+                              Positioned(
+                                top: 0,
+                                right: 0,
+                                child: Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: const BoxDecoration(
+                                    color: AppColors.dangerRed,
+                                    shape: BoxShape.circle,
+                                    border: Border(bottom: BorderSide(color: Colors.white, width: 2)),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ).animate().slideY(begin: -0.2).fadeIn(),
-            ),
-          ),
-          ),
 
-          // Online / Offline Toggle
-          Positioned(
-            top: 130, right: 16,
-            child: GestureDetector(
-              onTap: () => ref.read(mapStateProvider.notifier).toggleOnline(),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  color: isOnline ? AppColors.dangerRed : AppColors.successGreen,
-                  borderRadius: BorderRadius.circular(30),
-                  boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 4))],
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Map Status Card
+                        Container(
+                          width: double.infinity,
+                          height: 220,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(32),
+                            image: const DecorationImage(
+                              image: NetworkImage('https://static-maps.yandex.ru/1.x/?lang=en_US&ll=77.5946,12.9716&size=450,450&z=13&l=map&pt=77.5946,12.9716,pm2rdm'),
+                              fit: BoxFit.cover,
+                            ),
+                            boxShadow: [
+                              BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 20, offset: const Offset(0, 10)),
+                            ],
+                          ),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(32),
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  Colors.black.withValues(alpha: 0.2),
+                                  Colors.black.withValues(alpha: 0.5),
+                                ],
+                              ),
+                            ),
+                            padding: const EdgeInsets.all(24),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Row(
+                                  children: [
+                                    Container(
+                                      width: 8,
+                                      height: 8,
+                                      decoration: BoxDecoration(
+                                        color: isOnline ? AppColors.successGreen : AppColors.textMuted,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Text(
+                                      isOnline ? 'Currently Online' : 'Currently Offline',
+                                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 6),
+                                const Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    'Go online to receive rides',
+                                    style: TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w500),
+                                  ),
+                                ),
+                                const SizedBox(height: 20),
+                                GestureDetector(
+                                  onTap: () {
+                                    HapticFeedback.mediumImpact();
+                                    ref.read(mapStateProvider.notifier).toggleOnline();
+                                  },
+                                  child: Container(
+                                    height: 56,
+                                    width: double.infinity,
+                                    decoration: BoxDecoration(
+                                      color: isOnline ? AppColors.dangerRed : AppColors.successGreen,
+                                      borderRadius: BorderRadius.circular(20),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: (isOnline ? AppColors.dangerRed : AppColors.successGreen).withValues(alpha: 0.3),
+                                          blurRadius: 15,
+                                          offset: const Offset(0, 6),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Center(
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(isOnline ? Icons.power_settings_new_rounded : Iconsax.flash, color: Colors.white, size: 22),
+                                          const SizedBox(width: 12),
+                                          Text(
+                                            isOnline ? 'GO OFFLINE' : 'GO ONLINE',
+                                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: 0.5),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // Earnings Card (Premium Redesign)
+                        GestureDetector(
+                          onTap: () => context.pushReplacement('/driver-earnings'),
+                          child: Container(
+                            clipBehavior: Clip.antiAlias, // For background icon clipping
+                            padding: const EdgeInsets.all(28),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  Color(0xFF2563EB), // Blue 600
+                                  Color(0xFF3B82F6), // Blue 500
+                                  Color(0xFF1E40AF), // Blue 900
+                                ],
+                                stops: [0.0, 0.4, 1.0],
+                              ),
+                              borderRadius: BorderRadius.circular(32),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF2563EB).withValues(alpha: 0.35),
+                                  blurRadius: 25,
+                                  offset: const Offset(0, 12),
+                                ),
+                              ],
+                            ),
+                            child: Stack(
+                              children: [
+                                // Background Texture Icon
+                                Positioned(
+                                  right: -20,
+                                  bottom: -20,
+                                  child: Opacity(
+                                    opacity: 0.1,
+                                    child: Transform.rotate(
+                                      angle: -0.2,
+                                      child: const Icon(Iconsax.wallet, size: 140, color: Colors.white),
+                                    ),
+                                  ),
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        const Text('Earnings Today', style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 0.2)),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                          decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(20)),
+                                          child: const Row(
+                                            children: [
+                                              Icon(Icons.trending_up_rounded, color: Colors.white, size: 12),
+                                              SizedBox(width: 4),
+                                              Text('+12%', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800)),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Row(
+                                      crossAxisAlignment: CrossAxisAlignment.end,
+                                      children: [
+                                        const Padding(
+                                          padding: EdgeInsets.only(bottom: 8.0),
+                                          child: Text('₹', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w900)),
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text('${earnings.todayEarnings.toInt()}', style: const TextStyle(color: Colors.white, fontSize: 48, fontWeight: FontWeight.w900, letterSpacing: -1.5)),
+                                        const Padding(
+                                          padding: EdgeInsets.only(bottom: 8.0),
+                                          child: Text('.50', style: TextStyle(color: Colors.white70, fontSize: 22, fontWeight: FontWeight.w800)),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 32),
+                                    Row(
+                                      children: [
+                                        _buildMiniStat(Iconsax.car, '7', 'RIDES'),
+                                        Container(width: 1, height: 24, color: Colors.white24, margin: const EdgeInsets.symmetric(horizontal: 20)),
+                                        _buildMiniStat(Iconsax.timer_1, '4.2h', 'ONLINE'),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ).animate().fadeIn(delay: 100.ms).slideX(begin: 0.1, end: 0),
+
+                        const SizedBox(height: 32),
+
+                        // Quick Actions
+                        const Text('Quick Actions', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.deepNavy)),
+                        const SizedBox(height: 20),
+                        GridView.count(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                          childAspectRatio: 1.4,
+                          children: [
+                            _buildQuickAction('Incentives', Iconsax.gift, const Color(0xFFF97316), () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('My Incentives: Coming Soon!'), behavior: SnackBarBehavior.floating),
+                              );
+                            }),
+                            _buildQuickAction('Wallet', Iconsax.wallet, const Color(0xFF8B5CF6), () {
+                              context.push('/driver-bank-withdrawal');
+                            }),
+                            _buildQuickAction('Help Center', Iconsax.message_question, const Color(0xFF3B82F6), () {
+                              context.push('/help-center');
+                            }),
+                            _buildQuickAction('High Demand', Iconsax.direct_up, const Color(0xFFEC4899), () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Analyzing high demand zones...'), behavior: SnackBarBehavior.floating),
+                              );
+                            }),
+                          ],
+                        ),
+
+                        const SizedBox(height: 32),
+
+                        // Recent Rides
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text('Recent Rides', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.deepNavy)),
+                            TextButton(
+                              onPressed: () => context.pushReplacement('/driver-rides'),
+                              child: const Text('View All', style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.w800, fontSize: 13)),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        _buildRecentRide('Indiranagar to Koramangala', 'Today, 10:23 AM', '₹185.00', 'Completed'),
+                        const SizedBox(height: 100), // Bottom nav spacer
+                      ],
+                    ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.1),
+                  ),
                 ),
-                child: Row(
-                  children: [
-                    Icon(isOnline ? Icons.power_settings_new_rounded : Icons.play_arrow_rounded, color: Colors.white, size: 20),
-                    const SizedBox(width: 8),
-                    Text(isOnline ? 'GO OFFLINE' : 'GO ONLINE', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                  ],
-                ),
-              ).animate(target: isOnline ? 1 : 0).shimmer(),
+              ],
             ),
-          ),
-
-
-
-          if (isOnline && rideRequests.isNotEmpty)
-            RideRequestOverlay(
-              request: rideRequests.first,
-              onAccept: () {
-                ref.read(rideRequestsProvider.notifier).acceptRequest(rideRequests.first.id);
-                context.push('/driver-assigned'); // Or start active ride
-              },
-              onReject: () {
-                ref.read(rideRequestsProvider.notifier).rejectRequest(rideRequests.first.id);
-              },
-            ),
-        ],
+            if (isOnline && rideRequests.isNotEmpty)
+              RideRequestOverlay(
+                request: rideRequests.first,
+                onAccept: () {
+                  ref.read(rideRequestsProvider.notifier).acceptRequest(rideRequests.first.id);
+                  context.push('/driver-assigned');
+                },
+                onReject: () {
+                  ref.read(rideRequestsProvider.notifier).rejectRequest(rideRequests.first.id);
+                },
+              ),
+          ],
+        ),
       ),
       bottomNavigationBar: CustomBottomNavBar(
         currentIndex: 0,
         items: const [
           NavItemData(icon: Iconsax.home, activeIcon: Iconsax.home5, label: 'Home'),
-          NavItemData(icon: Iconsax.car, activeIcon: Iconsax.car5, label: 'Rides'),
           NavItemData(icon: Iconsax.wallet, activeIcon: Iconsax.wallet5, label: 'Earnings'),
-          NavItemData(icon: Iconsax.user, activeIcon: Iconsax.user, label: 'Profile'),
+          NavItemData(icon: Iconsax.star, activeIcon: Iconsax.star5, label: 'Ratings'),
+          NavItemData(icon: Iconsax.user, activeIcon: Iconsax.user, label: 'Account'),
         ],
         onTap: (index) {
           if (index == 0) return;
-          if (index == 1) context.pushReplacement('/driver-rides');
-          if (index == 2) context.pushReplacement('/driver-earnings');
+          if (index == 1) context.pushReplacement('/driver-earnings');
+          if (index == 2) context.pushReplacement('/driver-rides');
           if (index == 3) context.pushReplacement('/driver-profile');
         },
+      ),
+    );
+  }
+
+  Widget _buildMiniStat(IconData icon, String value, String label) {
+    return Row(
+      children: [
+        Icon(icon, color: Colors.white70, size: 14),
+        const SizedBox(width: 8),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(value, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900)),
+            Text(label, style: const TextStyle(color: Colors.white54, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 0.5)),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildQuickAction(String title, IconData icon, Color color, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onTap();
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4))],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+              child: Icon(icon, color: color, size: 20),
+            ),
+            Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRecentRide(String title, String time, String amount, String status) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: const BoxDecoration(color: AppColors.bgLightGrey, shape: BoxShape.circle),
+            child: const Icon(Iconsax.car, color: AppColors.deepNavy, size: 20),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: AppColors.textPrimary)),
+              Text(time, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w500)),
+            ]),
+          ),
+          Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+            Text(amount, style: const TextStyle(fontWeight: FontWeight.w900, color: AppColors.deepNavy, fontSize: 14)),
+            Text(status, style: const TextStyle(color: AppColors.successGreen, fontSize: 11, fontWeight: FontWeight.w800)),
+          ]),
+        ],
       ),
     );
   }

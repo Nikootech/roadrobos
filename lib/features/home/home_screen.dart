@@ -117,7 +117,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         const SizedBox(width: 12),
                         _buildMoreTile(context, 'Referral', Icons.card_giftcard_rounded, const Color(0xFFEC4899), '/referral'),
                         const SizedBox(width: 12),
-                        _buildMoreTile(context, 'Emergency', Iconsax.shield_slash, const Color(0xFFEF4444), '/sos-setup'),
+                        _buildMoreTile(context, 'Emergency', Iconsax.shield_slash, AppColors.dangerRed, '/sos-setup'),
                       ],
                     ),
                   ],

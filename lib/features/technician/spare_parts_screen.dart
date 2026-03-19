@@ -53,52 +53,70 @@ class _SparePartsScreenState extends ConsumerState<SparePartsScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: AppColors.textPrimary),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: Color(0xFF1A237E)),
           onPressed: () => context.pop(),
         ),
-        title: const Text('Parts Catalogue', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
+        title: const Text('Parts Catalogue', 
+          style: TextStyle(color: Color(0xFF1A237E), fontWeight: FontWeight.w900, letterSpacing: -0.5)),
+        centerTitle: false,
       ),
       body: Column(
         children: [
           Container(
             color: Colors.white,
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             child: Column(
               children: [
                 // Search Bar
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   decoration: BoxDecoration(
-                    color: AppColors.bgLightGrey,
-                    borderRadius: BorderRadius.circular(12),
+                    color: const Color(0xFFF1F2F4),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   child: TextField(
                     onChanged: (v) => setState(() => _searchQuery = v),
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                     decoration: const InputDecoration(
-                      icon: Icon(Iconsax.search_normal, size: 20, color: AppColors.textSecondary),
-                      hintText: 'Search parts...',
+                      icon: Icon(Iconsax.search_normal, size: 18, color: Color(0xFF1A237E)),
+                      hintText: 'Search Spare Parts...',
                       border: InputBorder.none,
-                      hintStyle: TextStyle(fontSize: 14, color: AppColors.textMuted),
+                      hintStyle: TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.normal),
                     ),
                   ),
                 ),
                 const SizedBox(height: 16),
                 // Categories
                 SizedBox(
-                  height: 36,
+                  height: 38,
                   child: ListView(
                     scrollDirection: Axis.horizontal,
                     children: ['All', 'Fluids', 'Brakes', 'Engine', 'Filters', 'Electrical', 'Accessories'].map((cat) {
                       final isSelected = _selectedCategory == cat;
                       return Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: ChoiceChip(
-                          label: Text(cat, style: TextStyle(fontSize: 12, color: isSelected ? Colors.white : AppColors.textPrimary)),
-                          selected: isSelected,
-                          onSelected: (val) => setState(() => _selectedCategory = cat),
-                          selectedColor: AppColors.primaryBlue,
-                          backgroundColor: Colors.white,
-                          side: BorderSide(color: isSelected ? AppColors.primaryBlue : AppColors.border),
+                        padding: const EdgeInsets.only(right: 10),
+                        child: GestureDetector(
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            setState(() => _selectedCategory = cat);
+                          },
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: isSelected ? const Color(0xFF1A237E) : const Color(0xFFF8F9FA),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: isSelected ? const Color(0xFF1A237E) : const Color(0xFFE5E9F0)),
+                            ),
+                            child: Center(
+                              child: Text(cat, 
+                                style: TextStyle(
+                                  fontSize: 12, 
+                                  fontWeight: FontWeight.bold,
+                                  color: isSelected ? Colors.white : Colors.grey[600],
+                                )),
+                            ),
+                          ),
                         ),
                       );
                     }).toList(),
@@ -136,7 +154,9 @@ class _SparePartsScreenState extends ConsumerState<SparePartsScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('${part.name} added to job!'),
-        backgroundColor: AppColors.primaryBlue,
+        backgroundColor: const Color(0xFF1A237E),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         duration: const Duration(seconds: 1),
       ),
     );
@@ -192,45 +212,85 @@ class _SparePartsScreenState extends ConsumerState<SparePartsScreen> {
   Widget _buildPartCard(Map<String, dynamic> part) {
     return GestureDetector(
       onTap: () {
-        HapticFeedback.selectionClick();
+        HapticFeedback.heavyImpact();
         _addPartToJob(part);
       },
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4))],
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFFE8EAF6)),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF1A237E).withValues(alpha: 0.04),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            )
+          ],
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: AppColors.bgLightGrey, borderRadius: BorderRadius.circular(12)),
-              child: Icon(part['icon'] as IconData, color: AppColors.primaryBlue, size: 24),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [const Color(0xFF1A237E).withValues(alpha: 0.1), const Color(0xFF3949AB).withValues(alpha: 0.05)],
+                ),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(part['icon'] as IconData, color: const Color(0xFF1A237E), size: 24),
             ),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(part['name'] as String, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                  Text(part['name'] as String, 
+                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: Color(0xFF1A237E))),
                   const SizedBox(height: 4),
-                  Text(part['category'] as String, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF1F2F4),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(part['category'] as String, 
+                      style: const TextStyle(color: Color(0xFF5E6AD2), fontSize: 10, fontWeight: FontWeight.bold)),
+                  ),
                 ],
               ),
             ),
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(part['price'] as String, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                Text(part['price'] as String, 
+                  style: const TextStyle(fontWeight: FontWeight.w900, color: Color(0xFF1A237E), fontSize: 16)),
                 const SizedBox(height: 4),
-                Text('${part['stock']} in stock', style: TextStyle(color: (part['stock'] as int) < 10 ? AppColors.dangerRed : AppColors.successGreen, fontSize: 11, fontWeight: FontWeight.w600)),
+                Row(
+                  children: [
+                    Container(
+                      width: 6, height: 6,
+                      decoration: BoxDecoration(
+                        color: (part['stock'] as int) < 10 ? Colors.red : Colors.green,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text('${part['stock']} IN STOCK', 
+                      style: TextStyle(
+                        color: (part['stock'] as int) < 10 ? Colors.red : Colors.green, 
+                        fontSize: 9, 
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.5,
+                      )),
+                  ],
+                ),
               ],
             ),
           ],
         ),
-      ).animate().fadeIn(delay: 50.ms).slideY(begin: 0.05, end: 0),
+      ).animate().fadeIn(delay: 50.ms).slideX(begin: 0.05, end: 0),
     );
   }
 }
