@@ -11,8 +11,133 @@ import '../../shared/widgets/shimmer_loading.dart';
 import 'admin_providers.dart';
 
 /// Admin Dashboard Overview matching Figma Screen [87]
-class AdminDashboardScreen extends StatelessWidget {
+class AdminDashboardScreen extends ConsumerStatefulWidget {
   const AdminDashboardScreen({super.key});
+
+  @override
+  ConsumerState<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
+}
+
+class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
+  String _selectedFilter = 'Today';
+
+  Future<void> _handleFilterSelection(String value) async {
+    if (value == 'Custom Range') {
+      final DateTimeRange? picked = await showDateRangePicker(
+        context: context,
+        firstDate: DateTime(2023),
+        lastDate: DateTime.now(),
+        builder: (context, child) {
+          return Theme(
+            data: Theme.of(context).copyWith(
+              colorScheme: const ColorScheme.light(
+                primary: AppColors.primaryBlue,
+                onPrimary: Colors.white,
+                onSurface: AppColors.textPrimary,
+              ),
+            ),
+            child: child!,
+          );
+        },
+      );
+      if (picked != null) {
+        final start = picked.start;
+        final end = picked.end;
+        setState(() {
+          _selectedFilter = '${start.day}/${start.month} - ${end.day}/${end.month}';
+        });
+      }
+    } else {
+      setState(() => _selectedFilter = value);
+    }
+  }
+
+  void _showSystemAlertDetails() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.5,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+        ),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(2)),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(color: AppColors.dangerRed.withValues(alpha: 0.1), shape: BoxShape.circle),
+                  child: const Icon(Iconsax.info_circle, color: AppColors.dangerRed),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('High Failure Rate Detected', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                      const Text('Bandra - Santa Cruz Zone', style: TextStyle(fontSize: 14, color: AppColors.textSecondary)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            const Divider(),
+            const SizedBox(height: 24),
+            _buildDetailRow('Root Cause', 'Potential network congestion or app version mismatch detected among 42 active drivers.', Iconsax.search_status),
+            const SizedBox(height: 16),
+            _buildDetailRow('Impact', 'Estimated 15% revenue loss in last 30 minutes. Customer wait times increased by 8 mins.', Iconsax.flash),
+            const Spacer(),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.deepNavy,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                child: const Text('Acknowledge & Notify Team', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String title, String desc, IconData icon) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 20, color: AppColors.primaryBlue),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textPrimary)),
+              const SizedBox(height: 4),
+              Text(desc, style: const TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.5)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,17 +187,32 @@ class AdminDashboardScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('Overview', style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: AppColors.border)),
-                  child: const Row(
-                    children: [
-                      Text('Today', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-                      SizedBox(width: 4),
-                      Icon(Icons.keyboard_arrow_down_rounded, size: 16)
-                    ],
+                PopupMenuButton<String>(
+                  onSelected: _handleFilterSelection,
+                  offset: const Offset(0, 40),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  itemBuilder: (context) => [
+                    _buildPopupItem('Today', Iconsax.calendar_1),
+                    _buildPopupItem('Yesterday', Iconsax.calendar_2),
+                    _buildPopupItem('Last 7 Days', Iconsax.calendar_tick),
+                    _buildPopupItem('Custom Range', Iconsax.calendar_search),
+                  ],
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: Row(
+                      children: [
+                        Text(_selectedFilter, style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                        const SizedBox(width: 4),
+                        const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: AppColors.primaryBlue)
+                      ],
+                    ),
                   ),
-                )
+                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -168,36 +308,69 @@ class AdminDashboardScreen extends StatelessWidget {
 
             const SizedBox(height: 32),
             // Minimal Alert Component
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColors.dangerRed.withValues(alpha: 0.05), 
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.dangerRed.withValues(alpha: 0.1)),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(color: AppColors.dangerRed.withValues(alpha: 0.1), shape: BoxShape.circle),
-                    child: const Icon(Iconsax.warning_2, color: AppColors.dangerRed, size: 20),
+            InkWell(
+              onTap: _showSystemAlertDetails,
+              borderRadius: BorderRadius.circular(20),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [AppColors.dangerRed.withValues(alpha: 0.05), Colors.white],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('System Alert', style: GoogleFonts.outfit(fontWeight: FontWeight.w800, color: AppColors.dangerRed, fontSize: 14)),
-                        const Text('High booking failure rate detected in Bandra zone.', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-                      ],
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: AppColors.dangerRed.withValues(alpha: 0.1)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: const BoxDecoration(color: AppColors.dangerRed, shape: BoxShape.circle),
+                      child: const Icon(Iconsax.info_circle, color: Colors.white, size: 18),
                     ),
-                  ),
-                  const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.dangerRed),
-                ],
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('System Alert', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: AppColors.dangerRed)),
+                          Text('High booking failure rate in Bandra', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.dangerRed)
+                  ],
+                ),
               ),
             ).animate(delay: 400.ms).fadeIn(),
           ],
         ),
+      ),
+    );
+  }
+
+  PopupMenuItem<String> _buildPopupItem(String value, IconData icon) {
+    final isSelected = _selectedFilter == value;
+    return PopupMenuItem(
+      value: value,
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: isSelected ? AppColors.primaryBlue : AppColors.textSecondary),
+          const SizedBox(width: 12),
+          Text(
+            value,
+            style: GoogleFonts.outfit(
+              fontSize: 14,
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+              color: isSelected ? AppColors.primaryBlue : AppColors.textPrimary,
+            ),
+          ),
+          if (isSelected) ...[
+            const Spacer(),
+            const Icon(Icons.check_circle_rounded, size: 16, color: AppColors.primaryBlue),
+          ],
+        ],
       ),
     );
   }

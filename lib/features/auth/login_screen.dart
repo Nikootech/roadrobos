@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -5,7 +6,6 @@ import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../core/theme/app_colors.dart';
 import '../../navigation/nav_helpers.dart';
-import '../../shared/widgets/glass_card.dart';
 import '../../core/constants/app_strings.dart';
 import '../../shared/widgets/custom_button.dart';
 import '../../shared/widgets/custom_text_field.dart';
@@ -176,71 +176,89 @@ class _LoginScreenState extends State<LoginScreen> {
               // ── Hero / Brand Showcase ─────────────────────────────────────
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: GlassCard(
-                  padding: EdgeInsets.zero,
-                  borderRadius: 28,
-                  opacity: 0.08,
-                  blur: 20,
-                  child: Container(
-                    height: 220,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(28),
-                      gradient: LinearGradient(
-                        colors: [
-                          AppColors.brandGreen.withValues(alpha: 0.12),
-                          AppColors.brandGreenMid.withValues(alpha: 0.06),
-                          AppColors.brandGreenLight.withValues(alpha: 0.04),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                    ),
+                child: Container(
+                  height: 240,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(32),
+                    color: Colors.white.withValues(alpha: 0.1),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(32),
                     child: Stack(
                       children: [
-                        // Decorative circles
+                        // Dynamic background blobs
                         Positioned(
-                          top: -20,
+                          top: -40,
                           right: -20,
                           child: Container(
-                            width: 120,
-                            height: 120,
+                            width: 180,
+                            height: 180,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: AppColors.brandGreen.withValues(alpha: 0.06),
+                              gradient: RadialGradient(
+                                colors: [
+                                  AppColors.brandGreen.withValues(alpha: 0.15),
+                                  AppColors.brandGreen.withValues(alpha: 0),
+                                ],
+                              ),
                             ),
-                          ),
+                          ).animate(onPlay: (controller) => controller.repeat(reverse: true))
+                           .move(begin: const Offset(-20, -10), end: const Offset(20, 10), duration: 4.seconds, curve: Curves.easeInOut),
                         ),
                         Positioned(
-                          bottom: -30,
-                          left: -15,
+                          bottom: -60,
+                          left: -30,
                           child: Container(
-                            width: 100,
-                            height: 100,
+                            width: 220,
+                            height: 220,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: AppColors.brandGreenLight.withValues(alpha: 0.08),
+                              gradient: RadialGradient(
+                                colors: [
+                                  AppColors.brandGreenMid.withValues(alpha: 0.12),
+                                  AppColors.brandGreenMid.withValues(alpha: 0),
+                                ],
+                              ),
+                            ),
+                          ).animate(onPlay: (controller) => controller.repeat(reverse: true))
+                           .move(begin: const Offset(30, 20), end: const Offset(-30, -20), duration: 5.seconds, curve: Curves.easeInOut),
+                        ),
+
+                        // Glass background overlay
+                        BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 40, sigmaY: 40),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  AppColors.brandGreen.withValues(alpha: 0.08),
+                                  Colors.white.withValues(alpha: 0.05),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
                             ),
                           ),
                         ),
+
                         // Center content
                         Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              // Logo image with bright white background and clean glow
+                              // Premium Logo Container
                               Container(
-                                width: 130,
-                                height: 130,
+                                width: 140,
+                                height: 140,
                                 decoration: BoxDecoration(
                                   color: Colors.white,
-                                  borderRadius: BorderRadius.circular(36),
+                                  borderRadius: BorderRadius.circular(40),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: AppColors.brandGreen.withValues(alpha: 0.15),
+                                      color: AppColors.brandGreen.withValues(alpha: 0.2),
                                       blurRadius: 30,
-                                      spreadRadius: 2,
-                                      offset: const Offset(0, 10),
+                                      offset: const Offset(0, 12),
                                     ),
                                     BoxShadow(
                                       color: Colors.white.withValues(alpha: 0.8),
@@ -249,34 +267,26 @@ class _LoginScreenState extends State<LoginScreen> {
                                     ),
                                   ],
                                 ),
-                                padding: EdgeInsets.zero,
+                                padding: const EdgeInsets.all(4),
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(36),
                                   child: Image.asset(
                                     'assets/signin_icon.png',
-                                    fit: BoxFit.cover,
+                                    fit: BoxFit.contain,
                                   ),
                                 ),
-                              ),
-                              const SizedBox(height: 14),
+                              ).animate(onPlay: (controller) => controller.repeat(reverse: true))
+                               .shimmer(duration: 3.seconds, color: Colors.white.withValues(alpha: 0.2))
+                               .scale(begin: const Offset(1, 1), end: const Offset(1.05, 1.05), duration: 3.seconds, curve: Curves.easeInOut),
+                               
+                              const SizedBox(height: 16),
                               // Brand name
                               Text(
                                 'RoAd RoBo\'s',
                                 style: GoogleFonts.outfit(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.w800,
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.w900,
                                   color: AppColors.brandGreen,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'SebChris Mobility Pvt Ltd',
-                                style: GoogleFonts.outfit(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w500,
-                                  color: AppColors.brandGreenMid,
-                                  letterSpacing: 0.8,
                                 ),
                               ),
                             ],
@@ -288,8 +298,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               )
                   .animate()
-                  .fadeIn(duration: 600.ms)
-                  .slideY(begin: -0.08, end: 0, duration: 600.ms, curve: Curves.easeOut),
+                  .fadeIn(duration: 800.ms)
+                  .slideY(begin: -0.1, end: 0, duration: 800.ms, curve: Curves.easeOutBack),
 
               const SizedBox(height: 24),
 
