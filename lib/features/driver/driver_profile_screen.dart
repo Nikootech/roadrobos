@@ -16,7 +16,7 @@ class DriverProfileScreen extends StatelessWidget {
       backgroundColor: AppColors.bgLightGrey,
       appBar: AppBar(
         title: const Text(
-          'Captain Profile',
+          'Roadrobo Profile',
           style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppColors.deepNavy, letterSpacing: -0.5),
         ),
         backgroundColor: Colors.white,
@@ -67,7 +67,7 @@ class DriverProfileScreen extends StatelessWidget {
                         child: const CircleAvatar(
                           radius: 54,
                           backgroundColor: AppColors.bgLightGrey,
-                          backgroundImage: NetworkImage('https://i.pravatar.cc/150?u=captain'),
+                          backgroundImage: NetworkImage('https://i.pravatar.cc/150?u=roadrobo'),
                         ),
                       ),
                       Container(
@@ -80,7 +80,7 @@ class DriverProfileScreen extends StatelessWidget {
                   const SizedBox(height: 20),
                   const Text('Rajesh Kumar', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: AppColors.textPrimary)),
                   const SizedBox(height: 4),
-                  const Text('Senior Captain • ID: BLR-49281', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600, fontSize: 13)),
+                  const Text('Senior Roadrobo • ID: BLR-49281', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600, fontSize: 13)),
                   const SizedBox(height: 16),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

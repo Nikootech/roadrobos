@@ -4,8 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:iconsax/iconsax.dart';
 import '../../core/theme/app_colors.dart';
-import '../../navigation/nav_helpers.dart';
 import '../../shared/widgets/custom_button.dart';
 import '../../shared/widgets/glass_card.dart';
 
@@ -38,8 +38,8 @@ class _RevenueAnalyticsScreenState extends State<RevenueAnalyticsScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.file_download_outlined, color: AppColors.textPrimary),
-            onPressed: () => NavHelpers.showComingSoon(context, 'Revenue filters'),
+            icon: const Icon(Iconsax.filter, color: AppColors.textPrimary),
+            onPressed: () => _showRevenueFilterSheet(context),
           )
         ],
       ),
@@ -183,6 +183,69 @@ class _RevenueAnalyticsScreenState extends State<RevenueAnalyticsScreen> {
           icon: Icons.download_rounded,
           backgroundColor: AppColors.primaryBlue,
           onPressed: () => context.push('/admin-export-reports'),
+        ),
+      ),
+    );
+  }
+
+  void _showRevenueFilterSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        ),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Filter Revenue',
+              style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.deepNavy),
+            ),
+            const SizedBox(height: 24),
+            const Text('Period', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: AppColors.textSecondary)),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              children: [
+                _buildFilterChip('Today', false),
+                _buildFilterChip('Weekly', true),
+                _buildFilterChip('Monthly', false),
+                _buildFilterChip('Custom', false),
+              ],
+            ),
+            const SizedBox(height: 24),
+            const Text('Categories', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: AppColors.textSecondary)),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              children: [
+                _buildFilterChip('All', true),
+                _buildFilterChip('Cab Rides', false),
+                _buildFilterChip('Rentals', false),
+                _buildFilterChip('Services', false),
+              ],
+            ),
+            const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryBlue,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  elevation: 0,
+                ),
+                child: const Text('Apply Filters', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
         ),
       ),
     );

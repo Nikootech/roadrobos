@@ -126,12 +126,16 @@ class _CustomButtonState extends State<CustomButton>
                         Icon(widget.icon, color: fgColor, size: 20),
                         const SizedBox(width: 10),
                       ],
-                      Text(
-                        widget.label,
-                        style: TextStyle(
-                          color: fgColor,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
+                      Flexible(
+                        child: Text(
+                          widget.label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: fgColor,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ],

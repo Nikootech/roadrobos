@@ -84,8 +84,8 @@ class AppMapController extends StateNotifier<AppMapState> {
         isLoading: false,
       );
       
-      addMockVehicles();
-      addRentalHubs();
+      // addMockVehicles(); // Removed as requested to hide riders/hubs
+      // addRentalHubs(); // Removed as requested to hide riders/hubs
     } catch (e) {
       state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }

@@ -5,8 +5,12 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
 
+import 'package:latlong2/latlong.dart';
+
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/bottom_nav_bar.dart';
+import '../../shared/widgets/responsive_utils.dart';
+import '../../providers/taxi_provider.dart';
 import 'providers/driver_state_provider.dart';
 import 'widgets/ride_request_overlay.dart';
 
@@ -33,7 +37,7 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
               children: [
                 // Header (Profile & Notification)
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                  padding: ResponsiveLayout.responsivePadding(context, horizontal: 24, vertical: 20),
                   child: Row(
                     children: [
                       InkWell(
@@ -57,11 +61,11 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                               ),
                             ),
                             const SizedBox(width: 14),
-                            const Column(
+                            Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('GOOD MORNING', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: AppColors.textSecondary, letterSpacing: 1)),
-                                Text('Rahul Sharma', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: AppColors.deepNavy, letterSpacing: -0.5)),
+                                Text('GOOD MORNING', style: TextStyle(fontSize: ResponsiveLayout.responsiveFontSize(context, 10), fontWeight: FontWeight.w800, color: AppColors.textSecondary, letterSpacing: 1)),
+                                Text('Rahul Sharma', style: TextStyle(fontSize: ResponsiveLayout.responsiveFontSize(context, 17), fontWeight: FontWeight.w900, color: AppColors.deepNavy, letterSpacing: -0.5)),
                               ],
                             ),
                           ],
@@ -87,11 +91,7 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                                 child: Container(
                                   width: 8,
                                   height: 8,
-                                  decoration: const BoxDecoration(
-                                    color: AppColors.dangerRed,
-                                    shape: BoxShape.circle,
-                                    border: Border(bottom: BorderSide(color: Colors.white, width: 2)),
-                                  ),
+                                  decoration: const BoxDecoration(color: AppColors.dangerRed, shape: BoxShape.circle, border: Border(bottom: BorderSide(color: Colors.white, width: 2))),
                                 ),
                               ),
                             ],
@@ -104,23 +104,23 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
 
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    padding: ResponsiveLayout.responsivePadding(context, horizontal: 24, vertical: 0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Map Status Card
                         Container(
                           width: double.infinity,
-                          height: 220,
+                          constraints: BoxConstraints(
+                            minHeight: ResponsiveLayout.responsiveHeight(context, 28),
+                          ),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(32),
                             image: const DecorationImage(
                               image: NetworkImage('https://static-maps.yandex.ru/1.x/?lang=en_US&ll=77.5946,12.9716&size=450,450&z=13&l=map&pt=77.5946,12.9716,pm2rdm'),
                               fit: BoxFit.cover,
                             ),
-                            boxShadow: [
-                              BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 20, offset: const Offset(0, 10)),
-                            ],
+                            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 20, offset: const Offset(0, 10))],
                           ),
                           child: Container(
                             decoration: BoxDecoration(
@@ -128,10 +128,7 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                               gradient: LinearGradient(
                                 begin: Alignment.topCenter,
                                 end: Alignment.bottomCenter,
-                                colors: [
-                                  Colors.black.withValues(alpha: 0.2),
-                                  Colors.black.withValues(alpha: 0.5),
-                                ],
+                                colors: [Colors.black.withValues(alpha: 0.2), Colors.black.withValues(alpha: 0.5)],
                               ),
                             ),
                             padding: const EdgeInsets.all(24),
@@ -140,28 +137,15 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                               children: [
                                 Row(
                                   children: [
-                                    Container(
-                                      width: 8,
-                                      height: 8,
-                                      decoration: BoxDecoration(
-                                        color: isOnline ? AppColors.successGreen : AppColors.textMuted,
-                                        shape: BoxShape.circle,
-                                      ),
-                                    ),
+                                    Container(width: 8, height: 8, decoration: BoxDecoration(color: isOnline ? AppColors.successGreen : AppColors.textMuted, shape: BoxShape.circle)),
                                     const SizedBox(width: 10),
-                                    Text(
-                                      isOnline ? 'Currently Online' : 'Currently Offline',
-                                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13),
-                                    ),
+                                    Text(isOnline ? 'Currently Online' : 'Currently Offline', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13)),
                                   ],
                                 ),
                                 const SizedBox(height: 6),
                                 const Align(
                                   alignment: Alignment.centerLeft,
-                                  child: Text(
-                                    'Go online to receive rides',
-                                    style: TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w500),
-                                  ),
+                                  child: Text('Go online to receive rides', style: TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w500)),
                                 ),
                                 const SizedBox(height: 20),
                                 GestureDetector(
@@ -175,13 +159,7 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                                     decoration: BoxDecoration(
                                       color: isOnline ? AppColors.dangerRed : AppColors.successGreen,
                                       borderRadius: BorderRadius.circular(20),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: (isOnline ? AppColors.dangerRed : AppColors.successGreen).withValues(alpha: 0.3),
-                                          blurRadius: 15,
-                                          offset: const Offset(0, 6),
-                                        ),
-                                      ],
+                                      boxShadow: [BoxShadow(color: (isOnline ? AppColors.dangerRed : AppColors.successGreen).withValues(alpha: 0.3), blurRadius: 15, offset: const Offset(0, 6))],
                                     ),
                                     child: Center(
                                       child: Row(
@@ -209,40 +187,26 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                         GestureDetector(
                           onTap: () => context.pushReplacement('/driver-earnings'),
                           child: Container(
-                            clipBehavior: Clip.antiAlias, // For background icon clipping
+                            clipBehavior: Clip.antiAlias,
                             padding: const EdgeInsets.all(28),
                             decoration: BoxDecoration(
                               gradient: const LinearGradient(
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
-                                colors: [
-                                  Color(0xFF2563EB), // Blue 600
-                                  Color(0xFF3B82F6), // Blue 500
-                                  Color(0xFF1E40AF), // Blue 900
-                                ],
+                                colors: [Color(0xFF2563EB), Color(0xFF3B82F6), Color(0xFF1E40AF)],
                                 stops: [0.0, 0.4, 1.0],
                               ),
                               borderRadius: BorderRadius.circular(32),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFF2563EB).withValues(alpha: 0.35),
-                                  blurRadius: 25,
-                                  offset: const Offset(0, 12),
-                                ),
-                              ],
+                              boxShadow: [BoxShadow(color: const Color(0xFF2563EB).withValues(alpha: 0.35), blurRadius: 25, offset: const Offset(0, 12))],
                             ),
                             child: Stack(
                               children: [
-                                // Background Texture Icon
                                 Positioned(
                                   right: -20,
                                   bottom: -20,
                                   child: Opacity(
                                     opacity: 0.1,
-                                    child: Transform.rotate(
-                                      angle: -0.2,
-                                      child: const Icon(Iconsax.wallet, size: 140, color: Colors.white),
-                                    ),
+                                    child: Transform.rotate(angle: -0.2, child: const Icon(Iconsax.wallet, size: 140, color: Colors.white)),
                                   ),
                                 ),
                                 Column(
@@ -266,20 +230,18 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                                       ],
                                     ),
                                     const SizedBox(height: 12),
-                                    Row(
-                                      crossAxisAlignment: CrossAxisAlignment.end,
-                                      children: [
-                                        const Padding(
-                                          padding: EdgeInsets.only(bottom: 8.0),
-                                          child: Text('₹', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w900)),
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Text('${earnings.todayEarnings.toInt()}', style: const TextStyle(color: Colors.white, fontSize: 48, fontWeight: FontWeight.w900, letterSpacing: -1.5)),
-                                        const Padding(
-                                          padding: EdgeInsets.only(bottom: 8.0),
-                                          child: Text('.50', style: TextStyle(color: Colors.white70, fontSize: 22, fontWeight: FontWeight.w800)),
-                                        ),
-                                      ],
+                                    FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      alignment: Alignment.centerLeft,
+                                      child: Row(
+                                        crossAxisAlignment: CrossAxisAlignment.end,
+                                        children: [
+                                          const Padding(padding: EdgeInsets.only(bottom: 8.0), child: Text('₹', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w900))),
+                                          const SizedBox(width: 4),
+                                          Text('${earnings.todayEarnings.toInt()}', style: TextStyle(color: Colors.white, fontSize: ResponsiveLayout.responsiveFontSize(context, 48), fontWeight: FontWeight.w900, letterSpacing: -1.5)),
+                                          const Padding(padding: EdgeInsets.only(bottom: 8.0), child: Text('.50', style: TextStyle(color: Colors.white70, fontSize: 22, fontWeight: FontWeight.w800))),
+                                        ],
+                                      ),
                                     ),
                                     const SizedBox(height: 32),
                                     Row(
@@ -299,20 +261,18 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                         const SizedBox(height: 32),
 
                         // Quick Actions
-                        const Text('Quick Actions', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.deepNavy)),
+                        Text('Quick Actions', style: TextStyle(fontSize: ResponsiveLayout.responsiveFontSize(context, 18), fontWeight: FontWeight.w900, color: AppColors.deepNavy)),
                         const SizedBox(height: 20),
                         GridView.count(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
-                          crossAxisCount: 2,
+                          crossAxisCount: ResponsiveLayout.isTablet(context) ? 4 : 2,
                           crossAxisSpacing: 16,
                           mainAxisSpacing: 16,
                           childAspectRatio: 1.4,
                           children: [
                             _buildQuickAction('Incentives', Iconsax.gift, const Color(0xFFF97316), () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('My Incentives: Coming Soon!'), behavior: SnackBarBehavior.floating),
-                              );
+                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('My Incentives: Coming Soon!'), behavior: SnackBarBehavior.floating));
                             }),
                             _buildQuickAction('Wallet', Iconsax.wallet, const Color(0xFF8B5CF6), () {
                               context.push('/driver-bank-withdrawal');
@@ -321,9 +281,7 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                               context.push('/help-center');
                             }),
                             _buildQuickAction('High Demand', Iconsax.direct_up, const Color(0xFFEC4899), () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Analyzing high demand zones...'), behavior: SnackBarBehavior.floating),
-                              );
+                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Analyzing high demand zones...'), behavior: SnackBarBehavior.floating));
                             }),
                           ],
                         ),
@@ -334,7 +292,7 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text('Recent Rides', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.deepNavy)),
+                            Text('Recent Rides', style: TextStyle(fontSize: ResponsiveLayout.responsiveFontSize(context, 18), fontWeight: FontWeight.w900, color: AppColors.deepNavy)),
                             TextButton(
                               onPressed: () => context.pushReplacement('/driver-rides'),
                               child: const Text('View All', style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.w800, fontSize: 13)),
@@ -343,7 +301,7 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                         ),
                         const SizedBox(height: 12),
                         _buildRecentRide('Indiranagar to Koramangala', 'Today, 10:23 AM', '₹185.00', 'Completed'),
-                        const SizedBox(height: 100), // Bottom nav spacer
+                        const SizedBox(height: 100),
                       ],
                     ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.1),
                   ),
@@ -354,7 +312,13 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
               RideRequestOverlay(
                 request: rideRequests.first,
                 onAccept: () {
-                  ref.read(rideRequestsProvider.notifier).acceptRequest(rideRequests.first.id);
+                  final request = rideRequests.first;
+                  ref.read(rideRequestsProvider.notifier).acceptRequest(request.id);
+                  // Setup TaxiProvider for tracking from driver perspective
+                  ref.read(taxiProvider.notifier).acceptRideRequest(
+                    const LatLng(12.9716, 77.5946), // Mock Pickup (using fixed for now as per state)
+                    const LatLng(12.9352, 77.6245), // Mock Dropoff
+                  );
                   context.push('/driver-assigned');
                 },
                 onReject: () {

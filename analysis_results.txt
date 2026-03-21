@@ -1,0 +1,7 @@
+Analyzing android app...                                        
+
+   info - Use 'const' with the constructor to improve performance - lib\features\driver\driver_assigned_screen.dart:280:9 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\features\driver\driver_assigned_screen.dart:281:18 - prefer_const_constructors
+   info - Use 'const' literals as arguments to constructors of '@immutable' classes - lib\features\driver\driver_assigned_screen.dart:283:23 - prefer_const_literals_to_create_immutables
+   info - Use 'const' with the constructor to improve performance - lib\features\driver\driver_assigned_screen.dart:286:15 - prefer_const_constructors
+

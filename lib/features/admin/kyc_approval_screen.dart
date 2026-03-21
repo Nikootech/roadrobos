@@ -3,7 +3,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/custom_button.dart';
-import '../../navigation/nav_helpers.dart';
 
 /// KYC Document Approval matching Figma Screen [95]
 class KycApprovalScreen extends StatelessWidget {
@@ -99,7 +98,7 @@ class KycApprovalScreen extends StatelessWidget {
                 label: 'REJECT',
                 backgroundColor: AppColors.bgLightGrey,
                 textColor: AppColors.dangerRed,
-                onPressed: () => NavHelpers.showComingSoon(context, 'Rejection reason modal'), // Would pop up a reject reason modal
+                onPressed: () => _showRejectionDialog(context),
               ),
             ),
             const SizedBox(width: 16),
@@ -112,6 +111,78 @@ class KycApprovalScreen extends StatelessWidget {
                    context.pop();
                 },
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showRejectionDialog(BuildContext context) {
+    final TextEditingController reasonController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: const Text('Rejection Reason', style: TextStyle(fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Please specify why this KYC application is being rejected.', style: TextStyle(fontSize: 14, color: AppColors.textSecondary)),
+            const SizedBox(height: 16),
+            TextField(
+              controller: reasonController,
+              maxLines: 3,
+              decoration: InputDecoration(
+                hintText: 'e.g. Blurred document, Expired ID...',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                filled: true,
+                fillColor: AppColors.bgLightGrey,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Application rejected.')));
+              context.pop();
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.dangerRed, foregroundColor: Colors.white),
+            child: const Text('Confirm Reject'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDocumentPreview(BuildContext context, String title) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        insetPadding: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              title: Text(title, style: const TextStyle(color: AppColors.textPrimary, fontSize: 16)),
+              leading: IconButton(icon: const Icon(Icons.close, color: AppColors.textPrimary), onPressed: () => Navigator.pop(context)),
+            ),
+            Container(
+              height: MediaQuery.of(context).size.height * 0.6,
+              width: double.infinity,
+              margin: const EdgeInsets.all(16),
+              decoration: BoxDecoration(color: AppColors.bgLightGrey, borderRadius: BorderRadius.circular(16)),
+              child: const Center(child: Icon(Icons.image_outlined, size: 80, color: AppColors.textMuted)),
+            ),
+            const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Text('Document verified by AI: 94% Match', style: TextStyle(color: AppColors.successGreen, fontWeight: FontWeight.w600)),
             ),
           ],
         ),
@@ -145,16 +216,19 @@ class KycApprovalScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              IconButton(icon: const Icon(Icons.remove_red_eye_outlined, color: AppColors.primaryBlue), onPressed: () => NavHelpers.showComingSoon(context, 'Document preview'))
+              IconButton(icon: const Icon(Icons.remove_red_eye_outlined, color: AppColors.primaryBlue), onPressed: () => _showDocumentPreview(context, title))
             ],
           ),
           if (!isValid) ...[
             const SizedBox(height: 16),
-            Container(
-              width: double.infinity,
-              height: 140,
-              decoration: BoxDecoration(color: AppColors.bgLightGrey, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.border)),
-              child: const Center(child: Icon(Icons.image_not_supported_outlined, size: 40, color: AppColors.textMuted)), // Simulated doc preview
+            GestureDetector(
+              onTap: () => _showDocumentPreview(context, title),
+              child: Container(
+                width: double.infinity,
+                height: 140,
+                decoration: BoxDecoration(color: AppColors.bgLightGrey, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.border)),
+                child: const Center(child: Icon(Icons.image_not_supported_outlined, size: 40, color: AppColors.textMuted)), // Simulated doc preview
+              ),
             )
           ]
         ],

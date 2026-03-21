@@ -5,15 +5,16 @@ class AppAssets {
   static const String logo = 'assets/images/logo.png';
   
   // Vehicles
-  static const String creta = 'assets/images/creta.png';
-  static const String swift = 'assets/images/swift.png';
-  static const String city = 'assets/images/city.png';
-  static const String dzire = 'assets/images/dzire.png';
-  static const String i20 = 'assets/images/i20.png';
-  static const String innova = 'assets/images/innova.png';
-  static const String nexon = 'assets/images/nexon.png';
-  static const String scorpio = 'assets/images/scorpio.png';
-  static const String xuv300 = 'assets/images/xuv300.png';
+  static const String baleno = 'assets/icons/baleno.png';
+  static const String creta = 'assets/icons/creta.png';
+  static const String swift = 'assets/icons/swift.png';
+  static const String city = 'assets/icons/city.png';
+  static const String dzire = 'assets/icons/dzire.png';
+  static const String i20 = 'assets/icons/i20.png';
+  static const String innova = 'assets/icons/innova.png';
+  static const String nexon = 'assets/icons/nexon.png';
+  static const String scorpio = 'assets/icons/scorpio.png';
+  static const String xuv300 = 'assets/icons/xuv300.png';
 
   // ── Placeholder network images ──
   static const String avatarPlaceholder =

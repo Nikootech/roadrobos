@@ -32,7 +32,7 @@ class SavedLocationsScreen extends StatelessWidget {
             
             const SizedBox(height: 48),
             TextButton.icon(
-              onPressed: () {},
+              onPressed: () => _showAddAddressSheet(context),
               icon: const Icon(Iconsax.add, size: 20),
               label: const Text('ADD NEW ADDRESS'),
               style: TextButton.styleFrom(
@@ -40,6 +40,59 @@ class SavedLocationsScreen extends StatelessWidget {
                 textStyle: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1),
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showAddAddressSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
+        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom, left: 24, right: 24, top: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Add New Address', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.deepNavy)),
+            const SizedBox(height: 24),
+            TextField(
+              decoration: InputDecoration(
+                labelText: 'Address Name',
+                hintText: 'e.g. Grandma\'s House',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              decoration: InputDecoration(
+                labelText: 'Full Address',
+                hintText: 'Street, Building, City...',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              maxLines: 2,
+            ),
+            const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Address added successfully!')));
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryBlue,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                child: const Text('Save Address', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              ),
+            ),
+            const SizedBox(height: 24),
           ],
         ),
       ),

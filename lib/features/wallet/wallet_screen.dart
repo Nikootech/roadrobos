@@ -52,6 +52,7 @@ class WalletScreen extends StatelessWidget {
                   ),
                   Positioned(
                     left: 20,
+                    right: 120, // Leave space for Verified badge
                     bottom: 40,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -66,12 +67,16 @@ class WalletScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        Text(
-                          '₹4,500.00',
-                          style: GoogleFonts.outfit(
-                            fontSize: 42,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            '₹4,500.00',
+                            style: GoogleFonts.outfit(
+                              fontSize: 42,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ],
@@ -219,12 +224,15 @@ class WalletScreen extends StatelessWidget {
             child: Icon(icon, color: color, size: 26),
           ),
           const SizedBox(height: 10),
-          Text(
-            label,
-            style: GoogleFonts.outfit(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              label,
+              style: GoogleFonts.outfit(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
             ),
           ),
         ],
@@ -290,12 +298,15 @@ class WalletScreen extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(
-                data['amount'] as String,
-                style: GoogleFonts.outfit(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w800,
-                  color: isDebit ? AppColors.textPrimary : AppColors.successGreen,
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  data['amount'] as String,
+                  style: GoogleFonts.outfit(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                    color: isDebit ? AppColors.textPrimary : AppColors.successGreen,
+                  ),
                 ),
               ),
               const SizedBox(height: 4),

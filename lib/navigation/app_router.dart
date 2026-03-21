@@ -29,6 +29,8 @@ import '../features/rides/live_tracking_screen.dart';
 import '../features/rides/ride_complete_screen.dart';
 import '../features/rides/rate_ride_screen.dart';
 import '../features/rides/live_vehicle_tracking_screen.dart';
+import '../features/rides/location_search_screen.dart';
+import '../features/rides/map_picker_screen.dart';
 import '../features/wallet/wallet_screen.dart';
 import '../features/wallet/wallet_topup_screen.dart';
 import '../features/wallet/fare_breakdown_screen.dart';
@@ -36,6 +38,7 @@ import '../features/wallet/billing_invoice_screen.dart';
 import '../features/wallet/secure_payment_screen.dart';
 import '../features/rentals/rental_explore_screen.dart';
 import '../features/rentals/vehicle_selection_screen.dart';
+import '../features/taxi/taxi_ride_screen.dart';
 import '../features/rentals/vehicle_detail_screen.dart';
 import '../features/rentals/rental_checkout_screen.dart';
 import '../features/rentals/rental_confirmed_screen.dart';
@@ -300,15 +303,27 @@ class AppRouter {
         ),
       ),
 
-      // ──────────────────────────────────────────
-      // RAPIDO-STYLE TAXI FLOW
-      // ──────────────────────────────────────────
       GoRoute(
         path: '/taxi/home',
         pageBuilder: (context, state) => AppTransitions.fade(
-          child: const BookRideScreen(),
+          child: const TaxiRideScreen(),
           state: state,
         ),
+      ),
+      GoRoute(
+        path: '/taxi/search-location',
+        pageBuilder: (context, state) {
+           final extra = state.extra as Map<String, dynamic>?;
+           final focusPickup = extra?['focusPickup'] ?? false;
+           return AppTransitions.slideUp(
+             child: LocationSearchScreen(focusPickup: focusPickup),
+             state: state,
+           );
+        },
+      ),
+      GoRoute(
+        path: '/taxi/map-picker',
+        builder: (context, state) => const MapPickerScreen(),
       ),
       GoRoute(
         path: '/taxi/ride-options',

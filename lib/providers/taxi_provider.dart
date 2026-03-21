@@ -1,0 +1,472 @@
+import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:geolocator/geolocator.dart';
+import 'dart:math' as math;
+
+enum RideStatus { 
+  idle, 
+  selectingPickup, 
+  selectingDrop, 
+  vehicleSelection, 
+  booked, 
+  tracking, 
+  atPickup, 
+  headingToDropoff, 
+  completed 
+}
+
+class NearbyVehicle {
+  final LatLng position;
+  final String type; // 'bike', 'auto', 'car'
+
+  NearbyVehicle({required this.position, required this.type});
+}
+
+class RideOption {
+  final String id;
+  final String title;
+  final String subtitle;
+  final double price;
+  final String? tag;
+  final IconData icon;
+  final String? assetPath;
+
+  RideOption({
+    required this.id,
+    required this.title,
+    required this.subtitle,
+    required this.price,
+    this.tag,
+    required this.icon,
+    this.assetPath,
+  });
+}
+
+class TaxiState {
+  final RideStatus status;
+  final LatLng? pickupLocation;
+  final LatLng? dropoffLocation;
+  final LatLng? roadroboLocation;
+  final String? pickupAddress;
+  final String? dropoffAddress;
+  final String? roadroboName;
+  final String? eta;
+  final double distance;
+  final String? otp;
+  final bool isOtpVerified;
+  final List<NearbyVehicle> nearbyVehicles;
+  final List<RideOption> rideOptions;
+  final RideOption? selectedOption;
+  final List<Map<String, dynamic>> mockLocations;
+
+  TaxiState({
+    this.status = RideStatus.idle,
+    this.pickupLocation,
+    this.dropoffLocation,
+    this.roadroboLocation,
+    this.pickupAddress,
+    this.dropoffAddress,
+    this.roadroboName,
+    this.eta,
+    this.distance = 0.0,
+    this.otp,
+    this.isOtpVerified = false,
+    this.nearbyVehicles = const [],
+    this.rideOptions = const [],
+    this.selectedOption,
+    this.mockLocations = const [],
+  });
+
+  TaxiState copyWith({
+    RideStatus? status,
+    LatLng? pickupLocation,
+    LatLng? dropoffLocation,
+    LatLng? roadroboLocation,
+    String? pickupAddress,
+    String? dropoffAddress,
+    String? roadroboName,
+    String? eta,
+    double? distance,
+    String? otp,
+    bool? isOtpVerified,
+    List<NearbyVehicle>? nearbyVehicles,
+    List<RideOption>? rideOptions,
+    RideOption? selectedOption,
+    List<Map<String, dynamic>>? mockLocations,
+  }) {
+    return TaxiState(
+      status: status ?? this.status,
+      pickupLocation: pickupLocation ?? this.pickupLocation,
+      dropoffLocation: dropoffLocation ?? this.dropoffLocation,
+      roadroboLocation: roadroboLocation ?? this.roadroboLocation,
+      pickupAddress: pickupAddress ?? this.pickupAddress,
+      dropoffAddress: dropoffAddress ?? this.dropoffAddress,
+      roadroboName: roadroboName ?? this.roadroboName,
+      eta: eta ?? this.eta,
+      distance: distance ?? this.distance,
+      otp: otp ?? this.otp,
+      isOtpVerified: isOtpVerified ?? this.isOtpVerified,
+      nearbyVehicles: nearbyVehicles ?? this.nearbyVehicles,
+      rideOptions: rideOptions ?? this.rideOptions,
+      selectedOption: selectedOption ?? this.selectedOption,
+      mockLocations: mockLocations ?? this.mockLocations,
+    );
+  }
+}
+
+class TaxiNotifier extends StateNotifier<TaxiState> {
+  TaxiNotifier() : super(TaxiState());
+
+  Timer? _simulationTimer;
+
+  Future<void> initializeLocation() async {
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        _setFallbackLocation();
+        return;
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          _setFallbackLocation();
+          return;
+        }
+      }
+      
+      if (permission == LocationPermission.deniedForever) {
+        _setFallbackLocation();
+        return;
+      }
+
+      final position = await Geolocator.getCurrentPosition(
+        timeLimit: const Duration(seconds: 5),
+      ).catchError((e) {
+        debugPrint('Location timeout or error: $e');
+        return Position(
+          longitude: 77.5946, latitude: 12.9716, 
+          timestamp: DateTime.now(), accuracy: 0, altitude: 0, 
+          heading: 0, speed: 0, speedAccuracy: 0, altitudeAccuracy: 0, headingAccuracy: 0
+        );
+      });
+
+      final location = LatLng(position.latitude, position.longitude);
+      state = state.copyWith(
+        pickupLocation: location,
+        pickupAddress: 'Current Location',
+        mockLocations: [
+          {'name': 'MG Road', 'address': 'MG Road, Bengaluru', 'distance': '2.4 km', 'lat': 12.9716, 'lng': 77.5946},
+          {'name': 'Indiranagar', 'address': 'Indiranagar, Bengaluru', 'distance': '4.1 km', 'lat': 12.9719, 'lng': 77.6412},
+          {'name': 'Koramangala', 'address': 'Koramangala, Bengaluru', 'distance': '5.8 km', 'lat': 12.9352, 'lng': 77.6245},
+        ],
+      );
+      // _generateNearbyVehicles(location); // Removed as requested
+      _generateRideOptions();
+    } catch (e) {
+      debugPrint('Error initializing location: $e');
+      _setFallbackLocation();
+    }
+  }
+
+  void _setFallbackLocation() {
+    // Default to Bengaluru center if location fails
+    const location = LatLng(12.9716, 77.5946);
+    state = state.copyWith(
+      pickupLocation: location,
+      pickupAddress: 'Bengaluru, Karnataka',
+      mockLocations: [
+        {'name': 'MG Road', 'address': 'MG Road, Bengaluru', 'distance': '2.4 km', 'lat': 12.9716, 'lng': 77.5946},
+        {'name': 'Indiranagar', 'address': 'Indiranagar, Bengaluru', 'distance': '4.1 km', 'lat': 12.9719, 'lng': 77.6412},
+        {'name': 'Koramangala', 'address': 'Koramangala, Bengaluru', 'distance': '5.8 km', 'lat': 12.9352, 'lng': 77.6245},
+      ],
+    );
+    // _generateNearbyVehicles(location); // Removed as requested
+    _generateRideOptions();
+  }
+
+  void setPickup(LatLng location, String address) {
+    state = state.copyWith(
+      pickupLocation: location, 
+      pickupAddress: address,
+      status: state.dropoffLocation == null ? RideStatus.selectingDrop : RideStatus.vehicleSelection,
+    );
+    _calculateDistance();
+    // _generateNearbyVehicles(location); // Removed as requested
+  }
+
+  void setDropoff(LatLng location, String address) {
+    state = state.copyWith(
+      dropoffLocation: location, 
+      dropoffAddress: address,
+      status: RideStatus.vehicleSelection,
+    );
+    _calculateDistance();
+  }
+
+  void _calculateDistance() {
+    if (state.pickupLocation != null && state.dropoffLocation != null) {
+      const distanceCalc = Distance();
+      final double meters = distanceCalc.as(LengthUnit.Meter, state.pickupLocation!, state.dropoffLocation!);
+      final distanceKm = meters / 1000.0;
+      state = state.copyWith(distance: distanceKm);
+      _generateRideOptions(distanceKm);
+    }
+  }
+
+  void updateStatus(RideStatus status) {
+    state = state.copyWith(status: status);
+  }
+
+  void acceptRideRequest(LatLng pickup, LatLng dropoff) {
+    // For driver use
+    state = state.copyWith(
+      status: RideStatus.tracking, // Heading to pickup
+      pickupLocation: pickup,
+      dropoffLocation: dropoff,
+      roadroboLocation: const LatLng(12.9716, 77.5946), // Driver starting position
+      otp: '1234',
+      isOtpVerified: false,
+    );
+    _startTrackingSimulation();
+  }
+
+  void arriveAtPickup() {
+    state = state.copyWith(status: RideStatus.atPickup, eta: 'Arrived');
+    _simulationTimer?.cancel();
+  }
+
+  bool verifyOtp(String enteredOtp) {
+    if (enteredOtp == state.otp) {
+      state = state.copyWith(isOtpVerified: true);
+      return true;
+    }
+    return false;
+  }
+
+  void startTrip() {
+    if (state.isOtpVerified) {
+      state = state.copyWith(status: RideStatus.headingToDropoff);
+      _startInTripSimulation();
+    }
+  }
+
+  void bookRide() {
+    state = state.copyWith(status: RideStatus.booked);
+    
+    // Simulate finding a driver after 2 seconds
+    Future.delayed(const Duration(seconds: 2), () {
+      final pickup = state.pickupLocation!;
+      // Driver starts 500m away
+      final roadroboLoc = LatLng(pickup.latitude + 0.005, pickup.longitude + 0.005);
+      
+      state = state.copyWith(
+        status: RideStatus.tracking,
+        roadroboName: 'Roadrobo',
+        roadroboLocation: roadroboLoc,
+        eta: '3 mins',
+        otp: '1234',
+      );
+      
+      _startTrackingSimulation();
+    });
+  }
+
+  void _startTrackingSimulation() {
+    _simulationTimer?.cancel();
+    _simulationTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
+      if (state.status != RideStatus.tracking || state.roadroboLocation == null || state.pickupLocation == null) {
+        timer.cancel();
+        return;
+      }
+      
+      final current = state.roadroboLocation!;
+      final pickup = state.pickupLocation!;
+      
+      const distanceCalc = Distance();
+      final double meters = distanceCalc.as(LengthUnit.Meter, current, pickup);
+      
+      if (meters < 15) {
+        // Arrived at pickup
+        state = state.copyWith(status: RideStatus.atPickup, eta: 'Arrived');
+        timer.cancel();
+        return;
+      }
+
+      final newLat = current.latitude + (pickup.latitude - current.latitude) * 0.05;
+      final newLng = current.longitude + (pickup.longitude - current.longitude) * 0.05;
+      
+      state = state.copyWith(
+        roadroboLocation: LatLng(newLat, newLng),
+        eta: '${(meters / 200).ceil()} mins',
+      );
+    });
+  }
+
+  void _startInTripSimulation() {
+    _simulationTimer?.cancel();
+    _simulationTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
+      if (state.status != RideStatus.headingToDropoff || state.roadroboLocation == null || state.dropoffLocation == null) {
+        timer.cancel();
+        return;
+      }
+      
+      final current = state.roadroboLocation!;
+      final dropoff = state.dropoffLocation!;
+      
+      const distanceCalc = Distance();
+      final double mToDrop = distanceCalc.as(LengthUnit.Meter, current, dropoff);
+      
+      if (mToDrop < 20) {
+        state = state.copyWith(eta: 'Arrived at destination');
+        timer.cancel();
+        return;
+      }
+
+      final newLat = current.latitude + (dropoff.latitude - current.latitude) * 0.04;
+      final newLng = current.longitude + (dropoff.longitude - current.longitude) * 0.04;
+      
+      state = state.copyWith(
+        roadroboLocation: LatLng(newLat, newLng),
+        eta: '${(mToDrop / 250).ceil()} mins left',
+      );
+    });
+  }
+
+  void completeRide() {
+    _simulationTimer?.cancel();
+    state = state.copyWith(status: RideStatus.completed);
+  }
+
+  void reset() {
+    _simulationTimer?.cancel();
+    state = TaxiState();
+    initializeLocation();
+  }
+
+  void _generateRideOptions([double? distance]) {
+    final d = distance ?? state.distance;
+    final bool hasDistance = d > 0.1;
+    
+    // Pricing formulas: Base + (Rate * Distance)
+    double bikePrice = hasDistance ? (25 + (12 * d)) : 105;
+    double autoPrice = hasDistance ? (45 + (15 * d)) : 178;
+    double cabPrice = hasDistance ? (70 + (22 * d)) : 267;
+
+    state = state.copyWith(
+      rideOptions: [
+        RideOption(
+          id: 'bike', 
+          title: 'Bike', 
+          subtitle: '1 min away • Drop 5:05pm', 
+          price: bikePrice.roundToDouble(), 
+          tag: 'Cheapest', 
+          icon: Icons.motorcycle,
+          assetPath: 'assets/icons/bycicle.png',
+        ),
+        RideOption(
+          id: 'auto_sharing', 
+          title: 'Auto Sharing', 
+          subtitle: '2 min away • Drop 5:08pm', 
+          price: (autoPrice * 0.7).roundToDouble(), 
+          tag: 'Eco', 
+          icon: Icons.electric_rickshaw,
+          assetPath: 'assets/icons/rikshaw.png',
+        ),
+        RideOption(
+          id: 'auto', 
+          title: 'Auto', 
+          subtitle: '2 min away • Drop 5:07pm', 
+          price: autoPrice.roundToDouble(), 
+          icon: Icons.electric_rickshaw,
+          assetPath: 'assets/icons/rikshaw.png',
+        ),
+        RideOption(
+          id: 'cab_economy', 
+          title: 'Cab Economy', 
+          subtitle: '5 min away • Drop 5:10pm', 
+          price: cabPrice.roundToDouble(), 
+          icon: Icons.local_taxi,
+          assetPath: 'assets/icons/car.png',
+        ),
+        RideOption(
+          id: 'cab_priority', 
+          title: 'Cab Priority', 
+          subtitle: '2 min away • Drop 5:06pm', 
+          price: (cabPrice * 1.3).roundToDouble(), 
+          tag: 'Quickest', 
+          icon: Icons.local_taxi,
+          assetPath: 'assets/icons/car.png',
+        ),
+      ],
+    );
+  }
+
+  void selectOption(RideOption option) {
+    state = state.copyWith(selectedOption: option);
+    if (state.pickupLocation != null) {
+      String type = 'car';
+      if (option.id.contains('bike')) {
+        type = 'bike';
+      } else if (option.id.contains('auto')) {
+        type = 'auto';
+      }
+      _generateNearbyVehicles(state.pickupLocation!, type);
+    }
+  }
+
+  void setFocus(bool isPickup) {
+    state = state.copyWith(status: isPickup ? RideStatus.selectingPickup : RideStatus.selectingDrop);
+  }
+
+  void cancelRide() {
+    reset();
+  }
+
+  void startSearching() {
+    state = state.copyWith(status: RideStatus.booked);
+    bookRide();
+  }
+
+  void _generateNearbyVehicles(LatLng center, String type) {
+    final math.Random random = math.Random();
+    final List<NearbyVehicle> vehicles = List.generate(5, (index) {
+      final double latOffset = (random.nextDouble() - 0.5) * 0.008;
+      final double lngOffset = (random.nextDouble() - 0.5) * 0.008;
+      return NearbyVehicle(
+        position: LatLng(center.latitude + latOffset, center.longitude + lngOffset),
+        type: type,
+      );
+    });
+    state = state.copyWith(nearbyVehicles: vehicles);
+  }
+
+  @override
+  void dispose() {
+    _simulationTimer?.cancel();
+    super.dispose();
+  }
+}
+
+// StateNotifierProvider
+final taxiProvider = StateNotifierProvider<TaxiNotifier, TaxiState>((ref) {
+  final notifier = TaxiNotifier();
+  ref.onDispose(() => notifier.dispose());
+  return notifier;
+});
+
+// Controllers using Provider.onDispose
+final pickupControllerProvider = Provider.autoDispose<TextEditingController>((ref) {
+  final controller = TextEditingController();
+  ref.onDispose(() => controller.dispose());
+  return controller;
+});
+
+final dropoffControllerProvider = Provider.autoDispose<TextEditingController>((ref) {
+  final controller = TextEditingController();
+  ref.onDispose(() => controller.dispose());
+  return controller;
+});

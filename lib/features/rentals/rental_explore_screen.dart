@@ -5,8 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/constants/app_assets.dart';
+import 'rental_providers.dart';
+import '../../shared/widgets/responsive_utils.dart';
 
-/// Screen [96]: Rental Exploration / Landing Page
 class RentalExploreScreen extends ConsumerStatefulWidget {
   const RentalExploreScreen({super.key});
 
@@ -26,7 +28,7 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
       'price': '₹159/hr',
       'rating': '4.9',
       'seats': '5 Seats',
-      'image': 'assets/images/baleno.png',
+      'image': AppAssets.baleno,
       'category': 'Popular',
     },
     {
@@ -35,7 +37,7 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
       'price': '₹179/hr',
       'rating': '4.9',
       'seats': '5 Seats',
-      'image': 'assets/images/city.png',
+      'image': AppAssets.city,
       'category': 'Luxury',
     },
     {
@@ -44,7 +46,7 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
       'price': '₹129/hr',
       'rating': '4.8',
       'seats': '5 Seats',
-      'image': 'assets/images/swift.png',
+      'image': AppAssets.swift,
       'category': 'Popular',
     },
     {
@@ -53,7 +55,7 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
       'price': '₹219/hr',
       'rating': '4.7',
       'seats': '7 Seats',
-      'image': 'assets/images/scorpio.png',
+      'image': AppAssets.scorpio,
       'category': 'Popular',
     },
   ];
@@ -81,7 +83,7 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_none_rounded, color: AppColors.textPrimary),
-            onPressed: () {},
+            onPressed: () => context.push('/notifications'),
           ),
           const SizedBox(width: 8),
         ],
@@ -109,7 +111,7 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
                   GestureDetector(
                     onTap: () {
                       HapticFeedback.lightImpact();
-                      // Show search overlay or focus a real field
+                      context.push('/rentals-selection'); // Navigate to full selection which has search
                     },
                     child: Container(
                       height: 52,
@@ -154,13 +156,13 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
             const SizedBox(height: 32),
 
             // Section 1: Top Recommendations (Figma [96]: FRAME: "list")
-            _buildSectionHeader('Top Recommendations'),
+            _buildSectionHeader('Top Recommendations', () => context.push('/rentals-selection')),
             _buildVehicleList(context),
 
             const SizedBox(height: 32),
 
             // Section 2: Recently Viewed (Figma [96]: FRAME: "list")
-            _buildSectionHeader('Top Recommendations', () => context.push('/rentals-selection')),
+            _buildSectionHeader('Recently Viewed', () => context.push('/rentals-selection')),
             _buildRecentList(context),
 
             const SizedBox(height: 100),
@@ -245,7 +247,7 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
 
   Widget _buildVehicleList(BuildContext context) {
     return SizedBox(
-      height: 480,
+      height: ResponsiveLayout.responsiveHeight(context, 55),
       child: ListView.separated(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         scrollDirection: Axis.horizontal,
@@ -256,10 +258,12 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
           return GestureDetector(
             onTap: () {
               HapticFeedback.lightImpact();
+              ref.read(selectedVehicleProvider.notifier).state = vehicle;
               context.push('/rental-detail');
             },
             child: Container(
-              width: 300,
+              width: ResponsiveLayout.responsiveWidth(context, 80),
+              constraints: const BoxConstraints(maxWidth: 320),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(24),
@@ -274,10 +278,11 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                   // ... keep the rest of the column but make heights responsive
                   Stack(
                     children: [
                       Container(
-                        height: 200,
+                        height: ResponsiveLayout.responsiveHeight(context, 22),
                         width: double.infinity,
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
@@ -285,7 +290,7 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
                           borderRadius: BorderRadius.circular(24),
                         ),
                         child: Hero(
-                          tag: 'vehicle_rec_${vehicle['name']}',
+                          tag: 'vehicle_${vehicle['name']}',
                           child: Image.asset(
                             vehicle['image'],
                             fit: BoxFit.contain,
@@ -308,23 +313,6 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
                               fontWeight: FontWeight.w900,
                               color: Colors.white,
                             ),
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        top: 12,
-                        right: 12,
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.favorite_outline_rounded,
-                            color: AppColors.textSecondary,
-                            size: 20,
                           ),
                         ),
                       ),
@@ -424,16 +412,31 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
   }
 
   Widget _buildRecentList(BuildContext context) {
+    final List<Map<String, dynamic>> recentVehicles = [
+      {
+        'name': 'Hyundai Creta',
+        'type': 'SUV',
+        'image': AppAssets.creta,
+      },
+      {
+        'name': 'Maruti Dzire',
+        'type': 'Sedan',
+        'image': AppAssets.dzire,
+      },
+    ];
+
     return ListView.separated(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      itemCount: 2,
+      itemCount: recentVehicles.length,
       separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
+        final vehicle = recentVehicles[index];
         return GestureDetector(
           onTap: () {
             HapticFeedback.lightImpact();
+            ref.read(selectedVehicleProvider.notifier).state = vehicle;
             context.push('/rental-detail');
           },
           child: Container(
@@ -452,15 +455,21 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
                     color: AppColors.bgLightGrey,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.car_rental_rounded, color: AppColors.primaryBlue),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.asset(
+                      vehicle['image'],
+                      fit: BoxFit.contain,
+                    ),
+                  ),
                 ),
                 const SizedBox(width: 16),
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Hyundai Venue', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-                      Text('Compact SUV', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                      Text(vehicle['name'], style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                      Text(vehicle['type'], style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                     ],
                   ),
                 ),

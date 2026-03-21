@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:latlong2/latlong.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:go_router/go_router.dart';
-import '../../core/theme/app_colors.dart';
+import 'package:latlong2/latlong.dart';
 import '../../shared/widgets/live_map_widget.dart';
 import '../../navigation/nav_helpers.dart';
-import 'taxi_provider.dart';
+import '../../providers/taxi_provider.dart';
 
 class BookRideScreen extends ConsumerStatefulWidget {
   const BookRideScreen({super.key});
@@ -16,11 +16,19 @@ class BookRideScreen extends ConsumerStatefulWidget {
 }
 
 class _BookRideScreenState extends ConsumerState<BookRideScreen> {
-  final TextEditingController _searchController = TextEditingController();
+  final DraggableScrollableController _sheetController = DraggableScrollableController();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(taxiProvider.notifier).initializeLocation();
+    });
+  }
 
   @override
   void dispose() {
-    _searchController.dispose();
+    _sheetController.dispose();
     super.dispose();
   }
 
@@ -29,10 +37,10 @@ class _BookRideScreenState extends ConsumerState<BookRideScreen> {
     final taxiState = ref.watch(taxiProvider);
 
     return Scaffold(
-      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.white,
       body: Stack(
         children: [
-          // 1. OSM Map Base
+          // 1. Background Map
           Positioned.fill(
             child: LiveMapWidget(
               height: MediaQuery.of(context).size.height,
@@ -40,210 +48,134 @@ class _BookRideScreenState extends ConsumerState<BookRideScreen> {
             ),
           ),
 
-          // 2. Top Location Pill (Rapido Style)
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 16,
-            left: 20,
-            right: 20,
-            child: _buildTopLocationIndicator(taxiState.pickupAddress ?? 'Current Location'),
-          ),
+          // 2. Floating Header & Pickup Pill
+          _buildFloatingHeader(context, taxiState),
 
-          // 3. Draggable Bottom Sheet
+          // 3. Draggable Quick Sheet
           DraggableScrollableSheet(
-            initialChildSize: 0.45,
-            minChildSize: 0.35,
-            maxChildSize: 0.9,
+            controller: _sheetController,
+            initialChildSize: 0.38,
+            minChildSize: 0.38,
+            maxChildSize: 0.7,
+            snap: true,
+            snapSizes: const [0.38, 0.7],
             builder: (context, scrollController) {
               return Container(
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black12,
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 20,
-                      spreadRadius: 5,
-                    )
+                      offset: const Offset(0, -5),
+                    ),
                   ],
                 ),
-                child: Column(
-                  children: [
-                    // Drag Handle
-                    Container(
-                      margin: const EdgeInsets.only(top: 12, bottom: 8),
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(2),
+                child: CustomScrollView(
+                  controller: scrollController,
+                  slivers: [
+                    SliverToBoxAdapter(
+                      child: Column(
+                        children: [
+                          Container(
+                            margin: const EdgeInsets.only(top: 12, bottom: 8),
+                            width: 36, height: 4,
+                            decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
+                          ),
+                          _buildSearchTrigger(context),
+                        ],
                       ),
                     ),
-
-                    // Search Bar
-                    Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: _buildSearchBar(context),
-                    ),
-
-                    // Recent Locations List
-                    Expanded(
-                      child: ListView.builder(
-                        controller: scrollController,
-                        padding: EdgeInsets.zero,
-                        itemCount: _recentLocations.length,
-                        itemBuilder: (context, index) {
-                          final loc = _recentLocations[index];
-                          return _buildLocationItem(context, ref, loc);
-                        },
-                      ),
-                    ),
+                    SliverToBoxAdapter(child: _buildRecentList()),
+                    const SliverToBoxAdapter(child: SizedBox(height: 80)),
                   ],
                 ),
               );
             },
           ),
-
-          // 4. Back Button (Left top)
-          Positioned(
-             top: MediaQuery.of(context).padding.top + 16,
-             left: 24,
-             child: InkWell(
-               onTap: () => NavHelpers.pop(context),
-               child: Container(
-                 padding: const EdgeInsets.all(8),
-                 decoration: BoxDecoration(
-                   color: Colors.white.withValues(alpha: 0.9),
-                   shape: BoxShape.circle,
-                   boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
-                 ),
-                 child: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: AppColors.primaryNavy),
-               ),
-             ),
-          ),
         ],
       ),
     );
   }
 
-  Widget _buildTopLocationIndicator(String address) {
-    return Column(
-      children: [
-        GestureDetector(
-          onTap: () {
-            // Refocus search to change pickup
-            _searchController.clear();
-            ref.read(taxiProvider.notifier).setPickup(const LatLng(12.9716, 77.5946), 'Current Location');
-          },
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.95),
-              borderRadius: BorderRadius.circular(30),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                )
-              ],
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  '80', // As per screenshot
-                  style: TextStyle(fontWeight: FontWeight.w900, color: AppColors.primaryNavy),
+  Widget _buildFloatingHeader(BuildContext context, TaxiState state) {
+    return Positioned(
+      top: MediaQuery.of(context).padding.top + 12,
+      left: 16, right: 16,
+      child: Column(
+        children: [
+          Row(
+            children: [
+              GestureDetector(
+                onTap: () => NavHelpers.pop(context),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 8)]),
+                  child: const Icon(Icons.arrow_back_rounded, size: 20, color: Colors.black87),
                 ),
-                const SizedBox(width: 8),
-                Flexible(
-                  child: Text(
-                    address,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.textPrimary,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ),
-        // Arrow/Dot connector
-        Container(
-          width: 24,
-          height: 24,
-          margin: const EdgeInsets.only(top: 4),
-          decoration: const BoxDecoration(
-            color: AppColors.successGreen,
-            shape: BoxShape.circle,
-            border: Border.fromBorderSide(BorderSide(color: Colors.white, width: 3)),
-          ),
-          child: Center(
+          const SizedBox(height: 100),
+          GestureDetector(
+            onTap: () => context.push('/taxi/search-location', extra: {'focusPickup': true}),
             child: Container(
-              width: 8,
-              height: 8,
-              decoration: const BoxDecoration(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
                 color: Colors.white,
-                shape: BoxShape.circle,
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 15)],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 8, height: 8,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF22C55E),
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(color: Color(0x6622C55E), blurRadius: 8, spreadRadius: 2),
+                      ],
+                    ),
+                  ).animate(onPlay: (controller) => controller.repeat(reverse: true))
+                   .scale(begin: const Offset(0.8, 0.8), end: const Offset(1.2, 1.2), duration: 1000.ms)
+                   .boxShadow(begin: const BoxShadow(color: Color(0x3322C55E), blurRadius: 4), end: const BoxShadow(color: Color(0x8822C55E), blurRadius: 12), duration: 1000.ms),
+                  const SizedBox(width: 10),
+                  Flexible(
+                    child: Text(
+                      state.pickupAddress ?? 'Detecting Location...',
+                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black87),
+                      maxLines: 1, overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
               ),
             ),
-          ),
-        ),
-      ],
+          ).animate().fadeIn().scale(),
+        ],
+      ),
     );
   }
 
-  Widget _buildSearchBar(BuildContext context) {
-    return Container(
-      height: 60,
-      decoration: BoxDecoration(
-        color: AppColors.bgSkyLight.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.1), width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primaryBlue.withValues(alpha: 0.2),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          )
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Row(
+  Widget _buildSearchTrigger(BuildContext context) {
+    return GestureDetector(
+      onTap: () => context.push('/taxi/search-location', extra: {'focusPickup': false}),
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF3F4F6),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: const Row(
           children: [
-            const Icon(Icons.search, color: Colors.black87, size: 28),
-            const SizedBox(width: 12),
-            Expanded(
-              child: TextField(
-                controller: _searchController,
-                decoration: const InputDecoration(
-                  hintText: 'Where do you want to go?',
-                  hintStyle: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.primaryNavy,
-                  ),
-                  border: InputBorder.none,
-                ),
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.primaryNavy,
-                ),
-                onSubmitted: (value) {
-                  if (value.isNotEmpty) {
-                    ref.read(taxiProvider.notifier).setDropoff(
-                          const LatLng(12.9716, 77.5946), // Mock coordinates
-                          value,
-                        );
-                    context.push('/taxi/ride-options');
-                  }
-                },
-              ),
+            Icon(Iconsax.search_normal, size: 20, color: Colors.black54),
+            SizedBox(width: 12),
+            Text(
+              'Where do you want to go?',
+              style: TextStyle(fontSize: 15, color: Colors.black54, fontWeight: FontWeight.w500),
             ),
           ],
         ),
@@ -251,95 +183,62 @@ class _BookRideScreenState extends ConsumerState<BookRideScreen> {
     );
   }
 
-  Widget _buildLocationItem(BuildContext context, WidgetRef ref, Map<String, String> loc) {
-    return InkWell(
-      onTap: () {
-        final lat = double.parse(loc['lat']!);
-        final lng = double.parse(loc['lng']!);
-        ref.read(taxiProvider.notifier).setDropoff(
-              LatLng(lat, lng),
-              loc['title']!,
-            );
-        context.push('/taxi/ride-options');
-      },
+  Widget _buildRecentList() {
+    final mockLocations = ref.read(taxiProvider).mockLocations;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            child: Row(
-              children: [
-                Column(
-                  children: [
-                    const Icon(Iconsax.clock, color: Colors.grey, size: 22),
-                    const SizedBox(height: 4),
-                    Text(
-                      loc['distance']!,
-                      style: const TextStyle(fontSize: 10, color: Colors.grey),
-                    ),
-                  ],
-                ),
-                const SizedBox(width: 20),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        loc['title']!,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primaryNavy,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        loc['address']!,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Colors.grey[600],
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-                const Icon(Iconsax.heart, color: Colors.grey, size: 22),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Divider(height: 1, color: Colors.grey[200], thickness: 1),
-          ),
+          const Text('Recent Locations', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF374151))),
+          const SizedBox(height: 16),
+          ...mockLocations.take(3).map((loc) => _buildRecommendedItem(loc)),
         ],
       ),
     );
   }
 
-  static const List<Map<String, String>> _recentLocations = [
-    {
-      'title': '5th Main, 7, 17th Cross Rd, Sector...',
-      'address': '5th Main, 7, 17th Cross Rd, Sector 6, HSR...',
-      'distance': '2 km',
-      'lat': '12.9121',
-      'lng': '77.6445',
-    },
-    {
-      'title': '155, 155, Outer Ring Rd, Sector 4,...',
-      'address': '155, 155, Outer Ring Rd, Sector 4, HSR La...',
-      'distance': '2.2 km',
-      'lat': '12.9141',
-      'lng': '77.6465',
-    },
-    {
-      'title': 'Indiranagar Police Station, Old Mad...',
-      'address': 'Indiranagar Police Station, Old Madras Ro...',
-      'distance': '9.3 km',
-      'lat': '12.9784',
-      'lng': '77.6408',
-    },
-  ];
+  Widget _buildRecommendedItem(Map<String, dynamic> loc) {
+     final String title = loc['name']!;
+     final String subtitle = loc['address']!;
+     final String distance = loc['distance']!;
+
+     return Material(
+       color: Colors.transparent,
+       child: InkWell(
+         onTap: () {
+           final lat = loc['lat'] as double;
+           final lng = loc['lng'] as double;
+           final latLng = LatLng(lat, lng);
+           
+           ref.read(taxiProvider.notifier).setDropoff(latLng, title);
+           context.push('/taxi/ride-options');
+         },
+         borderRadius: BorderRadius.circular(16),
+         child: Container(
+           padding: const EdgeInsets.all(16),
+           decoration: BoxDecoration(
+             color: const Color(0xFFF9FAFB),
+             borderRadius: BorderRadius.circular(16),
+           ),
+           child: Row(
+             children: [
+               const Icon(Iconsax.location, color: Colors.black45, size: 20),
+               const SizedBox(width: 16),
+               Expanded(
+                 child: Column(
+                   crossAxisAlignment: CrossAxisAlignment.start,
+                   children: [
+                     Text(title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
+                     Text(subtitle, style: const TextStyle(color: Colors.black45, fontSize: 11)),
+                   ],
+                 ),
+               ),
+               Text(distance, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11, color: Colors.black38)),
+             ],
+           ),
+         ),
+       ),
+     );
+  }
 }

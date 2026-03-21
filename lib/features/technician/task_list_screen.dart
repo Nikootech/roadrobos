@@ -4,7 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+
 // import '../profile/user_provider.dart'; // Removed unused import
 import 'technician_provider.dart';
 
@@ -30,7 +30,7 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
       'task': '10,000km Service + Oil Change',
       'description': 'Includes filter replacement and fluid top-up.',
       'status': 'In-Progress',
-      'image': 'assets/images/creta.png'
+      'image': 'assets/icons/creta.png'
     },
     {
       'priority': 'STANDARD',
@@ -40,7 +40,7 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
       'task': 'Brake Pad Replacement',
       'description': 'Front and rear wheels. Check rotors.',
       'status': 'To-Do',
-      'image': 'assets/images/dzire.png'
+      'image': 'assets/icons/dzire.png'
     },
     {
       'priority': 'STANDARD',
@@ -50,7 +50,7 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
       'task': 'AC Compressor Service',
       'description': 'Check refrigerant levels and clean filters.',
       'status': 'Done',
-      'image': 'assets/images/city.png'
+      'image': 'assets/icons/city.png'
     },
   ];
 
@@ -77,7 +77,7 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
   Widget build(BuildContext context) {
     // final userState = ref.watch(userProvider); // Removed unused variable
     final activeJob = ref.watch(technicianProvider);
-    final today = DateFormat('EEEE, d MMM').format(DateTime.now());
+
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
@@ -90,12 +90,10 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
+                  const Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(today, style: const TextStyle(color: Colors.grey, fontSize: 13, fontWeight: FontWeight.w500)),
-                      const SizedBox(height: 4),
-                      const Text('Service Tasks', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Color(0xFF1A237E))),
+                      Text('Service Tasks', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Color(0xFF1A237E))),
                     ],
                   ),
                   GestureDetector(

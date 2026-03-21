@@ -28,6 +28,11 @@ class _RentalScreenState extends ConsumerState<RentalScreen> {
   List<Map<String, dynamic>> _suggestions = [];
   bool _showSuggestions = false;
   bool _isSearching = false;
+  final List<Map<String, dynamic>> _recentLocations = [
+    {'display_name': 'Koramangala 4th Block, Bengaluru', 'lat': 12.9344, 'lon': 77.6244},
+    {'display_name': 'Indiranagar Double Road, Bengaluru', 'lat': 12.9719, 'lon': 77.6412},
+    {'display_name': 'MG Road Metro Station, Bengaluru', 'lat': 12.9716, 'lon': 77.5946},
+  ];
 
   @override
   void initState() {
@@ -226,9 +231,7 @@ class _RentalScreenState extends ConsumerState<RentalScreen> {
       controller: controller,
       onChanged: onChanged,
       onTap: () {
-        if (controller.text.isNotEmpty) {
-           _onSearchChanged(controller.text);
-        }
+        _onSearchChanged(controller.text);
       },
       decoration: InputDecoration(
         hintText: hint,
@@ -245,7 +248,15 @@ class _RentalScreenState extends ConsumerState<RentalScreen> {
   }
 
   void _onSearchChanged(String query) async {
-    if (query.length < 3) {
+    if (query.isEmpty) {
+      setState(() {
+        _showSuggestions = true;
+        _suggestions = [];
+      });
+      return;
+    }
+
+    if (query.length < 2) {
       setState(() {
         _showSuggestions = false;
         _suggestions = [];
@@ -274,25 +285,56 @@ class _RentalScreenState extends ConsumerState<RentalScreen> {
         borderRadius: 16,
         opacity: 0.95,
         child: Column(
-          children: _suggestions.map((s) => ListTile(
-            leading: const Icon(Iconsax.location, size: 18, color: AppColors.textSecondary),
-            title: Text(
-              s['display_name'], 
-              maxLines: 1, 
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
-            ),
-            onTap: () {
-              setState(() {
-                _dropController.text = s['display_name'];
-                _showSuggestions = false;
-              });
-              final pos = LatLng(s['lat'], s['lon']);
-              ref.read(mapControllerProvider.notifier).selectDestination(pos);
-            },
-          )).toList(),
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (_suggestions.isEmpty) ...[
+              const Padding(
+                padding: EdgeInsets.fromLTRB(16, 12, 16, 8),
+                child: Text(
+                  'RECENT SEARCHES',
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.textMuted, letterSpacing: 1),
+                ),
+              ),
+              ..._recentLocations.map((loc) => _buildLocationItem(loc)),
+            ] else 
+              ..._suggestions.map((s) => _buildLocationItem(s)),
+          ],
         ),
-      ).animate().fadeIn().slideY(begin: -0.1, end: 0),
+      ),
+    ).animate().fadeIn(duration: 200.ms).slideY(begin: -0.05, end: 0);
+  }
+
+  Widget _buildLocationItem(Map<String, dynamic> loc) {
+    return Material(
+      color: Colors.transparent,
+      child: ListTile(
+        dense: true,
+        visualDensity: VisualDensity.compact,
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: const BoxDecoration(
+            color: AppColors.bgLightGrey,
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(Iconsax.location, size: 16, color: AppColors.primaryBlue),
+        ),
+        title: Text(
+          loc['display_name'], 
+          maxLines: 1, 
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+        ),
+        onTap: () {
+          setState(() {
+            _dropController.text = loc['display_name'];
+            _showSuggestions = false;
+          });
+          final pos = LatLng(loc['lat'], loc['lon']);
+          ref.read(mapControllerProvider.notifier).selectDestination(pos);
+          HapticFeedback.lightImpact();
+        },
+      ),
     );
   }
 
@@ -363,31 +405,45 @@ class _RentalScreenState extends ConsumerState<RentalScreen> {
   final List<Map<String, dynamic>> _vehicles = [
     {
       'name': 'Maruti Baleno',
-      'image': 'assets/images/baleno.png',
-      'price': '₹250/hr',
+      'image': 'assets/icons/baleno.png',
+      'price': '₹159/hr',
+      'rating': '4.9',
+      'type': 'Hatchback'
+    },
+    {
+      'name': 'Honda City',
+      'image': 'assets/icons/city.png',
+      'price': '₹179/hr',
+      'rating': '4.9',
+      'type': 'Sedan'
+    },
+    {
+      'name': 'Maruti Swift',
+      'image': 'assets/icons/swift.png',
+      'price': '₹129/hr',
       'rating': '4.8',
-      'type': 'Petrol'
+      'type': 'Hatchback'
+    },
+    {
+      'name': 'Mahindra Scorpio',
+      'image': 'assets/icons/scorpio.png',
+      'price': '₹219/hr',
+      'rating': '4.7',
+      'type': 'SUV'
     },
     {
       'name': 'Hyundai Creta',
-      'image': 'assets/images/creta.png',
-      'price': '₹350/hr',
+      'image': 'assets/icons/creta.png',
+      'price': '₹199/hr',
       'rating': '4.9',
-      'type': 'Diesel'
+      'type': 'SUV'
     },
     {
-      'name': 'Tata Nexon EV',
-      'image': 'assets/images/nexon.png',
-      'price': '₹300/hr',
-      'rating': '4.7',
-      'type': 'Electric'
-    },
-    {
-      'name': 'Swift ZXi',
-      'image': 'assets/images/swift.png',
-      'price': '₹180/hr',
-      'rating': '4.6',
-      'type': 'Petrol'
+      'name': 'Maruti Dzire',
+      'image': 'assets/icons/dzire.png',
+      'price': '₹149/hr',
+      'rating': '4.8',
+      'type': 'Sedan'
     },
   ];
 }

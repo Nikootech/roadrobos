@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
@@ -711,7 +712,10 @@ class _GoogleSignInButton extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(14),
-          onTap: () {},
+          onTap: () {
+            HapticFeedback.mediumImpact();
+            NavHelpers.showSuccess(context, 'Google Sign-In coming soon in production!');
+          },
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [

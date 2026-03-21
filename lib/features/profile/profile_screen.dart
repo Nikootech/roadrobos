@@ -115,6 +115,8 @@ class ProfileScreen extends ConsumerWidget {
                           children: [
                             Text(
                               user.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w700,
@@ -169,25 +171,29 @@ class ProfileScreen extends ConsumerWidget {
                               ),
                             ),
                             const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                Text(
-                                  user.points.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},'),
-                                  style: const TextStyle(
-                                    fontSize: 28,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.warningAmber,
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerLeft,
+                              child: Row(
+                                children: [
+                                  Text(
+                                    user.points.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},'),
+                                    style: const TextStyle(
+                                      fontSize: 28,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.warningAmber,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(width: 4),
-                                 const Text(
-                                   'pts',
-                                   style: TextStyle(
-                                     fontSize: 14,
-                                     color: AppColors.textOnDarkMuted,
+                                  const SizedBox(width: 4),
+                                   const Text(
+                                     'pts',
+                                     style: TextStyle(
+                                       fontSize: 14,
+                                       color: AppColors.textOnDarkMuted,
+                                     ),
                                    ),
-                                 ),
-                              ],
+                                ],
+                              ),
                             ),
                           ],
                         ),
@@ -343,14 +349,17 @@ class ProfileScreen extends ConsumerWidget {
           children: [
             Icon(icon, color: color, size: 24),
             const SizedBox(height: 8),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: color,
-                height: 1.3,
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                label,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                  height: 1.3,
+                ),
               ),
             ),
           ],

@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/live_map_widget.dart';
-import 'taxi_provider.dart';
+import '../../providers/taxi_provider.dart';
 
 class RideOptionsScreen extends ConsumerStatefulWidget {
   const RideOptionsScreen({super.key});
@@ -14,17 +15,18 @@ class RideOptionsScreen extends ConsumerStatefulWidget {
 }
 
 class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
-  SelectedRide? _selectedRide;
+  RideOption? _selectedRide;
 
   @override
   void initState() {
     super.initState();
     // Default selection
-    _selectedRide = SelectedRide(
-      name: 'Auto',
-      price: '₹247',
-      eta: '2 min away • Drop 1:11 pm',
-      icon: 'https://img.icons8.com/color/150/rickshaw.png',
+    _selectedRide = RideOption(
+      id: 'bike',
+      title: 'Bike',
+      price: 47,
+      subtitle: '1 min away • Drop 1:05 pm',
+      icon: Icons.motorcycle,
     );
   }
 
@@ -56,12 +58,118 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
             ),
           ),
 
-          // 3. Vehicles Bottom Sheet
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: _buildVehiclesSheet(context, taxiState)
-                .animate()
-                .slideY(begin: 1, end: 0, duration: 600.ms, curve: Curves.easeOutQuart),
+          // 3. Draggable Vehicles Sheet (Rapido Style)
+          DraggableScrollableSheet(
+            initialChildSize: 0.45,
+            minChildSize: 0.4,
+            maxChildSize: 0.9,
+            builder: (context, scrollController) {
+              return Container(
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+                  boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 20)],
+                ),
+                child: Column(
+                  children: [
+                    // Drag handle
+                    Container(
+                      margin: const EdgeInsets.symmetric(vertical: 12),
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
+                    ),
+
+                    // Vehicle Options List
+                    Expanded(
+                      child: ListView.builder(
+                        controller: scrollController,
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        itemCount: taxiState.rideOptions.length,
+                        itemBuilder: (context, index) {
+                          final option = taxiState.rideOptions[index];
+                          final isSelected = _selectedRide?.title == option.title;
+                          
+                          // Use user-provided icons with fallback
+                          String seats = '4';
+                          if (option.id.contains('bike')) {
+                            seats = '1';
+                          } else if (option.id.contains('auto')) {
+                            seats = '3';
+                          }
+
+                          return _buildVehicleSelectableItem(
+                            option.title,
+                            '₹${option.price.toStringAsFixed(0)}',
+                            seats,
+                            option.subtitle,
+                            option.assetPath,
+                            fallbackIcon: option.icon,
+                            badge: option.tag,
+                            isSelected: isSelected,
+                            onTap: () {
+                              setState(() => _selectedRide = option);
+                              ref.read(taxiProvider.notifier).selectOption(option);
+                              HapticFeedback.selectionClick();
+                            },
+                          );
+                        },
+                      ),
+                    ),
+
+                    // Footer Settings (Cash / Offers)
+                    const Divider(height: 1),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      child: Row(
+                        children: [
+                          Expanded(child: _buildFooterOption(Icons.wallet, 'Cash')),
+                          Container(width: 1, height: 20, color: Colors.grey[200]),
+                          Expanded(child: _buildFooterOption(Icons.local_offer, 'Offers')),
+                        ],
+                      ),
+                    ),
+
+                    // Book Button
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(32),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primaryBlue.withValues(alpha: 0.3),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            )
+                          ],
+                        ),
+                        child: ElevatedButton(
+                          onPressed: () {
+                            if (_selectedRide != null) {
+                              ref.read(taxiProvider.notifier).selectOption(_selectedRide!);
+                              ref.read(taxiProvider.notifier).startSearching();
+                              context.push('/taxi/tracking');
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primaryBlue,
+                            foregroundColor: Colors.white,
+                            minimumSize: const Size(double.infinity, 56),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+                            elevation: 0,
+                          ),
+                          child: const Text(
+                            'Book Ride Direct',
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: 0.5),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -87,13 +195,19 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
               ),
               const Spacer(),
               // Pickup Pill
-              _buildAddressPill(context, state.pickupAddress ?? 'Pick-up', isPickup: true),
+              Flexible(
+                child: _buildAddressPill(context, state.pickupAddress ?? 'Pick-up', isPickup: true),
+              ),
             ],
           ),
           const SizedBox(height: 12),
-          Align(
-            alignment: Alignment.centerRight,
-            child: _buildAddressPill(context, state.dropoffAddress ?? 'Destination', isPickup: false),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Flexible(
+                child: _buildAddressPill(context, state.dropoffAddress ?? 'Destination', isPickup: false),
+              ),
+            ],
           ),
         ],
       ),
@@ -102,7 +216,10 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
 
   Widget _buildAddressPill(BuildContext context, String address, {bool isPickup = true}) {
     return GestureDetector(
-      onTap: () => context.pop(), // Go back to edit
+      onTap: () {
+        ref.read(taxiProvider.notifier).setFocus(isPickup);
+        context.pop();
+      },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
@@ -159,126 +276,70 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
     );
   }
 
-  Widget _buildVehiclesSheet(BuildContext context, TaxiState state) {
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.55,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 20)],
-      ),
-      child: Column(
-        children: [
-          // Drag handle
-          Container(
-            margin: const EdgeInsets.symmetric(vertical: 12),
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
-          ),
-
-          // Scrollable Vehicle List
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              children: [
-                _buildVehicleSelectableItem('Auto', '₹247', '3', '2 min away • Drop 1:11 pm', 'https://img.icons8.com/color/150/rickshaw.png'),
-                _buildVehicleSelectableItem('Auto Priority', '₹314', '3', '2 min away • Drop 1:11 pm', 'https://img.icons8.com/color/150/rickshaw.png', isPriority: true),
-                _buildVehicleSelectableItem('Cab Non AC', '₹237', '4', '2 min away • Drop 1:11 pm', 'https://img.icons8.com/color/150/car.png'),
-                _buildVehicleSelectableItem('Cab Priority', '₹298', '4', '2 min away • Drop 1:11 pm', 'https://img.icons8.com/color/150/car.png', badge: 'Quickest'),
-                _buildVehicleSelectableItem('Cab AC', '₹270', '4', '2 min away • Drop 1:11 pm', 'https://img.icons8.com/color/150/luxury-car.png'),
-              ],
-            ),
-          ),
-
-          // Footer Settings (Cash / Offers)
-          const Divider(height: 1),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Row(
-              children: [
-                Expanded(child: _buildFooterOption(Icons.wallet, 'Cash')),
-                Container(width: 1, height: 24, color: Colors.grey[200]),
-                Expanded(child: _buildFooterOption(Icons.local_offer, 'Offers')),
-              ],
-            ),
-          ),
-
-          // Book Button
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(30),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primaryBlue.withValues(alpha: 0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  )
-                ],
-              ),
-              child: ElevatedButton(
-                onPressed: () {
-                  if (_selectedRide != null) {
-                    ref.read(taxiProvider.notifier).selectRide(_selectedRide!);
-                    ref.read(taxiProvider.notifier).updateStatus(RideStatus.searching);
-                    context.push('/taxi/tracking');
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryBlue,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 56),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                  elevation: 0,
-                ),
-                child: const Text(
-                  'Book Ride Direct',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: 0.5),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildVehicleSelectableItem(String name, String price, String seats, String eta, String iconUrl, {bool isPriority = false, String? badge}) {
-    final isSelected = _selectedRide?.name == name;
-    
-    return InkWell(
-      onTap: () {
-        setState(() {
-          _selectedRide = SelectedRide(name: name, price: price, eta: eta, icon: iconUrl);
-        });
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+  Widget _buildVehicleSelectableItem(
+    String name, 
+    String price, 
+    String seats, 
+    String eta, 
+    String? imagePath, {
+    IconData? fallbackIcon,
+    String? badge, 
+    bool isSelected = false, 
+    VoidCallback? onTap
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primaryBlue.withValues(alpha: 0.05) : Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
+          color: isSelected ? AppColors.primaryBlue.withValues(alpha: 0.05) : Colors.white,
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? AppColors.primaryBlue.withValues(alpha: 0.3) : Colors.transparent,
-            width: 1,
+            color: isSelected ? AppColors.primaryBlue : Colors.black.withValues(alpha: 0.05),
+            width: isSelected ? 2 : 1,
           ),
+          boxShadow: isSelected ? [
+            BoxShadow(color: AppColors.primaryBlue.withValues(alpha: 0.1), blurRadius: 15, offset: const Offset(0, 5))
+          ] : null,
         ),
         child: Row(
           children: [
-            // Icon with priority badge
+            // Icon Container
             Stack(
               clipBehavior: Clip.none,
               children: [
-                Image.network(iconUrl, width: 44, height: 44, errorBuilder: (_, __, ___) => const Icon(Icons.local_taxi, size: 40)),
-                if (isPriority)
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: isSelected ? AppColors.primaryBlue.withValues(alpha: 0.1) : const Color(0xFFF3F4F6),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Center(
+                    child: imagePath != null 
+                      ? (imagePath.startsWith('http') 
+                          ? Image.network(imagePath, width: 44, height: 44, errorBuilder: (_, __, ___) => Icon(fallbackIcon ?? Icons.local_taxi, size: 32, color: Colors.black45))
+                          : Image.asset(imagePath, width: 44, height: 44, errorBuilder: (_, __, ___) => Icon(fallbackIcon ?? Icons.local_taxi, size: 32, color: Colors.black45)))
+                      : Icon(fallbackIcon ?? Icons.local_taxi, size: 32, color: isSelected ? AppColors.primaryBlue : Colors.black45),
+                  ),
+                ),
+                if (badge != null)
                   Positioned(
-                    top: -4,
-                    left: -4,
+                    top: -8,
+                    right: -8,
                     child: Container(
-                      padding: const EdgeInsets.all(2),
-                      decoration: const BoxDecoration(color: Color(0xFF1E293B), shape: BoxShape.circle),
-                      child: const Icon(Icons.bolt, color: Colors.yellow, size: 12),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: badge == 'Quickest' ? AppColors.dangerRed : AppColors.primaryBlue,
+                        borderRadius: BorderRadius.circular(10),
+                        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
+                      ),
+                      child: Text(
+                        badge,
+                        style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w800),
+                      ),
                     ),
                   ),
               ],
@@ -325,7 +386,7 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
             Text(price, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
           ],
         ),
-      ),
+      ).animate(target: isSelected ? 1 : 0).shimmer(color: Colors.white24).scale(begin: const Offset(1, 1), end: const Offset(1.02, 1.02)),
     );
   }
 

@@ -132,7 +132,7 @@ class _DriverBankWithdrawalScreenState extends State<DriverBankWithdrawalScreen>
                     ),
                   ),
                   IconButton(
-                    onPressed: () {},
+                    onPressed: () => _showBankSelectionSheet(context),
                     icon: const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.textSecondary),
                   ),
                 ],
@@ -184,6 +184,71 @@ class _DriverBankWithdrawalScreenState extends State<DriverBankWithdrawalScreen>
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showBankSelectionSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Select Bank Account', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.deepNavy)),
+            const SizedBox(height: 24),
+            _buildBankOption('HDFC Bank', '**** 1234', true),
+            const SizedBox(height: 12),
+            _buildBankOption('ICICI Bank', '**** 5678', false),
+            const SizedBox(height: 12),
+            _buildBankOption('SBI Bank', '**** 9012', false),
+            const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.deepNavy,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                child: const Text('Confirm Selection', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBankOption(String name, String acc, bool isSelected) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isSelected ? AppColors.primaryBlue.withValues(alpha: 0.05) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: isSelected ? AppColors.primaryBlue : AppColors.border),
+      ),
+      child: Row(
+        children: [
+          Icon(Iconsax.bank, color: isSelected ? AppColors.primaryBlue : AppColors.textSecondary),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                Text(acc, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+              ],
+            ),
+          ),
+          if (isSelected) const Icon(Icons.check_circle_rounded, color: AppColors.primaryBlue),
+        ],
       ),
     );
   }

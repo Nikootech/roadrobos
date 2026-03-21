@@ -33,13 +33,12 @@ class _RateRideScreenState extends State<RateRideScreen> {
           children: [
             const CircleAvatar(
               radius: 40,
-              backgroundImage: NetworkImage('https://i.pravatar.cc/150?u=captain'),
+              backgroundImage: NetworkImage('https://i.pravatar.cc/150?u=roadrobo'),
             ),
             const SizedBox(height: 16),
             const Text(
-              'How was your ride with Sohan?',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppColors.primaryNavy),
+              'Rate your Roadrobo',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.blue),
             ),
             const SizedBox(height: 32),
             

@@ -170,7 +170,7 @@ class _TechnicianDashboardScreenState extends ConsumerState<TechnicianDashboardS
   Widget build(BuildContext context) {
     final user = ref.watch(userProvider);
     final activeJob = ref.watch(technicianProvider);
-    final dateStr = DateFormat('EEEE, d MMM').format(DateTime.now());
+
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
@@ -192,8 +192,6 @@ class _TechnicianDashboardScreenState extends ConsumerState<TechnicianDashboardS
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(dateStr, style: const TextStyle(color: Colors.grey, fontSize: 13, fontWeight: FontWeight.w500)),
-                        const SizedBox(height: 4),
                         Text('Good Morning, ${user.name.split(' ')[0]}',
                             style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Color(0xFF1A237E))),
                       ],

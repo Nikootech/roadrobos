@@ -67,7 +67,7 @@ class DriverVerificationSuccessScreen extends StatelessWidget {
                   
                   const SizedBox(height: 16),
                   const Text(
-                    'Congratulations Captain! Your profile is verified. You are now authorized to accept ride requests.',
+                    'Congratulations Roadrobo! Your profile is verified. You are now authorized to accept ride requests.',
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 16, color: AppColors.textSecondary, height: 1.6, fontWeight: FontWeight.w500),
                   ).animate().fadeIn(delay: 600.ms).slideY(begin: 0.2, end: 0),

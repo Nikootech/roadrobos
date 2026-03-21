@@ -18,7 +18,7 @@ class RentalVehicleDetailScreen extends ConsumerWidget {
     // Default placeholder vehicle if none selected
     final displayVehicle = vehicle ?? {
       'name': 'Maruti Baleno',
-      'image': 'assets/images/baleno.png',
+      'image': 'assets/icons/baleno.png',
       'price': '₹1,200/day',
       'rating': '4.9',
       'seats': '5 Seats',
@@ -40,9 +40,12 @@ class RentalVehicleDetailScreen extends ConsumerWidget {
               background: Stack(
                 fit: StackFit.expand,
                 children: [
-                  Image.asset(
-                    displayVehicle['image'],
-                    fit: BoxFit.cover,
+                  Hero(
+                    tag: 'vehicle_${displayVehicle['name']}',
+                    child: Image.asset(
+                      displayVehicle['image'],
+                      fit: BoxFit.contain,
+                    ),
                   ),
                   // Animated Premium Badge
                   Positioned(
