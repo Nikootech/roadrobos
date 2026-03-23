@@ -5,14 +5,17 @@ import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/custom_button.dart';
 
-class ScheduleAppointmentScreen extends StatefulWidget {
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../features/technician/technician_provider.dart';
+
+class ScheduleAppointmentScreen extends ConsumerStatefulWidget {
   const ScheduleAppointmentScreen({super.key});
 
   @override
-  State<ScheduleAppointmentScreen> createState() => _ScheduleAppointmentScreenState();
+  ConsumerState<ScheduleAppointmentScreen> createState() => _ScheduleAppointmentScreenState();
 }
 
-class _ScheduleAppointmentScreenState extends State<ScheduleAppointmentScreen> {
+class _ScheduleAppointmentScreenState extends ConsumerState<ScheduleAppointmentScreen> {
   DateTime _selectedDate = DateTime.now().add(const Duration(days: 1));
   String _selectedTime = '';
 
@@ -96,6 +99,12 @@ class _ScheduleAppointmentScreenState extends State<ScheduleAppointmentScreen> {
             child: CustomButton(
               label: 'Book Appointment',
               onPressed: _selectedTime.isEmpty ? null : () {
+                final dateStr = DateFormat('d MMMM yyyy').format(_selectedDate);
+                ref.read(bookingProvider.notifier).setSchedule(dateStr, _selectedTime);
+                
+                final booking = ref.read(bookingProvider);
+                ref.read(technicianProvider.notifier).createJobFromBooking(booking);
+                
                 context.push('/live-service-status');
               },
               backgroundColor: AppColors.primaryBlue,

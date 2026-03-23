@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../features/rentals/rental_providers.dart';
+import '../core/data/mock_data.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 // Screens — Splash & Onboarding
 import '../features/splash/splash_screen.dart';
 import '../features/onboarding/onboarding_screen.dart';
@@ -12,6 +16,7 @@ import '../features/home/home_screen.dart';
 import '../features/home/bike_service_booking_screen.dart';
 import '../features/home/car_service_booking_screen.dart';
 import '../features/home/ev_bike_service_booking_screen.dart';
+import '../features/home/water_service_booking_screen.dart';
 import '../features/home/bookings_screen.dart';
 import '../features/home/explore_screen.dart';
 import '../features/profile/profile_screen.dart';
@@ -240,6 +245,13 @@ class AppRouter {
         ),
       ),
       GoRoute(
+        path: '/water-service-booking',
+        pageBuilder: (context, state) => AppTransitions.slideRight(
+          child: const WaterServiceBookingScreen(),
+          state: state,
+        ),
+      ),
+      GoRoute(
         path: '/live-service-status',
         pageBuilder: (context, state) => AppTransitions.slideUp(
           child: const LiveServiceStatusScreen(),
@@ -403,11 +415,51 @@ class AppRouter {
         ),
       ),
       GoRoute(
+        path: '/rental-detail/:slug',
+        pageBuilder: (context, state) {
+          final slug = state.pathParameters['slug']?.toLowerCase();
+          final vehicle = MockData.rentalVehicles.firstWhere(
+            (v) => v['name'].toString().toLowerCase().replaceAll(' ', '-') == slug,
+            orElse: () => MockData.rentalVehicles.first,
+          );
+          
+          return AppTransitions.slideRight(
+            child: ProviderScope(
+              overrides: [
+                selectedVehicleProvider.overrideWith((ref) => vehicle),
+              ],
+              child: const RentalVehicleDetailScreen(),
+            ),
+            state: state,
+          );
+        },
+      ),
+      GoRoute(
         path: '/rental-detail',
         pageBuilder: (context, state) => AppTransitions.slideRight(
           child: const RentalVehicleDetailScreen(),
           state: state,
         ),
+      ),
+      GoRoute(
+        path: '/product/:slug',
+        builder: (context, state) {
+          final slug = state.pathParameters['slug']?.toLowerCase();
+          final vehicle = MockData.rentalVehicles.firstWhere(
+            (v) => v['name'].toString().toLowerCase().replaceAll(RegExp(r'[^a-z0-9\s]'), '').replaceAll(RegExp(r'\s+'), '-') == slug,
+            orElse: () => {},
+          );
+
+          if (vehicle.isNotEmpty) {
+            return ProviderScope(
+              overrides: [
+                selectedVehicleProvider.overrideWith((ref) => vehicle),
+              ],
+              child: const RentalVehicleDetailScreen(),
+            );
+          }
+          return const HomeScreen();
+        },
       ),
       GoRoute(
         path: '/rental-checkout',

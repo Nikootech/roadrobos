@@ -1,13 +1,15 @@
+// ignore_for_file: deprecated_member_use, unused_import
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/constants/app_assets.dart';
 import '../../shared/widgets/responsive_utils.dart';
 import 'rental_providers.dart';
+import '../../core/data/mock_data.dart';
 
 /// Rentals - Vehicle Selection Screen matching Figma Screen [3] & [4]
 class VehicleSelectionScreen extends ConsumerStatefulWidget {
@@ -18,65 +20,23 @@ class VehicleSelectionScreen extends ConsumerStatefulWidget {
 }
 
 class _VehicleSelectionScreenState extends ConsumerState<VehicleSelectionScreen> {
-  final List<String> _filters = ['All', 'Sedan', 'SUV', 'Popular', 'Luxury'];
+  final List<Map<String, dynamic>> _filters = [
+    {'name': 'All', 'icon': Iconsax.category},
+    {'name': 'Cars', 'icon': Iconsax.car},
+    {'name': 'Bikes', 'icon': Icons.pedal_bike_rounded},
+    {'name': 'EV', 'icon': Icons.electric_bolt_rounded},
+  ];
   int _selectedFilterIndex = 0;
 
-  final List<Map<String, dynamic>> _vehicles = [
-    {
-      'name': 'Maruti Baleno',
-      'type': 'Hatchback',
-      'price': '₹159/hr',
-      'rating': '4.9',
-      'seats': '5 Seats',
-      'image': AppAssets.baleno,
-      'category': 'Popular',
-    },
-    {
-      'name': 'Maruti Swift',
-      'type': 'Hatchback',
-      'price': '₹129/hr',
-      'rating': '4.8',
-      'seats': '5 Seats',
-      'image': AppAssets.swift,
-      'category': 'Popular',
-    },
-    {
-      'name': 'Suzuki Dzire',
-      'type': 'Sedan',
-      'price': '₹149/hr',
-      'rating': '4.7',
-      'seats': '5 Seats',
-      'image': AppAssets.dzire,
-      'category': 'Popular',
-    },
-    {
-      'name': 'Honda City',
-      'type': 'Sedan',
-      'price': '₹179/hr',
-      'rating': '4.9',
-      'seats': '5 Seats',
-      'image': AppAssets.city,
-      'category': 'Luxury',
-    },
-    {
-      'name': 'Mahindra Scorpio',
-      'type': 'SUV',
-      'price': '₹219/hr',
-      'rating': '4.7',
-      'seats': '7 Seats',
-      'image': AppAssets.scorpio,
-      'category': 'Popular',
-    },
-    {
-      'name': 'Toyota Innova',
-      'type': 'SUV',
-      'price': '₹249/hr',
-      'rating': '4.8',
-      'seats': '7 Seats',
-      'image': AppAssets.innova,
-      'category': 'Popular',
-    },
-  ];
+  final List<Map<String, dynamic>> _vehicles = MockData.rentalVehicles;
+
+  List<Map<String, dynamic>> get _filteredVehicles {
+    if (_selectedFilterIndex == 0) return _vehicles;
+    final category = _filters[_selectedFilterIndex]['name'];
+    if (category == 'Cars') return _vehicles.where((v) => v['isBike'] != true).toList();
+    if (category == 'Bikes') return _vehicles.where((v) => v['isBike'] == true).toList();
+    return _vehicles.where((v) => v['category'] == category || (v['isBike'] == true && category == 'EV' && v['type'] == 'EV Bike')).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -113,25 +73,41 @@ class _VehicleSelectionScreenState extends ConsumerState<VehicleSelectionScreen>
               separatorBuilder: (_, __) => const SizedBox(width: 8),
               itemBuilder: (context, index) {
                 final isSelected = _selectedFilterIndex == index;
+                final filterMap = _filters[index];
                 return GestureDetector(
                   onTap: () {
                     HapticFeedback.selectionClick();
                     setState(() => _selectedFilterIndex = index);
                   },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
                       color: isSelected ? AppColors.primaryBlue : AppColors.bgLightGrey,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: isSelected ? AppColors.primaryBlue : AppColors.border.withOpacity(0.5)),
+                      boxShadow: isSelected ? [BoxShadow(color: AppColors.primaryBlue.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 4))] : null,
                     ),
-                    child: Text(
-                      _filters[index],
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: isSelected ? Colors.white : AppColors.textPrimary,
-                      ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          filterMap['icon'],
+                          size: 16,
+                          color: isSelected ? Colors.white : AppColors.textSecondary,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          filterMap['name'],
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                            color: isSelected ? Colors.white : AppColors.textPrimary,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 );
@@ -142,25 +118,20 @@ class _VehicleSelectionScreenState extends ConsumerState<VehicleSelectionScreen>
       ),
       body: ListView.separated(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
-        itemCount: _vehicles.length,
+        itemCount: _filteredVehicles.length,
         separatorBuilder: (_, __) => const SizedBox(height: 24),
         itemBuilder: (context, index) {
-          final vehicle = _vehicles[index];
-          // Simple filtering logic
-          if (_selectedFilterIndex != 0) {
-            final filter = _filters[_selectedFilterIndex].toLowerCase();
-            if (vehicle['type'].toString().toLowerCase() != filter && 
-                vehicle['category'].toString().toLowerCase() != filter) {
-              return const SizedBox.shrink();
-            }
-          }
+          final vehicle = _filteredVehicles[index];
           
           return _VehicleCard(
+            key: ValueKey(vehicle['name']),
             vehicle: vehicle,
             onTap: () {
               HapticFeedback.mediumImpact();
+              final slug = vehicle['name'].toString().toLowerCase().replaceAll(' ', '-');
+              ref.read(recentlyViewedProvider.notifier).addView(vehicle);
               ref.read(selectedVehicleProvider.notifier).state = vehicle;
-              context.push('/rental-detail');
+              context.push('/rental-detail/$slug');
             },
           )
               .animate()
@@ -176,180 +147,200 @@ class _VehicleCard extends ConsumerWidget {
   final Map<String, dynamic> vehicle;
   final VoidCallback onTap;
 
-  const _VehicleCard({required this.vehicle, required this.onTap});
+  const _VehicleCard({super.key, required this.vehicle, required this.onTap});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Image Area with Price Overlay
-              Stack(
-                children: [
-                  Container(
-                    height: ResponsiveLayout.responsiveHeight(context, 25),
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF9FAFB),
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    child: Hero(
-                      tag: 'vehicle_${vehicle['name']}',
-                      child: Image.asset(
-                        vehicle['image'],
-                        fit: BoxFit.contain,
-                      ),
+    final isBike = vehicle['isBike'] == true;
+    final isEV = vehicle['type'] == 'EV Bike' || vehicle['category'] == 'EV';
+
+    return GestureDetector(
+      onTap: () {
+        ref.read(selectedVehicleProvider.notifier).state = vehicle;
+        onTap();
+      },
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(28),
+          boxShadow: [
+            BoxShadow(
+              color: isEV ? Colors.green.withOpacity(0.12) : Colors.black.withOpacity(0.08),
+              blurRadius: 16,
+              offset: const Offset(0, 8),
+            ),
+          ],
+          border: isEV ? Border.all(color: Colors.green.withOpacity(0.1), width: 1) : null,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Image Area with Badges
+            Stack(
+              children: [
+                Container(
+                  height: ResponsiveLayout.responsiveHeight(context, 26),
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: isEV ? const Color(0xFFF0FAF0) : const Color(0xFFF9FAFB),
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                  ),
+                  child: Hero(
+                    tag: 'vehicle_${vehicle['name']}',
+                    child: Image.asset(
+                      vehicle['image'],
+                      fit: BoxFit.contain,
                     ),
                   ),
-                  // Price Badge
+                ),
+                // EV Badge
+                if (isEV)
                   Positioned(
-                    bottom: 12,
-                    left: 12,
+                    top: 16,
+                    left: 16,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
+                        color: Colors.green.shade600,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(Icons.electric_bolt_rounded, color: Colors.white, size: 14),
+                          SizedBox(width: 4),
+                          Text(
+                            'ECO FRIENDLY',
+                            style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.5),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                // Price Tag
+                Positioned(
+                  bottom: 16,
+                  right: 16,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10)],
+                    ),
+                    child: Text(
+                      vehicle['price'],
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
                         color: AppColors.primaryBlue,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        vehicle['price'],
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white,
-                        ),
                       ),
                     ),
                   ),
-                  // Wishlist Button
-                  Positioned(
-                    top: 12,
-                    right: 12,
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.favorite_outline_rounded,
-                        color: AppColors.textSecondary,
-                        size: 22,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
+                ),
+              ],
+            ),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
                           vehicle['name'],
                           style: const TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w900,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
                             color: AppColors.textPrimary,
                             letterSpacing: -0.5,
                           ),
                         ),
-                        Row(
-                          children: [
-                            const Icon(Icons.star_rounded, color: Colors.amber, size: 20),
-                            const SizedBox(width: 4),
-                            Text(
-                              vehicle['rating'],
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.textPrimary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+                      ),
+                      const Row(
+                        children: [
+                          Icon(Icons.star_rounded, color: Colors.amber, size: 18),
+                          SizedBox(width: 4),
+                          Text('4.9', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      _buildInfoChip(isBike ? Icons.speed_rounded : Iconsax.user, isBike ? (vehicle['spec'] ?? '') : (vehicle['seats'] ?? '')),
+                      const SizedBox(width: 8),
+                      _buildInfoChip(isBike ? Icons.pedal_bike_rounded : Iconsax.car, vehicle['type']),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: () {
+                      HapticFeedback.mediumImpact();
+                      final slug = vehicle['name'].toString().toLowerCase().replaceAll(' ', '-');
+                      ref.read(recentlyViewedProvider.notifier).addView(vehicle);
+                      ref.read(selectedVehicleProvider.notifier).state = vehicle;
+                      context.push('/rental-detail/$slug');
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primaryBlue,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(double.infinity, 54),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 0,
                     ),
-                    Row(
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Iconsax.user, size: 16, color: AppColors.textSecondary),
-                        const SizedBox(width: 6),
                         Text(
-                          vehicle['seats'],
-                          style: const TextStyle(
+                          'Book Now',
+                          style: TextStyle(
                             fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        const Icon(Iconsax.car, size: 16, color: AppColors.textSecondary),
-                        const SizedBox(width: 6),
-                        Text(
-                          vehicle['type'],
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
+                        SizedBox(width: 8),
+                        Icon(Icons.arrow_forward_ios_rounded, size: 14),
                       ],
                     ),
-                    const SizedBox(height: 24),
-                    ElevatedButton(
-                      onPressed: () {
-                        HapticFeedback.mediumImpact();
-                        ref.read(selectedVehicleProvider.notifier).state = vehicle;
-                        context.push('/rental-detail');
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primaryBlue,
-                        minimumSize: const Size(double.infinity, 56),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: const Text(
-                        'Book Now',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
-}
 
+  Widget _buildInfoChip(IconData icon, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.bgLightGrey,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: AppColors.textSecondary),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

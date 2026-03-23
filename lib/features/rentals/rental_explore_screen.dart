@@ -5,8 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/constants/app_assets.dart';
 import 'rental_providers.dart';
+import '../../core/data/mock_data.dart';
 import '../../shared/widgets/responsive_utils.dart';
 
 class RentalExploreScreen extends ConsumerStatefulWidget {
@@ -17,52 +17,15 @@ class RentalExploreScreen extends ConsumerStatefulWidget {
 }
 
 class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
-  String _selectedCategory = 'Recent';
+  String _selectedCategory = 'All';
 
-  final List<String> _categories = ['Recent', 'Popular', 'SUV', 'Sedan'];
-
-  final List<Map<String, dynamic>> _topVehicles = [
-    {
-      'name': 'Maruti Baleno',
-      'type': 'Hatchback',
-      'price': '₹159/hr',
-      'rating': '4.9',
-      'seats': '5 Seats',
-      'image': AppAssets.baleno,
-      'category': 'Popular',
-    },
-    {
-      'name': 'Honda City',
-      'type': 'Sedan',
-      'price': '₹179/hr',
-      'rating': '4.9',
-      'seats': '5 Seats',
-      'image': AppAssets.city,
-      'category': 'Luxury',
-    },
-    {
-      'name': 'Maruti Swift',
-      'type': 'Hatchback',
-      'price': '₹129/hr',
-      'rating': '4.8',
-      'seats': '5 Seats',
-      'image': AppAssets.swift,
-      'category': 'Popular',
-    },
-    {
-      'name': 'Mahindra Scorpio',
-      'type': 'SUV',
-      'price': '₹219/hr',
-      'rating': '4.7',
-      'seats': '7 Seats',
-      'image': AppAssets.scorpio,
-      'category': 'Popular',
-    },
-  ];
+  final List<Map<String, dynamic>> _topVehicles = MockData.rentalVehicles;
 
   List<Map<String, dynamic>> get _filteredVehicles {
-    if (_selectedCategory == 'Recent') return _topVehicles;
-    return _topVehicles.where((v) => v['category'] == _selectedCategory || v['type'] == _selectedCategory).toList();
+    if (_selectedCategory == 'All') return _topVehicles;
+    if (_selectedCategory == 'Cars') return _topVehicles.where((v) => v['isBike'] != true).toList();
+    if (_selectedCategory == 'Bikes') return _topVehicles.where((v) => v['isBike'] == true).toList();
+    return _topVehicles.where((v) => v['category'] == _selectedCategory || (v['isBike'] == true && _selectedCategory == 'EV' && v['type'] == 'EV Bike')).toList();
   }
 
   @override
@@ -145,9 +108,14 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
                 children: [
-                  ..._categories.map((cat) => Padding(
+                  ...[
+                    {'name': 'All', 'icon': Iconsax.category},
+                    {'name': 'Cars', 'icon': Iconsax.car},
+                    {'name': 'Bikes', 'icon': Icons.pedal_bike_rounded},
+                    {'name': 'EV', 'icon': Icons.electric_bolt_rounded},
+                  ].map((cat) => Padding(
                     padding: const EdgeInsets.only(right: 12),
-                    child: _buildTab(cat, _selectedCategory == cat),
+                    child: _buildTab(cat, _selectedCategory == cat['name']),
                   )),
                 ],
               ),
@@ -198,26 +166,40 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
     );
   }
 
-  Widget _buildTab(String label, bool isSelected) {
+  Widget _buildTab(Map<String, dynamic> categoryData, bool isSelected) {
     return GestureDetector(
       onTap: () {
         HapticFeedback.selectionClick();
-        setState(() => _selectedCategory = label);
+        setState(() => _selectedCategory = categoryData['name']);
       },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.primaryBlue : AppColors.bgLightGrey,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: isSelected ? [BoxShadow(color: AppColors.primaryBlue.withValues(alpha: 0.2), blurRadius: 10, offset: const Offset(0, 4))] : null,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: isSelected ? AppColors.primaryBlue : AppColors.border.withValues(alpha: 0.5)),
+          boxShadow: isSelected ? [BoxShadow(color: AppColors.primaryBlue.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 4))] : null,
         ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: isSelected ? Colors.white : AppColors.textPrimary,
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              categoryData['icon'],
+              size: 18,
+              color: isSelected ? Colors.white : AppColors.textSecondary,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              categoryData['name'],
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                color: isSelected ? Colors.white : AppColors.textPrimary,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -258,8 +240,10 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
           return GestureDetector(
             onTap: () {
               HapticFeedback.lightImpact();
+              final slug = vehicle['name'].toString().toLowerCase().replaceAll(' ', '-');
+              ref.read(recentlyViewedProvider.notifier).addView(vehicle);
               ref.read(selectedVehicleProvider.notifier).state = vehicle;
-              context.push('/rental-detail');
+              context.push('/rental-detail/$slug');
             },
             child: Container(
               width: ResponsiveLayout.responsiveWidth(context, 80),
@@ -353,10 +337,10 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
                         const SizedBox(height: 6),
                         Row(
                           children: [
-                            const Icon(Iconsax.user, size: 14, color: AppColors.textSecondary),
+                            Icon(vehicle['isBike'] == true ? Icons.speed_rounded : Iconsax.user, size: 14, color: AppColors.textSecondary),
                             const SizedBox(width: 4),
                             Text(
-                              vehicle['seats'],
+                              vehicle['spec'] ?? vehicle['seats'] ?? '',
                               style: const TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
@@ -364,7 +348,8 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
                               ),
                             ),
                             const SizedBox(width: 10),
-                            const Icon(Iconsax.car, size: 14, color: AppColors.textSecondary),
+                            Icon(vehicle['isBike'] == true ? Icons.pedal_bike_rounded : Iconsax.car, size: 14, color: AppColors.textSecondary),
+
                             const SizedBox(width: 4),
                             Text(
                               vehicle['type'],
@@ -380,7 +365,10 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
                         ElevatedButton(
                           onPressed: () {
                             HapticFeedback.mediumImpact();
-                            context.push('/rental-detail');
+                            final slug = vehicle['name'].toString().toLowerCase().replaceAll(' ', '-');
+                            ref.read(recentlyViewedProvider.notifier).addView(vehicle);
+                            ref.read(selectedVehicleProvider.notifier).state = vehicle;
+                            context.push('/rental-detail/$slug');
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primaryBlue,
@@ -412,18 +400,28 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
   }
 
   Widget _buildRecentList(BuildContext context) {
-    final List<Map<String, dynamic>> recentVehicles = [
-      {
-        'name': 'Hyundai Creta',
-        'type': 'SUV',
-        'image': AppAssets.creta,
-      },
-      {
-        'name': 'Maruti Dzire',
-        'type': 'Sedan',
-        'image': AppAssets.dzire,
-      },
-    ];
+    final recentVehicles = ref.watch(recentlyViewedProvider);
+
+    if (recentVehicles.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: AppColors.bgLightGrey,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+          ),
+          child: const Center(
+            child: Text(
+              'Your recently viewed vehicles will appear here',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w500),
+            ),
+          ),
+        ),
+      );
+    }
 
     return ListView.separated(
       shrinkWrap: true,
@@ -436,8 +434,10 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
         return GestureDetector(
           onTap: () {
             HapticFeedback.lightImpact();
+            final slug = vehicle['name'].toString().toLowerCase().replaceAll(' ', '-');
+            ref.read(recentlyViewedProvider.notifier).addView(vehicle);
             ref.read(selectedVehicleProvider.notifier).state = vehicle;
-            context.push('/rental-detail');
+            context.push('/rental-detail/$slug');
           },
           child: Container(
             padding: const EdgeInsets.all(12),
@@ -457,10 +457,9 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12),
-                    child: Image.asset(
-                      vehicle['image'],
-                      fit: BoxFit.contain,
-                    ),
+                    child: vehicle['image'] != null 
+                      ? Image.asset(vehicle['image'], fit: BoxFit.contain)
+                      : const Icon(Icons.car_rental, color: AppColors.textMuted),
                   ),
                 ),
                 const SizedBox(width: 16),

@@ -4,11 +4,14 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 
-class SelectServiceTypeScreen extends StatelessWidget {
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../features/technician/technician_provider.dart';
+
+class SelectServiceTypeScreen extends ConsumerWidget {
   const SelectServiceTypeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -43,6 +46,7 @@ class SelectServiceTypeScreen extends StatelessWidget {
               const SizedBox(height: 24),
               _buildServiceCategoryCard(
                 context,
+                ref,
                 'EV Bike Service',
                 'Electric vehicle specialized maintenance',
                 Icons.bolt_rounded,
@@ -52,6 +56,7 @@ class SelectServiceTypeScreen extends StatelessWidget {
               const SizedBox(height: 16),
               _buildServiceCategoryCard(
                 context,
+                ref,
                 'Bike Service',
                 'Comprehensive packages for all bike models',
                 Icons.pedal_bike_rounded,
@@ -61,11 +66,22 @@ class SelectServiceTypeScreen extends StatelessWidget {
               const SizedBox(height: 16),
               _buildServiceCategoryCard(
                 context,
+                ref,
                 'Car Service',
                 'Premium care and repairs for your car',
                 Icons.directions_car_rounded,
                 AppColors.accentOrange,
                 '/car-service-booking',
+              ),
+              const SizedBox(height: 16),
+              _buildServiceCategoryCard(
+                context,
+                ref,
+                'Water Service',
+                'Professional wash for bikes & cars',
+                Icons.local_car_wash_rounded,
+                const Color(0xFF0EA5E9),
+                '/water-service-booking',
               ),
               const SizedBox(height: 16),
               _buildEmergencyServiceCard(
@@ -136,18 +152,18 @@ class SelectServiceTypeScreen extends StatelessWidget {
     ).animate().fadeIn(duration: 400.ms).slideX(begin: 0.1, end: 0);
   }
 
-  Widget _buildServiceCategoryCard(BuildContext context, String title, String desc, IconData icon, Color color, String route) {
+  Widget _buildServiceCategoryCard(BuildContext context, WidgetRef ref, String title, String desc, IconData icon, Color color, String route) {
     return GestureDetector(
-      onTap: () => context.push(route),
+      onTap: () {
+        ref.read(bookingProvider.notifier).reset();
+        ref.read(bookingProvider.notifier).setServiceType(title);
+        context.push(route);
+      },
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: AppColors.bgSkyLight,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.1)),
-          boxShadow: [
-            BoxShadow(color: color.withValues(alpha: 0.05), blurRadius: 20, offset: const Offset(0, 8)),
-          ],
         ),
         child: Row(
           children: [

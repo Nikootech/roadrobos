@@ -5,18 +5,21 @@ import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../core/theme/app_colors.dart';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../features/home/vehicle_provider.dart';
+
 /// Explore/Search Screen - Service categories and search
 /// Matches Figma service category patterns
-class ExploreScreen extends StatelessWidget {
+class ExploreScreen extends ConsumerWidget {
   const ExploreScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final categories = [
       {'icon': Icons.build_rounded, 'label': 'Repair', 'count': '12 services', 'color': const Color(0xFF3B82F6), 'route': '/select-service'},
       {'icon': Icons.car_rental_rounded, 'label': 'Rentals', 'count': '15+ models', 'color': const Color(0xFF8B5CF6), 'route': '/rentals'},
       {'icon': Icons.bolt_rounded, 'label': 'EV Service', 'count': '4 services', 'color': const Color(0xFF06B6D4), 'route': '/ev-bike-service-booking'},
-      {'icon': Icons.local_car_wash_rounded, 'label': 'Wash & Clean', 'count': '8 services', 'color': const Color(0xFF06B6D4), 'route': '/car-service-booking'},
+      {'icon': Icons.local_car_wash_rounded, 'label': 'Water Service', 'count': 'Wash & Clean', 'color': const Color(0xFF0EA5E9), 'route': '/water-service-booking'},
       {'icon': Icons.local_shipping_rounded, 'label': 'Logistics', 'count': 'Full support', 'color': const Color(0xFFF97316), 'route': '/delivery-logistics'},
       {'icon': Icons.oil_barrel_rounded, 'label': 'Oil & Fluids', 'count': '6 services', 'color': const Color(0xFFF97316), 'route': '/car-service-booking'},
       {'icon': Icons.ac_unit_rounded, 'label': 'AC & Climate', 'count': '5 services', 'color': const Color(0xFF8B5CF6), 'route': '/car-service-booking'},
@@ -118,7 +121,28 @@ class ExploreScreen extends StatelessWidget {
                   (context, index) {
                     final cat = categories[index];
                     return GestureDetector(
-                      onTap: () => context.push(cat['route'] as String),
+                      onTap: () {
+                        final route = cat['route'] as String;
+                        if (route == '/bike-service-booking') {
+                          final bikes = ref.read(allVehiclesProvider).where((v) => v.type == 'Bike' || v.type == 'EV Bike').toList();
+                          if (bikes.isNotEmpty) ref.read(vehicleProvider.notifier).setVehicle(bikes.first);
+                        } else if (route == '/car-service-booking') {
+                          final cars = ref.read(allVehiclesProvider).where((v) => v.type == 'Car').toList();
+                          if (cars.isNotEmpty) ref.read(vehicleProvider.notifier).setVehicle(cars.first);
+                        } else if (route == '/ev-bike-service-booking') {
+                          final evBikes = ref.read(allVehiclesProvider).where((v) => v.type == 'EV Bike').toList();
+                          if (evBikes.isNotEmpty) {
+                            ref.read(vehicleProvider.notifier).setVehicle(evBikes.first);
+                          } else {
+                            final bikes = ref.read(allVehiclesProvider).where((v) => v.type == 'Bike').toList();
+                            if (bikes.isNotEmpty) ref.read(vehicleProvider.notifier).setVehicle(bikes.first);
+                          }
+                        } else if (route == '/water-service-booking') {
+                          final cars = ref.read(allVehiclesProvider).where((v) => v.type == 'Car').toList();
+                          if (cars.isNotEmpty) ref.read(vehicleProvider.notifier).setVehicle(cars.first);
+                        }
+                        context.push(route);
+                      },
                       child: Container(
                         decoration: BoxDecoration(
                           color: AppColors.bgSkyLight,

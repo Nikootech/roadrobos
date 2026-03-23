@@ -4,14 +4,18 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/custom_button.dart';
 
-class CarServiceBookingScreen extends StatefulWidget {
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../features/technician/technician_provider.dart';
+import 'vehicle_provider.dart';
+
+class CarServiceBookingScreen extends ConsumerStatefulWidget {
   const CarServiceBookingScreen({super.key});
 
   @override
-  State<CarServiceBookingScreen> createState() => _CarServiceBookingScreenState();
+  ConsumerState<CarServiceBookingScreen> createState() => _CarServiceBookingScreenState();
 }
 
-class _CarServiceBookingScreenState extends State<CarServiceBookingScreen> {
+class _CarServiceBookingScreenState extends ConsumerState<CarServiceBookingScreen> {
   int _selectedPackageIndex = -1;
 
   final List<Map<String, dynamic>> _packages = [
@@ -103,7 +107,16 @@ class _CarServiceBookingScreenState extends State<CarServiceBookingScreen> {
 
   Widget _buildPremiumPackageCard(int index, Map<String, dynamic> pkg, bool isSelected) {
     return GestureDetector(
-      onTap: () => setState(() => _selectedPackageIndex = index),
+      onTap: () {
+        setState(() => _selectedPackageIndex = index);
+        final selectedVehicle = ref.read(vehicleProvider);
+        ref.read(bookingProvider.notifier).setVehicle(selectedVehicle.name, selectedVehicle.plate);
+        ref.read(bookingProvider.notifier).setPackage(
+          pkg['name'] as String, 
+          pkg['price'] as String,
+          List<String>.from(pkg['items'] as List),
+        );
+      },
       child: Container(
         margin: const EdgeInsets.only(bottom: 20),
         decoration: BoxDecoration(

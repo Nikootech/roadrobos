@@ -11,9 +11,9 @@ import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/constants/app_strings.dart';
-import '../../core/constants/app_assets.dart';
 import '../../shared/widgets/responsive_utils.dart';
 import '../../shared/widgets/glass_card.dart';
+import 'vehicle_provider.dart';
 import '../profile/user_provider.dart';
 import '../rentals/rental_providers.dart';
 import '../technician/technician_provider.dart';
@@ -187,8 +187,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+
+
   Widget _buildGreetingSection(WidgetRef ref) {
     final user = ref.watch(userProvider);
+    final selectedVehicle = ref.watch(vehicleProvider);
+    final allVehicles = ref.watch(allVehiclesProvider);
+
     return Padding(
       padding: ResponsiveLayout.responsivePadding(context, horizontal: 20, vertical: 20).copyWith(bottom: 0),
       child: Column(
@@ -199,7 +204,70 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           Text(user.name.split(' ')[0], style: TextStyle(fontSize: ResponsiveLayout.responsiveFontSize(context, 28), fontWeight: FontWeight.w800, color: AppColors.textPrimary)).animate(delay: 100.ms).fadeIn(duration: 500.ms).slideX(begin: -0.05, end: 0),
           const SizedBox(height: 16),
           GestureDetector(
-            onTap: () => context.go('/add-vehicle'),
+            onTap: () {
+              showModalBottomSheet(
+                context: context,
+                backgroundColor: Colors.transparent,
+                isScrollControlled: true,
+                builder: (context) => Container(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(context).size.height * 0.7,
+                  ),
+                  padding: EdgeInsets.only(
+                    left: 24, right: 24, top: 12,
+                    bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+                  ),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.bgLightGrey, borderRadius: BorderRadius.circular(2))),
+                      const SizedBox(height: 24),
+                      Text('Select Vehicle', style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w800)),
+                      const SizedBox(height: 16),
+                      Flexible(
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: allVehicles.length,
+                          itemBuilder: (context, index) {
+                            final vehicle = allVehicles[index];
+                            return ListTile(
+                              onTap: () {
+                                ref.read(vehicleProvider.notifier).setVehicle(vehicle);
+                                Navigator.pop(context);
+                              },
+                              leading: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(color: AppColors.bgSkyLight, borderRadius: BorderRadius.circular(10)),
+                                child: Icon(
+                                  vehicle.type == 'Car' ? Icons.directions_car_rounded : (vehicle.type == 'EV Bike' ? Icons.electric_bike_rounded : Icons.pedal_bike_rounded), 
+                                  color: AppColors.primaryBlue,
+                                ),
+                              ),
+                              title: Text(vehicle.name, style: const TextStyle(fontWeight: FontWeight.w600)),
+                              subtitle: Text(vehicle.plate),
+                              trailing: selectedVehicle.plate == vehicle.plate ? const Icon(Icons.check_circle_rounded, color: AppColors.successGreen) : null,
+                            );
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextButton.icon(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          context.push('/add-vehicle');
+                        },
+                        icon: const Icon(Icons.add_circle_outline_rounded),
+                        label: const Text('Add New Vehicle'),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
             child: Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(color: AppColors.bgSkyLight, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.1), width: 1)),
@@ -209,16 +277,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     width: 50,
                     height: 44,
                     decoration: BoxDecoration(color: AppColors.primaryBlue.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
-                    child: Image.asset(AppAssets.creta, fit: BoxFit.contain),
+                    child: Icon(selectedVehicle.name.toLowerCase().contains('car') ? Icons.directions_car_rounded : Icons.pedal_bike_rounded, color: AppColors.primaryBlue),
                   ),
                   const SizedBox(width: 12),
-                  const Expanded(
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(AppStrings.selectedVehicle, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.textSecondary, letterSpacing: 1)),
-                        SizedBox(height: 2),
-                        Text('Hyundai Creta - MH 02 AB 1234', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary), maxLines: 1, overflow: TextOverflow.ellipsis),
+                        const Text(AppStrings.selectedVehicle, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.textSecondary, letterSpacing: 1)),
+                        const SizedBox(height: 2),
+                        Text('${selectedVehicle.name} - ${selectedVehicle.plate}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary), maxLines: 1, overflow: TextOverflow.ellipsis),
                       ],
                     ),
                   ),
@@ -295,13 +363,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final activeJob = ref.watch(technicianProvider);
     if (activeRental == null && activeJob == null) return const SizedBox.shrink();
     final isRental = activeRental != null;
-    final title = isRental ? activeRental.vehicle['name'] : 'Job Card: ${activeJob!.id}';
-    final subtitle = isRental ? activeRental.status.name.toUpperCase() : activeJob!.status;
+    final title = isRental ? activeRental.vehicle['name'] : '${activeJob!.serviceType} - ${activeJob.packageName}';
+    final subtitle = isRental ? activeRental.status.name.toUpperCase() : '${activeJob!.vehicleModel} (${activeJob.vehiclePlate})';
     final statusColor = isRental ? (activeRental.status == RentalStatus.active ? AppColors.successGreen : AppColors.accentOrange) : AppColors.primaryBlue;
     return Padding(
       padding: ResponsiveLayout.responsivePadding(context, horizontal: 20, vertical: 16).copyWith(bottom: 0),
       child: GlassCard(
-        onTap: () => context.push(isRental ? '/delivery-logistics' : '/tech-job-card-details'),
+        onTap: () => context.push(isRental ? '/delivery-logistics' : '/live-service-status'),
         padding: const EdgeInsets.all(20),
         borderRadius: 32,
         opacity: 0.08,
@@ -313,7 +381,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             const SizedBox(height: 12),
             Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
             const SizedBox(height: 8),
-            ClipRRect(borderRadius: BorderRadius.circular(4), child: LinearProgressIndicator(value: 0.65, backgroundColor: AppColors.bgSkyLight, valueColor: AlwaysStoppedAnimation(statusColor), minHeight: 6)),
+            ClipRRect(borderRadius: BorderRadius.circular(4), child: LinearProgressIndicator(value: activeJob?.progress ?? 0.65, backgroundColor: AppColors.bgSkyLight, valueColor: AlwaysStoppedAnimation(statusColor), minHeight: 6)),
             const SizedBox(height: 8),
             Text(subtitle, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
           ],
@@ -350,7 +418,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               final service = _services[index];
               final color = service['color'] as Color;
               return GestureDetector(
-                onTap: () => context.push(service['route'] as String),
+                onTap: () {
+                  final route = service['route'] as String;
+                  if (route == '/bike-service') {
+                    final bikes = ref.read(allVehiclesProvider).where((v) => v.type == 'Bike' || v.type == 'EV Bike').toList();
+                    if (bikes.isNotEmpty) ref.read(vehicleProvider.notifier).setVehicle(bikes.first);
+                  } else if (route == '/car-service') {
+                    final cars = ref.read(allVehiclesProvider).where((v) => v.type == 'Car').toList();
+                    if (cars.isNotEmpty) ref.read(vehicleProvider.notifier).setVehicle(cars.first);
+                  } else if (route == '/ev-bike-service') {
+                    final evBikes = ref.read(allVehiclesProvider).where((v) => v.type == 'EV Bike').toList();
+                    if (evBikes.isNotEmpty) {
+                      ref.read(vehicleProvider.notifier).setVehicle(evBikes.first);
+                    } else {
+                      final bikes = ref.read(allVehiclesProvider).where((v) => v.type == 'Bike').toList();
+                      if (bikes.isNotEmpty) ref.read(vehicleProvider.notifier).setVehicle(bikes.first);
+                    }
+                  } else if (route == '/water-service') {
+                    // Default to Car for water service, but the screen has its own toggle
+                    final cars = ref.read(allVehiclesProvider).where((v) => v.type == 'Car').toList();
+                    if (cars.isNotEmpty) ref.read(vehicleProvider.notifier).setVehicle(cars.first);
+                  }
+                  context.push(route);
+                },
                 child: Container(
                   decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(16), border: Border.all(color: color.withValues(alpha: 0.2))),
                   child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(service['icon'] as IconData, color: color, size: ResponsiveLayout.isSmallPhone(context) ? 18 : 22), const SizedBox(height: 8), Text(service['label'] as String, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: ResponsiveLayout.responsiveFontSize(context, 10), fontWeight: FontWeight.w600, color: color))]),

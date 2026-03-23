@@ -4,14 +4,18 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/custom_button.dart';
 
-class EVBikeServiceBookingScreen extends StatefulWidget {
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../features/technician/technician_provider.dart';
+import 'vehicle_provider.dart';
+
+class EVBikeServiceBookingScreen extends ConsumerStatefulWidget {
   const EVBikeServiceBookingScreen({super.key});
 
   @override
-  State<EVBikeServiceBookingScreen> createState() => _EVBikeServiceBookingScreenState();
+  ConsumerState<EVBikeServiceBookingScreen> createState() => _EVBikeServiceBookingScreenState();
 }
 
-class _EVBikeServiceBookingScreenState extends State<EVBikeServiceBookingScreen> {
+class _EVBikeServiceBookingScreenState extends ConsumerState<EVBikeServiceBookingScreen> {
   int _selectedPackageIndex = -1;
 
   final List<Map<String, dynamic>> _packages = [
@@ -103,7 +107,16 @@ class _EVBikeServiceBookingScreenState extends State<EVBikeServiceBookingScreen>
 
   Widget _buildPremiumPackageCard(int index, Map<String, dynamic> pkg, bool isSelected) {
     return GestureDetector(
-      onTap: () => setState(() => _selectedPackageIndex = index),
+      onTap: () {
+        setState(() => _selectedPackageIndex = index);
+        final selectedVehicle = ref.read(vehicleProvider);
+        ref.read(bookingProvider.notifier).setVehicle(selectedVehicle.name, selectedVehicle.plate);
+        ref.read(bookingProvider.notifier).setPackage(
+          pkg['name'] as String, 
+          pkg['price'] as String,
+          List<String>.from(pkg['items'] as List),
+        );
+      },
       child: Container(
         margin: const EdgeInsets.only(bottom: 20),
         decoration: BoxDecoration(

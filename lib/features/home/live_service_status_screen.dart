@@ -1,15 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/custom_button.dart';
 import '../../navigation/nav_helpers.dart';
+import '../technician/technician_provider.dart';
 
-class LiveServiceStatusScreen extends StatelessWidget {
+class LiveServiceStatusScreen extends ConsumerStatefulWidget {
   const LiveServiceStatusScreen({super.key});
 
   @override
+  ConsumerState<LiveServiceStatusScreen> createState() => _LiveServiceStatusScreenState();
+}
+
+class _LiveServiceStatusScreenState extends ConsumerState<LiveServiceStatusScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Start the mock progress simulation when the screen is opened
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(technicianProvider.notifier).startMockProgress();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final job = ref.watch(technicianProvider);
+    
+    if (job == null) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     return Scaffold(
       backgroundColor: AppColors.bgLightAlt,
       appBar: AppBar(
@@ -21,9 +43,9 @@ class LiveServiceStatusScreen extends StatelessWidget {
             child: Icon(Icons.close_rounded, size: 24, color: AppColors.textPrimary),
           ),
         ),
-        title: const Text(
-          'Service Status',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+        title: Text(
+          'Service Status: ${job.id}',
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
         ),
       ),
       body: SingleChildScrollView(
@@ -31,23 +53,47 @@ class LiveServiceStatusScreen extends StatelessWidget {
         child: Column(
           children: [
             // Vehicle Info Card
-            _buildVehicleStatusCard(),
+            _buildVehicleStatusCard(job),
             const SizedBox(height: 24),
             
             // Progress Steps
-            const Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'Live Progress',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Live Progress',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryBlue.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    '${(job.progress * 100).toInt()}%',
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primaryBlue),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 20),
-            _buildProgressStep('Vehicle Picked Up', 'Technician is on the way to the hub', true, true),
-            _buildProgressStep('Inspection Started', 'Checking all vital components', true, true),
-            _buildProgressStep('Servicing in Progress', 'Oil change and brake cleaning', true, false),
-            _buildProgressStep('Quality Check', 'Final testing and verification', false, false),
-            _buildProgressStep('Ready for Delivery', 'Vehicle is being cleaned', false, false),
+            
+            // Dynamically build progress steps from checklist
+            ...List.generate(job.checklist.length, (index) {
+              final step = job.checklist[index];
+              final bool isCompleted = step.isDone;
+              final bool isCurrent = !isCompleted && 
+                  (index == 0 || job.checklist[index - 1].isDone);
+              
+              return _buildProgressStep(
+                step.task, 
+                step.category, 
+                isCompleted, 
+                isCurrent,
+                isLast: index == job.checklist.length - 1,
+              );
+            }),
             
             const SizedBox(height: 32),
             
@@ -58,6 +104,14 @@ class LiveServiceStatusScreen extends StatelessWidget {
             CustomButton(
               label: 'Back to Home',
               onPressed: () => context.go('/main/home'),
+            ),
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: () {
+                ref.read(technicianProvider.notifier).resetProgress();
+                ref.read(technicianProvider.notifier).startMockProgress();
+              },
+              child: const Text('Restart Simulation', style: TextStyle(color: AppColors.textSecondary)),
             ),
           ],
         ),
@@ -71,7 +125,7 @@ class LiveServiceStatusScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildVehicleStatusCard() {
+  Widget _buildVehicleStatusCard(TechnicianJob job) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -89,32 +143,71 @@ class LiveServiceStatusScreen extends StatelessWidget {
                 width: 50,
                 height: 50,
                 decoration: BoxDecoration(
-                  color: AppColors.primaryBlue.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
+                  color: (job.vehicleModel.toLowerCase().contains('car') || job.vehicleModel.toLowerCase().contains('creta')) 
+                    ? AppColors.primaryBlue.withValues(alpha: 0.1)
+                    : AppColors.accentOrange.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: (job.vehicleModel.toLowerCase().contains('car') || job.vehicleModel.toLowerCase().contains('creta'))
+                      ? AppColors.primaryBlue.withValues(alpha: 0.2)
+                      : AppColors.accentOrange.withValues(alpha: 0.2),
+                    width: 1,
+                  ),
                 ),
-                child: const Icon(Icons.directions_car_rounded, color: AppColors.primaryBlue),
+                child: Icon(
+                  (job.vehicleModel.toLowerCase().contains('car') || job.vehicleModel.toLowerCase().contains('creta'))
+                    ? Icons.directions_car_rounded 
+                    : Icons.pedal_bike_rounded, 
+                  color: (job.vehicleModel.toLowerCase().contains('car') || job.vehicleModel.toLowerCase().contains('creta'))
+                    ? AppColors.primaryBlue 
+                    : AppColors.accentOrange,
+                ),
               ),
               const SizedBox(width: 16),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Hyundai Creta', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                    Text('MH 02 AB 1234', style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                    Text('${job.serviceType} - ${job.packageName}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    Text('${job.vehicleModel} (${job.vehiclePlate})', style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                    const SizedBox(height: 4),
+                    Text('Scheduled: ${job.date} at ${job.time}', style: const TextStyle(fontSize: 12, color: AppColors.primaryBlue, fontWeight: FontWeight.w600)),
                   ],
                 ),
               ),
-              const Text('₹ 1,499', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.primaryBlue)),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    job.price,
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.primaryBlue,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  const Text(
+                    'TOTAL',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textSecondary,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
           const SizedBox(height: 20),
           const Divider(),
           const SizedBox(height: 16),
-          const Row(
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Estimated Completion', style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
-              Text('05:30 PM Today', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+              const Text('Estimated Completion', style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+              Text(job.estimatedCompletion, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
             ],
           ),
         ],
@@ -122,7 +215,7 @@ class LiveServiceStatusScreen extends StatelessWidget {
     ).animate().fadeIn().scale(begin: const Offset(0.9, 0.9), end: const Offset(1.0, 1.0));
   }
 
-  Widget _buildProgressStep(String title, String subtitle, bool completed, bool current) {
+  Widget _buildProgressStep(String title, String subtitle, bool completed, bool current, {bool isLast = false}) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -138,13 +231,14 @@ class LiveServiceStatusScreen extends StatelessWidget {
               ),
               child: completed 
                 ? const Icon(Icons.check, size: 14, color: Colors.white)
-                : (current ? Container(width: 8, height: 8, decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle)) : null),
+                : (current ? Container(width: 8, height: 8, decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle)).animate(onPlay: (c) => c.repeat()).scale(duration: 1.seconds, begin: const Offset(0.8, 0.8), end: const Offset(1.2, 1.2)) : null),
             ),
-            Container(
-              width: 2,
-              height: 40,
-              color: completed ? AppColors.successGreen : AppColors.bgLightGrey,
-            ),
+            if (!isLast)
+              Container(
+                width: 2,
+                height: 40,
+                color: completed ? AppColors.successGreen : AppColors.bgLightGrey,
+              ),
           ],
         ),
         const SizedBox(width: 16),
@@ -168,11 +262,12 @@ class LiveServiceStatusScreen extends StatelessWidget {
                   color: AppColors.textSecondary.withValues(alpha: 0.8),
                 ),
               ),
+              const SizedBox(height: 20),
             ],
           ),
         ),
       ],
-    ).animate().fadeIn(delay: 200.ms);
+    ).animate().fadeIn(delay: 100.ms);
   }
 
   Widget _buildTechnicianInfo(BuildContext context) {
@@ -204,7 +299,7 @@ class LiveServiceStatusScreen extends StatelessWidget {
           ),
         ],
       ),
-    ).animate().fadeIn(delay: 400.ms);
+    ).animate().fadeIn(delay: 200.ms);
   }
 }
 

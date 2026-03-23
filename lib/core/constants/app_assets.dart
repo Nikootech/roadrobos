@@ -27,4 +27,13 @@ class AppAssets {
       'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=600&h=200&fit=crop';
   static const String offerBanner2 =
       'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=600&h=200&fit=crop';
+
+  // Rentals - Bikes
+  static const String zeeoneevaesilver = 'assets/rentals/zeeoneevaesilver1.jpg';
+  static const String zeeoneevaered = 'assets/rentals/zeeoneevaered1.jpg';
+  static const String zeeoneevaeblue = 'assets/rentals/zeeoneevaeblue1.jpg';
+  static const String zeeoneevaewhite = 'assets/rentals/zeeoneevaewhite1.jpg';
+  static const String zeeoneevaeblack = 'assets/rentals/zeeoneevaeblack1.jpg';
+  static const String hondaactiva = 'assets/rentals/hondaactiva1.png';
+  static const String royalenfieldclassic = 'assets/rentals/royalenfieldclassic1.png';
 }

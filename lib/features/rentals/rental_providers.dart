@@ -70,6 +70,35 @@ final activeRentalProvider = StateNotifierProvider<ActiveRentalNotifier, ActiveR
   return ActiveRentalNotifier();
 });
 
+
+class RecentlyViewedNotifier extends StateNotifier<List<Map<String, dynamic>>> {
+  RecentlyViewedNotifier() : super([]);
+
+  void addView(Map<String, dynamic> vehicle) {
+    final existingIndex = state.indexWhere((v) => v['name'] == vehicle['name']);
+    
+    List<Map<String, dynamic>> newState = List.from(state);
+    if (existingIndex != -1) {
+      newState.removeAt(existingIndex);
+    }
+    
+    newState.insert(0, vehicle);
+    
+    // Cap at 10 items
+    if (newState.length > 10) {
+      newState = newState.sublist(0, 10);
+    }
+    
+    state = newState;
+  }
+
+  void clearHistory() => state = [];
+}
+
+final recentlyViewedProvider = StateNotifierProvider<RecentlyViewedNotifier, List<Map<String, dynamic>>>((ref) {
+  return RecentlyViewedNotifier();
+});
+
 final rentalPriceProvider = Provider<String>((ref) {
   final vehicle = ref.watch(selectedVehicleProvider);
   final type = ref.watch(selectedRentalTypeProvider);
