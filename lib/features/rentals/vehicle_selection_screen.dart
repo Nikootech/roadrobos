@@ -155,6 +155,8 @@ class _VehicleCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isBike = vehicle['isBike'] == true;
     final isEV = vehicle['type'] == 'EV Bike' || vehicle['category'] == 'EV';
+    final isZeelio = vehicle['name'].toString().contains('Zelio');
+    
     return GestureDetector(
       onTap: () {
         if (vehicle['isComingSoon'] == true) return;
@@ -168,12 +170,16 @@ class _VehicleCard extends ConsumerWidget {
           borderRadius: BorderRadius.circular(28),
           boxShadow: [
             BoxShadow(
-              color: isEV ? Colors.green.withOpacity(0.12) : Colors.black.withOpacity(0.08),
-              blurRadius: 16,
+              color: isZeelio 
+                  ? AppColors.primaryBlue.withOpacity(0.15) 
+                  : (isEV ? Colors.green.withOpacity(0.12) : Colors.black.withOpacity(0.08)),
+              blurRadius: 24,
               offset: const Offset(0, 8),
             ),
           ],
-          border: isEV ? Border.all(color: Colors.green.withOpacity(0.1), width: 1) : null,
+          border: isZeelio 
+              ? Border.all(color: AppColors.primaryBlue.withOpacity(0.2), width: 1.5)
+              : (isEV ? Border.all(color: Colors.green.withOpacity(0.1), width: 1) : null),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -269,6 +275,34 @@ class _VehicleCard extends ConsumerWidget {
                           SizedBox(width: 4),
                           Text(
                             'ECO FRIENDLY',
+                            style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.5),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                // Zeelio Series Badge
+                if (isZeelio)
+                  Positioned(
+                    top: isEV ? 48 : 16,
+                    left: 16,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            AppColors.primaryBlue.withOpacity(0.9),
+                            AppColors.primaryBlue.withValues(alpha: 0.7),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(Icons.stars_rounded, color: Colors.white, size: 14),
+                          SizedBox(width: 4),
+                          Text(
+                            'ZEELIO SERIES',
                             style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.5),
                           ),
                         ],

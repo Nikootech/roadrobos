@@ -237,8 +237,10 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
         itemCount: _filteredVehicles.length,
         separatorBuilder: (_, __) => const SizedBox(width: 16),
         itemBuilder: (context, index) {
-          final vehicle = _filteredVehicles[index];
-          return GestureDetector(
+            final isZeelio = vehicle['name'].toString().contains('Zelio');
+            final isEV = vehicle['type'] == 'EV Bike' || vehicle['category'] == 'EV';
+            
+            return GestureDetector(
             onTap: () {
               if (vehicle['isComingSoon'] == true) return;
               HapticFeedback.lightImpact();
@@ -255,11 +257,16 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.04),
-                    blurRadius: 20,
+                    color: isZeelio 
+                        ? AppColors.primaryBlue.withOpacity(0.12) 
+                        : Colors.black.withValues(alpha: 0.04),
+                    blurRadius: 24,
                     offset: const Offset(0, 10),
                   ),
                 ],
+                border: isZeelio 
+                    ? Border.all(color: AppColors.primaryBlue.withOpacity(0.15), width: 1)
+                    : null,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -301,7 +308,31 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
                             ),
                           ),
                         ),
+                            ),
+                          ),
+                        ),
                       ),
+                      if (isZeelio)
+                        Positioned(
+                          top: 12,
+                          left: 12,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  AppColors.primaryBlue.withOpacity(0.9),
+                                  AppColors.primaryBlue.withValues(alpha: 0.7),
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Text(
+                              'ZEELIO',
+                              style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1),
+                            ),
+                          ),
+                        ),
                       if (vehicle['isComingSoon'] == true)
                         Positioned.fill(
                           child: ClipRRect(
