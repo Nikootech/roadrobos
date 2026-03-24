@@ -1,4 +1,5 @@
 // ignore_for_file: deprecated_member_use, unused_import
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -34,7 +35,7 @@ class _VehicleSelectionScreenState extends ConsumerState<VehicleSelectionScreen>
     if (_selectedFilterIndex == 0) return _vehicles;
     final category = _filters[_selectedFilterIndex]['name'];
     if (category == 'Cars') return _vehicles.where((v) => v['isBike'] != true).toList();
-    if (category == 'Bikes') return _vehicles.where((v) => v['isBike'] == true).toList();
+    if (category == 'Bikes') return _vehicles.where((v) => v['isBike'] == true && v['category'] != 'EV' && v['type'] != 'EV Bike').toList();
     return _vehicles.where((v) => v['category'] == category || (v['isBike'] == true && category == 'EV' && v['type'] == 'EV Bike')).toList();
   }
 
@@ -127,6 +128,7 @@ class _VehicleSelectionScreenState extends ConsumerState<VehicleSelectionScreen>
             key: ValueKey(vehicle['name']),
             vehicle: vehicle,
             onTap: () {
+              if (vehicle['isComingSoon'] == true) return;
               HapticFeedback.mediumImpact();
               final slug = vehicle['name'].toString().toLowerCase().replaceAll(' ', '-');
               ref.read(recentlyViewedProvider.notifier).addView(vehicle);
@@ -153,9 +155,9 @@ class _VehicleCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isBike = vehicle['isBike'] == true;
     final isEV = vehicle['type'] == 'EV Bike' || vehicle['category'] == 'EV';
-
     return GestureDetector(
       onTap: () {
+        if (vehicle['isComingSoon'] == true) return;
         ref.read(selectedVehicleProvider.notifier).state = vehicle;
         onTap();
       },
@@ -187,14 +189,69 @@ class _VehicleCard extends ConsumerWidget {
                     color: isEV ? const Color(0xFFF0FAF0) : const Color(0xFFF9FAFB),
                     borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
                   ),
-                  child: Hero(
-                    tag: 'vehicle_${vehicle['name']}',
-                    child: Image.asset(
-                      vehicle['image'],
-                      fit: BoxFit.contain,
+                    child: Hero(
+                      tag: 'vehicle_${vehicle['name']}',
+                      child: Image.asset(
+                        vehicle['image'],
+                        fit: BoxFit.contain,
+                      ),
                     ),
                   ),
-                ),
+                  if (vehicle['isComingSoon'] == true)
+                    Positioned.fill(
+                      child: ClipRRect(
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1.5),
+                            ),
+                            child: Center(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      AppColors.primaryBlue.withValues(alpha: 0.9),
+                                      AppColors.primaryBlue.withValues(alpha: 0.7),
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                  borderRadius: BorderRadius.circular(20),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.primaryBlue.withValues(alpha: 0.4),
+                                      blurRadius: 15,
+                                      offset: const Offset(0, 8),
+                                    ),
+                                  ],
+                                ),
+                                child: const Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.timer_outlined, color: Colors.white, size: 20),
+                                    SizedBox(height: 4),
+                                    Text(
+                                      'COMING SOON',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w900,
+                                        fontSize: 14,
+                                        letterSpacing: 2,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                 // EV Badge
                 if (isEV)
                   Positioned(
@@ -225,16 +282,16 @@ class _VehicleCard extends ConsumerWidget {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: vehicle['isComingSoon'] == true ? AppColors.bgLightGrey : Colors.white,
                       borderRadius: BorderRadius.circular(12),
-                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10)],
+                      boxShadow: vehicle['isComingSoon'] == true ? null : [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10)],
                     ),
                     child: Text(
-                      vehicle['price'],
-                      style: const TextStyle(
+                      vehicle['isComingSoon'] == true ? 'N/A' : vehicle['price'],
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w900,
-                        color: AppColors.primaryBlue,
+                        color: vehicle['isComingSoon'] == true ? AppColors.textMuted : AppColors.primaryBlue,
                       ),
                     ),
                   ),
@@ -281,32 +338,51 @@ class _VehicleCard extends ConsumerWidget {
                   ElevatedButton(
                     onPressed: () {
                       HapticFeedback.mediumImpact();
+                      if (vehicle['isComingSoon'] == true) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('We will notify you when ${vehicle['name']} is available!'),
+                            backgroundColor: AppColors.primaryBlue,
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          ),
+                        );
+                        return;
+                      }
                       final slug = vehicle['name'].toString().toLowerCase().replaceAll(' ', '-');
                       ref.read(recentlyViewedProvider.notifier).addView(vehicle);
                       ref.read(selectedVehicleProvider.notifier).state = vehicle;
                       context.push('/rental-detail/$slug');
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryBlue,
-                      foregroundColor: Colors.white,
+                      backgroundColor: vehicle['isComingSoon'] == true ? Colors.white : AppColors.primaryBlue,
+                      foregroundColor: vehicle['isComingSoon'] == true ? AppColors.primaryBlue : Colors.white,
                       minimumSize: const Size(double.infinity, 54),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
+                        side: vehicle['isComingSoon'] == true ? const BorderSide(color: AppColors.primaryBlue, width: 2) : BorderSide.none,
                       ),
-                      elevation: 0,
+                      elevation: vehicle['isComingSoon'] == true ? 0 : 2,
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
+                        Icon(
+                          vehicle['isComingSoon'] == true ? Icons.notifications_active_outlined : Icons.bolt_rounded,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
                         Text(
-                          'Book Now',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
+                          vehicle['isComingSoon'] == true ? 'Notify Me' : 'Book Now',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
-                        SizedBox(width: 8),
-                        Icon(Icons.arrow_forward_ios_rounded, size: 14),
+                        if (vehicle['isComingSoon'] != true) ...[
+                          const SizedBox(width: 8),
+                          const Icon(Icons.arrow_forward_ios_rounded, size: 14),
+                        ],
                       ],
                     ),
                   ),

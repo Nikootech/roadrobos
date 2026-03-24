@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:iconsax/iconsax.dart';
@@ -24,7 +25,7 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
   List<Map<String, dynamic>> get _filteredVehicles {
     if (_selectedCategory == 'All') return _topVehicles;
     if (_selectedCategory == 'Cars') return _topVehicles.where((v) => v['isBike'] != true).toList();
-    if (_selectedCategory == 'Bikes') return _topVehicles.where((v) => v['isBike'] == true).toList();
+    if (_selectedCategory == 'Bikes') return _topVehicles.where((v) => v['isBike'] == true && v['category'] != 'EV' && v['type'] != 'EV Bike').toList();
     return _topVehicles.where((v) => v['category'] == _selectedCategory || (v['isBike'] == true && _selectedCategory == 'EV' && v['type'] == 'EV Bike')).toList();
   }
 
@@ -239,6 +240,7 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
           final vehicle = _filteredVehicles[index];
           return GestureDetector(
             onTap: () {
+              if (vehicle['isComingSoon'] == true) return;
               HapticFeedback.lightImpact();
               final slug = vehicle['name'].toString().toLowerCase().replaceAll(' ', '-');
               ref.read(recentlyViewedProvider.notifier).addView(vehicle);
@@ -287,11 +289,11 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                           decoration: BoxDecoration(
-                            color: AppColors.primaryBlue,
+                            color: vehicle['isComingSoon'] == true ? AppColors.textMuted : AppColors.primaryBlue,
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
-                            vehicle['price'],
+                            vehicle['isComingSoon'] == true ? 'Coming Soon' : vehicle['price'],
                             style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w900,
@@ -300,6 +302,55 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
                           ),
                         ),
                       ),
+                      if (vehicle['isComingSoon'] == true)
+                        Positioned.fill(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(24),
+                            child: BackdropFilter(
+                              filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(24),
+                                  border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1.5),
+                                ),
+                                child: Center(
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          AppColors.primaryBlue.withValues(alpha: 0.9),
+                                          AppColors.primaryBlue.withValues(alpha: 0.7),
+                                        ],
+                                      ),
+                                      borderRadius: BorderRadius.circular(12),
+                                      boxShadow: [
+                                        BoxShadow(color: AppColors.primaryBlue.withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, 4)),
+                                      ],
+                                    ),
+                                    child: const Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(Icons.timer_outlined, color: Colors.white, size: 14),
+                                        SizedBox(width: 4),
+                                        Text(
+                                          'COMING SOON',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w900,
+                                            fontSize: 10,
+                                            letterSpacing: 1,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                   Padding(
@@ -365,26 +416,49 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
                         ElevatedButton(
                           onPressed: () {
                             HapticFeedback.mediumImpact();
+                            if (vehicle['isComingSoon'] == true) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('We will notify you when ${vehicle['name']} is available!'),
+                                  backgroundColor: AppColors.primaryBlue,
+                                  behavior: SnackBarBehavior.floating,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                ),
+                              );
+                              return;
+                            }
                             final slug = vehicle['name'].toString().toLowerCase().replaceAll(' ', '-');
                             ref.read(recentlyViewedProvider.notifier).addView(vehicle);
                             ref.read(selectedVehicleProvider.notifier).state = vehicle;
                             context.push('/rental-detail/$slug');
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primaryBlue,
+                            backgroundColor: vehicle['isComingSoon'] == true ? Colors.white : AppColors.primaryBlue,
+                            foregroundColor: vehicle['isComingSoon'] == true ? AppColors.primaryBlue : Colors.white,
                             minimumSize: const Size(double.infinity, 48),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
+                              side: vehicle['isComingSoon'] == true ? const BorderSide(color: AppColors.primaryBlue, width: 2) : BorderSide.none,
                             ),
-                            elevation: 0,
+                            elevation: vehicle['isComingSoon'] == true ? 0 : 2,
                           ),
-                          child: const Text(
-                            'Book Now',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                            ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                vehicle['isComingSoon'] == true ? Icons.notifications_active_outlined : Icons.bolt_rounded,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                vehicle['isComingSoon'] == true ? 'Notify Me' : 'Book Now',
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w800,
+                                  color: null, // use foregroundColor
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
