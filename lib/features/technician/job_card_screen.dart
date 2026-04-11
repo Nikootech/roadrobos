@@ -174,7 +174,7 @@ class _TechnicianJobCardScreenState extends ConsumerState<TechnicianJobCardScree
                const SizedBox(height: 12),
                LinearProgressIndicator(
                  value: progress,
-                 backgroundColor: AppColors.primaryBlue.withValues(alpha: 0.1),
+                 backgroundColor: AppColors.primaryBlue.withOpacity(0.1),
                  color: AppColors.primaryBlue,
                  minHeight: 8,
                  borderRadius: BorderRadius.circular(4),

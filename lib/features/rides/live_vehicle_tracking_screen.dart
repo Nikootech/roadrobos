@@ -46,7 +46,7 @@ class LiveVehicleTrackingScreen extends StatelessWidget {
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
-                            BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10),
+                            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10),
                           ],
                         ),
                         child: const Row(
@@ -84,7 +84,7 @@ class LiveVehicleTrackingScreen extends StatelessWidget {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(32),
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 20, offset: const Offset(0, 10)),
+                  BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 20, offset: const Offset(0, 10)),
                 ],
               ),
               child: Column(
@@ -134,7 +134,7 @@ class LiveVehicleTrackingScreen extends StatelessWidget {
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
-            BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10),
+            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10),
           ],
         ),
         child: Icon(icon, color: AppColors.textPrimary, size: 20),

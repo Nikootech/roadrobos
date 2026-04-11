@@ -48,7 +48,7 @@ class _InAppChatScreenState extends State<InAppChatScreen> {
           children: [
             CircleAvatar(
               radius: 18,
-              backgroundColor: AppColors.primaryBlue.withValues(alpha: 0.1),
+              backgroundColor: AppColors.primaryBlue.withOpacity(0.1),
               child: const Icon(Icons.person, color: AppColors.primaryBlue, size: 20),
             ),
             const SizedBox(width: 12),

@@ -105,8 +105,8 @@ class EarningsScreen extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(28),
-                    border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
-                    boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 20, offset: const Offset(0, 10))],
+                    border: Border.all(color: AppColors.border.withOpacity(0.5)),
+                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 20, offset: const Offset(0, 10))],
                   ),
                   child: Column(
                     children: [
@@ -129,7 +129,7 @@ class EarningsScreen extends StatelessWidget {
                       const SizedBox(height: 24),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        decoration: BoxDecoration(color: AppColors.successGreen.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(12)),
+                        decoration: BoxDecoration(color: AppColors.successGreen.withOpacity(0.05), borderRadius: BorderRadius.circular(12)),
                         child: const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -189,14 +189,14 @@ class EarningsScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10)],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
             children: [
-              Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle), child: Icon(Iconsax.empty_wallet_tick, color: color, size: 20)),
+              Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle), child: Icon(Iconsax.empty_wallet_tick, color: color, size: 20)),
               const SizedBox(width: 12),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -226,8 +226,8 @@ class EarningsScreen extends StatelessWidget {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: isMax 
-                ? [AppColors.primaryBlue, AppColors.primaryBlue.withValues(alpha: 0.7)]
-                : [AppColors.primaryBlue.withValues(alpha: 0.2), AppColors.primaryBlue.withValues(alpha: 0.1)],
+                ? [AppColors.primaryBlue, AppColors.primaryBlue.withOpacity(0.7)]
+                : [AppColors.primaryBlue.withOpacity(0.2), AppColors.primaryBlue.withOpacity(0.1)],
             ),
             borderRadius: BorderRadius.circular(8),
           ),

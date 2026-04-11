@@ -129,7 +129,7 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 20)],
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 20)],
           ),
           child: ListView(
             controller: scrollController,
@@ -209,7 +209,7 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
   Widget _buildFareEstimate(TaxiState state) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: AppColors.primaryBlue.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(color: AppColors.primaryBlue.withOpacity(0.05), borderRadius: BorderRadius.circular(16)),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -287,7 +287,7 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
 
   Widget _buildBookingShimmer() {
     return Container(
-      color: Colors.white.withValues(alpha: 0.8),
+      color: Colors.white.withOpacity(0.8),
       child: const Center(
         child: Padding(
           padding: EdgeInsets.all(40),

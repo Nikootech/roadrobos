@@ -88,7 +88,7 @@ class AdminManagementScreen extends StatelessWidget {
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border)),
       child: Row(
         children: [
-          CircleAvatar(backgroundColor: AppColors.primaryBlue.withValues(alpha: 0.1), child: Text(admin['name']![0], style: const TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.bold))),
+          CircleAvatar(backgroundColor: AppColors.primaryBlue.withOpacity(0.1), child: Text(admin['name']![0], style: const TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.bold))),
           const SizedBox(width: 16),
           Expanded(
             child: Column(

@@ -257,7 +257,7 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 16),
           decoration: BoxDecoration(
-            color: isSelected ? AppColors.primaryBlue.withValues(alpha: 0.1) : Colors.transparent,
+            color: isSelected ? AppColors.primaryBlue.withOpacity(0.1) : Colors.transparent,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: isSelected ? AppColors.primaryBlue : AppColors.border, width: isSelected ? 2 : 1),
           ),

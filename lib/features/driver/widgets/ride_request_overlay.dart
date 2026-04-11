@@ -61,7 +61,7 @@ class _RideRequestOverlayState extends State<RideRequestOverlay> with SingleTick
             color: Colors.white,
             borderRadius: BorderRadius.circular(32),
             boxShadow: [
-              BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 30, offset: const Offset(0, 10)),
+              BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 30, offset: const Offset(0, 10)),
             ],
           ),
           child: ClipRRect(
@@ -83,7 +83,7 @@ class _RideRequestOverlayState extends State<RideRequestOverlay> with SingleTick
                                   padding: const EdgeInsets.all(3),
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.3), width: 1.5),
+                                    border: Border.all(color: AppColors.primaryBlue.withOpacity(0.3), width: 1.5),
                                   ),
                                   child: const CircleAvatar(radius: 26, backgroundImage: NetworkImage('https://i.pravatar.cc/150?u=rider')),
                                 ),
@@ -128,9 +128,9 @@ class _RideRequestOverlayState extends State<RideRequestOverlay> with SingleTick
                       Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: AppColors.bgLightGrey.withValues(alpha: 0.5),
+                          color: AppColors.bgLightGrey.withOpacity(0.5),
                           borderRadius: BorderRadius.circular(24),
-                          border: Border.all(color: AppColors.border.withValues(alpha: 0.3)),
+                          border: Border.all(color: AppColors.border.withOpacity(0.3)),
                         ),
                         child: Column(
                           children: [
@@ -138,7 +138,7 @@ class _RideRequestOverlayState extends State<RideRequestOverlay> with SingleTick
                             const SizedBox(height: 8),
                             Padding(
                               padding: const EdgeInsets.only(left: 7),
-                              child: Align(alignment: Alignment.centerLeft, child: Container(width: 2, height: 12, color: AppColors.textMuted.withValues(alpha: 0.3))),
+                              child: Align(alignment: Alignment.centerLeft, child: Container(width: 2, height: 12, color: AppColors.textMuted.withOpacity(0.3))),
                             ),
                             const SizedBox(height: 8),
                             _buildCompactLocation(Icons.location_on_rounded, AppColors.dangerRed, widget.request.dropoff),

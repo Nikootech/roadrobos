@@ -104,7 +104,7 @@ class _RateRideScreenState extends State<RateRideScreen> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: isSelected ? color.withValues(alpha: 0.1) : Colors.grey[100],
+              color: isSelected ? color.withOpacity(0.1) : Colors.grey[100],
               shape: BoxShape.circle,
               border: Border.all(color: isSelected ? color : Colors.transparent, width: 2),
             ),

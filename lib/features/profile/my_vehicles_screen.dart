@@ -60,7 +60,7 @@ class MyVehiclesScreen extends StatelessWidget {
         children: [
           Row(
             children: [
-              CircleAvatar(backgroundColor: AppColors.primaryBlue.withValues(alpha: 0.1), child: Icon(index == 0 ? Icons.directions_car : Icons.directions_bike, color: AppColors.primaryBlue)),
+              CircleAvatar(backgroundColor: AppColors.primaryBlue.withOpacity(0.1), child: Icon(index == 0 ? Icons.directions_car : Icons.directions_bike, color: AppColors.primaryBlue)),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(

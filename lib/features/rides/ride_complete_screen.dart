@@ -81,7 +81,7 @@ class _RideCompleteScreenState extends ConsumerState<RideCompleteScreen> {
                         color: Colors.white,
                         shape: BoxShape.circle,
                         boxShadow: [
-                          BoxShadow(color: AppColors.primaryBlue.withValues(alpha: 0.3), blurRadius: 30, spreadRadius: 10),
+                          BoxShadow(color: AppColors.primaryBlue.withOpacity(0.3), blurRadius: 30, spreadRadius: 10),
                         ],
                       ),
                       child: const Center(
@@ -113,7 +113,7 @@ class _RideCompleteScreenState extends ConsumerState<RideCompleteScreen> {
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(32),
-                      boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 20, offset: const Offset(0, 10))],
+                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, 10))],
                     ),
                     child: Column(
                       children: [

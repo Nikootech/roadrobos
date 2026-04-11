@@ -74,7 +74,7 @@ class RevenueReferralScreen extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.border),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 4))],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -89,7 +89,7 @@ class RevenueReferralScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: (isPositive ? Colors.green : Colors.red).withValues(alpha: 0.1),
+                  color: (isPositive ? Colors.green : Colors.red).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(change, style: TextStyle(color: isPositive ? Colors.green : Colors.red, fontSize: 10, fontWeight: FontWeight.bold)),
@@ -109,7 +109,7 @@ class RevenueReferralScreen extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: AppColors.border),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 4))],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))],
       ),
       child: child,
     );
@@ -130,7 +130,7 @@ class RevenueReferralScreen extends StatelessWidget {
             dotData: const FlDotData(show: false),
             belowBarData: BarAreaData(
               show: true,
-              color: AppColors.primaryBlue.withValues(alpha: 0.2),
+              color: AppColors.primaryBlue.withOpacity(0.2),
             ),
             spots: const [
               FlSpot(0, 3), FlSpot(2, 4), FlSpot(4, 3.5), FlSpot(6, 5), FlSpot(8, 4), FlSpot(10, 7), FlSpot(12, 6),
@@ -154,7 +154,7 @@ class RevenueReferralScreen extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 18,
-            backgroundColor: AppColors.primaryBlue.withValues(alpha: 0.2),
+            backgroundColor: AppColors.primaryBlue.withOpacity(0.2),
             child: Text('${index + 1}', style: const TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.bold)),
           ),
           const SizedBox(width: 16),

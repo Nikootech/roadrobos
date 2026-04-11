@@ -69,7 +69,7 @@ class SuperAdminScreen extends StatelessWidget {
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: AppColors.border),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 4)],
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 4)],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -96,8 +96,8 @@ class SuperAdminScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.15)),
-        boxShadow: [BoxShadow(color: AppColors.primaryBlue.withValues(alpha: 0.05), blurRadius: 10)],
+        border: Border.all(color: AppColors.primaryBlue.withOpacity(0.15)),
+        boxShadow: [BoxShadow(color: AppColors.primaryBlue.withOpacity(0.05), blurRadius: 10)],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,

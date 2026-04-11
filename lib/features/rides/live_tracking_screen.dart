@@ -66,7 +66,7 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> with Si
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                       decoration: BoxDecoration(
-                        color: AppColors.primaryBlue.withValues(alpha: 0.1),
+                        color: AppColors.primaryBlue.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: const Text(
@@ -305,7 +305,7 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> with Si
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withOpacity(0.1),
         shape: BoxShape.circle,
       ),
       child: Icon(icon, color: color, size: 24),

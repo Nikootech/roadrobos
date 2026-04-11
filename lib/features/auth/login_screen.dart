@@ -88,7 +88,7 @@ class _LoginScreenState extends State<LoginScreen> {
       leading: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
+          color: color.withOpacity(0.1),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Icon(icon, color: color, size: 20),
@@ -141,10 +141,10 @@ class _LoginScreenState extends State<LoginScreen> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: AppColors.bgWhite,
-                          border: Border.all(color: AppColors.brandGreen.withValues(alpha: 0.2)),
+                          border: Border.all(color: AppColors.brandGreen.withOpacity(0.2)),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.brandGreen.withValues(alpha: 0.08),
+                              color: AppColors.brandGreen.withOpacity(0.08),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),
@@ -182,7 +182,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   width: double.infinity,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(32),
-                    color: Colors.white.withValues(alpha: 0.1),
+                    color: Colors.white.withOpacity(0.1),
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(32),
@@ -199,8 +199,8 @@ class _LoginScreenState extends State<LoginScreen> {
                               shape: BoxShape.circle,
                               gradient: RadialGradient(
                                 colors: [
-                                  AppColors.brandGreen.withValues(alpha: 0.15),
-                                  AppColors.brandGreen.withValues(alpha: 0),
+                                  AppColors.brandGreen.withOpacity(0.15),
+                                  AppColors.brandGreen.withOpacity(0),
                                 ],
                               ),
                             ),
@@ -217,8 +217,8 @@ class _LoginScreenState extends State<LoginScreen> {
                               shape: BoxShape.circle,
                               gradient: RadialGradient(
                                 colors: [
-                                  AppColors.brandGreenMid.withValues(alpha: 0.12),
-                                  AppColors.brandGreenMid.withValues(alpha: 0),
+                                  AppColors.brandGreenMid.withOpacity(0.12),
+                                  AppColors.brandGreenMid.withOpacity(0),
                                 ],
                               ),
                             ),
@@ -233,8 +233,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
-                                  AppColors.brandGreen.withValues(alpha: 0.08),
-                                  Colors.white.withValues(alpha: 0.05),
+                                  AppColors.brandGreen.withOpacity(0.08),
+                                  Colors.white.withOpacity(0.05),
                                 ],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
@@ -257,12 +257,12 @@ class _LoginScreenState extends State<LoginScreen> {
                                   borderRadius: BorderRadius.circular(40),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: AppColors.brandGreen.withValues(alpha: 0.2),
+                                      color: AppColors.brandGreen.withOpacity(0.2),
                                       blurRadius: 30,
                                       offset: const Offset(0, 12),
                                     ),
                                     BoxShadow(
-                                      color: Colors.white.withValues(alpha: 0.8),
+                                      color: Colors.white.withOpacity(0.8),
                                       blurRadius: 10,
                                       spreadRadius: -5,
                                     ),
@@ -277,7 +277,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                 ),
                               ).animate(onPlay: (controller) => controller.repeat(reverse: true))
-                               .shimmer(duration: 3.seconds, color: Colors.white.withValues(alpha: 0.2))
+                               .shimmer(duration: 3.seconds, color: Colors.white.withOpacity(0.2))
                                .scale(begin: const Offset(1, 1), end: const Offset(1.05, 1.05), duration: 3.seconds, curve: Curves.easeInOut),
                                
                               const SizedBox(height: 16),
@@ -324,7 +324,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       AppStrings.loginSubtitle,
                       style: TextStyle(
                         fontSize: 14,
-                        color: AppColors.textSecondary.withValues(alpha: 0.8),
+                        color: AppColors.textSecondary.withOpacity(0.8),
                       ),
                     ),
                   ],
@@ -345,10 +345,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   decoration: BoxDecoration(
                     color: AppColors.bgWhite,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.brandGreen.withValues(alpha: 0.15)),
+                    border: Border.all(color: AppColors.brandGreen.withOpacity(0.15)),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.brandGreen.withValues(alpha: 0.06),
+                        color: AppColors.brandGreen.withOpacity(0.06),
                         blurRadius: 12,
                         offset: const Offset(0, 2),
                       ),
@@ -371,7 +371,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               boxShadow: _isCustomer
                                   ? [
                                       BoxShadow(
-                                        color: AppColors.brandGreen.withValues(alpha: 0.30),
+                                        color: AppColors.brandGreen.withOpacity(0.30),
                                         blurRadius: 8,
                                         offset: const Offset(0, 2),
                                       )
@@ -402,7 +402,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               boxShadow: !_isCustomer
                                   ? [
                                       BoxShadow(
-                                        color: AppColors.brandGreen.withValues(alpha: 0.30),
+                                        color: AppColors.brandGreen.withOpacity(0.30),
                                         blurRadius: 8,
                                         offset: const Offset(0, 2),
                                       )
@@ -550,7 +550,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       // Divider
                       Row(
                         children: [
-                          Expanded(child: Divider(color: AppColors.border.withValues(alpha: 0.6))),
+                          Expanded(child: Divider(color: AppColors.border.withOpacity(0.6))),
                           const Padding(
                             padding: EdgeInsets.symmetric(horizontal: 16),
                             child: Text(
@@ -558,7 +558,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               style: TextStyle(fontSize: 13, color: AppColors.textMuted),
                             ),
                           ),
-                          Expanded(child: Divider(color: AppColors.border.withValues(alpha: 0.6))),
+                          Expanded(child: Divider(color: AppColors.border.withOpacity(0.6))),
                         ],
                       ),
 
@@ -601,10 +601,10 @@ class _LoginScreenState extends State<LoginScreen> {
                         decoration: BoxDecoration(
                           color: AppColors.bgWhite,
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: AppColors.brandGreen.withValues(alpha: 0.12)),
+                          border: Border.all(color: AppColors.brandGreen.withOpacity(0.12)),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.brandGreen.withValues(alpha: 0.05),
+                              color: AppColors.brandGreen.withOpacity(0.05),
                               blurRadius: 16,
                               offset: const Offset(0, 4),
                             ),
@@ -668,9 +668,9 @@ class _LoginScreenState extends State<LoginScreen> {
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
+              color: color.withOpacity(0.1),
               shape: BoxShape.circle,
-              border: Border.all(color: color.withValues(alpha: 0.25)),
+              border: Border.all(color: color.withOpacity(0.25)),
             ),
             child: Icon(icon, color: color, size: 24),
           ),
@@ -702,7 +702,7 @@ class _GoogleSignInButton extends StatelessWidget {
         border: Border.all(color: AppColors.border),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: Colors.black.withOpacity(0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),

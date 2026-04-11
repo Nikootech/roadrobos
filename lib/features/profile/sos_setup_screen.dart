@@ -80,7 +80,7 @@ class _SosSetupScreenState extends ConsumerState<SosSetupScreen> {
              // SOS illustration placeholder
              Container(
                padding: const EdgeInsets.all(32),
-               decoration: BoxDecoration(color: AppColors.dangerRed.withValues(alpha: 0.05), shape: BoxShape.circle),
+               decoration: BoxDecoration(color: AppColors.dangerRed.withOpacity(0.05), shape: BoxShape.circle),
                child: const Icon(Iconsax.shield_slash, size: 80, color: AppColors.dangerRed),
              ).animate().shake(),
              

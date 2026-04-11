@@ -84,7 +84,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(9999),
-                      color: AppColors.textPrimary.withValues(alpha: 0.05),
+                      color: AppColors.textPrimary.withOpacity(0.05),
                     ),
                     child: const Text(
                       AppStrings.skip,
@@ -193,8 +193,8 @@ class _OnboardingPage extends StatelessWidget {
                   shape: BoxShape.circle,
                   gradient: LinearGradient(
                     colors: [
-                      data.color.withValues(alpha: 0.1),
-                      data.color.withValues(alpha: 0.05),
+                      data.color.withOpacity(0.1),
+                      data.color.withOpacity(0.05),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -225,7 +225,7 @@ class _OnboardingPage extends StatelessWidget {
                         width: 52,
                         height: 52,
                         decoration: BoxDecoration(
-                          color: data.color.withValues(alpha: 0.15),
+                          color: data.color.withOpacity(0.15),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Icon(
@@ -276,7 +276,7 @@ class _OnboardingPage extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w400,
-                    color: AppColors.textSecondary.withValues(alpha: 0.8),
+                    color: AppColors.textSecondary.withOpacity(0.8),
                     height: 1.5,
                   ),
                 )

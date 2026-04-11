@@ -123,7 +123,7 @@ class _CreateJobCardScreenState extends ConsumerState<CreateJobCardScreen> {
           icon: Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: Colors.grey.withValues(alpha: 0.1),
+              color: Colors.grey.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.close_rounded, color: Colors.grey, size: 18),
@@ -322,7 +322,7 @@ class _CreateJobCardScreenState extends ConsumerState<CreateJobCardScreen> {
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: const Color(0xFF5E81AC).withValues(alpha: 0.3)),
+                              border: Border.all(color: const Color(0xFF5E81AC).withOpacity(0.3)),
                             ),
                             child: Center(
                               child: Row(
@@ -429,7 +429,7 @@ class _CreateJobCardScreenState extends ConsumerState<CreateJobCardScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+        border: Border.all(color: Colors.black.withOpacity(0.05)),
       ),
       child: child,
     );
@@ -441,7 +441,7 @@ class _CreateJobCardScreenState extends ConsumerState<CreateJobCardScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+        border: Border.all(color: Colors.black.withOpacity(0.05)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -495,7 +495,7 @@ class _CreateJobCardScreenState extends ConsumerState<CreateJobCardScreen> {
                 _scopeItems.remove(item);
               });
             },
-            icon: Icon(Icons.remove_circle_outline, color: Colors.red.withValues(alpha: 0.5), size: 20),
+            icon: Icon(Icons.remove_circle_outline, color: Colors.red.withOpacity(0.5), size: 20),
           ),
         ],
       ),

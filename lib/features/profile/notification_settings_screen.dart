@@ -58,7 +58,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
       onChanged: onChanged,
       title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
       subtitle: Text(subtitle, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-      activeThumbColor: AppColors.primaryBlue,
+      activeColor: AppColors.primaryBlue,
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
     );
   }

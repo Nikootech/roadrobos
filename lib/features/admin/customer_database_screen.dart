@@ -120,7 +120,7 @@ class CustomerDatabaseScreen extends ConsumerWidget {
 
   Widget _buildCustomerCard(AdminCustomer c) {
     return Container(
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.1)), boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4))]),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.primaryBlue.withOpacity(0.1)), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))]),
       child: Theme(
         data: ThemeData(dividerColor: Colors.transparent),
         child: ExpansionTile(
@@ -129,7 +129,7 @@ class CustomerDatabaseScreen extends ConsumerWidget {
           collapsedIconColor: AppColors.textSecondary,
           title: Row(
             children: [
-              CircleAvatar(radius: 20, backgroundColor: AppColors.primaryBlue.withValues(alpha: 0.1), child: const Icon(Icons.person, color: AppColors.primaryBlue, size: 20)),
+              CircleAvatar(radius: 20, backgroundColor: AppColors.primaryBlue.withOpacity(0.1), child: const Icon(Icons.person, color: AppColors.primaryBlue, size: 20)),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
@@ -197,7 +197,7 @@ class CustomerDatabaseScreen extends ConsumerWidget {
   Widget _buildBadge(String emoji, String text, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: color.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(12), border: Border.all(color: color.withValues(alpha: 0.1))),
+      decoration: BoxDecoration(color: color.withOpacity(0.05), borderRadius: BorderRadius.circular(12), border: Border.all(color: color.withOpacity(0.1))),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -218,13 +218,13 @@ class CustomerDatabaseScreen extends ConsumerWidget {
       case 'Service': icon = Icons.build_rounded; color = AppColors.warningAmber; break;
       default: icon = Icons.history; color = AppColors.textSecondary;
     }
-    return Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle), child: Icon(icon, color: color, size: 16));
+    return Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle), child: Icon(icon, color: color, size: 16));
   }
 
   Color _getStatusBg(String status) {
-    if (status.contains('Ongoing') || status.contains('Progress')) return AppColors.primaryBlue.withValues(alpha: 0.1);
-    if (status.contains('Completed')) return AppColors.successGreen.withValues(alpha: 0.1);
-    if (status.contains('Scheduled')) return AppColors.warningAmber.withValues(alpha: 0.1);
+    if (status.contains('Ongoing') || status.contains('Progress')) return AppColors.primaryBlue.withOpacity(0.1);
+    if (status.contains('Completed')) return AppColors.successGreen.withOpacity(0.1);
+    if (status.contains('Scheduled')) return AppColors.warningAmber.withOpacity(0.1);
     return AppColors.bgLightGrey;
   }
 

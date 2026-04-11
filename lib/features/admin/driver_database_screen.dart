@@ -141,7 +141,7 @@ class DriverDatabaseScreen extends ConsumerWidget {
 
   Widget _buildDriverCard(BuildContext context, WidgetRef ref, AdminDriver d) {
     return Container(
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.1)), boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4))]),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.primaryBlue.withOpacity(0.1)), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))]),
       child: Theme(
         data: ThemeData(dividerColor: Colors.transparent),
         child: ExpansionTile(
@@ -150,7 +150,7 @@ class DriverDatabaseScreen extends ConsumerWidget {
           collapsedIconColor: AppColors.textSecondary,
           title: Row(
             children: [
-              CircleAvatar(radius: 20, backgroundColor: AppColors.primaryBlue.withValues(alpha: 0.1), child: const Text('🚗', style: TextStyle(fontSize: 18))),
+              CircleAvatar(radius: 20, backgroundColor: AppColors.primaryBlue.withOpacity(0.1), child: const Text('🚗', style: TextStyle(fontSize: 18))),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
@@ -187,7 +187,7 @@ class DriverDatabaseScreen extends ConsumerWidget {
               const SizedBox(height: 12),
               Container(
                 padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(color: AppColors.warningAmber.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+                decoration: BoxDecoration(color: AppColors.warningAmber.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -293,7 +293,7 @@ class DriverDatabaseScreen extends ConsumerWidget {
                         ] else
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(color: AppColors.successGreen.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
+                            decoration: BoxDecoration(color: AppColors.successGreen.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
                             child: const Text('Approved', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.successGreen)),
                           )
                       ],
@@ -310,7 +310,7 @@ class DriverDatabaseScreen extends ConsumerWidget {
   Widget _buildBadge(String emoji, String text, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: color.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(12), border: Border.all(color: color.withValues(alpha: 0.1))),
+      decoration: BoxDecoration(color: color.withOpacity(0.05), borderRadius: BorderRadius.circular(12), border: Border.all(color: color.withOpacity(0.1))),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

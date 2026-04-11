@@ -164,7 +164,7 @@ class _DriverAssignedScreenState extends ConsumerState<DriverAssignedScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: accentColor.withValues(alpha: 0.1),
+                      color: accentColor.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Row(
@@ -186,7 +186,7 @@ class _DriverAssignedScreenState extends ConsumerState<DriverAssignedScreen> {
         Container(
           width: 60, height: 60,
           decoration: BoxDecoration(
-            color: accentColor.withValues(alpha: 0.1),
+            color: accentColor.withOpacity(0.1),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Icon(
@@ -217,7 +217,7 @@ class _DriverAssignedScreenState extends ConsumerState<DriverAssignedScreen> {
                 decoration: InputDecoration(
                   counterText: '',
                   hintText: '----',
-                  hintStyle: TextStyle(color: AppColors.textMuted.withValues(alpha: 0.3)),
+                  hintStyle: TextStyle(color: AppColors.textMuted.withOpacity(0.3)),
                   border: InputBorder.none,
                 ),
                 onChanged: (val) {
@@ -242,9 +242,9 @@ class _DriverAssignedScreenState extends ConsumerState<DriverAssignedScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: AppColors.bgLightGrey.withValues(alpha: 0.5),
+        color: AppColors.bgLightGrey.withOpacity(0.5),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.5), width: 1),
+        border: Border.all(color: AppColors.border.withOpacity(0.5), width: 1),
       ),
       child: Row(
         children: [
@@ -273,7 +273,7 @@ class _DriverAssignedScreenState extends ConsumerState<DriverAssignedScreen> {
           decoration: BoxDecoration(
             image: const DecorationImage(image: NetworkImage('https://i.pravatar.cc/150?u=rahul'), fit: BoxFit.cover),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.2), width: 2),
+            border: Border.all(color: AppColors.primaryBlue.withOpacity(0.2), width: 2),
           ),
         ),
         const SizedBox(width: 16),
@@ -358,7 +358,7 @@ class _DriverAssignedScreenState extends ConsumerState<DriverAssignedScreen> {
       },
       child: Container(
         width: 44, height: 44,
-        decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+        decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
         child: Icon(icon, color: color, size: 20),
       ),
     );

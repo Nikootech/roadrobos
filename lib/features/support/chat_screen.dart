@@ -15,7 +15,7 @@ class ChatScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 1,
-        shadowColor: Colors.black.withValues(alpha: 0.05),
+        shadowColor: Colors.black.withOpacity(0.05),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: AppColors.textPrimary),
           onPressed: () => context.pop(),
@@ -28,7 +28,7 @@ class ChatScreen extends StatelessWidget {
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: AppColors.primaryBlue.withValues(alpha: 0.1),
+                    color: AppColors.primaryBlue.withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.support_agent_rounded, color: AppColors.primaryBlue, size: 20),
@@ -64,7 +64,7 @@ class ChatScreen extends StatelessWidget {
             child: ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                Center(child: Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4), decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(12)), child: const Text('Today', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.textSecondary)))),
+                Center(child: Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4), decoration: BoxDecoration(color: Colors.black.withOpacity(0.05), borderRadius: BorderRadius.circular(12)), child: const Text('Today', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.textSecondary)))),
                 const SizedBox(height: 24),
                 _buildMessageBubble('Hi Rahul! How can I help you today?', false, '10:30 AM'),
                 _buildMessageBubble('I need help with my recent booking. The driver hasn\'t arrived yet.', true, '10:32 AM'),
@@ -78,7 +78,7 @@ class ChatScreen extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12).copyWith(bottom: 24),
             decoration: BoxDecoration(
               color: Colors.white,
-              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, -5))],
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -5))],
             ),
             child: Row(
               children: [
@@ -125,7 +125,7 @@ class ChatScreen extends StatelessWidget {
               margin: const EdgeInsets.only(right: 8),
               width: 24,
               height: 24,
-              decoration: BoxDecoration(color: AppColors.primaryBlue.withValues(alpha: 0.1), shape: BoxShape.circle),
+              decoration: BoxDecoration(color: AppColors.primaryBlue.withOpacity(0.1), shape: BoxShape.circle),
               child: const Icon(Icons.support_agent_rounded, color: AppColors.primaryBlue, size: 12),
             ),
           
@@ -140,7 +140,7 @@ class ChatScreen extends StatelessWidget {
                   bottomLeft: Radius.circular(isMe ? 16 : 4),
                   bottomRight: Radius.circular(isMe ? 4 : 16),
                 ),
-                boxShadow: isMe ? [] : [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 5, offset: const Offset(0, 2))],
+                boxShadow: isMe ? [] : [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 5, offset: const Offset(0, 2))],
               ),
               child: Text(text, style: TextStyle(fontSize: 14, color: isMe ? Colors.white : AppColors.textPrimary, height: 1.4)),
             ),

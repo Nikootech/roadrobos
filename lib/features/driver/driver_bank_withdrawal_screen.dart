@@ -55,7 +55,7 @@ class _DriverBankWithdrawalScreenState extends State<DriverBankWithdrawalScreen>
                 ),
                 borderRadius: BorderRadius.circular(32),
                 boxShadow: [
-                  BoxShadow(color: AppColors.deepNavy.withValues(alpha: 0.2), blurRadius: 20, offset: const Offset(0, 10)),
+                  BoxShadow(color: AppColors.deepNavy.withOpacity(0.2), blurRadius: 20, offset: const Offset(0, 10)),
                 ],
               ),
               child: Column(
@@ -65,7 +65,7 @@ class _DriverBankWithdrawalScreenState extends State<DriverBankWithdrawalScreen>
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text('AVAILABLE BALANCE', style: TextStyle(color: Colors.white60, fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 1.2)),
-                      Icon(Iconsax.wallet_1, color: Colors.white.withValues(alpha: 0.3), size: 20),
+                      Icon(Iconsax.wallet_1, color: Colors.white.withOpacity(0.3), size: 20),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -80,9 +80,9 @@ class _DriverBankWithdrawalScreenState extends State<DriverBankWithdrawalScreen>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
               decoration: BoxDecoration(
-                color: AppColors.bgLightGrey.withValues(alpha: 0.5),
+                color: AppColors.bgLightGrey.withOpacity(0.5),
                 borderRadius: BorderRadius.circular(28),
-                border: Border.all(color: AppColors.border.withValues(alpha: 0.3)),
+                border: Border.all(color: AppColors.border.withOpacity(0.3)),
               ),
               child: Row(
                 children: [
@@ -108,15 +108,15 @@ class _DriverBankWithdrawalScreenState extends State<DriverBankWithdrawalScreen>
               padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(28),
-                border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+                border: Border.all(color: AppColors.border.withOpacity(0.5)),
                 color: Colors.white,
-                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 15, offset: const Offset(0, 5))],
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 15, offset: const Offset(0, 5))],
               ),
               child: Row(
                 children: [
                   Container(
                     padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(color: AppColors.primaryBlue.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(18)),
+                    decoration: BoxDecoration(color: AppColors.primaryBlue.withOpacity(0.1), borderRadius: BorderRadius.circular(18)),
                     child: const Icon(Iconsax.bank, color: AppColors.primaryBlue, size: 26),
                   ),
                   const SizedBox(width: 20),
@@ -235,7 +235,7 @@ class _DriverBankWithdrawalScreenState extends State<DriverBankWithdrawalScreen>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isSelected ? AppColors.primaryBlue.withValues(alpha: 0.05) : Colors.white,
+        color: isSelected ? AppColors.primaryBlue.withOpacity(0.05) : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: isSelected ? AppColors.primaryBlue : AppColors.border),
       ),

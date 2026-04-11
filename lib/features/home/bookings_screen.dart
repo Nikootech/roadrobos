@@ -63,7 +63,7 @@ class BookingsScreen extends StatelessWidget {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: booking.statusColor.withValues(alpha: 0.1),
+                    color: booking.statusColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Icon(
@@ -111,7 +111,7 @@ class BookingsScreen extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: booking.statusColor.withValues(alpha: 0.1),
+                        color: booking.statusColor.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(

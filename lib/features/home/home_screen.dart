@@ -151,7 +151,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   color: Colors.white,
                   shape: BoxShape.circle,
                   border: Border.all(color: AppColors.border),
-                  boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4))],
+                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
                 ),
                 child: Stack(
                   alignment: Alignment.center,
@@ -259,13 +259,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             },
             child: Container(
               padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(color: AppColors.bgSkyLight, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.1), width: 1)),
+              decoration: BoxDecoration(color: AppColors.bgSkyLight, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.primaryBlue.withOpacity(0.1), width: 1)),
               child: Row(
                 children: [
                   Container(
                     width: 50,
                     height: 44,
-                    decoration: BoxDecoration(color: AppColors.primaryBlue.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+                    decoration: BoxDecoration(color: AppColors.primaryBlue.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
                     child: Icon(selectedVehicle.name.toLowerCase().contains('car') ? Icons.directions_car_rounded : Icons.pedal_bike_rounded, color: AppColors.primaryBlue),
                   ),
                   const SizedBox(width: 12),
@@ -281,7 +281,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(color: AppColors.primaryBlue.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(8)),
+                    decoration: BoxDecoration(color: AppColors.primaryBlue.withOpacity(0.15), borderRadius: BorderRadius.circular(8)),
                     child: const Text(AppStrings.change, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.primaryBlue)),
                   ),
                 ],
@@ -301,7 +301,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         decoration: BoxDecoration(
           gradient: const LinearGradient(colors: [AppColors.primaryBlue, AppColors.primaryBlueDark], begin: Alignment.topLeft, end: Alignment.bottomRight),
           borderRadius: BorderRadius.circular(24),
-          boxShadow: [BoxShadow(color: AppColors.primaryBlue.withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, 8))],
+          boxShadow: [BoxShadow(color: AppColors.primaryBlue.withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 8))],
         ),
         child: Row(
           children: [
@@ -309,7 +309,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Wallet Balance', style: TextStyle(fontSize: ResponsiveLayout.responsiveFontSize(context, 12), color: Colors.white.withValues(alpha: 0.8), fontWeight: FontWeight.w500)),
+                  Text('Wallet Balance', style: TextStyle(fontSize: ResponsiveLayout.responsiveFontSize(context, 12), color: Colors.white.withOpacity(0.8), fontWeight: FontWeight.w500)),
                   const SizedBox(height: 4),
                   FittedBox(
                     fit: BoxFit.scaleDown,
@@ -323,7 +323,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               onTap: () => context.push('/wallet'),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(12)),
+                decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(12)),
                 child: const Row(children: [Icon(Icons.add_circle_outline_rounded, size: 18, color: Colors.white), SizedBox(width: 8), Text('Top Up', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white))]),
               ),
             ),
@@ -431,7 +431,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   context.push(route);
                 },
                 child: Container(
-                  decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(16), border: Border.all(color: color.withValues(alpha: 0.2))),
+                  decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(16), border: Border.all(color: color.withOpacity(0.2))),
                   child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(service['icon'] as IconData, color: color, size: ResponsiveLayout.isSmallPhone(context) ? 18 : 22), const SizedBox(height: 8), Text(service['label'] as String, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: ResponsiveLayout.responsiveFontSize(context, 10), fontWeight: FontWeight.w600, color: color))]),
                 ),
               ).animate(delay: (200 + index * 50).ms).fadeIn(duration: 400.ms).scale(begin: const Offset(0.9, 0.9), end: const Offset(1.0, 1.0));
@@ -473,7 +473,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 child: Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(gradient: LinearGradient(colors: colors[index % 3], begin: Alignment.topLeft, end: Alignment.bottomRight), borderRadius: BorderRadius.circular(32), boxShadow: [BoxShadow(color: colors[index % 3][0].withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, 10))]),
+                  decoration: BoxDecoration(gradient: LinearGradient(colors: colors[index % 3], begin: Alignment.topLeft, end: Alignment.bottomRight), borderRadius: BorderRadius.circular(32), boxShadow: [BoxShadow(color: colors[index % 3][0].withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 10))]),
                   child: SingleChildScrollView(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -481,9 +481,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       children: [
                         Text(offer['title']!, style: GoogleFonts.outfit(fontSize: ResponsiveLayout.responsiveFontSize(context, 22), fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: 0.5)),
                         const SizedBox(height: 8),
-                        Text(offer['desc']!, maxLines: 2, overflow: TextOverflow.ellipsis, style: GoogleFonts.inter(fontSize: ResponsiveLayout.responsiveFontSize(context, 13), fontWeight: FontWeight.w400, color: Colors.white.withValues(alpha: 0.9))),
+                        Text(offer['desc']!, maxLines: 2, overflow: TextOverflow.ellipsis, style: GoogleFonts.inter(fontSize: ResponsiveLayout.responsiveFontSize(context, 13), fontWeight: FontWeight.w400, color: Colors.white.withOpacity(0.9))),
                         const SizedBox(height: 16),
-                        Container(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6), decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.25), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.white.withValues(alpha: 0.3))), child: Text('USE CODE: ${offer['code']}', style: GoogleFonts.outfit(fontSize: ResponsiveLayout.responsiveFontSize(context, 11), fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: 1.0))),
+                        Container(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6), decoration: BoxDecoration(color: Colors.white.withOpacity(0.25), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.white.withOpacity(0.3))), child: Text('USE CODE: ${offer['code']}', style: GoogleFonts.outfit(fontSize: ResponsiveLayout.responsiveFontSize(context, 11), fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: 1.0))),
                       ],
                     ),
                   ),
@@ -512,9 +512,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 16),
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
+            color: color.withOpacity(0.1),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: color.withValues(alpha: 0.2)),
+            border: Border.all(color: color.withOpacity(0.2)),
           ),
           child: Column(
             children: [
@@ -535,16 +535,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 20),
           decoration: BoxDecoration(
-            gradient: LinearGradient(colors: [color.withValues(alpha: 0.15), color.withValues(alpha: 0.05)]),
+            gradient: LinearGradient(colors: [color.withOpacity(0.15), color.withOpacity(0.05)]),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: color.withValues(alpha: 0.3)),
+            border: Border.all(color: color.withOpacity(0.3)),
           ),
           child: Column(
             children: [
               Container(
                 width: 44,
                 height: 44,
-                decoration: BoxDecoration(color: color.withValues(alpha: 0.2), shape: BoxShape.circle),
+                decoration: BoxDecoration(color: color.withOpacity(0.2), shape: BoxShape.circle),
                 child: Icon(icon, color: color, size: 22),
               ),
               const SizedBox(height: 8),

@@ -17,7 +17,7 @@ dependencies:
   # Animations
   flutter_animate: ^4.5.0
   # UI Components
-  google_fonts: 8.0.2
+  google_fonts: ^6.3.0
   cached_network_image: ^3.3.1
   shimmer: ^3.0.0
   smooth_page_indicator: ^1.1.0

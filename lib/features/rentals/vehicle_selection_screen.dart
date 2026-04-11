@@ -211,9 +211,9 @@ class _VehicleCard extends ConsumerWidget {
                           filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
                           child: Container(
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
+                              color: Colors.white.withOpacity(0.2),
                               borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-                              border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1.5),
+                              border: Border.all(color: Colors.white.withOpacity(0.3), width: 1.5),
                             ),
                             child: Center(
                               child: Container(
@@ -221,8 +221,8 @@ class _VehicleCard extends ConsumerWidget {
                                 decoration: BoxDecoration(
                                   gradient: LinearGradient(
                                     colors: [
-                                      AppColors.primaryBlue.withValues(alpha: 0.9),
-                                      AppColors.primaryBlue.withValues(alpha: 0.7),
+                                      AppColors.primaryBlue.withOpacity(0.9),
+                                      AppColors.primaryBlue.withOpacity(0.7),
                                     ],
                                     begin: Alignment.topLeft,
                                     end: Alignment.bottomRight,
@@ -230,7 +230,7 @@ class _VehicleCard extends ConsumerWidget {
                                   borderRadius: BorderRadius.circular(20),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: AppColors.primaryBlue.withValues(alpha: 0.4),
+                                      color: AppColors.primaryBlue.withOpacity(0.4),
                                       blurRadius: 15,
                                       offset: const Offset(0, 8),
                                     ),
@@ -292,7 +292,7 @@ class _VehicleCard extends ConsumerWidget {
                         gradient: LinearGradient(
                           colors: [
                             AppColors.primaryBlue.withOpacity(0.9),
-                            AppColors.primaryBlue.withValues(alpha: 0.7),
+                            AppColors.primaryBlue.withOpacity(0.7),
                           ],
                         ),
                         borderRadius: BorderRadius.circular(8),

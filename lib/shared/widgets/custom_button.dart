@@ -88,7 +88,7 @@ class _CustomButtonState extends State<CustomButton>
           height: widget.height,
           decoration: BoxDecoration(
             color: widget.isLoading
-                ? bgColor.withValues(alpha: 0.7)
+                ? bgColor.withOpacity(0.7)
                 : bgColor,
             borderRadius: BorderRadius.circular(widget.borderRadius),
             border: widget.isOutlined
@@ -97,7 +97,7 @@ class _CustomButtonState extends State<CustomButton>
             boxShadow: !widget.isOutlined
                 ? [
                     BoxShadow(
-                      color: bgColor.withValues(alpha: 0.2),
+                      color: bgColor.withOpacity(0.2),
                       blurRadius: 20,
                       offset: const Offset(0, 8),
                     ),

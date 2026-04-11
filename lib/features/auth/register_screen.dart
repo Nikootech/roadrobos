@@ -163,7 +163,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       AppStrings.registerSubtitle,
                       style: TextStyle(
                         fontSize: 15,
-                        color: AppColors.textSecondary.withValues(alpha: 0.8),
+                        color: AppColors.textSecondary.withOpacity(0.8),
                       ),
                     ),
                   ],
@@ -358,9 +358,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
+              color: color.withOpacity(0.1),
               shape: BoxShape.circle,
-              border: Border.all(color: color.withValues(alpha: 0.3)),
+              border: Border.all(color: color.withOpacity(0.3)),
             ),
             child: Icon(icon, color: color, size: 28),
           ),

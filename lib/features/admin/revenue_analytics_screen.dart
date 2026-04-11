@@ -83,7 +83,7 @@ class _RevenueAnalyticsScreenState extends State<RevenueAnalyticsScreen> {
                     const SizedBox(height: 16),
                     Row(
                       children: [
-                        Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4), decoration: BoxDecoration(color: AppColors.successGreen.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(8)), child: Text('+12.5%', style: GoogleFonts.outfit(color: AppColors.successGreen, fontSize: 11, fontWeight: FontWeight.w800))),
+                        Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4), decoration: BoxDecoration(color: AppColors.successGreen.withOpacity(0.2), borderRadius: BorderRadius.circular(8)), child: Text('+12.5%', style: GoogleFonts.outfit(color: AppColors.successGreen, fontSize: 11, fontWeight: FontWeight.w800))),
                         const SizedBox(width: 8),
                         Text('vs last week (₹75,100)', style: GoogleFonts.inter(color: Colors.white70, fontSize: 12)),
                       ],
@@ -102,7 +102,7 @@ class _RevenueAnalyticsScreenState extends State<RevenueAnalyticsScreen> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
-                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 4))],
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -150,7 +150,7 @@ class _RevenueAnalyticsScreenState extends State<RevenueAnalyticsScreen> {
                             dotData: const FlDotData(show: false),
                             belowBarData: BarAreaData(
                               show: true,
-                              color: AppColors.primaryBlue.withValues(alpha: 0.1),
+                              color: AppColors.primaryBlue.withOpacity(0.1),
                             ),
                           ),
                         ],

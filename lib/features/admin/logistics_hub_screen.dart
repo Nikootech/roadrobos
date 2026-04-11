@@ -106,7 +106,7 @@ class LogisticsHubScreen extends StatelessWidget {
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(color: (status == 'Normal' ? AppColors.primaryBlue : AppColors.dangerRed).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+            decoration: BoxDecoration(color: (status == 'Normal' ? AppColors.primaryBlue : AppColors.dangerRed).withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
             child: Text(status, style: TextStyle(color: status == 'Normal' ? AppColors.primaryBlue : AppColors.dangerRed, fontSize: 10, fontWeight: FontWeight.bold)),
           ),
         ],

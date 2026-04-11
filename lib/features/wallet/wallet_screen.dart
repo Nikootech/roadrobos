@@ -45,7 +45,7 @@ class WalletScreen extends StatelessWidget {
                       width: 200,
                       height: 200,
                       decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.15),
+                      color: Colors.white.withOpacity(0.15),
                       shape: BoxShape.circle,
                     ),
                     ),
@@ -62,7 +62,7 @@ class WalletScreen extends StatelessWidget {
                           'Available Balance',
                           style: GoogleFonts.inter(
                             fontSize: 14,
-                          color: Colors.white.withValues(alpha: 0.8),
+                          color: Colors.white.withOpacity(0.8),
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -88,9 +88,9 @@ class WalletScreen extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
+                        color: Colors.white.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                        border: Border.all(color: Colors.white.withOpacity(0.3)),
                       ),
                       child: Row(
                         children: [
@@ -217,9 +217,9 @@ class WalletScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
+              color: color.withOpacity(0.1),
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: color.withValues(alpha: 0.15)),
+              border: Border.all(color: color.withOpacity(0.15)),
             ),
             child: Icon(icon, color: color, size: 26),
           ),
@@ -247,10 +247,10 @@ class WalletScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+        border: Border.all(color: AppColors.border.withOpacity(0.5)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
+            color: Colors.black.withOpacity(0.02),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -261,7 +261,7 @@ class WalletScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: isDebit ? AppColors.dangerRed.withValues(alpha: 0.1) : AppColors.successGreen.withValues(alpha: 0.1),
+              color: isDebit ? AppColors.dangerRed.withOpacity(0.1) : AppColors.successGreen.withOpacity(0.1),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(

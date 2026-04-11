@@ -213,7 +213,7 @@ class _TechnicianDashboardScreenState extends ConsumerState<TechnicianDashboardS
                         decoration: BoxDecoration(
                           color: Colors.white,
                           shape: BoxShape.circle,
-                          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)],
+                          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
                         ),
                         child: Stack(
                           children: [
@@ -330,7 +330,7 @@ class _TechnicianDashboardScreenState extends ConsumerState<TechnicianDashboardS
         decoration: BoxDecoration(
           gradient: const LinearGradient(colors: [Color(0xFF1A237E), Color(0xFF3949AB)]),
           borderRadius: BorderRadius.circular(24),
-          boxShadow: [BoxShadow(color: const Color(0xFF1A237E).withValues(alpha: 0.2), blurRadius: 20, offset: const Offset(0, 10))],
+          boxShadow: [BoxShadow(color: const Color(0xFF1A237E).withOpacity(0.2), blurRadius: 20, offset: const Offset(0, 10))],
         ),
         child: Row(
           children: [
@@ -350,14 +350,14 @@ class _TechnicianDashboardScreenState extends ConsumerState<TechnicianDashboardS
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                        decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(6)),
+                        decoration: BoxDecoration(color: Colors.white.withOpacity(0.15), borderRadius: BorderRadius.circular(6)),
                         child: Text(job.vehiclePlate, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white70)),
                       ),
                       const SizedBox(width: 12),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: (job.status == 'COMPLETED' ? Colors.greenAccent : Colors.amberAccent).withValues(alpha: 0.2),
+                          color: (job.status == 'COMPLETED' ? Colors.greenAccent : Colors.amberAccent).withOpacity(0.2),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
@@ -386,7 +386,7 @@ class _TechnicianDashboardScreenState extends ConsumerState<TechnicianDashboardS
       decoration: BoxDecoration(
         gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF1A237E), Color(0xFF3949AB)]),
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [BoxShadow(color: const Color(0xFF1A237E).withValues(alpha: 0.2), blurRadius: 20, offset: const Offset(0, 10))],
+        boxShadow: [BoxShadow(color: const Color(0xFF1A237E).withOpacity(0.2), blurRadius: 20, offset: const Offset(0, 10))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -404,7 +404,7 @@ class _TechnicianDashboardScreenState extends ConsumerState<TechnicianDashboardS
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(20)),
+                decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(20)),
                 child: const Row(
                   children: [
                     Icon(Icons.trending_up, color: Colors.greenAccent, size: 14),
@@ -441,7 +441,7 @@ class _TechnicianDashboardScreenState extends ConsumerState<TechnicianDashboardS
           width: 25,
           height: 80 * percent,
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: percent > 0.8 ? 1.0 : 0.4),
+            color: Colors.white.withOpacity(percent > 0.8 ? 1.0 : 0.4),
             borderRadius: BorderRadius.circular(6),
           ),
         ),
@@ -465,13 +465,13 @@ class _TechnicianDashboardScreenState extends ConsumerState<TechnicianDashboardS
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: const Color(0xFFE5E9F0)),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4))],
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
         ),
         child: Column(
           children: [
             Container(
               padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
+              decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
               child: Icon(icon, color: color, size: 24),
             ),
             const SizedBox(height: 12),
@@ -502,13 +502,13 @@ class _TechnicianDashboardScreenState extends ConsumerState<TechnicianDashboardS
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: const Color(0xFFE5E9F0)),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4))],
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+              decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
               child: Icon(Icons.directions_car_rounded, color: statusColor),
             ),
             const SizedBox(width: 16),
@@ -523,7 +523,7 @@ class _TechnicianDashboardScreenState extends ConsumerState<TechnicianDashboardS
             ),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(20)),
+              decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
               child: Text(status, style: TextStyle(color: statusColor, fontSize: 11, fontWeight: FontWeight.bold)),
             ),
           ],

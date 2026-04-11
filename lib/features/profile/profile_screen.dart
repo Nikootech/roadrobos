@@ -76,14 +76,14 @@ class ProfileScreen extends ConsumerWidget {
                 gradient: LinearGradient(
                   colors: [
                     AppColors.bgDarkSurface,
-                    AppColors.bgDarkSurface.withValues(alpha: 0.8),
+                    AppColors.bgDarkSurface.withOpacity(0.8),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: AppColors.warningAmber.withValues(alpha: 0.3),
+                  color: AppColors.warningAmber.withOpacity(0.3),
                 ),
               ),
               child: Column(
@@ -160,7 +160,7 @@ class ProfileScreen extends ConsumerWidget {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppColors.bgDarkProfile.withValues(alpha: 0.5),
+                      color: AppColors.bgDarkProfile.withOpacity(0.5),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
@@ -297,10 +297,10 @@ class ProfileScreen extends ConsumerWidget {
                     child: Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: AppColors.dangerRed.withValues(alpha: 0.1),
+                        color: AppColors.dangerRed.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: AppColors.dangerRed.withValues(alpha: 0.2),
+                          color: AppColors.dangerRed.withOpacity(0.2),
                         ),
                       ),
                       child: Row(
@@ -323,7 +323,7 @@ class ProfileScreen extends ConsumerWidget {
                           Icon(
                             Icons.arrow_forward_ios_rounded,
                             size: 14,
-                            color: AppColors.dangerRed.withValues(alpha: 0.5),
+                            color: AppColors.dangerRed.withOpacity(0.5),
                           ),
                         ],
                       ),
@@ -347,9 +347,9 @@ class ProfileScreen extends ConsumerWidget {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
+          color: color.withOpacity(0.1),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withValues(alpha: 0.2)),
+          border: Border.all(color: color.withOpacity(0.2)),
         ),
         child: Column(
           children: [
@@ -384,7 +384,7 @@ class ProfileScreen extends ConsumerWidget {
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.bgDarkSurface.withValues(alpha: 0.4),
+          color: AppColors.bgDarkSurface.withOpacity(0.4),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(

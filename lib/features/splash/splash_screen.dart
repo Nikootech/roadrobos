@@ -52,7 +52,7 @@ class _SplashScreenState extends State<SplashScreen> {
               height: size.width * 0.45,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFFE0F2FE).withValues(alpha: 0.6), // Soft sky blue
+                color: const Color(0xFFE0F2FE).withOpacity(0.6), // Soft sky blue
               ),
             ),
           ).animate(delay: 200.ms).fadeIn(duration: 800.ms),
@@ -85,7 +85,7 @@ class _SplashScreenState extends State<SplashScreen> {
                     borderRadius: BorderRadius.circular(32),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.primaryBlue.withValues(alpha: 0.08),
+                        color: AppColors.primaryBlue.withOpacity(0.08),
                         blurRadius: 30,
                         spreadRadius: 2,
                         offset: const Offset(0, 10),
@@ -140,7 +140,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 child: CircularProgressIndicator(
                   strokeWidth: 1.2,
                   valueColor: AlwaysStoppedAnimation<Color>(
-                    AppColors.primaryBlue.withValues(alpha: 0.4),
+                    AppColors.primaryBlue.withOpacity(0.4),
                   ),
                 ),
               ),

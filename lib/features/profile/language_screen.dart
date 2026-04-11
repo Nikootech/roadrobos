@@ -32,7 +32,7 @@ class _LanguageScreenState extends State<LanguageScreen> {
           return Container(
             margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
-              color: isSelected ? AppColors.primaryBlue.withValues(alpha: 0.05) : Colors.white,
+              color: isSelected ? AppColors.primaryBlue.withOpacity(0.05) : Colors.white,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: isSelected ? AppColors.primaryBlue : AppColors.border),
             ),

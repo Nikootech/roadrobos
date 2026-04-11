@@ -147,7 +147,7 @@ class ExploreScreen extends ConsumerWidget {
                         decoration: BoxDecoration(
                           color: AppColors.bgSkyLight,
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.1)),
+                          border: Border.all(color: AppColors.primaryBlue.withOpacity(0.1)),
                         ),
                         padding: const EdgeInsets.all(14),
                         child: Column(
@@ -158,7 +158,7 @@ class ExploreScreen extends ConsumerWidget {
                               width: 40,
                               height: 40,
                               decoration: BoxDecoration(
-                                color: (cat['color'] as Color).withValues(alpha: 0.12),
+                                color: (cat['color'] as Color).withOpacity(0.12),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Icon(

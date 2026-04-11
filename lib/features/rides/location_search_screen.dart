@@ -199,7 +199,7 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
                     final isPickup = _pickupFocusNode.hasFocus || _pickupController.text.isEmpty;
                     return Container(
                       padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-                      color: isPickup ? Colors.green.withValues(alpha: 0.05) : Colors.orange.withValues(alpha: 0.05),
+                      color: isPickup ? Colors.green.withOpacity(0.05) : Colors.orange.withOpacity(0.05),
                       child: Row(
                         children: [
                           Icon(isPickup ? Iconsax.location : Iconsax.routing, size: 16, color: isPickup ? Colors.green : Colors.orange),
@@ -251,7 +251,7 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
       duration: const Duration(milliseconds: 200),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: isFocused ? Colors.blue.withValues(alpha: 0.05) : const Color(0xFFF3F4F6),
+        color: isFocused ? Colors.blue.withOpacity(0.05) : const Color(0xFFF3F4F6),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isFocused ? Colors.blue : Colors.transparent,

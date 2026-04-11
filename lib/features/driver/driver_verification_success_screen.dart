@@ -24,7 +24,7 @@ class DriverVerificationSuccessScreen extends StatelessWidget {
           ...List.generate(6, (index) => Positioned(
             top: 200 + (index * 60),
             left: 50 + (index * 40),
-            child: Icon(Icons.circle, size: 8, color: AppColors.primaryBlue.withValues(alpha: 0.1))
+            child: Icon(Icons.circle, size: 8, color: AppColors.primaryBlue.withOpacity(0.1))
                 .animate(onPlay: (c) => c.repeat(reverse: true))
                 .moveY(begin: 0, end: 20, duration: (1 + index * 0.2).seconds)
                 .fadeIn(),
@@ -42,7 +42,7 @@ class DriverVerificationSuccessScreen extends StatelessWidget {
                       Container(
                         width: 160, height: 160,
                         decoration: BoxDecoration(
-                          color: AppColors.successGreen.withValues(alpha: 0.1),
+                          color: AppColors.successGreen.withOpacity(0.1),
                           shape: BoxShape.circle,
                         ),
                       ).animate().scale(duration: 800.ms, curve: Curves.elasticOut),

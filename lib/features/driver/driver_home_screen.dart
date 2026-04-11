@@ -54,7 +54,7 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                               height: 48,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.1), width: 2),
+                                border: Border.all(color: AppColors.primaryBlue.withOpacity(0.1), width: 2),
                                 image: const DecorationImage(
                                   image: NetworkImage('https://i.pravatar.cc/150?u=driver'),
                                   fit: BoxFit.cover,
@@ -121,7 +121,7 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                               image: NetworkImage('https://static-maps.yandex.ru/1.x/?lang=en_US&ll=77.5946,12.9716&size=450,450&z=13&l=map&pt=77.5946,12.9716,pm2rdm'),
                               fit: BoxFit.cover,
                             ),
-                            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 20, offset: const Offset(0, 10))],
+                            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, 10))],
                           ),
                           child: Container(
                             decoration: BoxDecoration(
@@ -129,7 +129,7 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                               gradient: LinearGradient(
                                 begin: Alignment.topCenter,
                                 end: Alignment.bottomCenter,
-                                colors: [Colors.black.withValues(alpha: 0.2), Colors.black.withValues(alpha: 0.5)],
+                                colors: [Colors.black.withOpacity(0.2), Colors.black.withOpacity(0.5)],
                               ),
                             ),
                             padding: const EdgeInsets.all(24),
@@ -164,7 +164,7 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                                     decoration: BoxDecoration(
                                       color: isOnline ? AppColors.dangerRed : AppColors.successGreen,
                                       borderRadius: BorderRadius.circular(20),
-                                      boxShadow: [BoxShadow(color: (isOnline ? AppColors.dangerRed : AppColors.successGreen).withValues(alpha: 0.3), blurRadius: 15, offset: const Offset(0, 6))],
+                                      boxShadow: [BoxShadow(color: (isOnline ? AppColors.dangerRed : AppColors.successGreen).withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 6))],
                                     ),
                                     child: Center(
                                       child: Row(
@@ -202,7 +202,7 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                                 stops: [0.0, 0.4, 1.0],
                               ),
                               borderRadius: BorderRadius.circular(32),
-                              boxShadow: [BoxShadow(color: const Color(0xFF2563EB).withValues(alpha: 0.35), blurRadius: 25, offset: const Offset(0, 12))],
+                              boxShadow: [BoxShadow(color: const Color(0xFF2563EB).withOpacity(0.35), blurRadius: 25, offset: const Offset(0, 12))],
                             ),
                             child: Stack(
                               children: [
@@ -223,7 +223,7 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                                         const Text('Earnings Today', style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 0.2)),
                                         Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                          decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(20)),
+                                          decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(20)),
                                           child: const Row(
                                             children: [
                                               Icon(Icons.trending_up_rounded, color: Colors.white, size: 12),
@@ -380,8 +380,8 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4))],
+          border: Border.all(color: AppColors.border.withOpacity(0.5)),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -389,7 +389,7 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
           children: [
             Container(
               padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+              decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
               child: Icon(icon, color: color, size: 20),
             ),
             Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
@@ -405,7 +405,7 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+        border: Border.all(color: AppColors.border.withOpacity(0.5)),
       ),
       child: Row(
         children: [

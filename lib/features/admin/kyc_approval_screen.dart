@@ -16,7 +16,7 @@ class KycApprovalScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 1,
-        shadowColor: Colors.black.withValues(alpha: 0.05),
+        shadowColor: Colors.black.withOpacity(0.05),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: AppColors.textPrimary),
           onPressed: () => context.pop(),
@@ -40,7 +40,7 @@ class KycApprovalScreen extends StatelessWidget {
                         Container(
                           width: 60,
                           height: 60,
-                          decoration: BoxDecoration(color: AppColors.primaryBlue.withValues(alpha: 0.1), shape: BoxShape.circle),
+                          decoration: BoxDecoration(color: AppColors.primaryBlue.withOpacity(0.1), shape: BoxShape.circle),
                           child: const Icon(Icons.person, color: AppColors.primaryBlue, size: 30),
                         ),
                         const SizedBox(width: 16),

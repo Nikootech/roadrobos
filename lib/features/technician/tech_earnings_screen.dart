@@ -90,7 +90,7 @@ class _TechEarningsScreenState extends State<TechEarningsScreen> {
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(20),
-                      boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 20, offset: const Offset(0, 10))],
+                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 20, offset: const Offset(0, 10))],
                     ),
                     child: const Text('Cash Out Profits', style: TextStyle(color: primaryIndigo, fontWeight: FontWeight.w900, fontSize: 16)),
                   ),
@@ -124,8 +124,8 @@ class _TechEarningsScreenState extends State<TechEarningsScreen> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(28),
-                    border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
-                    boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 20, offset: const Offset(0, 10))],
+                    border: Border.all(color: Colors.black.withOpacity(0.05)),
+                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 20, offset: const Offset(0, 10))],
                   ),
                   child: Column(
                     children: [
@@ -229,7 +229,7 @@ class _TechEarningsScreenState extends State<TechEarningsScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+        border: Border.all(color: Colors.black.withOpacity(0.05)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -237,7 +237,7 @@ class _TechEarningsScreenState extends State<TechEarningsScreen> {
           Row(
             children: [
               Container(padding: const EdgeInsets.all(10), 
-                decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle), 
+                decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle), 
                 child: Icon(Iconsax.money_tick, color: color, size: 20)),
               const SizedBox(width: 12),
               Column(
@@ -270,7 +270,7 @@ class _TechEarningsScreenState extends State<TechEarningsScreen> {
               end: Alignment.bottomCenter,
               colors: isMax 
                 ? [primaryIndigo, const Color(0xFF3949AB)]
-                : [primaryIndigo.withValues(alpha: 0.1), primaryIndigo.withValues(alpha: 0.05)],
+                : [primaryIndigo.withOpacity(0.1), primaryIndigo.withOpacity(0.05)],
             ),
             borderRadius: BorderRadius.circular(8),
           ),

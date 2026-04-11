@@ -116,11 +116,11 @@ class SelectServiceTypeScreen extends ConsumerWidget {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: AppColors.dangerRed.withValues(alpha: 0.05),
+          color: AppColors.dangerRed.withOpacity(0.05),
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: AppColors.dangerRed.withValues(alpha: 0.1)),
+          border: Border.all(color: AppColors.dangerRed.withOpacity(0.1)),
           boxShadow: [
-            BoxShadow(color: color.withValues(alpha: 0.05), blurRadius: 20, offset: const Offset(0, 8)),
+            BoxShadow(color: color.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, 8)),
           ],
         ),
         child: Row(
@@ -129,7 +129,7 @@ class SelectServiceTypeScreen extends ConsumerWidget {
               width: 56,
               height: 56,
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
+                color: color.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Icon(icon, color: color, size: 28),
@@ -145,7 +145,7 @@ class SelectServiceTypeScreen extends ConsumerWidget {
                 ],
               ),
             ),
-            Icon(Icons.arrow_forward_ios_rounded, size: 16, color: color.withValues(alpha: 0.5)),
+            Icon(Icons.arrow_forward_ios_rounded, size: 16, color: color.withOpacity(0.5)),
           ],
         ),
       ),
@@ -171,7 +171,7 @@ class SelectServiceTypeScreen extends ConsumerWidget {
               width: 56,
               height: 56,
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
+                color: color.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Icon(icon, color: color, size: 28),
@@ -187,7 +187,7 @@ class SelectServiceTypeScreen extends ConsumerWidget {
                 ],
               ),
             ),
-            Icon(Icons.arrow_forward_ios_rounded, size: 16, color: AppColors.textMuted.withValues(alpha: 0.5)),
+            Icon(Icons.arrow_forward_ios_rounded, size: 16, color: AppColors.textMuted.withOpacity(0.5)),
           ],
         ),
       ),
@@ -199,7 +199,7 @@ class SelectServiceTypeScreen extends ConsumerWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.5),
+        color: Colors.white.withOpacity(0.5),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(

@@ -46,13 +46,13 @@ class TechProfileScreen extends ConsumerWidget {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(24),
-                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)],
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
               ),
               child: Column(
                 children: [
                    CircleAvatar(
                     radius: 50,
-                    backgroundColor: AppColors.primaryBlue.withValues(alpha: 0.1),
+                    backgroundColor: AppColors.primaryBlue.withOpacity(0.1),
                     child: const Icon(Iconsax.user, size: 50, color: AppColors.primaryBlue),
                   ),
                   const SizedBox(height: 16),
@@ -61,7 +61,7 @@ class TechProfileScreen extends ConsumerWidget {
                   const SizedBox(height: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    decoration: BoxDecoration(color: AppColors.successGreen.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+                    decoration: BoxDecoration(color: AppColors.successGreen.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
                     child: const Text('ACTIVE', style: TextStyle(color: AppColors.successGreen, fontSize: 12, fontWeight: FontWeight.bold)),
                   ),
                 ],
@@ -101,7 +101,7 @@ class TechProfileScreen extends ConsumerWidget {
               child: ElevatedButton(
                 onPressed: () => context.go('/auth/login'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.dangerRed.withValues(alpha: 0.1),
+                  backgroundColor: AppColors.dangerRed.withOpacity(0.1),
                   foregroundColor: AppColors.dangerRed,
                   elevation: 0,
                   padding: const EdgeInsets.symmetric(vertical: 16),

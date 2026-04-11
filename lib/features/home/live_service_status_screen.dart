@@ -71,7 +71,7 @@ class _LiveServiceStatusScreenState extends ConsumerState<LiveServiceStatusScree
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
-                    color: AppColors.primaryBlue.withValues(alpha: 0.1),
+                    color: AppColors.primaryBlue.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
@@ -136,7 +136,7 @@ class _LiveServiceStatusScreenState extends ConsumerState<LiveServiceStatusScree
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 20, offset: const Offset(0, 10)),
+          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 20, offset: const Offset(0, 10)),
         ],
       ),
       child: Column(
@@ -148,13 +148,13 @@ class _LiveServiceStatusScreenState extends ConsumerState<LiveServiceStatusScree
                 height: 50,
                 decoration: BoxDecoration(
                   color: (job.vehicleModel.toLowerCase().contains('car') || job.vehicleModel.toLowerCase().contains('creta')) 
-                    ? AppColors.primaryBlue.withValues(alpha: 0.1)
-                    : AppColors.accentOrange.withValues(alpha: 0.1),
+                    ? AppColors.primaryBlue.withOpacity(0.1)
+                    : AppColors.accentOrange.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
                     color: (job.vehicleModel.toLowerCase().contains('car') || job.vehicleModel.toLowerCase().contains('creta'))
-                      ? AppColors.primaryBlue.withValues(alpha: 0.2)
-                      : AppColors.accentOrange.withValues(alpha: 0.2),
+                      ? AppColors.primaryBlue.withOpacity(0.2)
+                      : AppColors.accentOrange.withOpacity(0.2),
                     width: 1,
                   ),
                 ),
@@ -231,7 +231,7 @@ class _LiveServiceStatusScreenState extends ConsumerState<LiveServiceStatusScree
               decoration: BoxDecoration(
                 color: completed ? AppColors.successGreen : (current ? AppColors.primaryBlue : AppColors.bgLightGrey),
                 shape: BoxShape.circle,
-                border: current ? Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.2), width: 4) : null,
+                border: current ? Border.all(color: AppColors.primaryBlue.withOpacity(0.2), width: 4) : null,
               ),
               child: completed 
                 ? const Icon(Icons.check, size: 14, color: Colors.white)
@@ -263,7 +263,7 @@ class _LiveServiceStatusScreenState extends ConsumerState<LiveServiceStatusScree
                 subtitle,
                 style: TextStyle(
                   fontSize: 12,
-                  color: AppColors.textSecondary.withValues(alpha: 0.8),
+                  color: AppColors.textSecondary.withOpacity(0.8),
                 ),
               ),
               const SizedBox(height: 20),

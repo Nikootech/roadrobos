@@ -206,7 +206,7 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget> with SingleTicker
                     color: Colors.white,
                     shape: BoxShape.circle,
                     boxShadow: [
-                      BoxShadow(color: AppColors.primaryBlue.withValues(alpha: 0.3), blurRadius: 10, spreadRadius: 2),
+                      BoxShadow(color: AppColors.primaryBlue.withOpacity(0.3), blurRadius: 10, spreadRadius: 2),
                     ],
                     border: Border.all(color: AppColors.primaryBlue, width: 2),
                   ),
@@ -250,11 +250,11 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget> with SingleTicker
                     scale: value,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.8),
+                        color: Colors.white.withOpacity(0.8),
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.1),
+                            color: Colors.black.withOpacity(0.1),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -291,7 +291,7 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget> with SingleTicker
         polylines.add(
           Polyline(
             points: [widget.roadroboLocation!, widget.pickupLocation!],
-            color: AppColors.primaryBlue.withValues(alpha: 0.8),
+            color: AppColors.primaryBlue.withOpacity(0.8),
             strokeWidth: 4,
           ),
         );
@@ -300,7 +300,7 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget> with SingleTicker
       polylines.add(
         Polyline(
           points: [taxiState.pickupLocation!, taxiState.dropoffLocation!],
-          color: AppColors.primaryBlue.withValues(alpha: 0.7),
+          color: AppColors.primaryBlue.withOpacity(0.7),
           strokeWidth: 4,
         ),
       );
@@ -385,7 +385,7 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget> with SingleTicker
         children: [
           Container(
             padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(color: AppColors.primaryBlue.withValues(alpha: 0.1), shape: BoxShape.circle),
+            decoration: BoxDecoration(color: AppColors.primaryBlue.withOpacity(0.1), shape: BoxShape.circle),
             child: const Icon(Iconsax.location, color: AppColors.primaryBlue, size: 20),
           ),
           const SizedBox(width: 16),
@@ -423,11 +423,11 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget> with SingleTicker
             width: 45,
             height: 45,
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.15),
+              color: color.withOpacity(0.15),
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: color.withValues(alpha: 0.2),
+                  color: color.withOpacity(0.2),
                   blurRadius: 15,
                   spreadRadius: 5,
                 )
@@ -465,11 +465,11 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget> with SingleTicker
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.9),
+        color: Colors.white.withOpacity(0.9),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: Colors.black.withOpacity(0.1),
             blurRadius: 10,
           ),
         ],

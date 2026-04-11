@@ -129,7 +129,7 @@ class _ScheduleAppointmentScreenState extends ConsumerState<ScheduleAppointmentS
       decoration: BoxDecoration(
         color: AppColors.bgSkyLight,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.1)),
+        border: Border.all(color: AppColors.primaryBlue.withOpacity(0.1)),
       ),
       child: Column(
         children: [
@@ -170,7 +170,7 @@ class _ScheduleAppointmentScreenState extends ConsumerState<ScheduleAppointmentS
                         DateFormat('E').format(date)[0],
                         style: TextStyle(
                           fontSize: 12,
-                          color: isSelected ? Colors.white.withValues(alpha: 0.8) : AppColors.textSecondary,
+                          color: isSelected ? Colors.white.withOpacity(0.8) : AppColors.textSecondary,
                         ),
                       ),
                       const SizedBox(height: 4),

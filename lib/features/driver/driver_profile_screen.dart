@@ -62,7 +62,7 @@ class DriverProfileScreen extends StatelessWidget {
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.2), width: 2),
+                          border: Border.all(color: AppColors.primaryBlue.withOpacity(0.2), width: 2),
                         ),
                         child: const CircleAvatar(
                           radius: 54,
@@ -85,7 +85,7 @@ class DriverProfileScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      color: AppColors.successGreen.withValues(alpha: 0.1),
+                      color: AppColors.successGreen.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
@@ -141,7 +141,7 @@ class DriverProfileScreen extends StatelessWidget {
                 },
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 18),
-                  backgroundColor: AppColors.dangerRed.withValues(alpha: 0.08),
+                  backgroundColor: AppColors.dangerRed.withOpacity(0.08),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                 ),
                 child: const Text('Sign Out', style: TextStyle(color: AppColors.dangerRed, fontWeight: FontWeight.w900, fontSize: 16)),
@@ -186,7 +186,7 @@ class DriverProfileScreen extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10)],
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)],
         ),
         child: Column(
           children: [
@@ -206,7 +206,7 @@ class DriverProfileScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10)],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)],
       ),
       child: Material(
         color: Colors.transparent,
@@ -385,7 +385,7 @@ class DriverProfileScreen extends StatelessWidget {
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [AppColors.primaryBlue, AppColors.primaryBlue.withValues(alpha: 0.6)],
+              colors: [AppColors.primaryBlue, AppColors.primaryBlue.withOpacity(0.6)],
             ),
             borderRadius: BorderRadius.circular(8),
           ),

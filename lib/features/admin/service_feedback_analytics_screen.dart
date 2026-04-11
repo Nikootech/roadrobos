@@ -129,7 +129,7 @@ class _RatingBar extends StatelessWidget {
           Expanded(
             child: LinearProgressIndicator(
               value: progress,
-              backgroundColor: Colors.white.withValues(alpha: 0.2),
+              backgroundColor: Colors.white.withOpacity(0.2),
               color: Colors.white,
               minHeight: 4,
               borderRadius: BorderRadius.circular(2),

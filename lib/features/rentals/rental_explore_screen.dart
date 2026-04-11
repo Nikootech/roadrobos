@@ -144,7 +144,7 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           boxShadow: [
-            BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, -4)),
+            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -4)),
           ],
         ),
         child: ElevatedButton(
@@ -180,8 +180,8 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
         decoration: BoxDecoration(
           color: isSelected ? AppColors.primaryBlue : AppColors.bgLightGrey,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: isSelected ? AppColors.primaryBlue : AppColors.border.withValues(alpha: 0.5)),
-          boxShadow: isSelected ? [BoxShadow(color: AppColors.primaryBlue.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 4))] : null,
+          border: Border.all(color: isSelected ? AppColors.primaryBlue : AppColors.border.withOpacity(0.5)),
+          boxShadow: isSelected ? [BoxShadow(color: AppColors.primaryBlue.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 4))] : null,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -258,14 +258,14 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
                 boxShadow: [
                   BoxShadow(
                     color: isZeelio 
-                        ? AppColors.primaryBlue.withValues(alpha: 0.12) 
-                        : Colors.black.withValues(alpha: 0.04),
+                        ? AppColors.primaryBlue.withOpacity(0.12) 
+                        : Colors.black.withOpacity(0.04),
                     blurRadius: 24,
                     offset: const Offset(0, 10),
                   ),
                 ],
                 border: isZeelio 
-                    ? Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.15), width: 1)
+                    ? Border.all(color: AppColors.primaryBlue.withOpacity(0.15), width: 1)
                     : null,
               ),
               child: Column(
@@ -318,8 +318,8 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
-                                  AppColors.primaryBlue.withValues(alpha: 0.9),
-                                  AppColors.primaryBlue.withValues(alpha: 0.7),
+                                  AppColors.primaryBlue.withOpacity(0.9),
+                                  AppColors.primaryBlue.withOpacity(0.7),
                                 ],
                               ),
                               borderRadius: BorderRadius.circular(8),
@@ -338,9 +338,9 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
                               filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
                               child: Container(
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.2),
+                                  color: Colors.white.withOpacity(0.2),
                                   borderRadius: BorderRadius.circular(24),
-                                  border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1.5),
+                                  border: Border.all(color: Colors.white.withOpacity(0.3), width: 1.5),
                                 ),
                                 child: Center(
                                   child: Container(
@@ -348,13 +348,13 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
                                     decoration: BoxDecoration(
                                       gradient: LinearGradient(
                                         colors: [
-                                          AppColors.primaryBlue.withValues(alpha: 0.9),
-                                          AppColors.primaryBlue.withValues(alpha: 0.7),
+                                          AppColors.primaryBlue.withOpacity(0.9),
+                                          AppColors.primaryBlue.withOpacity(0.7),
                                         ],
                                       ),
                                       borderRadius: BorderRadius.circular(12),
                                       boxShadow: [
-                                        BoxShadow(color: AppColors.primaryBlue.withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, 4)),
+                                        BoxShadow(color: AppColors.primaryBlue.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4)),
                                       ],
                                     ),
                                     child: const Row(
@@ -512,7 +512,7 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
           decoration: BoxDecoration(
             color: AppColors.bgLightGrey,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+            border: Border.all(color: AppColors.border.withOpacity(0.5)),
           ),
           child: const Center(
             child: Text(

@@ -67,13 +67,13 @@ class ManageOffersScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: isActive ? AppColors.primaryBlue.withValues(alpha: 0.3) : AppColors.border),
+        border: Border.all(color: isActive ? AppColors.primaryBlue.withOpacity(0.3) : AppColors.border),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: (isActive ? AppColors.primaryBlue : AppColors.textMuted).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+            decoration: BoxDecoration(color: (isActive ? AppColors.primaryBlue : AppColors.textMuted).withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
             child: Icon(Iconsax.ticket_discount, color: isActive ? AppColors.primaryBlue : AppColors.textMuted),
           ),
           const SizedBox(width: 16),

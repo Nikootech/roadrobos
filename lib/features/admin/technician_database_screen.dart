@@ -110,7 +110,7 @@ class TechnicianDatabaseScreen extends ConsumerWidget {
 
   Widget _buildTechCard(BuildContext context, AdminTechnician t) {
     return Container(
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.1)), boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4))]),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.primaryBlue.withOpacity(0.1)), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))]),
       child: Theme(
         data: ThemeData(dividerColor: Colors.transparent),
         child: ExpansionTile(
@@ -119,7 +119,7 @@ class TechnicianDatabaseScreen extends ConsumerWidget {
           collapsedIconColor: AppColors.textSecondary,
           title: Row(
             children: [
-              CircleAvatar(radius: 20, backgroundColor: AppColors.primaryBlue.withValues(alpha: 0.1), child: const Text('🔧', style: TextStyle(fontSize: 18))),
+              CircleAvatar(radius: 20, backgroundColor: AppColors.primaryBlue.withOpacity(0.1), child: const Text('🔧', style: TextStyle(fontSize: 18))),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
@@ -191,7 +191,7 @@ class TechnicianDatabaseScreen extends ConsumerWidget {
                       Container(
                         margin: const EdgeInsets.only(top: 4),
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(color: job.status == 'In Progress' ? AppColors.primaryBlue.withValues(alpha: 0.1) : AppColors.warningAmber.withValues(alpha: 0.1), borderRadius: const BorderRadius.all(Radius.circular(6))),
+                        decoration: BoxDecoration(color: job.status == 'In Progress' ? AppColors.primaryBlue.withOpacity(0.1) : AppColors.warningAmber.withOpacity(0.1), borderRadius: const BorderRadius.all(Radius.circular(6))),
                         child: Text(job.status, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: job.status == 'In Progress' ? AppColors.primaryBlue : AppColors.warningAmber)),
                       )
                   ],
@@ -206,7 +206,7 @@ class TechnicianDatabaseScreen extends ConsumerWidget {
   Widget _buildBadge(String emoji, String text, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: color.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(12), border: Border.all(color: color.withValues(alpha: 0.1))),
+      decoration: BoxDecoration(color: color.withOpacity(0.05), borderRadius: BorderRadius.circular(12), border: Border.all(color: color.withOpacity(0.1))),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
