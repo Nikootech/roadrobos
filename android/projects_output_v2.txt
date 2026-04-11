@@ -1,0 +1,37 @@
+> Task :gradle:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :gradle:compileKotlin UP-TO-DATE
+> Task :gradle:compileJava NO-SOURCE
+> Task :gradle:compileGroovy NO-SOURCE
+> Task :gradle:pluginDescriptors UP-TO-DATE
+> Task :gradle:processResources UP-TO-DATE
+> Task :gradle:classes UP-TO-DATE
+> Task :gradle:jar UP-TO-DATE
+
+> Configure project :app
+
+> Task :projects
+
+Projects:
+
+------------------------------------------------------------
+Root project 'roadrobos_app_android'
+------------------------------------------------------------
+
+Root project 'roadrobos_app_android'
++--- Project ':app'
++--- Project ':flutter_plugin_android_lifecycle'
++--- Project ':geolocator_android'
++--- Project ':image_picker_android'
++--- Project ':path_provider_android'
++--- Project ':sqflite_android'
+\--- Project ':url_launcher_android'
+
+Included builds:
+
+\--- Included build ':gradle'
+
+To see a list of the tasks of a project, run gradlew <project-path>:tasks
+For example, try running gradlew :app:tasks
+
+BUILD SUCCESSFUL in 2s
+5 actionable tasks: 1 executed, 4 up-to-date
