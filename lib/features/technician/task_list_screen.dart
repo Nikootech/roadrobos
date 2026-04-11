@@ -18,48 +18,14 @@ class TaskListScreen extends ConsumerStatefulWidget {
 
 class _TaskListScreenState extends ConsumerState<TaskListScreen> {
   String _selectedFilter = 'All Jobs';
-  int _bottomNavIndex = 1; // Default to Jobs tab
+  int _bottomNavIndex = 1;
 
-  // Mock job data for filtering
-  final List<Map<String, String>> _allJobs = [
-    {
-      'priority': 'HIGH PRIORITY',
-      'time': '10:00 AM',
-      'vehicle': 'Hyundai Creta SX',
-      'plate': 'MH 12 AB 1234',
-      'task': '10,000km Service + Oil Change',
-      'description': 'Includes filter replacement and fluid top-up.',
-      'status': 'In-Progress',
-      'image': 'assets/icons/creta.png'
-    },
-    {
-      'priority': 'STANDARD',
-      'time': '01:30 PM',
-      'vehicle': 'Maruti Swift Dzire',
-      'plate': 'KA 05 MJ 8899',
-      'task': 'Brake Pad Replacement',
-      'description': 'Front and rear wheels. Check rotors.',
-      'status': 'To-Do',
-      'image': 'assets/icons/dzire.png'
-    },
-    {
-      'priority': 'STANDARD',
-      'time': '03:00 PM',
-      'vehicle': 'Honda City ZX',
-      'plate': 'DL 09 CA 5566',
-      'task': 'AC Compressor Service',
-      'description': 'Check refrigerant levels and clean filters.',
-      'status': 'Done',
-      'image': 'assets/icons/city.png'
-    },
-  ];
-
-  List<Map<String, String>> get _filteredJobs {
-    if (_selectedFilter == 'All Jobs') return _allJobs;
-    if (_selectedFilter == 'High Priority') return _allJobs.where((j) => j['priority'] == 'HIGH PRIORITY').toList();
-    if (_selectedFilter == 'In-Progress') return _allJobs.where((j) => j['status'] == 'In-Progress').toList();
-    if (_selectedFilter == 'Completed') return _allJobs.where((j) => j['status'] == 'Done').toList();
-    return _allJobs;
+  List<TechnicianJob> _getFilteredJobs(List<TechnicianJob> jobs) {
+    if (_selectedFilter == 'All Jobs') return jobs;
+    if (_selectedFilter == 'High Priority') return jobs.where((j) => j.status == 'ACCEPTED').toList();
+    if (_selectedFilter == 'In-Progress') return jobs.where((j) => j.status == 'IN PROGRESS').toList();
+    if (_selectedFilter == 'Completed') return jobs.where((j) => j.status == 'COMPLETED').toList();
+    return jobs;
   }
 
   void _onBottomNavTap(int index) {
@@ -75,9 +41,8 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // final userState = ref.watch(userProvider); // Removed unused variable
-    final activeJob = ref.watch(technicianProvider);
-
+    final jobs = ref.watch(technicianProvider);
+    final filteredJobs = _getFilteredJobs(jobs);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
@@ -112,11 +77,11 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
                 children: [
-                  Expanded(child: _buildSummaryCard('ASSIGNED', '${_allJobs.length + (activeJob != null ? 1 : 0)}', Iconsax.box, const Color(0xFF5E6AD2))),
+                  Expanded(child: _buildSummaryCard('ASSIGNED', '${jobs.length}', Iconsax.box, const Color(0xFF5E6AD2))),
                   const SizedBox(width: 12),
-                  Expanded(child: _buildSummaryCard('PENDING', '${_allJobs.where((j) => j['status'] == 'To-Do' || j['status'] == 'In-Progress').length}', Iconsax.timer_1, const Color(0xFFFF9F43))),
+                  Expanded(child: _buildSummaryCard('PENDING', '${jobs.where((j) => j.status != 'COMPLETED').length}', Iconsax.timer_1, const Color(0xFFFF9F43))),
                   const SizedBox(width: 12),
-                  Expanded(child: _buildSummaryCard('DONE', '${_allJobs.where((j) => j['status'] == 'Done').length + (activeJob?.status == 'COMPLETED' ? 1 : 0)}', Iconsax.tick_circle, const Color(0xFF28C76F))),
+                  Expanded(child: _buildSummaryCard('DONE', '${jobs.where((j) => j.status == 'COMPLETED').length}', Iconsax.tick_circle, const Color(0xFF28C76F))),
                 ],
               ),
             ),
@@ -139,44 +104,22 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
 
             // 4. Job List
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                children: [
-                  if (activeJob != null &&
-                      (_selectedFilter == 'All Jobs' ||
-                          (_selectedFilter == 'In-Progress' && activeJob.status == 'IN PROGRESS') ||
-                          (_selectedFilter == 'Completed' && activeJob.status == 'COMPLETED')))
-                    _buildJobCard(
-                      context: context,
-                      ref: ref,
-                      priority: 'ACTIVE JOB',
-                      time: activeJob.estimatedCompletion,
-                      vehicle: '2021 Toyota Rav4',
-                      plate: 'XYZ-123',
-                      task: activeJob.checklist.isEmpty ? 'General Service' : activeJob.checklist.first.task,
-                      description: 'Active job managed via provider.',
-                      status: activeJob.status == 'IN PROGRESS' ? 'In-Progress' : (activeJob.status == 'COMPLETED' ? 'Done' : 'To-Do'),
-                      image: null,
-                    ),
-                  if (activeJob != null) const SizedBox(height: 16),
-                  ..._filteredJobs.map((job) => Padding(
+              child: filteredJobs.isEmpty 
+                ? const Center(child: Text('No jobs found matching the filter.'))
+                : ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    itemCount: filteredJobs.length,
+                    itemBuilder: (context, index) {
+                      return Padding(
                         padding: const EdgeInsets.only(bottom: 16),
                         child: _buildJobCard(
                           context: context,
                           ref: ref,
-                          priority: job['priority']!,
-                          time: job['time']!,
-                          vehicle: job['vehicle']!,
-                          plate: job['plate']!,
-                          task: job['task']!,
-                          description: job['description']!,
-                          status: job['status']!,
-                          image: job['image'],
+                          job: filteredJobs[index],
                         ),
-                      )),
-                  const SizedBox(height: 20),
-                ],
-              ),
+                      );
+                    },
+                  ),
             ),
           ],
         ),
@@ -271,15 +214,11 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
   Widget _buildJobCard({
     required BuildContext context,
     required WidgetRef ref,
-    required String priority,
-    required String time,
-    required String vehicle,
-    required String plate,
-    required String task,
-    required String description,
-    required String status,
-    String? image,
+    required TechnicianJob job,
   }) {
+    final statusLabel = job.status == 'COMPLETED' ? 'Done' : (job.status == 'IN PROGRESS' ? 'In-Progress' : 'To-Do');
+    final priority = job.status == 'ACCEPTED' ? 'HIGH PRIORITY' : 'STANDARD';
+    
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -302,7 +241,7 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: priority == 'HIGH PRIORITY' || priority == 'ACTIVE JOB' ? const Color(0xFFFFEBEE) : const Color(0xFFF1F2F4),
+                            color: priority == 'HIGH PRIORITY' ? const Color(0xFFFFEBEE) : const Color(0xFFF1F2F4),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
@@ -310,7 +249,7 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
-                              color: priority == 'HIGH PRIORITY' || priority == 'ACTIVE JOB' ? Colors.red : Colors.grey[600],
+                              color: priority == 'HIGH PRIORITY' ? Colors.red : Colors.grey[600],
                             ),
                           ),
                         ),
@@ -319,21 +258,16 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
                           children: [
                             const Icon(Icons.access_time_filled, size: 12, color: Colors.grey),
                             const SizedBox(width: 4),
-                            Text(time, style: const TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.bold)),
+                            Text(job.estimatedCompletion, style: const TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.bold)),
                           ],
                         ),
                       ],
                     ),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: image != null
-                          ? Image.asset(image, width: 44, height: 44, fit: BoxFit.cover)
-                          : Container(width: 44, height: 44, color: Colors.grey[200], child: const Icon(Icons.car_repair, size: 20, color: Colors.grey)),
-                    ),
+                    Container(width: 44, height: 44, color: Colors.grey[200], child: const Icon(Icons.car_repair, size: 20, color: Colors.grey)),
                   ],
                 ),
                 const SizedBox(height: 12),
-                Text(vehicle, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF1A237E))),
+                Text(job.vehicleModel, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF1A237E))),
                 const SizedBox(height: 4),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -341,7 +275,7 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
                     color: const Color(0xFFFFF9C4),
                     borderRadius: BorderRadius.circular(4),
                   ),
-                  child: Text(plate, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF827717))),
+                  child: Text(job.vehiclePlate, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF827717))),
                 ),
                 const SizedBox(height: 16),
                 const Divider(height: 1, color: Color(0xFFF1F2F4)),
@@ -355,9 +289,9 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(task, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF1A237E))),
+                          Text(job.checklist.isNotEmpty ? job.checklist.first.task : 'General Service', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF1A237E))),
                           const SizedBox(height: 4),
-                          Text(description, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                          Text(job.serviceType, style: const TextStyle(fontSize: 12, color: Colors.grey)),
                         ],
                       ),
                     ),
@@ -373,9 +307,9 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
                   ),
                   child: Row(
                     children: [
-                      _statusSegment('To-Do', status == 'To-Do'),
-                      _statusSegment('In-Progress', status == 'In-Progress'),
-                      _statusSegment('Done', status == 'Done'),
+                      _statusSegment('To-Do', statusLabel == 'To-Do'),
+                      _statusSegment('In-Progress', statusLabel == 'In-Progress'),
+                      _statusSegment('Done', statusLabel == 'Done'),
                     ],
                   ),
                 ),
@@ -386,38 +320,35 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
                   child: ElevatedButton(
                     onPressed: () {
                       HapticFeedback.mediumImpact();
-                      if (priority == 'ACTIVE JOB') {
-                        if (status == 'To-Do') {
-                          ref.read(technicianProvider.notifier).startJob();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Job started!'), backgroundColor: Color(0xFF1A237E)),
-                          );
-                        } else {
-                          context.push('/tech-job-card-details');
-                        }
+                      ref.read(selectedJobIdProvider.notifier).state = job.id;
+                      if (statusLabel == 'To-Do') {
+                        ref.read(technicianProvider.notifier).startJob(job.id);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Job started!'), backgroundColor: Color(0xFF1A237E)),
+                        );
                       } else {
                         context.push('/tech-job-card-details');
                       }
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: status == 'Done' ? Colors.white : const Color(0xFF1A237E),
-                      foregroundColor: status == 'Done' ? const Color(0xFF1A237E) : Colors.white,
+                      backgroundColor: statusLabel == 'Done' ? Colors.white : const Color(0xFF1A237E),
+                      foregroundColor: statusLabel == 'Done' ? const Color(0xFF1A237E) : Colors.white,
                       elevation: 0,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
-                        side: status == 'Done' ? const BorderSide(color: Color(0xFFE5E9F0)) : BorderSide.none,
+                        side: statusLabel == 'Done' ? const BorderSide(color: Color(0xFFE5E9F0)) : BorderSide.none,
                       ),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        if (status == 'To-Do') const Icon(Icons.play_arrow_rounded, size: 20),
-                        if (status == 'In-Progress') const Icon(Icons.check_circle_outline, size: 20),
-                        if (status == 'Done') const Icon(Icons.visibility_rounded, size: 20),
+                        if (statusLabel == 'To-Do') const Icon(Icons.play_arrow_rounded, size: 20),
+                        if (statusLabel == 'In-Progress') const Icon(Icons.check_circle_outline, size: 20),
+                        if (statusLabel == 'Done') const Icon(Icons.visibility_rounded, size: 20),
                         const SizedBox(width: 8),
                         Text(
-                          status == 'Done' ? 'View Report' : (status == 'To-Do' ? 'Start Work' : 'Manage Job'),
+                          statusLabel == 'Done' ? 'View Report' : (statusLabel == 'To-Do' ? 'Start Work' : 'Manage Job'),
                           style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                         ),
                       ],

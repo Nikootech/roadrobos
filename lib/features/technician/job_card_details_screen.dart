@@ -10,6 +10,7 @@ import '../../navigation/nav_helpers.dart';
 import '../../shared/widgets/custom_button.dart';
 
 import '../../shared/widgets/live_map_widget.dart';
+import '../../core/services/gsheets_api.dart';
 import 'technician_provider.dart';
 
 class JobCardDetailsScreen extends ConsumerStatefulWidget {
@@ -28,7 +29,7 @@ class _JobCardDetailsScreenState extends ConsumerState<JobCardDetailsScreen> {
   @override
   void initState() {
     super.initState();
-    final job = ref.read(technicianProvider);
+    final job = ref.read(selectedJobProvider);
     _modelController = TextEditingController(text: job?.vehicleModel ?? '');
     _plateController = TextEditingController(text: job?.vehiclePlate ?? '');
   }
@@ -54,9 +55,9 @@ class _JobCardDetailsScreenState extends ConsumerState<JobCardDetailsScreen> {
     final model = _modelController.text;
     final plate = _plateController.text;
     await Future.delayed(const Duration(milliseconds: 400)); // Simulate save
-    final job = ref.read(technicianProvider);
+    final job = ref.read(selectedJobProvider);
     if (job != null) {
-      ref.read(technicianProvider.notifier).createJob(
+      ref.read(technicianProvider.notifier).updateJob(
         job.copyWith(vehicleModel: model, vehiclePlate: plate),
       );
     }
@@ -70,7 +71,7 @@ class _JobCardDetailsScreenState extends ConsumerState<JobCardDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final jobState = ref.watch(technicianProvider);
+    final jobState = ref.watch(selectedJobProvider);
 
     if (jobState == null) {
       return Scaffold(
@@ -308,7 +309,13 @@ class _JobCardDetailsScreenState extends ConsumerState<JobCardDetailsScreen> {
                       label: 'ACCEPT JOB',
                       onPressed: () {
                         HapticFeedback.heavyImpact();
-                        ref.read(technicianProvider.notifier).acceptJob();
+                        ref.read(technicianProvider.notifier).acceptJob(jobState.id);
+                        GSheetsApi.logTechWork(
+                          jobState.id, 
+                          jobState.vehiclePlate, 
+                          'TECH-001', 
+                          status: 'ACCEPTED'
+                        );
                         NavHelpers.showSuccess(context, 'Job accepted! You can now start work.');
                       },
                       backgroundColor: AppColors.primaryBlue,
@@ -327,7 +334,13 @@ class _JobCardDetailsScreenState extends ConsumerState<JobCardDetailsScreen> {
                       label: 'START JOB',
                       onPressed: () {
                         HapticFeedback.heavyImpact();
-                        ref.read(technicianProvider.notifier).startJob();
+                        ref.read(technicianProvider.notifier).startJob(jobState.id);
+                        GSheetsApi.logTechWork(
+                          jobState.id, 
+                          jobState.vehiclePlate, 
+                          'TECH-001', 
+                          status: 'IN_PROGRESS'
+                        );
                         NavHelpers.showSuccess(context, 'Job started! Complete the checklist.');
                       },
                       backgroundColor: const Color(0xFF1A237E),
@@ -346,7 +359,14 @@ class _JobCardDetailsScreenState extends ConsumerState<JobCardDetailsScreen> {
                     label: jobState.status == 'COMPLETED' ? 'JOB FINISHED ✓' : 'FINISH JOB',
                     onPressed: jobState.status == 'COMPLETED' ? null : () {
                       HapticFeedback.heavyImpact();
-                      ref.read(technicianProvider.notifier).finishJob();
+                      ref.read(technicianProvider.notifier).finishJob(jobState.id);
+                      GSheetsApi.logTechWork(
+                        jobState.id, 
+                        jobState.vehiclePlate, 
+                        'TECH-001', 
+                        status: 'COMPLETED',
+                        price: jobState.price
+                      );
                       NavHelpers.showSuccess(context, 'Job marked as complete! Pending QA check.');
                     },
                     backgroundColor: jobState.status == 'COMPLETED' ? AppColors.textMuted : AppColors.successGreen,
@@ -383,7 +403,7 @@ class _JobCardDetailsScreenState extends ConsumerState<JobCardDetailsScreen> {
             value: item.isDone,
             onChanged: (val) {
               HapticFeedback.selectionClick();
-              ref.read(technicianProvider.notifier).toggleChecklistItem(index);
+              ref.read(technicianProvider.notifier).toggleChecklistItem(job.id, index);
             },
             title: Text(
               item.task,

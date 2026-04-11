@@ -8,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'dart:io';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/services/gsheets_api.dart';
 import '../../shared/widgets/custom_button.dart';
 import '../../shared/widgets/custom_text_field.dart';
 import '../../shared/widgets/shimmer_loading.dart';
@@ -188,9 +189,31 @@ class _DocumentsUploadScreenState extends State<DocumentsUploadScreen> {
               width: double.infinity,
               child: CustomButton(
                 label: 'SUBMIT APPLICATION',
-                onPressed: _isAllValid ? () {
+                onPressed: _isAllValid ? () async {
                   HapticFeedback.heavyImpact();
-                  context.pushReplacement('/driver-verification-pending');
+                  
+                  // Show loading indicator or handle result
+                  final success = await GSheetsApi.registerNewDriver(
+                    name: _nameController.text,
+                    phone: _phoneController.text,
+                    vehicleModel: _bikeModelController.text,
+                    chassisNumber: _chassisController.text,
+                    licenseNumber: _licenseController.text,
+                  );
+
+                  if (!mounted) return;
+
+                  if (success) {
+                    if (context.mounted) {
+                      context.pushReplacement('/driver-verification-pending');
+                    }
+                  } else {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Submission failed. Please try again.'), backgroundColor: AppColors.dangerRed),
+                      );
+                    }
+                  }
                 } : null,
                 backgroundColor: AppColors.deepNavy,
               ),

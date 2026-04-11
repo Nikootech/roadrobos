@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/custom_button.dart';
+import '../../shared/widgets/app_avatar.dart';
 import '../../navigation/nav_helpers.dart';
 import '../technician/technician_provider.dart';
 
@@ -20,13 +21,16 @@ class _LiveServiceStatusScreenState extends ConsumerState<LiveServiceStatusScree
     super.initState();
     // Start the mock progress simulation when the screen is opened
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(technicianProvider.notifier).startMockProgress();
+      final job = ref.read(selectedJobProvider);
+      if (job != null) {
+        ref.read(technicianProvider.notifier).startMockProgress(job.id);
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final job = ref.watch(technicianProvider);
+    final job = ref.watch(selectedJobProvider);
     
     if (job == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -108,8 +112,8 @@ class _LiveServiceStatusScreenState extends ConsumerState<LiveServiceStatusScree
             const SizedBox(height: 12),
             TextButton(
               onPressed: () {
-                ref.read(technicianProvider.notifier).resetProgress();
-                ref.read(technicianProvider.notifier).startMockProgress();
+                ref.read(technicianProvider.notifier).resetProgress(job.id);
+                ref.read(technicianProvider.notifier).startMockProgress(job.id);
               },
               child: const Text('Restart Simulation', style: TextStyle(color: AppColors.textSecondary)),
             ),
@@ -279,9 +283,10 @@ class _LiveServiceStatusScreenState extends ConsumerState<LiveServiceStatusScree
       ),
       child: Row(
         children: [
-          const CircleAvatar(
+          const AppAvatar(
             radius: 24,
-            backgroundImage: NetworkImage('https://i.pravatar.cc/150?u=tech'),
+            imageUrl: 'https://i.pravatar.cc/150?u=tech',
+            backgroundColor: Color(0xFF1F2937),
           ),
           const SizedBox(width: 16),
           const Expanded(

@@ -4,9 +4,11 @@ import 'core/theme/app_theme.dart';
 import 'navigation/app_router.dart';
 import 'features/rentals/rental_providers.dart';
 import 'shared/widgets/rental_completion_dialog.dart';
+import 'core/services/gsheets_api.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await GSheetsApi.init();
   runApp(const ProviderScope(child: RoadRobosApp()));
 }
 

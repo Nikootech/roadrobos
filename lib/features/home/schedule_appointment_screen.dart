@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import '../../core/services/gsheets_api.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/custom_button.dart';
 
@@ -105,6 +106,13 @@ class _ScheduleAppointmentScreenState extends ConsumerState<ScheduleAppointmentS
                 final booking = ref.read(bookingProvider);
                 ref.read(technicianProvider.notifier).createJobFromBooking(booking);
                 
+                GSheetsApi.logCustomerActivity(
+                  'SERVICE_BOOKED',
+                  vehicle: booking.vehicleModel,
+                  price: booking.price,
+                  details: 'Date: ${booking.date}, Slot: ${booking.time}, Package: ${booking.packageName}',
+                );
+
                 context.push('/live-service-status');
               },
               backgroundColor: AppColors.primaryBlue,

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
+import '../../core/services/gsheets_api.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/custom_button.dart';
 import '../../navigation/nav_helpers.dart';
@@ -28,6 +29,18 @@ class _RentalCheckoutScreenState extends ConsumerState<RentalCheckoutScreen> {
     final gst = (basePrice * 0.18).round();
     final insurance = _includeInsurance ? 400 : 0;
     final grandTotal = basePrice + gst + insurance;
+
+    // Log checkout start once
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (selectedVehicle != null) {
+        GSheetsApi.logCustomerActivity(
+          'CHECKOUT_STARTED',
+          vehicle: selectedVehicle['name'],
+          price: '₹$grandTotal',
+          details: 'Insurance: $_includeInsurance',
+        );
+      }
+    });
 
     return Scaffold(
       backgroundColor: AppColors.bgLightGrey,
@@ -186,6 +199,11 @@ class _RentalCheckoutScreenState extends ConsumerState<RentalCheckoutScreen> {
               ref.read(activeRentalProvider.notifier).startRental(
                 selectedVehicle,
                 const Duration(hours: 2), // Simulation duration
+              );
+              GSheetsApi.logCustomerActivity(
+                'PAYMENT_INITIATED',
+                vehicle: selectedVehicle['name'],
+                price: '₹$grandTotal',
               );
               context.push('/rental-confirmed');
             }

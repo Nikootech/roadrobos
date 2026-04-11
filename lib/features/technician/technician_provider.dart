@@ -154,86 +154,135 @@ class BookingNotifier extends StateNotifier<BookingState> {
 
 final bookingProvider = StateNotifierProvider<BookingNotifier, BookingState>((ref) => BookingNotifier());
 
-class TechnicianNotifier extends StateNotifier<TechnicianJob?> {
+final selectedJobIdProvider = StateProvider<String?>((ref) => 'JOB-008');
+
+final selectedJobProvider = Provider<TechnicianJob?>((ref) {
+  final jobs = ref.watch(technicianProvider);
+  final selectedId = ref.watch(selectedJobIdProvider);
+  if (selectedId == null) return null;
+  return jobs.firstWhere((j) => j.id == selectedId, orElse: () => jobs.first);
+});
+
+class TechnicianNotifier extends StateNotifier<List<TechnicianJob>> {
   Timer? _simulationTimer;
 
-  TechnicianNotifier() : super(_mockJob);
+  TechnicianNotifier() : super(_mockJobs);
 
-  static final _mockJob = TechnicianJob(
-    id: 'JOB-008',
-    estimatedCompletion: '4:30 PM',
-    vehicleModel: '2021 Hyundai Creta SX',
-    vehiclePlate: 'MH 12 AB 1234',
-    serviceType: 'General Service',
-    packageName: 'Premium detailing',
-    date: '23 March 2026',
-    time: '02:00 PM',
-    progress: 0.1,
-    checklist: [
-      ChecklistItem(task: 'Vehicle Inspection & Job Card', category: 'Core Service', isDone: true),
-      ChecklistItem(task: 'Surface Cleaning (High Pressure)', category: 'Core Service', isDone: false),
-      ChecklistItem(task: 'Interior Detailing & Polish', category: 'Finishing', isDone: false),
-      ChecklistItem(task: 'Foam Cleaning & Rims Polish', category: 'Finishing', isDone: false),
-      ChecklistItem(task: 'Engine Degreasing & Dressing', category: 'Finishing', isDone: false),
-      ChecklistItem(task: 'Final Inspection & Ready', category: 'Finishing', isDone: false),
-    ],
-    parts: [
-      SparePart(name: 'Ceramic Coating Wax', qty: '1 Box'),
-      SparePart(name: 'Premium Glass Cleaner', qty: '1 Bottle'),
-    ],
-    status: 'ACCEPTED',
-  );
+  static final _mockJobs = [
+    TechnicianJob(
+      id: 'JOB-008',
+      estimatedCompletion: '4:30 PM',
+      vehicleModel: '2021 Hyundai Creta SX',
+      vehiclePlate: 'MH 12 AB 1234',
+      serviceType: 'General Service',
+      packageName: 'Premium detailing',
+      date: '23 March 2026',
+      time: '02:00 PM',
+      progress: 0.1,
+      checklist: [
+        ChecklistItem(task: 'Vehicle Inspection & Job Card', category: 'Core Service', isDone: true),
+        ChecklistItem(task: 'Surface Cleaning (High Pressure)', category: 'Core Service', isDone: false),
+        ChecklistItem(task: 'Interior Detailing & Polish', category: 'Finishing', isDone: false),
+        ChecklistItem(task: 'Foam Cleaning & Rims Polish', category: 'Finishing', isDone: false),
+        ChecklistItem(task: 'Engine Degreasing & Dressing', category: 'Finishing', isDone: false),
+        ChecklistItem(task: 'Final Inspection & Ready', category: 'Finishing', isDone: false),
+      ],
+      parts: [
+        SparePart(name: 'Ceramic Coating Wax', qty: '1 Box'),
+        SparePart(name: 'Premium Glass Cleaner', qty: '1 Bottle'),
+      ],
+      status: 'ACCEPTED',
+    ),
+    TechnicianJob(
+      id: 'JOB-009',
+      estimatedCompletion: '01:30 PM',
+      vehicleModel: 'Maruti Swift Dzire',
+      vehiclePlate: 'KA 05 MJ 8899',
+      serviceType: 'Brake Service',
+      progress: 0.0,
+      checklist: [
+        ChecklistItem(task: 'Brake Pad Replacement', category: 'Core Service'),
+        ChecklistItem(task: 'Check Rotors', category: 'Inspection'),
+      ],
+      parts: [],
+      status: 'SCHEDULED',
+    ),
+    TechnicianJob(
+      id: 'JOB-010',
+      estimatedCompletion: '03:00 PM',
+      vehicleModel: 'Honda City ZX',
+      vehiclePlate: 'DL 09 CA 5566',
+      serviceType: 'AC Service',
+      progress: 1.0,
+      checklist: [
+        ChecklistItem(task: 'AC Compressor Service', category: 'Core Service', isDone: true),
+        ChecklistItem(task: 'Clean Filters', category: 'Core Service', isDone: true),
+      ],
+      parts: [],
+      status: 'COMPLETED',
+    ),
+  ];
 
-  void toggleChecklistItem(int index) {
-    if (state == null) return;
-    
-    final newList = List<ChecklistItem>.from(state!.checklist);
+  void toggleChecklistItem(String jobId, int index) {
+    state = [
+      for (final job in state)
+        if (job.id == jobId)
+          _updateJobChecklist(job, index)
+        else
+          job,
+    ];
+  }
+
+  TechnicianJob _updateJobChecklist(TechnicianJob job, int index) {
+    final newList = List<ChecklistItem>.from(job.checklist);
     newList[index] = newList[index].copyWith(isDone: !newList[index].isDone);
     
-    // Recalculate progress
     final doneCount = newList.where((item) => item.isDone).length;
     final progress = doneCount / newList.length;
     
-    state = state!.copyWith(checklist: newList, progress: progress);
+    return job.copyWith(checklist: newList, progress: progress);
   }
 
-  void startMockProgress() {
+  void startMockProgress(String jobId) {
     _simulationTimer?.cancel();
     _simulationTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
-      if (state == null || state!.progress >= 1.0) {
+      final jobIndex = state.indexWhere((j) => j.id == jobId);
+      if (jobIndex == -1 || state[jobIndex].progress >= 1.0) {
         timer.cancel();
         return;
       }
 
-      final currentIndex = (state!.progress * state!.checklist.length).floor();
-      if (currentIndex < state!.checklist.length) {
-        toggleChecklistItem(currentIndex);
+      final job = state[jobIndex];
+      final currentIndex = (job.progress * job.checklist.length).floor();
+      if (currentIndex < job.checklist.length) {
+        toggleChecklistItem(jobId, currentIndex);
         
-        // Update status based on progress
+        final updatedJob = state.firstWhere((j) => j.id == jobId);
         String newStatus = 'IN PROGRESS';
-        if (state!.progress > 0.8) {
+        if (updatedJob.progress > 0.8) {
           newStatus = 'QUALITY CHECK';
-        } else if (state!.progress == 1.0) {
+        } else if (updatedJob.progress == 1.0) {
           newStatus = 'COMPLETED';
         }
         
-        state = state?.copyWith(status: newStatus);
+        _updateJobStatus(jobId, newStatus);
       }
     });
   }
 
-  void stopSimulation() {
-    _simulationTimer?.cancel();
+  void _updateJobStatus(String jobId, String status) {
+    state = [
+      for (final job in state)
+        if (job.id == jobId) job.copyWith(status: status) else job,
+    ];
   }
 
-  void resetProgress() {
+  void resetProgress(String jobId) {
     _simulationTimer?.cancel();
-    state = _mockJob;
+    // This simple mock reset doesn't restore original mock state for specific job
   }
 
   void createJobFromBooking(BookingState booking) {
-    _simulationTimer?.cancel();
-    
     final checklist = booking.packageItems.isNotEmpty 
       ? booking.packageItems.map((item) => ChecklistItem(task: item, category: 'Service Item')).toList()
       : [
@@ -242,7 +291,7 @@ class TechnicianNotifier extends StateNotifier<TechnicianJob?> {
           ChecklistItem(task: 'Final Quality Check', category: 'Quality'),
         ];
 
-    state = TechnicianJob(
+    final newJob = TechnicianJob(
       id: 'JOB-${(100 + (DateTime.now().millisecondsSinceEpoch % 900))}',
       estimatedCompletion: booking.time, 
       vehicleModel: booking.vehicleModel,
@@ -257,27 +306,41 @@ class TechnicianNotifier extends StateNotifier<TechnicianJob?> {
       parts: [],
       status: 'SCHEDULED',
     );
+    
+    state = [...state, newJob];
   }
 
   void createJob(TechnicianJob job) {
-    state = job;
+    state = [...state, job];
   }
 
-  void acceptJob() {
-    state = state?.copyWith(status: 'ACCEPTED');
+  void updateJob(TechnicianJob job) {
+    state = [
+      for (final j in state)
+        if (j.id == job.id) job else j,
+    ];
   }
 
-  void startJob() {
-    state = state?.copyWith(status: 'IN PROGRESS');
+  void acceptJob(String jobId) {
+    _updateJobStatus(jobId, 'ACCEPTED');
   }
 
-  void finishJob() {
-    state = state?.copyWith(status: 'COMPLETED', progress: 1.0);
+  void startJob(String jobId) {
+    _updateJobStatus(jobId, 'IN PROGRESS');
   }
 
-  void addSparePart(SparePart part) {
-    if (state == null) return;
-    state = state!.copyWith(parts: [...state!.parts, part]);
+  void finishJob(String jobId) {
+    state = [
+      for (final job in state)
+        if (job.id == jobId) job.copyWith(status: 'COMPLETED', progress: 1.0) else job,
+    ];
+  }
+
+  void addSparePart(String jobId, SparePart part) {
+    state = [
+      for (final job in state)
+        if (job.id == jobId) job.copyWith(parts: [...job.parts, part]) else job,
+    ];
   }
 
   @override
@@ -287,6 +350,6 @@ class TechnicianNotifier extends StateNotifier<TechnicianJob?> {
   }
 }
 
-final technicianProvider = StateNotifierProvider<TechnicianNotifier, TechnicianJob?>((ref) {
+final technicianProvider = StateNotifierProvider<TechnicianNotifier, List<TechnicianJob>>((ref) {
   return TechnicianNotifier();
 });

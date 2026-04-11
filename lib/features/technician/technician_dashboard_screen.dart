@@ -108,15 +108,19 @@ class _TechnicianDashboardScreenState extends ConsumerState<TechnicianDashboardS
                           checklist: [
                             ChecklistItem(task: 'Pre-service Inspection', category: 'Initial'),
                             ChecklistItem(task: 'Engine Diagnosis', category: 'Core Service'),
+                            ChecklistItem(task: 'Wait for Customer Approval', category: 'Communication'),
+                            ChecklistItem(task: 'Final Quality Check', category: 'Quality'),
                           ],
                           parts: [],
-                          status: 'CREATED',
+                          status: 'ACCEPTED',
                         );
                         ref.read(technicianProvider.notifier).createJob(newJob);
+                        ref.read(selectedJobIdProvider.notifier).state = newJob.id;
                         Navigator.pop(ctx);
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('Vehicle "${modelCtrl.text}" added & job created!'), backgroundColor: const Color(0xFF28C76F)),
                         );
+                        context.push('/tech-job-card');
                       }
                     },
                     style: ElevatedButton.styleFrom(
@@ -169,7 +173,10 @@ class _TechnicianDashboardScreenState extends ConsumerState<TechnicianDashboardS
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(userProvider);
-    final activeJob = ref.watch(technicianProvider);
+    final jobs = ref.watch(technicianProvider);
+    final activeJob = ref.watch(selectedJobProvider);
+
+    final pendingJobs = jobs.where((j) => j.status != 'COMPLETED').toList();
 
 
     return Scaffold(
@@ -222,7 +229,7 @@ class _TechnicianDashboardScreenState extends ConsumerState<TechnicianDashboardS
                 const SizedBox(height: 24),
 
                 // ─── 2. Weekly Performance Card ───
-                _buildMainPerformanceCard(activeJob),
+                _buildMainPerformanceCard(jobs),
 
                 const SizedBox(height: 24),
 
@@ -287,10 +294,9 @@ class _TechnicianDashboardScreenState extends ConsumerState<TechnicianDashboardS
                   ],
                 ),
                 const SizedBox(height: 12),
-                if (activeJob != null)
-                  _buildTaskPreviewItem(context, activeJob.vehicleModel, activeJob.vehiclePlate, activeJob.status, activeJob.estimatedCompletion),
-                _buildTaskPreviewItem(context, 'Maruti Swift Dzire', 'KA 05 MJ 8899', 'To-Do', '01:30 PM'),
-                _buildTaskPreviewItem(context, 'Honda City ZX', 'DL 09 CA 5566', 'Done', '03:00 PM'),
+                if (pendingJobs.isEmpty)
+                  const Center(child: Padding(padding: EdgeInsets.all(20), child: Text('No active tasks'))),
+                ...pendingJobs.take(3).map((job) => _buildTaskPreviewItem(context, job)),
 
                 const SizedBox(height: 30),
               ],
@@ -372,8 +378,8 @@ class _TechnicianDashboardScreenState extends ConsumerState<TechnicianDashboardS
   }
 
   // ─── Performance Card ───
-  Widget _buildMainPerformanceCard(TechnicianJob? activeJob) {
-    final completedCount = activeJob?.status == 'COMPLETED' ? 13 : 12;
+  Widget _buildMainPerformanceCard(List<TechnicianJob> jobs) {
+    final completedCount = 12 + jobs.where((j) => j.status == 'COMPLETED').length;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -477,13 +483,15 @@ class _TechnicianDashboardScreenState extends ConsumerState<TechnicianDashboardS
   }
 
   // ─── Task Preview Item ───
-  Widget _buildTaskPreviewItem(BuildContext context, String vehicle, String plate, String status, String time) {
-    final statusColor = status == 'Done' || status == 'COMPLETED'
+  Widget _buildTaskPreviewItem(BuildContext context, TechnicianJob job) {
+    final status = job.status == 'COMPLETED' ? 'Done' : (job.status == 'IN PROGRESS' ? 'In-Progress' : (job.status == 'ACCEPTED' ? 'Priority' : 'To-Do'));
+    final statusColor = status == 'Done' 
         ? const Color(0xFF28C76F)
-        : (status == 'In-Progress' || status == 'IN PROGRESS' ? const Color(0xFF5E6AD2) : const Color(0xFFFF9F43));
+        : (status == 'In-Progress' ? const Color(0xFF5E6AD2) : const Color(0xFFFF9F43));
     return InkWell(
       onTap: () {
         HapticFeedback.selectionClick();
+        ref.read(selectedJobIdProvider.notifier).state = job.id;
         context.push('/tech-job-card-details');
       },
       borderRadius: BorderRadius.circular(20),
@@ -508,8 +516,8 @@ class _TechnicianDashboardScreenState extends ConsumerState<TechnicianDashboardS
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(vehicle, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: Color(0xFF1A237E))),
-                  Text('$plate • $time', style: const TextStyle(color: Colors.grey, fontSize: 13)),
+                  Text(job.vehicleModel, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: Color(0xFF1A237E))),
+                  Text('${job.vehiclePlate} • ${job.estimatedCompletion}', style: const TextStyle(color: Colors.grey, fontSize: 13)),
                 ],
               ),
             ),

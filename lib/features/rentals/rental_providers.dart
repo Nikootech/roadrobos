@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:async';
+import '../../core/services/gsheets_api.dart';
 
 enum RentalType { hourly, daily }
 enum RentalStatus { active, completed, paid }
@@ -51,8 +52,19 @@ class ActiveRentalNotifier extends StateNotifier<ActiveRental?> {
     });
   }
 
-  void completePayment() {
+  Future<void> completePayment() async {
     if (state != null) {
+      // Log to Google Sheets
+      await GSheetsApi.logCustomerActivity(
+        'BOOKING_COMPLETED',
+        vehicle: state!.vehicle['name'] ?? 'Unknown',
+        price: state!.vehicle['price'] ?? 'N/A',
+        details: 'Duration: ${state!.duration.inHours}h, Start: ${state!.startTime.toIso8601String()}',
+      );
+      
+      _timer?.cancel();
+      _timer = null;
+      
       state = state!.copyWith(status: RentalStatus.paid);
     }
   }

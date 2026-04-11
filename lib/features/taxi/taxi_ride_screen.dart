@@ -11,6 +11,7 @@ import '../../shared/widgets/glass_card.dart';
 import '../../shared/widgets/shimmer_loading.dart';
 import '../../shared/widgets/rental_completion_dialog.dart';
 import '../../providers/taxi_provider.dart';
+import '../../core/services/gsheets_api.dart';
 import '../../core/theme/app_colors.dart';
 
 class TaxiRideScreen extends ConsumerStatefulWidget {
@@ -190,6 +191,12 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
             _triggerHaptic();
             if (state.status == RideStatus.vehicleSelection) {
               notifier.bookRide();
+              GSheetsApi.logCustomerActivity(
+                'TAXI_BOOKED',
+                vehicle: 'Motorcycle Taxi',
+                price: '₹145-180',
+                details: 'From: ${state.pickupAddress} To: ${state.dropoffAddress}',
+              );
             } else {
               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select both locations')));
             }
@@ -254,6 +261,7 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
           onPressed: () {
             _triggerHaptic();
             notifier.completeRide();
+            GSheetsApi.logCustomerActivity('TAXI_COMPLETED', details: 'Ride finished successfully');
             _showCompletionDialog(context, notifier);
           },
           backgroundColor: AppColors.errorRed,

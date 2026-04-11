@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/services/gsheets_api.dart';
 import '../../shared/widgets/custom_button.dart';
 
 /// Driver Bank Withdrawal Screen — Premium Overhaul
@@ -45,7 +46,7 @@ class _DriverBankWithdrawalScreenState extends State<DriverBankWithdrawalScreen>
             // Available Balance Card (Premium Navy Gradient)
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(28),
+              padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
                   begin: Alignment.topLeft,
@@ -67,14 +68,13 @@ class _DriverBankWithdrawalScreenState extends State<DriverBankWithdrawalScreen>
                       Icon(Iconsax.wallet_1, color: Colors.white.withValues(alpha: 0.3), size: 20),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                   const Text('₹12,450.00', style: TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.w900, letterSpacing: -1)),
                 ],
               ),
             ).animate().fadeIn().slideY(begin: 0.1, end: 0),
             
-            const SizedBox(height: 40),
-            const SizedBox(height: 40),
+            const SizedBox(height: 24),
             const Text('Enter amount to withdraw', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.textPrimary, letterSpacing: -0.5)),
             const SizedBox(height: 20),
             Container(
@@ -92,7 +92,6 @@ class _DriverBankWithdrawalScreenState extends State<DriverBankWithdrawalScreen>
                     child: TextField(
                       controller: _amountController,
                       keyboardType: TextInputType.number,
-                      autofocus: true,
                       style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w900, color: AppColors.deepNavy, letterSpacing: -1),
                       decoration: const InputDecoration(border: InputBorder.none, contentPadding: EdgeInsets.zero, isDense: true, hintText: '0.00'),
                       textAlign: TextAlign.start,
@@ -102,7 +101,7 @@ class _DriverBankWithdrawalScreenState extends State<DriverBankWithdrawalScreen>
               ),
             ),
             
-            const SizedBox(height: 48),
+            const SizedBox(height: 24),
             const Text('Payout method', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.textPrimary, letterSpacing: -0.5)),
             const SizedBox(height: 20),
             Container(
@@ -139,7 +138,7 @@ class _DriverBankWithdrawalScreenState extends State<DriverBankWithdrawalScreen>
               ),
             ),
             
-            const SizedBox(height: 60),
+            const SizedBox(height: 32),
             if (_isProcessing)
               const Center(child: CircularProgressIndicator(color: AppColors.primaryBlue))
             else
@@ -154,6 +153,12 @@ class _DriverBankWithdrawalScreenState extends State<DriverBankWithdrawalScreen>
                     if (!context.mounted) return;
                     setState(() => _isProcessing = false);
                     HapticFeedback.heavyImpact();
+                    GSheetsApi.logFleetActivity(
+                      'CAPT-001', 
+                      'WITHDRAWAL_REQUEST', 
+                      impact: '₹${_amountController.text}',
+                      details: 'Bank: HDFC (**** 1234)'
+                    );
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: const Text('Withdrawal request submitted!'),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/services/gsheets_api.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/custom_button.dart';
 
@@ -108,6 +109,7 @@ class KycApprovalScreen extends StatelessWidget {
                 backgroundColor: AppColors.successGreen,
                 onPressed: () {
                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('KYC Approved successfully!')));
+                   GSheetsApi.logAdminAction('ADMIN_01', 'KYC_APPROVE', 'DRV-8492', 'Approved after document review');
                    context.pop();
                 },
               ),
@@ -148,6 +150,7 @@ class KycApprovalScreen extends StatelessWidget {
             onPressed: () {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Application rejected.')));
+              GSheetsApi.logAdminAction('ADMIN_01', 'KYC_REJECT', 'DRV-8492', 'Reason: ${reasonController.text}');
               context.pop();
             },
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.dangerRed, foregroundColor: Colors.white),

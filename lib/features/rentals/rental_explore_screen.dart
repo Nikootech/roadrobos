@@ -237,8 +237,8 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
         itemCount: _filteredVehicles.length,
         separatorBuilder: (_, __) => const SizedBox(width: 16),
         itemBuilder: (context, index) {
+            final vehicle = _filteredVehicles[index];
             final isZeelio = vehicle['name'].toString().contains('Zelio');
-            final isEV = vehicle['type'] == 'EV Bike' || vehicle['category'] == 'EV';
             
             return GestureDetector(
             onTap: () {
@@ -258,14 +258,14 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
                 boxShadow: [
                   BoxShadow(
                     color: isZeelio 
-                        ? AppColors.primaryBlue.withOpacity(0.12) 
+                        ? AppColors.primaryBlue.withValues(alpha: 0.12) 
                         : Colors.black.withValues(alpha: 0.04),
                     blurRadius: 24,
                     offset: const Offset(0, 10),
                   ),
                 ],
                 border: isZeelio 
-                    ? Border.all(color: AppColors.primaryBlue.withOpacity(0.15), width: 1)
+                    ? Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.15), width: 1)
                     : null,
               ),
               child: Column(
@@ -308,9 +308,6 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
                             ),
                           ),
                         ),
-                            ),
-                          ),
-                        ),
                       ),
                       if (isZeelio)
                         Positioned(
@@ -321,7 +318,7 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
-                                  AppColors.primaryBlue.withOpacity(0.9),
+                                  AppColors.primaryBlue.withValues(alpha: 0.9),
                                   AppColors.primaryBlue.withValues(alpha: 0.7),
                                 ],
                               ),
@@ -498,7 +495,7 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
                 ],
               ),
             ),
-          ).animate().fadeIn(delay: (index * 100).ms).slideX(begin: 0.1, end: 0);
+          ).animate().fadeIn(delay: Duration(milliseconds: index * 100)).slideX(begin: 0.1, end: 0);
         },
       ),
     );

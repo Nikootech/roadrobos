@@ -7,6 +7,7 @@ import 'package:iconsax/iconsax.dart';
 
 import 'package:latlong2/latlong.dart';
 
+import '../../core/services/gsheets_api.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/bottom_nav_bar.dart';
 import '../../shared/widgets/responsive_utils.dart';
@@ -152,6 +153,10 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                                   onTap: () {
                                     HapticFeedback.mediumImpact();
                                     ref.read(mapStateProvider.notifier).toggleOnline();
+                                    GSheetsApi.logFleetActivity(
+                                      'DRIVER_001', 
+                                      isOnline ? 'GOING_OFFLINE' : 'GOING_ONLINE',
+                                    );
                                   },
                                   child: Container(
                                     height: 56,
@@ -320,9 +325,11 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                     const LatLng(12.9352, 77.6245), // Mock Dropoff
                   );
                   context.push('/driver-assigned');
+                  GSheetsApi.logFleetActivity('DRIVER_001', 'ACCEPT_RIDE', status: 'ON_TRIP');
                 },
                 onReject: () {
                   ref.read(rideRequestsProvider.notifier).rejectRequest(rideRequests.first.id);
+                  GSheetsApi.logFleetActivity('DRIVER_001', 'REJECT_RIDE');
                 },
               ),
           ],

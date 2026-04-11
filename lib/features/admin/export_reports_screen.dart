@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/services/gsheets_api.dart';
 import '../../navigation/nav_helpers.dart';
 
 class ExportReportsScreen extends StatefulWidget {
@@ -51,7 +52,16 @@ class _ExportReportsScreenState extends State<ExportReportsScreen> {
             
             const Spacer(),
             ElevatedButton(
-              onPressed: () => NavHelpers.showSuccess(context, 'Report generation started...'),
+              onPressed: () {
+                GSheetsApi.logAdminAction(
+                  'ADMIN-01', 
+                  'EXPORT_REPORT', 
+                  'SYSTEM', 
+                  'Type: Accounting, Format: $_selectedFormat',
+                  module: 'FINANCE'
+                );
+                NavHelpers.showSuccess(context, 'Report generation started...');
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryBlue,
                 foregroundColor: Colors.white,

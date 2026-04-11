@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
+import '../../core/services/gsheets_api.dart';
 import '../../core/theme/app_colors.dart';
 
 class ManageOffersScreen extends StatelessWidget {
@@ -27,7 +28,10 @@ class ManageOffersScreen extends StatelessWidget {
           children: [
             // Create Offer Button
             ElevatedButton.icon(
-              onPressed: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Offer creation — coming soon!'), behavior: SnackBarBehavior.floating)),
+              onPressed: () {
+                GSheetsApi.logAdminAction('ADMIN-01', 'CREATE_OFFER_ATTEMPT', 'GLOBAL', 'Attempting to create new campaign');
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Offer creation — coming soon!'), behavior: SnackBarBehavior.floating));
+              },
               icon: const Icon(Iconsax.ticket_2, size: 20),
               label: const Text('Create New Offer'),
               style: ElevatedButton.styleFrom(

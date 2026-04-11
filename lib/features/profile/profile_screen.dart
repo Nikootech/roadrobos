@@ -8,6 +8,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/constants/app_strings.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'user_provider.dart';
+import '../../core/services/gsheets_api.dart';
 
 /// Profile Screen matching Figma Screen [55]: "User Profile & Loyalty Rewards"
 /// Dark theme, membership card, loyalty benefits, profile action list
@@ -17,6 +18,11 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(userProvider);
+    
+    // Log profile view
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      GSheetsApi.logCustomerActivity('VIEW_PROFILE', details: 'User: ${user.name}');
+    });
 
     return Scaffold(
       backgroundColor: AppColors.bgDarkProfile,

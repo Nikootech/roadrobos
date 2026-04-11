@@ -27,7 +27,7 @@ class _TechnicianJobCardScreenState extends ConsumerState<TechnicianJobCardScree
   @override
   void initState() {
     super.initState();
-    final activeJob = ref.read(technicianProvider);
+    final activeJob = ref.read(selectedJobProvider);
     _modelController = TextEditingController(text: activeJob?.vehicleModel ?? '');
     _plateController = TextEditingController(text: activeJob?.vehiclePlate ?? '');
   }
@@ -47,9 +47,9 @@ class _TechnicianJobCardScreenState extends ConsumerState<TechnicianJobCardScree
   }
 
   void _saveVehicleDetails() {
-    final activeJob = ref.read(technicianProvider);
+    final activeJob = ref.read(selectedJobProvider);
     if (activeJob != null) {
-      ref.read(technicianProvider.notifier).createJob(
+      ref.read(technicianProvider.notifier).updateJob(
         activeJob.copyWith(
           vehicleModel: _modelController.text,
           vehiclePlate: _plateController.text,
@@ -64,7 +64,7 @@ class _TechnicianJobCardScreenState extends ConsumerState<TechnicianJobCardScree
 
   @override
   Widget build(BuildContext context) {
-    final activeJob = ref.watch(technicianProvider);
+    final activeJob = ref.watch(selectedJobProvider);
     
     if (activeJob == null) {
       return Scaffold(
@@ -205,7 +205,7 @@ class _TechnicianJobCardScreenState extends ConsumerState<TechnicianJobCardScree
                               activeColor: AppColors.successGreen,
                               checkboxShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
                               onChanged: (bool? val) {
-                                ref.read(technicianProvider.notifier).toggleChecklistItem(originalIndex);
+                                ref.read(technicianProvider.notifier).toggleChecklistItem(activeJob.id, originalIndex);
                               },
                             );
                           }).toList(),
@@ -268,7 +268,7 @@ class _TechnicianJobCardScreenState extends ConsumerState<TechnicianJobCardScree
                 backgroundColor: progress >= 1.0 ? AppColors.successGreen : AppColors.deepNavy,
                 onPressed: () { 
                   if(progress >= 1.0) {
-                    ref.read(technicianProvider.notifier).finishJob();
+                    ref.read(technicianProvider.notifier).finishJob(activeJob.id);
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Job completed successfully!'), backgroundColor: AppColors.successGreen),
                     );

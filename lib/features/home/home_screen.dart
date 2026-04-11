@@ -13,6 +13,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/constants/app_strings.dart';
 import '../../shared/widgets/responsive_utils.dart';
 import '../../shared/widgets/glass_card.dart';
+import '../../shared/widgets/app_avatar.dart';
 import 'vehicle_provider.dart';
 import '../profile/user_provider.dart';
 import '../rentals/rental_providers.dart';
@@ -131,22 +132,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           children: [
             GestureDetector(
               onTap: () => context.push('/main/profile'),
-              child: Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.primaryBlue, width: 2),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(22),
-                  child: CachedNetworkImage(
-                    imageUrl: user.profileImageUrl,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => Shimmer.fromColors(baseColor: AppColors.bgLightGrey, highlightColor: Colors.white, child: Container(color: AppColors.bgLightGrey)),
-                    errorWidget: (context, url, error) => const Icon(Icons.person, color: AppColors.textPrimary),
-                  ),
-                ),
+              child: AppAvatar(
+                imageUrl: user.profileImageUrl,
+                radius: 22,
+                backgroundColor: Colors.white,
               ),
             ).animate().fadeIn(duration: 500.ms).scale(begin: const Offset(0.8, 0.8), end: const Offset(1.0, 1.0)),
             const Spacer(),
@@ -360,7 +349,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildLiveStatusCard(WidgetRef ref) {
     final activeRental = ref.watch(activeRentalProvider);
-    final activeJob = ref.watch(technicianProvider);
+    final activeJob = ref.watch(selectedJobProvider);
     if (activeRental == null && activeJob == null) return const SizedBox.shrink();
     final isRental = activeRental != null;
     final title = isRental ? activeRental.vehicle['name'] : '${activeJob!.serviceType} - ${activeJob.packageName}';
