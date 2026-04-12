@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../profile/user_provider.dart';
 import 'technician_provider.dart';
+import 'widgets/service_team_alert_monitor.dart';
 
 class TechnicianDashboardScreen extends ConsumerStatefulWidget {
   const TechnicianDashboardScreen({super.key});
@@ -192,6 +193,7 @@ class _TechnicianDashboardScreenState extends ConsumerState<TechnicianDashboardS
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 10),
+                const ServiceTeamAlertMonitor(),
                 // ─── 1. Header ───
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -199,7 +201,7 @@ class _TechnicianDashboardScreenState extends ConsumerState<TechnicianDashboardS
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Good Morning, ${user.name.split(' ')[0]}',
+                        Text('Good Morning, ${user?.name.split(' ')[0] ?? 'Technician'}',
                             style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Color(0xFF1A237E))),
                       ],
                     ),

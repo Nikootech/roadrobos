@@ -41,3 +41,30 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# ═══ SECURITY — Never commit these ═══
+# Service account keys, credentials, secrets
+*-service-account-key.json
+*-credentials.json
+*service-account*.json
+google-services.json
+GoogleService-Info.plist
+
+# Environment files
+.env
+.env.*
+*.env
+
+# Android keystore
+*.jks
+*.keystore
+key.properties
+
+# Firebase generated config (regenerate with flutterfire configure)
+lib/core/config/firebase_options.dart
+
+# Analysis artifacts (stale)
+analysis_results.txt
+
+# Web build
+build/web/

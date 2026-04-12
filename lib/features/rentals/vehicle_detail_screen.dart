@@ -7,7 +7,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/services/gsheets_api.dart';
 import '../../shared/widgets/live_map_widget.dart';
 import 'rental_providers.dart';
 
@@ -18,16 +17,6 @@ class RentalVehicleDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final vehicle = ref.watch(selectedVehicleProvider);
     
-    // Log view activity once
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (vehicle != null) {
-        GSheetsApi.logCustomerActivity(
-          'VIEW_DETAIL',
-          vehicle: vehicle['name'],
-          price: vehicle['price'],
-        );
-      }
-    });
     
     // Default placeholder vehicle if none selected
     final displayVehicle = vehicle ?? {
@@ -295,12 +284,6 @@ class RentalVehicleDetailScreen extends ConsumerWidget {
                         if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
                           await launchUrl(Uri.parse('https://roadrobos.com'), mode: LaunchMode.externalApplication);
                         }
-                        // Log website redirect lead
-                        GSheetsApi.logCustomerActivity(
-                          'WEBSITE_REDIRECT',
-                          vehicle: displayVehicle['name'],
-                          details: 'Slug: $slug',
-                        );
                       } catch (e) {
                         await launchUrl(Uri.parse('https://roadrobos.com'), mode: LaunchMode.externalApplication);
                       }

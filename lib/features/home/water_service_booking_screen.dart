@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
-import '../../core/services/gsheets_api.dart';
 import '../../shared/widgets/custom_button.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -28,7 +27,6 @@ class _WaterServiceBookingScreenState extends ConsumerState<WaterServiceBookingS
       setState(() {
         _isCarSelected = activeVehicle.type == 'Car';
       });
-      GSheetsApi.logCustomerActivity('VIEW_WATER_PACKAGES', details: 'Vehicle: ${activeVehicle.name}');
     });
   }
 
@@ -296,12 +294,6 @@ class _WaterServiceBookingScreenState extends ConsumerState<WaterServiceBookingS
           pkg['name'] as String, 
           pkg['price'] as String,
           List<String>.from(pkg['items'] as List),
-        );
-        GSheetsApi.logCustomerActivity(
-          'PACKAGE_SELECTED',
-          vehicle: selectedVehicle.name,
-          price: pkg['price'] as String,
-          details: 'Package: ${pkg['name']}',
         );
       },
       child: Container(

@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/services/gsheets_api.dart';
 import 'technician_provider.dart';
 
 class SparePartsScreen extends ConsumerStatefulWidget {
@@ -155,14 +154,7 @@ class _SparePartsScreenState extends ConsumerState<SparePartsScreen> {
 
     ref.read(technicianProvider.notifier).addSparePart(currentJob.id, part);
     
-    GSheetsApi.logTechWork(
-      currentJob.id,
-      currentJob.vehiclePlate,
-      'TECH-001',
-      status: 'PART_ADDED',
-      task: part.name,
-      price: partData['price'] as String,
-    );
+    // Legacy telemetry removed — Firestore handles spare part additions now
     
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

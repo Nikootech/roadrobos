@@ -21,7 +21,8 @@ class TechProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final userState = ref.watch(userProvider);
+    final user = ref.watch(userProvider);
+    final String name = user?.name ?? 'Guest Technician';
 
     return Scaffold(
       backgroundColor: AppColors.bgLightGrey,
@@ -53,10 +54,15 @@ class TechProfileScreen extends ConsumerWidget {
                    CircleAvatar(
                     radius: 50,
                     backgroundColor: AppColors.primaryBlue.withOpacity(0.1),
-                    child: const Icon(Iconsax.user, size: 50, color: AppColors.primaryBlue),
+                    child: (user.profileImageUrl.isNotEmpty)
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(50),
+                            child: Image.network(user.profileImageUrl, fit: BoxFit.cover),
+                          )
+                        : const Icon(Iconsax.user, size: 50, color: AppColors.primaryBlue),
                   ),
                   const SizedBox(height: 16),
-                  Text(userState.name, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                  Text(name, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
                   const Text('Senior Technician • ID: TECH-099', style: TextStyle(color: AppColors.textSecondary)),
                   const SizedBox(height: 8),
                   Container(

@@ -7,7 +7,6 @@ import 'package:iconsax/iconsax.dart';
 
 import 'package:latlong2/latlong.dart';
 
-import '../../core/services/gsheets_api.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/bottom_nav_bar.dart';
 import '../../shared/widgets/responsive_utils.dart';
@@ -25,9 +24,9 @@ class DriverHomeScreen extends ConsumerStatefulWidget {
 class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
   @override
   Widget build(BuildContext context) {
-    final earnings = ref.watch(earningsProvider);
+    final earningsAsync = ref.watch(earningsProvider);
     final isOnline = ref.watch(mapStateProvider).isOnline;
-    final rideRequests = ref.watch(rideRequestsProvider);
+    final rideRequestsAsync = ref.watch(rideRequestsProvider);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -153,10 +152,6 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                                   onTap: () {
                                     HapticFeedback.mediumImpact();
                                     ref.read(mapStateProvider.notifier).toggleOnline();
-                                    GSheetsApi.logFleetActivity(
-                                      'DRIVER_001', 
-                                      isOnline ? 'GOING_OFFLINE' : 'GOING_ONLINE',
-                                    );
                                   },
                                   child: Container(
                                     height: 56,
@@ -235,18 +230,22 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                                       ],
                                     ),
                                     const SizedBox(height: 12),
-                                    FittedBox(
-                                      fit: BoxFit.scaleDown,
-                                      alignment: Alignment.centerLeft,
-                                      child: Row(
-                                        crossAxisAlignment: CrossAxisAlignment.end,
-                                        children: [
-                                          const Padding(padding: EdgeInsets.only(bottom: 8.0), child: Text('₹', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w900))),
-                                          const SizedBox(width: 4),
-                                          Text('${earnings.todayEarnings.toInt()}', style: TextStyle(color: Colors.white, fontSize: ResponsiveLayout.responsiveFontSize(context, 48), fontWeight: FontWeight.w900, letterSpacing: -1.5)),
-                                          const Padding(padding: EdgeInsets.only(bottom: 8.0), child: Text('.50', style: TextStyle(color: Colors.white70, fontSize: 22, fontWeight: FontWeight.w800))),
-                                        ],
+                                    earningsAsync.when(
+                                      data: (earnings) => FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        alignment: Alignment.centerLeft,
+                                        child: Row(
+                                          crossAxisAlignment: CrossAxisAlignment.end,
+                                          children: [
+                                            const Padding(padding: EdgeInsets.only(bottom: 8.0), child: Text('₹', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w900))),
+                                            const SizedBox(width: 4),
+                                            Text('${earnings.todayEarnings.toInt()}', style: TextStyle(color: Colors.white, fontSize: ResponsiveLayout.responsiveFontSize(context, 48), fontWeight: FontWeight.w900, letterSpacing: -1.5)),
+                                            const Padding(padding: EdgeInsets.only(bottom: 8.0), child: Text('.50', style: TextStyle(color: Colors.white70, fontSize: 22, fontWeight: FontWeight.w800))),
+                                          ],
+                                        ),
                                       ),
+                                      loading: () => const CircularProgressIndicator(color: Colors.white),
+                                      error: (e, _) => const Text('Error', style: TextStyle(color: Colors.white)),
                                     ),
                                     const SizedBox(height: 32),
                                     Row(
@@ -313,25 +312,25 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                 ),
               ],
             ),
-            if (isOnline && rideRequests.isNotEmpty)
-              RideRequestOverlay(
-                request: rideRequests.first,
-                onAccept: () {
-                  final request = rideRequests.first;
-                  ref.read(rideRequestsProvider.notifier).acceptRequest(request.id);
-                  // Setup TaxiProvider for tracking from driver perspective
-                  ref.read(taxiProvider.notifier).acceptRideRequest(
-                    const LatLng(12.9716, 77.5946), // Mock Pickup (using fixed for now as per state)
-                    const LatLng(12.9352, 77.6245), // Mock Dropoff
-                  );
-                  context.push('/driver-assigned');
-                  GSheetsApi.logFleetActivity('DRIVER_001', 'ACCEPT_RIDE', status: 'ON_TRIP');
-                },
-                onReject: () {
-                  ref.read(rideRequestsProvider.notifier).rejectRequest(rideRequests.first.id);
-                  GSheetsApi.logFleetActivity('DRIVER_001', 'REJECT_RIDE');
-                },
-              ),
+            rideRequestsAsync.when(
+              data: (requests) => (isOnline && requests.isNotEmpty) 
+                  ? RideRequestOverlay(
+                      request: requests.first,
+                      onAccept: () {
+                        final request = requests.first;
+                        ref.read(rideRequestsActionProvider.notifier).acceptRequest(request.id);
+                        // The repository handles the Firestore update, 
+                        // and the TaxiProvider should be watching the specific ride.
+                        context.push('/driver-assigned');
+                      },
+                      onReject: () {
+                        ref.read(rideRequestsActionProvider.notifier).rejectRequest(requests.first.id);
+                      },
+                    )
+                  : const SizedBox.shrink(),
+              loading: () => const SizedBox.shrink(),
+              error: (e, _) => const SizedBox.shrink(),
+            ),
           ],
         ),
       ),

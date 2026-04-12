@@ -3,10 +3,15 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
-import '../../core/services/gsheets_api.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/custom_button.dart';
 import '../../navigation/nav_helpers.dart';
+import '../../core/services/payment_service.dart';
+import '../../core/services/pricing_service.dart';
+import '../../core/repositories/transaction_repository.dart';
+import '../../core/models/transaction_model.dart';
+import '../profile/user_provider.dart';
 import 'rental_providers.dart';
 
 class RentalCheckoutScreen extends ConsumerStatefulWidget {
@@ -18,29 +23,74 @@ class RentalCheckoutScreen extends ConsumerStatefulWidget {
 
 class _RentalCheckoutScreenState extends ConsumerState<RentalCheckoutScreen> {
   bool _includeInsurance = true;
+  late final PaymentService _paymentService;
+
+  @override
+  void initState() {
+    super.initState();
+    _paymentService = PaymentService(
+      onSuccess: (PaymentSuccessResponse? response) async {
+        final selectedVehicle = ref.read(selectedVehicleProvider);
+        final basePriceStr = ref.read(rentalPriceProvider);
+        final basePrice = double.tryParse(basePriceStr.replaceAll(RegExp(r'[^0-9.]'), '')) ?? 0.0;
+        final breakdown = PricingService.calculateBill(basePrice + (_includeInsurance ? 400 : 0));
+
+        // 1. Log detailed transaction to Firestore
+        final userId = ref.read(userProvider).user?.id ?? 'demo';
+        await ref.read(transactionRepositoryProvider).logTransaction(AppTransaction(
+          id: '',
+          userId: userId,
+          razoprayPaymentId: response?.paymentId ?? 'SIM_SUCCESS',
+          razorpayOrderId: response?.orderId,
+          razorpaySignature: response?.signature,
+          baseAmount: breakdown.baseAmount,
+          gstAmount: breakdown.gstAmount,
+          platformFee: breakdown.platformFee,
+          handlingCharges: breakdown.handlingCharges,
+          totalAmount: breakdown.totalPayable,
+          description: 'Vehicle Rental: ${selectedVehicle?['name']}',
+          timestamp: DateTime.now(),
+        ));
+
+        // 2. Start the rental state
+        if (selectedVehicle != null) {
+          ref.read(activeRentalProvider.notifier).startRental(
+            selectedVehicle,
+            const Duration(hours: 2), // Demo limit
+          );
+          
+          await ref.read(activeRentalProvider.notifier).completePayment(
+            totalCost: breakdown.totalPayable,
+            paymentId: response?.paymentId,
+          );
+
+          if (mounted) context.push('/rental-confirmed');
+        }
+      },
+      onFailure: (error) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(error),
+            backgroundColor: AppColors.errorRed,
+          ));
+        }
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _paymentService.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final selectedVehicle = ref.watch(selectedVehicleProvider);
     final basePriceStr = ref.watch(rentalPriceProvider);
     
-    // Simple calculation for taxes and total
-    final basePrice = int.tryParse(basePriceStr.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0;
-    final gst = (basePrice * 0.18).round();
-    final insurance = _includeInsurance ? 400 : 0;
-    final grandTotal = basePrice + gst + insurance;
-
-    // Log checkout start once
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (selectedVehicle != null) {
-        GSheetsApi.logCustomerActivity(
-          'CHECKOUT_STARTED',
-          vehicle: selectedVehicle['name'],
-          price: '₹$grandTotal',
-          details: 'Insurance: $_includeInsurance',
-        );
-      }
-    });
+    final basePrice = double.tryParse(basePriceStr.replaceAll(RegExp(r'[^0-9.]'), '')) ?? 0.0;
+    final breakdown = PricingService.calculateBill(basePrice + (_includeInsurance ? 400 : 0));
 
     return Scaffold(
       backgroundColor: AppColors.bgLightGrey,
@@ -132,31 +182,6 @@ class _RentalCheckoutScreenState extends ConsumerState<RentalCheckoutScreen> {
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             ),
             
-            const SizedBox(height: 12),
-            _buildSectionHeader('Offers & Coupons'),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.border.withAlpha(128)),
-              ),
-              child: const Row(
-                children: [
-                  Icon(Iconsax.ticket_discount, color: AppColors.primaryBlue, size: 20),
-                  SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Apply Coupon Code',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.textPrimary),
-                    ),
-                  ),
-                  Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.textMuted),
-                ],
-              ),
-            ),
-            
             const SizedBox(height: 32),
             _buildSectionHeader('Price Summary'),
             const SizedBox(height: 12),
@@ -165,15 +190,19 @@ class _RentalCheckoutScreenState extends ConsumerState<RentalCheckoutScreen> {
               decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
               child: Column(
                 children: [
-                  _buildPriceRow('Base Rental', '₹$basePrice'),
+                  _buildPriceRow('Base Rental', '₹${basePrice.toInt()}'),
                   const SizedBox(height: 12),
                   if (_includeInsurance) ...[
                     _buildPriceRow('Insurance', '₹400'),
                     const SizedBox(height: 12),
                   ],
-                  _buildPriceRow('GST (18%)', '₹$gst'),
+                  _buildPriceRow('Platform Fee', '₹${breakdown.platformFee.toInt()}'),
+                  const SizedBox(height: 12),
+                  _buildPriceRow('Handling Charges', '₹${breakdown.handlingCharges.toInt()}'),
+                  const SizedBox(height: 12),
+                  _buildPriceRow('GST (18%)', '₹${breakdown.gstAmount.round()}'),
                   const Divider(height: 32),
-                  _buildPriceRow('Grand Total', '₹$grandTotal', isTotal: true),
+                  _buildPriceRow('Grand Total', '₹${breakdown.totalPayable.round()}', isTotal: true),
                 ],
               ),
             ),
@@ -192,21 +221,18 @@ class _RentalCheckoutScreenState extends ConsumerState<RentalCheckoutScreen> {
         padding: const EdgeInsets.all(24),
         decoration: const BoxDecoration(color: Colors.white),
         child: CustomButton(
-          label: 'PAY ₹$grandTotal',
+          label: 'PAY ₹${breakdown.totalPayable.round()}',
           onPressed: () {
             HapticFeedback.heavyImpact();
-            if (selectedVehicle != null) {
-              ref.read(activeRentalProvider.notifier).startRental(
-                selectedVehicle,
-                const Duration(hours: 2), // Simulation duration
-              );
-              GSheetsApi.logCustomerActivity(
-                'PAYMENT_INITIATED',
-                vehicle: selectedVehicle['name'],
-                price: '₹$grandTotal',
-              );
-              context.push('/rental-confirmed');
-            }
+            
+            final userData = ref.read(userProvider).user;
+            
+            _paymentService.startPayment(
+              amount: breakdown.totalPayable,
+              contact: userData?.phone ?? '9876543210',
+              email: userData?.email ?? 'customer@example.com',
+              description: 'Vehicle Rental: ${selectedVehicle?['name']}',
+            );
           },
         ),
       ),

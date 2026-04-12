@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../features/rentals/rental_providers.dart';
+import '../core/services/auth_service.dart';
 import '../core/data/mock_data.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../features/profile/user_provider.dart';
+import '../core/models/user_role.dart';
 
 // Screens — Splash & Onboarding
 import '../features/splash/splash_screen.dart';
@@ -91,8 +94,6 @@ import '../features/admin/revenue_analytics_screen.dart';
 import '../features/admin/kyc_approval_screen.dart';
 import '../features/admin/revenue_referral_screen.dart';
 import '../features/admin/active_rides_screen.dart';
-import '../features/admin/super_admin_screen.dart';
-import '../features/admin/logistics_hub_screen.dart';
 import '../features/admin/admin_management_screen.dart';
 import '../features/admin/service_feedback_analytics_screen.dart';
 import '../features/admin/manage_offers_screen.dart';
@@ -106,33 +107,77 @@ import '../features/admin/manpower_supply_screen.dart';
 // Transitions
 import 'app_transitions.dart';
 
-class AppRouter {
-  static final GlobalKey<NavigatorState> _rootNavigatorKey =
-      GlobalKey<NavigatorState>(debugLabel: 'root');
-  static final GlobalKey<NavigatorState> _shellNavigatorKey =
-      GlobalKey<NavigatorState>(debugLabel: 'shell');
+class RouterNotifier extends ChangeNotifier {
+  final Ref _ref;
+  RouterNotifier(this._ref) {
+    _ref.listen(authStateProvider, (_, __) => notifyListeners());
+    _ref.listen(userProvider, (_, __) => notifyListeners());
+  }
+}
 
-  static final GoRouter router = GoRouter(
-    navigatorKey: _rootNavigatorKey,
+final routerNotifierProvider = Provider((ref) => RouterNotifier(ref));
+
+final routerProvider = Provider<GoRouter>((ref) {
+  final rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
+  final shellNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'shell');
+  final notifier = ref.watch(routerNotifierProvider);
+
+  return GoRouter(
+    navigatorKey: rootNavigatorKey,
+    refreshListenable: notifier,
     initialLocation: '/splash',
     debugLogDiagnostics: true,
     
     // Fallback for invalid routes
     errorBuilder: (context, state) => const HomeScreen(),
 
-    // Basic auth guard and navigation redirect logic
+    // Auth guard and navigation redirect logic
     redirect: (context, state) {
-      // final location = state.matchedLocation;
+      final authState = ref.read(authStateProvider);
+      final userState = ref.read(userProvider);
+      final isLoggedIn = authState.value != null;
+      final user = userState.user;
+      final location = state.matchedLocation;
       
-      // List of paths that are part of the 'Auth' flow
-      // final authPaths = ['/splash', '/onboarding', '/auth/login', '/auth/register'];
+      final publicPaths = ['/splash', '/onboarding', '/auth/login', '/auth/register'];
+      final isPublicPath = publicPaths.contains(location);
       
-      // Example: If we were to implement a real auth check
-      // final bool isLoggedIn = authService.currentUser != null;
-      // if (!isLoggedIn && !authPaths.contains(location)) return '/auth/login';
-      // if (isLoggedIn && authPaths.contains(location)) return '/main/home';
+      if (!isLoggedIn && !isPublicPath) {
+        return '/auth/login';
+      }
       
-      return null; // No redirect
+      if (isLoggedIn && isPublicPath) {
+        // If profile isn't loaded yet, wait on login screen
+        if (user == null) return null;
+
+        // Redirect based on role
+        switch (user.role) {
+          case UserRole.admin:
+          case UserRole.superAdmin:
+            return '/admin-home';
+          case UserRole.driver:
+            return '/driver-home';
+          case UserRole.technician:
+            return '/tech-dashboard';
+          case UserRole.customer:
+          default:
+            return '/main/home';
+        }
+      }
+      
+      // -- Simple Role Guards --
+      if (isLoggedIn && user != null) {
+        if (location.startsWith('/admin-') && 
+            user.role != UserRole.admin && 
+            user.role != UserRole.superAdmin) {
+          return '/main/home'; // Unauthorized
+        }
+        if (location.startsWith('/tech-') && user.role != UserRole.technician) {
+          return '/main/home';
+        }
+      }
+      
+      return null;
     },
 
     routes: [
@@ -169,11 +214,8 @@ class AppRouter {
         ),
       ),
 
-      // ═══════════════════════════════════════════
-      // GROUP A — Customer Flow (Main Shell)
-      // ═══════════════════════════════════════════
       ShellRoute(
-        navigatorKey: _shellNavigatorKey,
+        navigatorKey: shellNavigatorKey,
         builder: (context, state, child) {
           return MainShell(child: child);
         },
@@ -807,7 +849,7 @@ class AppRouter {
       ),
       GoRoute(
         path: '/admin-export-reports',
-        pageBuilder: (context, state) => AppTransitions.slideUp(
+        pageBuilder: (context, state) => AppTransitions.slideRight(
           child: const ExportReportsScreen(),
           state: state,
         ),
@@ -820,26 +862,12 @@ class AppRouter {
         ),
       ),
       GoRoute(
-        path: '/admin-manpower-supply',
+        path: '/admin-manpower',
         pageBuilder: (context, state) => AppTransitions.slideRight(
           child: const ManpowerSupplyScreen(),
           state: state,
         ),
       ),
-      GoRoute(
-        path: '/admin-logistics-hub',
-        pageBuilder: (context, state) => AppTransitions.slideRight(
-          child: const LogisticsHubScreen(),
-          state: state,
-        ),
-      ),
-      GoRoute(
-        path: '/super-admin-overview',
-        pageBuilder: (context, state) => AppTransitions.scaleIn(
-          child: const SuperAdminScreen(),
-          state: state,
-        ),
-      ),
     ],
   );
-}
+});

@@ -90,6 +90,16 @@ class NavHelpers {
     );
   }
 
+  /// Shows an error SnackBar.
+  static void showError(BuildContext context, String message) {
+    showSnackAction(
+      context,
+      message,
+      icon: Icons.error_outline_rounded,
+      color: AppColors.dangerRed,
+    );
+  }
+
   /// Shows a confirmation dialog and executes the action if confirmed.
   static Future<void> showConfirmDialog(
     BuildContext context, {

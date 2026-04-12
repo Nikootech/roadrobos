@@ -2,21 +2,67 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/custom_button.dart';
+import '../../core/services/payment_service.dart';
+import '../../core/repositories/wallet_repository.dart';
+import '../profile/user_provider.dart';
 
-class WalletTopupScreen extends StatefulWidget {
+class WalletTopupScreen extends ConsumerStatefulWidget {
   const WalletTopupScreen({super.key});
 
   @override
-  State<WalletTopupScreen> createState() => _WalletTopupScreenState();
+  ConsumerState<WalletTopupScreen> createState() => _WalletTopupScreenState();
 }
 
-class _WalletTopupScreenState extends State<WalletTopupScreen> {
+class _WalletTopupScreenState extends ConsumerState<WalletTopupScreen> {
   final TextEditingController _amountController = TextEditingController(text: '500');
   String _selectedMethod = 'UPI';
+  late final PaymentService _paymentService;
 
   final List<int> _quickAmounts = [100, 500, 1000, 2000];
+
+  @override
+  void initState() {
+    super.initState();
+    _paymentService = PaymentService(
+      onSuccess: (PaymentSuccessResponse? response) async {
+        final amount = double.tryParse(_amountController.text) ?? 0.0;
+        final userId = ref.read(userProvider).user?.id ?? 'demo';
+        
+        await ref.read(walletRepositoryProvider).topUpWallet(
+          userId, 
+          amount, 
+          response?.paymentId ?? 'Direct'
+        );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Wallet Top-up Successful!'),
+            backgroundColor: Colors.green,
+          ));
+          context.pop();
+        }
+      },
+      onFailure: (error) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(error),
+            backgroundColor: AppColors.errorRed,
+          ));
+        }
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _paymentService.dispose();
+    _amountController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,6 +102,7 @@ class _WalletTopupScreenState extends State<WalletTopupScreen> {
                   TextField(
                     controller: _amountController,
                     keyboardType: TextInputType.number,
+                    onChanged: (v) => setState(() {}),
                     style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                     decoration: const InputDecoration(
                       prefixText: '₹ ',
@@ -94,8 +141,16 @@ class _WalletTopupScreenState extends State<WalletTopupScreen> {
             CustomButton(
               label: 'Proceed to Pay ₹${_amountController.text}',
               onPressed: () {
-                 // Mock success
-                 context.pop();
+                final amount = double.tryParse(_amountController.text) ?? 0.0;
+                if (amount <= 0) return;
+
+                final userData = ref.read(userProvider).user;
+                _paymentService.startPayment(
+                  amount: amount,
+                  contact: userData?.phone ?? '9876543210',
+                  email: userData?.email ?? 'customer@example.com',
+                  description: 'Wallet Top-up',
+                );
               },
               backgroundColor: AppColors.primaryBlue,
             ),
@@ -134,4 +189,5 @@ class _WalletTopupScreenState extends State<WalletTopupScreen> {
     ).animate().fadeIn(delay: 100.ms);
   }
 }
+
 

@@ -12,7 +12,7 @@ import '../../shared/widgets/custom_text_field.dart';
 /// Upload section, vehicle details form, registration & legal, sticky footer
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/home/vehicle_provider.dart';
-import '../../core/services/gsheets_api.dart';
+import '../profile/user_provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AddVehicleScreen extends ConsumerStatefulWidget {
@@ -218,6 +218,8 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                 onPressed: () {
                   if (_nameController.text.isNotEmpty && _plateController.text.isNotEmpty) {
                     final newVehicle = Vehicle(
+                      id: DateTime.now().millisecondsSinceEpoch.toString(),
+                      userId: ref.read(userProvider).user?.id ?? 'demo',
                       name: _nameController.text,
                       plate: _plateController.text,
                       fuel: _selectedFuelType,
@@ -227,11 +229,6 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                     ref.read(allVehiclesProvider.notifier).addVehicle(newVehicle);
                     ref.read(vehicleProvider.notifier).setVehicle(newVehicle);
                     
-                    GSheetsApi.logCustomerActivity(
-                      'VEHICLE_ADDED',
-                      vehicle: newVehicle.name,
-                      details: 'Plate: ${newVehicle.plate}, Type: ${newVehicle.type}',
-                    );
                     context.pop();
                   }
                 },

@@ -340,6 +340,15 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget> with SingleTicker
                 userAgentPackageName: 'com.roadrobos.app',
                 tileProvider: CancellableNetworkTileProvider(),
               ),
+              // --- Phase 3: Traffic Overlay ---
+              TileLayer(
+                urlTemplate: 'https://api.mapbox.com/styles/v1/mapbox/traffic-day-v2/tiles/{z}/{x}/{y}?access_token={accessToken}',
+                additionalOptions: const {
+                  'accessToken': 'pk.placeholder_mapbox_token', // User to update with real token
+                },
+                userAgentPackageName: 'com.roadrobos.app',
+                tileProvider: CancellableNetworkTileProvider(),
+              ),
               PolylineLayer(polylines: polylines.isNotEmpty ? polylines : mapState.polylines),
               MarkerLayer(
                 markers: [

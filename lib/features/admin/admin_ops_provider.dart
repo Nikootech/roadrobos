@@ -1,5 +1,8 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/repositories/admin_ops_repository.dart';
+import '../profile/user_provider.dart';
+import '../../core/models/user_role.dart';
 
 class AdminOpsMetrics {
   final int activeRides;
@@ -25,49 +28,91 @@ class ServiceOp {
   ServiceOp({required this.id, required this.vehicleReg, required this.tech, required this.status});
 }
 
-// Global Providers 
+// --- Firestore-Backed Providers ---
 
-final adminMetricsStreamProvider = StreamProvider<AdminOpsMetrics>((ref) async* {
-  yield AdminOpsMetrics(activeRides: 5, pendingServices: 3, walletRequests: 2);
-  // Simulating live updates
-  await for (final _ in Stream.periodic(const Duration(seconds: 10))) {
-    yield AdminOpsMetrics(
-      activeRides: 5 + (DateTime.now().second % 3),
-      pendingServices: 3 + (DateTime.now().second % 2),
-      walletRequests: 2 + (DateTime.now().second % 4),
-    );
+final adminMetricsStreamProvider = StreamProvider<AdminOpsMetrics>((ref) {
+  // Permission Guard
+  final userRole = ref.watch(userProvider).user?.role;
+  if (userRole != UserRole.admin && userRole != UserRole.superAdmin) {
+    return Stream.error('Security Violation: Unauthorized Access');
   }
+
+  final repo = ref.watch(adminOpsRepositoryProvider);
+  return repo.watchMetrics().map((live) => AdminOpsMetrics(
+    activeRides: live.activeRides,
+    pendingServices: live.pendingServices,
+    walletRequests: live.activeRentals, // Mapped to rentals count for now
+  ));
 });
 
-final adminBookingsProvider = StreamProvider<List<BookingOp>>((ref) async* {
-  yield [
-    BookingOp(id: 'B1042', customer: 'Arjun K.', vehicle: 'Sedan (DL 1C)', status: 'Active', date: 'Today, 14:30'),
-    BookingOp(id: 'B1043', customer: 'Neha S.', vehicle: 'Hatchback', status: 'Pending', date: 'Today, 15:00'),
-    BookingOp(id: 'R9021', customer: 'Priya D.', vehicle: 'Innova (Rent)', status: 'Active', date: 'Today, 09:00'),
-  ];
+final adminBookingsProvider = StreamProvider<List<BookingOp>>((ref) {
+  // Permission Guard
+  final userRole = ref.watch(userProvider).user?.role;
+  if (userRole != UserRole.admin && userRole != UserRole.superAdmin) {
+    return Stream.error('Access Denied');
+  }
+
+  final repo = ref.watch(adminOpsRepositoryProvider);
+  return repo.watchRecentBookings().map((bookings) => bookings.map((b) => BookingOp(
+    id: b['id'] ?? '',
+    customer: b['customer'] ?? 'Unknown',
+    vehicle: b['vehicle'] ?? 'N/A',
+    status: b['status'] ?? 'Pending',
+    date: b['date'] ?? 'Today',
+  )).toList());
 });
 
 class ServiceOpsNotifier extends Notifier<AsyncValue<List<ServiceOp>>> {
+  StreamSubscription? _subscription;
+
   @override
   AsyncValue<List<ServiceOp>> build() {
+    // Permission Guard
+    final userRole = ref.watch(userProvider).user?.role;
+    if (userRole != UserRole.admin && userRole != UserRole.superAdmin) {
+      return const AsyncValue.error('Access Denied', StackTrace.empty);
+    }
+
     _init();
+    
+    // Ensure cleanup of stream listener
+    ref.onDispose(() {
+      _subscription?.cancel();
+    });
+
     return const AsyncValue.loading();
   }
 
-  void _init() async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    state = AsyncValue.data([
-      ServiceOp(id: 'S401', vehicleReg: 'MH 02 AB 1234', tech: 'Unassigned', status: 'Pending'),
-      ServiceOp(id: 'S402', vehicleReg: 'TS 09 GH 2345', tech: 'Rajesh (T04)', status: 'In Progress'),
-    ]);
+  void _init() {
+    final repo = ref.read(adminOpsRepositoryProvider);
+    _subscription = repo.watchActiveServices().listen((services) {
+      state = AsyncValue.data(services.map((s) => ServiceOp(
+        id: s['id'] ?? '',
+        vehicleReg: s['vehicleReg'] ?? 'N/A',
+        tech: s['tech'] ?? 'Unassigned',
+        status: s['status'] ?? 'Pending',
+      )).toList());
+    }, onError: (err) {
+      state = AsyncValue.error(err, StackTrace.current);
+    });
   }
 
-  void approveService(String id) {
-    if (state.value == null) return;
-    final current = state.value!;
-    state = AsyncValue.data(
-      current.map((s) => s.id == id ? ServiceOp(id: s.id, vehicleReg: s.vehicleReg, tech: s.tech, status: 'Approved') : s).toList()
-    );
+  Future<void> approveService(String id) async {
+    try {
+       // 1. Persist to Firestore
+       await ref.read(adminOpsRepositoryProvider).updateServiceStatus(id, 'Approved');
+       
+       // 2. Optimistic Update (Local UI)
+       if (state.hasValue) {
+         final current = state.value!;
+         state = AsyncValue.data(
+           current.map((s) => s.id == id ? ServiceOp(id: s.id, vehicleReg: s.vehicleReg, tech: s.tech, status: 'Approved') : s).toList()
+         );
+       }
+    } catch (e) {
+       // Rollback or handle error
+       state = AsyncValue.error('Failed to approve: $e', StackTrace.current);
+    }
   }
 }
 

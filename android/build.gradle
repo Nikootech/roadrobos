@@ -5,7 +5,10 @@ allprojects {
     }
 }
 
-rootProject.buildDir = '../build'
+// Relocating build directory to C: drive to fix Flutter/Kotlin multi-drive "different roots" bug on Windows
+String tmpdir = System.getProperty("java.io.tmpdir")
+rootProject.buildDir = "${tmpdir}/roadrobosapp_build"
+
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
 }

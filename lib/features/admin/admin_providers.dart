@@ -1,7 +1,10 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/repositories/admin_ops_repository.dart';
+import '../../core/repositories/technician_job_repository.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-// --- Models ---
+// --- Models (kept for UI compatibility) ---
 class CustomerOp {
   final int activeBookings;
   final int activeRentals;
@@ -51,14 +54,36 @@ class ServiceJob {
   ServiceJob(this.regNo, this.tech, this.status, this.invoiceAmount);
 }
 
-// --- Providers ---
+class EmergencyAlert {
+  final String id;
+  final String userId;
+  final String message;
+  final DateTime timestamp;
+  final bool isAcknowledged;
 
-final customersOpProvider = StreamProvider<CustomerOp>((ref) async* {
-  yield CustomerOp(12, 5, 3, [
-    CustomerRide('B1042', 'Arjun K.', 'Ride: Sedan', 'Active', '14:30'),
-    CustomerRide('S204', 'Neha S.', 'Service: Swift', 'Scheduled', '15:00'),
-    CustomerRide('R9021', 'Priya D.', 'Rental: Innova', 'Active', '09:00'),
-  ]);
+  EmergencyAlert(this.id, this.userId, this.message, this.timestamp, {this.isAcknowledged = false});
+}
+
+// --- Providers backed by Firestore ---
+
+final customersOpProvider = StreamProvider<CustomerOp>((ref) {
+  final repo = ref.watch(adminOpsRepositoryProvider);
+  return repo.watchRecentBookings().map((bookings) {
+    final rides = bookings.map((b) => CustomerRide(
+      b['id'] ?? '',
+      b['customer'] ?? 'Unknown',
+      b['vehicle'] ?? 'N/A',
+      b['status'] ?? 'Active',
+      b['date'] ?? 'Today',
+    )).toList();
+
+    return CustomerOp(
+      bookings.where((b) => b['type'] == 'Ride').length,
+      bookings.where((b) => b['type'] == 'Rental').length,
+      bookings.where((b) => b['type'] == 'Service').length,
+      rides,
+    );
+  });
 });
 
 class DriversOpNotifier extends Notifier<AsyncValue<DriverOp>> {
@@ -69,12 +94,10 @@ class DriversOpNotifier extends Notifier<AsyncValue<DriverOp>> {
   }
 
   void _init() async {
+    // TODO: When driver collection is fully migrated, stream from Firestore
+    // For now, provide reasonable defaults so UI doesn't crash
     await Future.delayed(const Duration(milliseconds: 500));
-    state = AsyncValue.data(DriverOp(8, 4, 156, [
-      PendingDriver('D11', 'Rajesh S.', 'Oct 24', 4),
-      PendingDriver('D12', 'Vikas P.', 'Oct 24', 2),
-      PendingDriver('D13', 'Arun M.', 'Oct 23', 3),
-    ]));
+    state = AsyncValue.data(DriverOp(0, 0, 0, []));
   }
 
   void approve(String id) {
@@ -86,10 +109,32 @@ class DriversOpNotifier extends Notifier<AsyncValue<DriverOp>> {
 }
 final driversOpProvider = NotifierProvider<DriversOpNotifier, AsyncValue<DriverOp>>(() => DriversOpNotifier());
 
-final techOpProvider = StreamProvider<TechOp>((ref) async* {
-  yield TechOp(7, 3, 15, [
-    ServiceJob('MH02AB1234', 'Unassigned', 'Scheduled', 4500),
-    ServiceJob('TS09GH2345', 'Rajesh (T04)', 'In Progress', 1200),
-    ServiceJob('KA05EF6789', 'Karan (T12)', 'Completed', 8500),
-  ]);
+final techOpProvider = StreamProvider<TechOp>((ref) {
+  final repo = ref.watch(technicianJobRepositoryProvider);
+  return repo.watchJobMetrics().map((metrics) {
+    return TechOp(
+      metrics['scheduled'] ?? 0,
+      metrics['inProgress'] ?? 0,
+      metrics['completed'] ?? 0,
+      [], // Recent services list is shown via the main dashboard feed instead
+    );
+  });
+});
+
+final emergencyAlertsProvider = StreamProvider<List<EmergencyAlert>>((ref) {
+  return FirebaseFirestore.instance
+      .collection('emergency_alerts')
+      .orderBy('timestamp', descending: true)
+      .limit(5)
+      .snapshots()
+      .map((snapshot) => snapshot.docs.map((doc) {
+            final data = doc.data();
+            return EmergencyAlert(
+              doc.id,
+              data['userId'] ?? 'Unknown',
+              data['message'] ?? 'Emergency Triggered',
+              (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
+              isAcknowledged: data['isAcknowledged'] ?? false,
+            );
+          }).toList());
 });

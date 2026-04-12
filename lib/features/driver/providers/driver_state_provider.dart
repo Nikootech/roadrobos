@@ -1,43 +1,49 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:async';
+import '../../../core/repositories/driver_repository.dart';
+import '../../../core/repositories/ride_booking_repository.dart';
+import '../../../features/profile/user_provider.dart';
+import '../../../core/models/driver_model.dart';
+import '../../../core/models/ride_booking.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../core/services/notification_service.dart';
 
 enum VerificationStatus { pending, approved, rejected }
 
-// Verification Status Provider
-class VerificationNotifier extends StateNotifier<VerificationStatus> {
-  VerificationNotifier() : super(VerificationStatus.pending) {
-    _startMockVerification();
-  }
+// Verification Status Provider (Stream-based)
+final verificationProvider = StreamProvider<VerificationStatus>((ref) {
+  final user = ref.watch(userProvider);
+  if (user == null) return Stream.value(VerificationStatus.pending);
 
-  void _startMockVerification() {
-    // Mocking a long verification, but for testing purposes we speed it up,
-    // or we can expose a method to force approval.
-    // The prompt says "Mock verification timer (24hrs) -> auto-approve",
-    // we'll implement a 2-minute timer for actual usability, but display 24hrs.
-    Timer(const Duration(minutes: 2), () {
-      if (mounted) state = VerificationStatus.approved;
-    });
-  }
-
-  Future<void> refreshStatus() async {
-    // Simulating a pull-to-refresh network call
-    await Future.delayed(const Duration(seconds: 2));
-    // Random chance to approve if they pull to refresh, for interactivity
-    if (DateTime.now().second % 3 == 0) {
-      state = VerificationStatus.approved;
+  return ref.watch(driverRepositoryProvider).watchDriver(user.user?.id ?? 'demo').map((driver) {
+    if (driver == null) return VerificationStatus.pending;
+    switch (driver.approvalStatus) {
+      case DriverApprovalStatus.approved: return VerificationStatus.approved;
+      case DriverApprovalStatus.rejected: return VerificationStatus.rejected;
+      default: return VerificationStatus.pending;
     }
-  }
-
-  void forceApprove() => state = VerificationStatus.approved;
-  void forceReject() => state = VerificationStatus.rejected;
-  void resubmit() => state = VerificationStatus.pending;
-}
-
-final verificationProvider = StateNotifierProvider<VerificationNotifier, VerificationStatus>((ref) {
-  return VerificationNotifier();
+  });
 });
 
-// Mock Earnings Provider
+// Wrapper Notifier for Verification Actions
+class VerificationActionNotifier extends StateNotifier<void> {
+  final Ref ref;
+  VerificationActionNotifier(this.ref) : super(null);
+
+  Future<void> updateStatus(DriverApprovalStatus status) async {
+    final user = ref.read(userProvider);
+    if (user == null) return;
+    await FirebaseFirestore.instance.collection('drivers').doc(user.user?.id ?? 'demo').update({
+      'approvalStatus': status.toString().split('.').last,
+    });
+  }
+}
+
+final verificationActionProvider = StateNotifierProvider<VerificationActionNotifier, void>((ref) {
+  return VerificationActionNotifier(ref);
+});
+
+// Mock Earnings Provider (Rewired to real driver stats)
 class DriverEarnings {
   final double todayEarnings;
   final double bonusTarget;
@@ -46,11 +52,20 @@ class DriverEarnings {
   DriverEarnings({required this.todayEarnings, required this.bonusTarget, required this.bonusAchieved});
 }
 
-final earningsProvider = Provider<DriverEarnings>((ref) {
-  return DriverEarnings(todayEarnings: 850.0, bonusTarget: 1050.0, bonusAchieved: 850.0);
+final earningsProvider = StreamProvider<DriverEarnings>((ref) {
+  final user = ref.watch(userProvider);
+  if (user == null) return Stream.value(DriverEarnings(todayEarnings: 0, bonusTarget: 1000, bonusAchieved: 0));
+
+  return ref.watch(driverRepositoryProvider).watchDriver(user.user?.id ?? 'demo').map((driver) {
+    return DriverEarnings(
+      todayEarnings: driver?.todayEarnings ?? 0.0,
+      bonusTarget: 1050.0,
+      bonusAchieved: (driver?.todayEarnings ?? 0.0) % 1050,
+    );
+  });
 });
 
-// Ride Requests Provider
+// Ride Requests Provider (Real-time Firestore stream)
 class RideRequest {
   final String id;
   final String riderName;
@@ -71,70 +86,43 @@ class RideRequest {
   });
 }
 
-class RideRequestsNotifier extends StateNotifier<List<RideRequest>> {
-  RideRequestsNotifier() : super([]) {
-    _startSimulatedRequests();
+final rideRequestsProvider = StreamProvider<List<RideRequest>>((ref) {
+  return ref.watch(driverRepositoryProvider).watchPendingRides().map((rides) {
+    return rides.map((r) => RideRequest(
+      id: r.id,
+      riderName: 'Customer ${r.customerId.substring(0, 4)}',
+      distance: 'Calculating...', 
+      fare: r.fare,
+      rating: 4.8,
+      pickup: r.pickupAddress,
+      dropoff: r.dropAddress,
+    )).toList();
+  });
+});
+
+// Wrapper Notifier to handle Actions (Accept/Reject)
+class RideRequestsActionNotifier extends StateNotifier<void> {
+  final Ref ref;
+  RideRequestsActionNotifier(this.ref) : super(null);
+
+  Future<void> acceptRequest(String id) async {
+    final user = ref.read(userProvider);
+    if (user == null) return;
+    await ref.read(driverRepositoryProvider).acceptRide(id, user.user?.id ?? 'demo');
   }
 
-  Timer? _timer;
-
-  void _startSimulatedRequests() {
-    // Generate an initial request very quickly for demonstration
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted && state.isEmpty) {
-        state = [
-          RideRequest(
-            id: DateTime.now().millisecondsSinceEpoch.toString(),
-            riderName: 'Anil K',
-            distance: '2.4km',
-            fare: 45.0,
-            rating: 4.8,
-            pickup: 'MG Road',
-            dropoff: 'Koramangala',
-          )
-        ];
-      }
-    });
-
-    // Generate a new request every 8 seconds if empty
-    _timer = Timer.periodic(const Duration(seconds: 8), (timer) {
-      if (mounted && state.isEmpty) {
-        state = [
-          RideRequest(
-            id: DateTime.now().millisecondsSinceEpoch.toString(),
-            riderName: 'Priya S',
-            distance: '1.2km',
-            fare: 65.0,
-            rating: 4.9,
-            pickup: 'Indiranagar',
-            dropoff: 'Domlur',
-          )
-        ];
-      }
-    });
-  }
-
-  void acceptRequest(String id) {
-    state = state.where((req) => req.id != id).toList();
-    // Logic for transitioning to active ride goes here
-  }
-
-  void rejectRequest(String id) {
-    state = state.where((req) => req.id != id).toList();
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
+  Future<void> rejectRequest(String id) async {
+    // In a real app, we might mark this ride as "skipped" for this driver in a subcollection
+    // For now, we just clear it from local UI if it were a local state, 
+    // but Since it's a StreamProvider, it will stay unless filtered.
   }
 }
 
-final rideRequestsProvider = StateNotifierProvider<RideRequestsNotifier, List<RideRequest>>((ref) {
-  return RideRequestsNotifier();
+final rideRequestsActionProvider = StateNotifierProvider<RideRequestsActionNotifier, void>((ref) {
+  return RideRequestsActionNotifier(ref);
 });
 
-// Mock Map State Provider (Current Location in Bengaluru)
+// Mock Map State Provider (Rewired to online status)
 class MapState {
   final double lat;
   final double lng;
@@ -152,14 +140,48 @@ class MapState {
 }
 
 class MapStateNotifier extends StateNotifier<MapState> {
-  // Center of Bengaluru roughly
-  MapStateNotifier() : super(MapState(lat: 12.9716, lng: 77.5946, isOnline: false));
+  final Ref ref;
+  MapStateNotifier(this.ref) : super(MapState(lat: 12.9716, lng: 77.5946, isOnline: false)) {
+    _init();
+  }
 
-  void toggleOnline() {
-    state = state.copyWith(isOnline: !state.isOnline);
+  void _init() {
+    final user = ref.read(userProvider);
+    if (user != null) {
+      ref.listen(driverRepositoryProvider.select((repo) => repo.watchDriver(user.user?.id ?? 'demo')), (prev, next) {
+        next.listen((driver) {
+          if (driver != null && mounted) {
+            state = state.copyWith(
+              isOnline: driver.isOnline,
+              lat: driver.currentPosition?.latitude,
+              lng: driver.currentPosition?.longitude,
+            );
+          }
+        });
+      });
+    }
+  }
+
+  Future<void> toggleOnline() async {
+    final user = ref.read(userProvider);
+    if (user == null) return;
+    
+    final newStatus = !state.isOnline;
+    await ref.read(driverRepositoryProvider).updateOnlineStatus(user.user?.id ?? 'demo', newStatus);
+    
+    if (newStatus) {
+      // Sync FCM token when going online
+      final token = await NotificationService().getToken();
+      if (token != null) {
+        await ref.read(driverRepositoryProvider).updateFcmToken(user.user?.id ?? 'demo', token);
+      }
+    }
+
+    if (mounted) state = state.copyWith(isOnline: newStatus);
   }
 }
 
 final mapStateProvider = StateNotifierProvider<MapStateNotifier, MapState>((ref) {
-  return MapStateNotifier();
+  return MapStateNotifier(ref);
 });
+

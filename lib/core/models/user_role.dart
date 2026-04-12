@@ -10,34 +10,92 @@ class AppUser {
   final String id;
   final String name;
   final String phone;
+  final String? email;
   final UserRole role;
+  final String? profilePic;
+  final DateTime? createdAt;
+  
+  // Stats & Loyalty (from old mock state)
+  final int points;
+  final int totalRides;
+  final List<String> emergencyContacts;
+  final String referralCode;
 
   const AppUser({
     required this.id,
     required this.name,
     required this.phone,
+    this.email,
     required this.role,
+    this.profilePic,
+    this.createdAt,
+    this.points = 0,
+    this.totalRides = 0,
+    this.emergencyContacts = const [],
+    this.referralCode = '',
   });
 
-  factory AppUser.customer({required String id, required String name, required String phone}) {
-    return AppUser(id: id, name: name, phone: phone, role: UserRole.customer);
+  factory AppUser.fromMap(Map<String, dynamic> map, String id) {
+    return AppUser(
+      id: id,
+      name: map['name'] ?? 'Unknown User',
+      phone: map['phone'] ?? '',
+      email: map['email'],
+      role: UserRole.values.firstWhere(
+        (e) => e.toString() == 'UserRole.${map['role']}',
+        orElse: () => UserRole.customer,
+      ),
+      profilePic: map['profilePic'],
+      createdAt: map['createdAt'] != null ? DateTime.parse(map['createdAt']) : null,
+      points: map['points'] ?? 0,
+      totalRides: map['totalRides'] ?? 0,
+      emergencyContacts: List<String>.from(map['emergencyContacts'] ?? []),
+      referralCode: map['referralCode'] ?? '',
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'name': name,
+      'phone': phone,
+      'email': email,
+      'role': role.toString().split('.').last,
+      'profilePic': profilePic,
+      'createdAt': createdAt?.toIso8601String() ?? DateTime.now().toIso8601String(),
+      'points': points,
+      'totalRides': totalRides,
+      'emergencyContacts': emergencyContacts,
+      'referralCode': referralCode,
+    };
   }
 
   factory AppUser.empty() {
-    return const AppUser(id: '', name: 'Guest', phone: '', role: UserRole.customer);
+    return const AppUser(id: '', name: 'Guest User', phone: '', role: UserRole.customer);
   }
 
   AppUser copyWith({
     String? id,
     String? name,
     String? phone,
+    String? email,
     UserRole? role,
+    String? profilePic,
+    DateTime? createdAt,
+    int? points,
+    int? totalRides,
   }) {
     return AppUser(
       id: id ?? this.id,
       name: name ?? this.name,
       phone: phone ?? this.phone,
+      email: email ?? this.email,
       role: role ?? this.role,
+      profilePic: profilePic ?? this.profilePic,
+      createdAt: createdAt ?? this.createdAt,
+      points: points ?? this.points,
+      totalRides: totalRides ?? this.totalRides,
+      emergencyContacts: emergencyContacts ?? this.emergencyContacts,
+      referralCode: referralCode ?? this.referralCode,
     );
   }
 }

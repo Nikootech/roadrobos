@@ -4,6 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/custom_button.dart';
+import '../../core/services/invoice_service.dart';
+import '../profile/user_provider.dart';
+import 'package:iconsax/iconsax.dart';
 import 'rental_providers.dart';
 
 class RentalConfirmedScreen extends ConsumerWidget {
@@ -50,6 +53,30 @@ class RentalConfirmedScreen extends ConsumerWidget {
                       }
                       context.push('/delivery-logistics');
                     },
+                  ),
+                  const SizedBox(height: 16),
+                  OutlinedButton.icon(
+                    onPressed: () async {
+                      final userData = ref.read(userProvider);
+                      final basePriceStr = ref.read(rentalPriceProvider);
+                      final basePrice = double.tryParse(basePriceStr.replaceAll(RegExp(r'[^0-9.]'), '')) ?? 0.0;
+                      
+                      await InvoiceService.generateAndShareInvoice(
+                        bookingId: DateTime.now().millisecondsSinceEpoch.toString().substring(7),
+                        customerName: userData.name,
+                        vehicleName: vehicleName,
+                        baseAmount: basePrice,
+                        date: DateTime.now(),
+                      );
+                    },
+                    icon: const Icon(Iconsax.document_download, size: 18),
+                    label: const Text('DOWNLOAD INVOICE'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.primaryBlue,
+                      side: const BorderSide(color: AppColors.primaryBlue),
+                      minimumSize: const Size(double.infinity, 54),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
                   ),
                   const SizedBox(height: 16),
                   TextButton(

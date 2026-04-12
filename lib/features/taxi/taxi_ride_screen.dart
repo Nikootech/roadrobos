@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
 
 import '../../shared/widgets/live_map_widget.dart';
 import '../../shared/widgets/custom_button.dart';
@@ -11,8 +12,17 @@ import '../../shared/widgets/glass_card.dart';
 import '../../shared/widgets/shimmer_loading.dart';
 import '../../shared/widgets/rental_completion_dialog.dart';
 import '../../providers/taxi_provider.dart';
-import '../../core/services/gsheets_api.dart';
+import '../../core/repositories/ride_booking_repository.dart';
+import '../../core/repositories/transaction_repository.dart';
+import '../../core/models/ride_booking.dart';
+import '../../core/models/transaction_model.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/services/payment_service.dart';
+import '../../core/services/pricing_service.dart';
+import '../../shared/widgets/sos_button.dart';
+import '../chat/chat_screen.dart';
+import '../profile/user_provider.dart';
+import '../profile/sos_provider.dart';
 
 class TaxiRideScreen extends ConsumerStatefulWidget {
   const TaxiRideScreen({super.key});
@@ -23,10 +33,47 @@ class TaxiRideScreen extends ConsumerStatefulWidget {
 
 class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
   final DraggableScrollableController _sheetController = DraggableScrollableController();
+  late final PaymentService _paymentService;
 
   @override
   void initState() {
     super.initState();
+    _paymentService = PaymentService(
+      onSuccess: (PaymentSuccessResponse? response) async {
+        final state = ref.read(taxiProvider);
+        final basePrice = state.selectedOption?.price ?? 145.0;
+        final breakdown = PricingService.calculateBill(basePrice);
+        final userId = ref.read(userProvider).user?.id ?? 'demo';
+
+        // 1. Log Transaction
+        await ref.read(transactionRepositoryProvider).logTransaction(AppTransaction(
+          id: '',
+          userId: userId,
+          razoprayPaymentId: response?.paymentId ?? 'SIM_SUCCESS',
+          razorpayOrderId: response?.orderId,
+          razorpaySignature: response?.signature,
+          baseAmount: breakdown.baseAmount,
+          gstAmount: breakdown.gstAmount,
+          platformFee: breakdown.platformFee,
+          handlingCharges: breakdown.handlingCharges,
+          totalAmount: breakdown.totalPayable,
+          description: 'Taxi Ride: ${state.pickupAddress} to ${state.dropoffAddress}',
+          timestamp: DateTime.now(),
+        ));
+
+        // 2. Reset Taxi State
+        ref.read(taxiProvider.notifier).reset();
+        if (mounted) Navigator.pop(context); // Close the dialog
+      },
+      onFailure: (error) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(error),
+            backgroundColor: AppColors.errorRed,
+          ));
+        }
+      },
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(taxiProvider.notifier).initializeLocation();
     });
@@ -34,6 +81,7 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
 
   @override
   void dispose() {
+    _paymentService.dispose();
     _sheetController.dispose();
     super.dispose();
   }
@@ -50,10 +98,12 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
     final dropoffController = ref.watch(dropoffControllerProvider);
 
     // Sync controllers with state
-    if (taxiState.pickupAddress != null && pickupController.text.isEmpty) {
+    // Sync controllers with state ONLY if they are not currently focused to avoid jitter
+    final pFocus = FocusScope.of(context).focusedChild;
+    if (taxiState.pickupAddress != null && pickupController.text != taxiState.pickupAddress && pFocus == null) {
       pickupController.text = taxiState.pickupAddress!;
     }
-    if (taxiState.dropoffAddress != null && dropoffController.text.isEmpty) {
+    if (taxiState.dropoffAddress != null && dropoffController.text != taxiState.dropoffAddress && pFocus == null) {
       dropoffController.text = taxiState.dropoffAddress!;
     }
 
@@ -93,7 +143,19 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
                 children: [
                   _buildRoundedButton(Icons.arrow_back, () => Navigator.pop(context)),
                   const Spacer(),
-                  if (taxiState.status == RideStatus.tracking)
+                  if (taxiState.status == RideStatus.tracking || 
+                      taxiState.status == RideStatus.headingToDropoff)
+                    _buildRoundedButton(Icons.share, () {
+                      final pos = taxiState.pickupLocation; // Using pickup as live loc for demo
+                      if (pos != null) {
+                        final link = 'https://www.google.com/maps/search/?api=1&query=${pos.latitude},${pos.longitude}';
+                        ref.read(taxiProvider.notifier).shareTrip(link);
+                      }
+                    }),
+                  const SizedBox(width: 12),
+                  if (taxiState.status == RideStatus.tracking || 
+                      taxiState.status == RideStatus.atPickup ||
+                      taxiState.status == RideStatus.headingToDropoff)
                     _buildETAIndicator(taxiState.eta ?? 'Calculating...'),
                 ],
               ),
@@ -103,6 +165,21 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
           // 3. Main UI Overlay based on Status
           _buildBottomUI(context, taxiState, taxiNotifier, pickupController, dropoffController),
           
+          // 3b. SOS Button Overlay (Visible during tracking/ride)
+          if (taxiState.status == RideStatus.tracking || 
+              taxiState.status == RideStatus.atPickup || 
+              taxiState.status == RideStatus.headingToDropoff)
+            Positioned(
+              right: 20,
+              bottom: MediaQuery.of(context).size.height * 0.45 + 20, // Sit above the sheet
+              child: SOSButton(
+                onTrigger: () {
+                  final userId = ref.read(userProvider).user?.id ?? 'demo';
+                  ref.read(sosProvider.notifier).triggerEmergency(userId);
+                },
+              ),
+            ).animate().fadeIn().scale(),
+
           // 4. Booking Shimmer Overlay
           if (taxiState.status == RideStatus.booked)
             _buildBookingShimmer(),
@@ -187,20 +264,16 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
         const SizedBox(height: 16),
         CustomButton(
           label: state.status == RideStatus.vehicleSelection ? 'BOOK NOW' : 'SELECT LOCATIONS',
-          onPressed: () {
+          onPressed: state.status == RideStatus.booked ? null : () {
             _triggerHaptic();
             if (state.status == RideStatus.vehicleSelection) {
-              notifier.bookRide();
-              GSheetsApi.logCustomerActivity(
-                'TAXI_BOOKED',
-                vehicle: 'Motorcycle Taxi',
-                price: '₹145-180',
-                details: 'From: ${state.pickupAddress} To: ${state.dropoffAddress}',
-              );
+              // Fix: Centralized booking logic in Notifier ONLY to avoid duplicate writes
+              notifier.bookRide(); 
             } else {
               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select both locations')));
             }
           },
+          isLoading: state.status == RideStatus.booked,
         ),
       ],
     ).animate().fadeIn();
@@ -251,7 +324,24 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
                   ],
                 ),
               ),
-              const Icon(Iconsax.call, color: AppColors.primaryBlue),
+              IconButton(
+                icon: const Icon(Iconsax.message, color: AppColors.primaryBlue),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ChatScreen(
+                        otherPartyId: state.driverId ?? 'driver_demo',
+                        otherPartyName: state.roadroboName ?? 'Roadrobo',
+                      ),
+                    ),
+                  );
+                },
+              ),
+              IconButton(
+                icon: const Icon(Iconsax.call, color: AppColors.primaryBlue),
+                onPressed: () {},
+              ),
             ],
           ),
         ),
@@ -261,7 +351,6 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
           onPressed: () {
             _triggerHaptic();
             notifier.completeRide();
-            GSheetsApi.logCustomerActivity('TAXI_COMPLETED', details: 'Ride finished successfully');
             _showCompletionDialog(context, notifier);
           },
           backgroundColor: AppColors.errorRed,
@@ -276,6 +365,20 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
         const Icon(Icons.check_circle, color: Colors.green, size: 64),
         const SizedBox(height: 16),
         const Text('Ride Completed!', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
+        const SizedBox(height: 24),
+        const Text('How was your experience?', style: TextStyle(color: AppColors.textSecondary)),
+        const SizedBox(height: 16),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(5, (index) => IconButton(
+            icon: Icon(Icons.star_border_rounded, color: Colors.amber.withOpacity(0.4), size: 32),
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Thank you for your rating!'), backgroundColor: AppColors.successGreen),
+              );
+            },
+          )),
+        ),
         const SizedBox(height: 32),
         CustomButton(
           label: 'BOOK NEXT RIDE',
@@ -361,8 +464,17 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
       builder: (context) => RentalCompletionDialog(
         vehicleName: 'Motorcycle',
         onCompletePayment: () {
-          notifier.reset();
-          Navigator.pop(context);
+          final userData = ref.read(userProvider).user;
+          final state = ref.read(taxiProvider);
+          final basePrice = state.selectedOption?.price ?? 145.0;
+          final breakdown = PricingService.calculateBill(basePrice);
+
+          _paymentService.startPayment(
+            amount: breakdown.totalPayable,
+            contact: userData?.phone ?? '9876543210',
+            email: userData?.email ?? 'customer@example.com',
+            description: 'Taxi Ride Payment',
+          );
         },
         onReschedule: () {
           Navigator.pop(context);

@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:async';
-import '../../core/services/gsheets_api.dart';
+import '../../core/repositories/rental_booking_repository.dart';
+import '../../core/models/rental_booking.dart';
+import '../profile/user_provider.dart';
 
 enum RentalType { hourly, daily }
 enum RentalStatus { active, completed, paid }
@@ -32,7 +34,8 @@ class ActiveRental {
 }
 
 class ActiveRentalNotifier extends StateNotifier<ActiveRental?> {
-  ActiveRentalNotifier() : super(null);
+  final Ref ref;
+  ActiveRentalNotifier(this.ref) : super(null);
   Timer? _timer;
 
   void startRental(Map<String, dynamic> vehicle, Duration duration) {
@@ -52,15 +55,24 @@ class ActiveRentalNotifier extends StateNotifier<ActiveRental?> {
     });
   }
 
-  Future<void> completePayment() async {
+  Future<void> completePayment({
+    required double totalCost,
+    String? paymentId,
+  }) async {
     if (state != null) {
-      // Log to Google Sheets
-      await GSheetsApi.logCustomerActivity(
-        'BOOKING_COMPLETED',
-        vehicle: state!.vehicle['name'] ?? 'Unknown',
-        price: state!.vehicle['price'] ?? 'N/A',
-        details: 'Duration: ${state!.duration.inHours}h, Start: ${state!.startTime.toIso8601String()}',
-      );
+      final custId = ref.read(userProvider).user?.id ?? 'demo';
+      
+      await ref.read(rentalBookingRepositoryProvider).createRentalBooking(RentalBooking(
+        id: '',
+        customerId: custId,
+        vehicleName: state!.vehicle['name'] ?? 'Unknown',
+        rentalType: 'hourly',
+        startTime: state!.startTime,
+        duration: state!.duration.inHours,
+        totalCost: totalCost,
+        details: paymentId != null ? 'Razorpay ID: $paymentId' : '',
+        status: 'paid'
+      ));
       
       _timer?.cancel();
       _timer = null;
@@ -78,9 +90,7 @@ class ActiveRentalNotifier extends StateNotifier<ActiveRental?> {
 final selectedRentalTypeProvider = StateProvider<RentalType>((ref) => RentalType.hourly);
 final selectedVehicleProvider = StateProvider<Map<String, dynamic>?>((ref) => null);
 
-final activeRentalProvider = StateNotifierProvider<ActiveRentalNotifier, ActiveRental?>((ref) {
-  return ActiveRentalNotifier();
-});
+final activeRentalProvider = StateNotifierProvider<ActiveRentalNotifier, ActiveRental?>((ref) => ActiveRentalNotifier(ref));
 
 
 class RecentlyViewedNotifier extends StateNotifier<List<Map<String, dynamic>>> {

@@ -1,39 +1,51 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:go_router/go_router.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/repositories/chat_repository.dart';
+import '../../profile/user_provider.dart';
+import '../../../core/models/chat_message.dart';
+import '../../../navigation/nav_helpers.dart';
 
-class InAppChatScreen extends StatefulWidget {
+class InAppChatScreen extends ConsumerStatefulWidget {
   final String peerName;
-  const InAppChatScreen({super.key, this.peerName = 'Rajesh Kumar'});
+  final String chatRoomId;
+  const InAppChatScreen({
+    super.key, 
+    this.peerName = 'Rajesh Kumar',
+    this.chatRoomId = 'demo-room-1',
+  });
 
   @override
-  State<InAppChatScreen> createState() => _InAppChatScreenState();
+  ConsumerState<InAppChatScreen> createState() => _InAppChatScreenState();
 }
 
-class _InAppChatScreenState extends State<InAppChatScreen> {
+class _InAppChatScreenState extends ConsumerState<InAppChatScreen> {
   final TextEditingController _messageController = TextEditingController();
-  final List<Map<String, dynamic>> _messages = [
-    {'text': 'Hello! I am on my way to your location.', 'isMe': false, 'time': '10:05 AM'},
-    {'text': 'Great, thanks! How long will it take?', 'isMe': true, 'time': '10:06 AM'},
-    {'text': 'Around 5-7 minutes depending on traffic.', 'isMe': false, 'time': '10:06 AM'},
-  ];
 
   void _sendMessage() {
     if (_messageController.text.trim().isEmpty) return;
-    setState(() {
-      _messages.add({
-        'text': _messageController.text.trim(),
-        'isMe': true,
-        'time': '10:07 AM',
-      });
-    });
+    
+    final userId = ref.read(userProvider).user?.id ?? 'demo';
+    ref.read(chatRepositoryProvider).sendMessage(ChatMessage(
+      id: '',
+      senderId: userId,
+      receiverId: 'driver_id', // This should Ideally come from widget, but widget has chatRoomId
+      message: _messageController.text.trim(),
+      timestamp: DateTime.now(),
+    ));
+    
     _messageController.clear();
   }
 
   @override
   Widget build(BuildContext context) {
+    final userId = ref.watch(userProvider).user?.id ?? 'demo';
+    final messagesAsync = ref.watch(chatMessagesProvider((widget.chatRoomId, userId)));
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -74,13 +86,23 @@ class _InAppChatScreenState extends State<InAppChatScreen> {
       body: Column(
         children: [
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(20),
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                final msg = _messages[index];
-                return _buildChatBubble(msg['text'], msg['isMe'], msg['time']);
-              },
+            child: messagesAsync.when(
+              data: (messages) => ListView.builder(
+                reverse: true,
+                padding: const EdgeInsets.all(20),
+                itemCount: messages.length,
+                itemBuilder: (context, index) {
+                  final msg = messages[index];
+                  final isMe = msg.senderId == userId;
+                  return _buildChatBubble(
+                    msg.message, 
+                    isMe, 
+                    DateFormat('hh:mm a').format(msg.timestamp)
+                  );
+                },
+              ),
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (err, _) => Center(child: Text('Error loading messages: $err')),
             ),
           ),
           
@@ -186,9 +208,16 @@ class _InAppChatScreenState extends State<InAppChatScreen> {
         backgroundColor: Colors.white,
         side: const BorderSide(color: AppColors.border),
         onPressed: () {
-          setState(() {
-            _messages.add({'text': text, 'isMe': true, 'time': '10:08 AM'});
-          });
+          // Fix: Call the repository instead of modifying a non-existent local list
+          final userId = ref.read(userProvider).user?.id ?? 'demo';
+          ref.read(chatRepositoryProvider).sendMessage(ChatMessage(
+            id: '',
+            senderId: userId,
+            receiverId: 'driver_id',
+            message: text,
+            timestamp: DateTime.now(),
+          ));
+          NavHelpers.showSuccess(context, 'Sent: $text');
         },
       ),
     );

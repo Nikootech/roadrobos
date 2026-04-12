@@ -4,7 +4,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/services/gsheets_api.dart';
 import '../../shared/widgets/custom_button.dart';
 
 /// Driver Bank Withdrawal Screen — Premium Overhaul
@@ -153,12 +152,6 @@ class _DriverBankWithdrawalScreenState extends State<DriverBankWithdrawalScreen>
                     if (!context.mounted) return;
                     setState(() => _isProcessing = false);
                     HapticFeedback.heavyImpact();
-                    GSheetsApi.logFleetActivity(
-                      'CAPT-001', 
-                      'WITHDRAWAL_REQUEST', 
-                      impact: '₹${_amountController.text}',
-                      details: 'Bank: HDFC (**** 1234)'
-                    );
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: const Text('Withdrawal request submitted!'),

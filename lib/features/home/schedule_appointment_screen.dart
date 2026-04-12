@@ -2,10 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import '../../core/services/gsheets_api.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
+import '../../core/repositories/service_booking_repository.dart';
+import '../../core/repositories/transaction_repository.dart';
+import '../../core/models/service_booking.dart';
+import '../../core/models/transaction_model.dart';
+import '../profile/user_provider.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/custom_button.dart';
-
+import '../../core/services/payment_service.dart';
+import '../../core/services/pricing_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/technician/technician_provider.dart';
 
@@ -19,6 +25,72 @@ class ScheduleAppointmentScreen extends ConsumerStatefulWidget {
 class _ScheduleAppointmentScreenState extends ConsumerState<ScheduleAppointmentScreen> {
   DateTime _selectedDate = DateTime.now().add(const Duration(days: 1));
   String _selectedTime = '';
+  late final PaymentService _paymentService;
+
+  @override
+  void initState() {
+    super.initState();
+    _paymentService = PaymentService(
+      onSuccess: (PaymentSuccessResponse? response) async {
+        final dateStr = DateFormat('d MMMM yyyy').format(_selectedDate);
+        ref.read(bookingProvider.notifier).setSchedule(dateStr, _selectedTime);
+        
+        final booking = ref.read(bookingProvider);
+        final basePrice = double.tryParse((booking.price ?? '0').replaceAll(RegExp(r'[^0-9.]'), '')) ?? 0.0;
+        final breakdown = PricingService.calculateBill(basePrice);
+        final userId = ref.read(userProvider).user?.id ?? 'demo';
+
+        // 1. Log Transaction
+        await ref.read(transactionRepositoryProvider).logTransaction(AppTransaction(
+          id: '',
+          userId: userId,
+          razoprayPaymentId: response?.paymentId ?? 'SIM_SUCCESS',
+          razorpayOrderId: response?.orderId,
+          razorpaySignature: response?.signature,
+          baseAmount: breakdown.baseAmount,
+          gstAmount: breakdown.gstAmount,
+          platformFee: breakdown.platformFee,
+          handlingCharges: breakdown.handlingCharges,
+          totalAmount: breakdown.totalPayable,
+          description: 'Service Booking: ${booking.packageName}',
+          timestamp: DateTime.now(),
+        ));
+
+        // 2. Create Job and Booking
+        ref.read(technicianProvider.notifier).createJobFromBooking(booking);
+        
+        await ref.read(serviceBookingRepositoryProvider).createServiceBooking(ServiceBooking(
+          id: '',
+          customerId: userId,
+          vehicleName: booking.vehicleModel ?? 'Unknown Vehicle',
+          vehiclePlate: booking.vehiclePlate ?? 'Unknown Plate',
+          packageName: booking.packageName ?? 'Custom Service',
+          date: booking.date ?? dateStr,
+          time: booking.time ?? _selectedTime,
+          totalCost: breakdown.totalPayable,
+          details: 'Paid via Razorpay (ID: ${response?.paymentId ?? 'Direct'})',
+          status: 'paid',
+          createdAt: DateTime.now(),
+        ));
+
+        if (mounted) context.push('/live-service-status');
+      },
+      onFailure: (error) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(error),
+            backgroundColor: AppColors.errorRed,
+          ));
+        }
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _paymentService.dispose();
+    super.dispose();
+  }
 
   final List<String> _timeSlots = [
     '09:00 AM', '10:00 AM', '11:00 AM', '12:00 PM',
@@ -100,20 +172,17 @@ class _ScheduleAppointmentScreenState extends ConsumerState<ScheduleAppointmentS
             child: CustomButton(
               label: 'Book Appointment',
               onPressed: _selectedTime.isEmpty ? null : () {
-                final dateStr = DateFormat('d MMMM yyyy').format(_selectedDate);
-                ref.read(bookingProvider.notifier).setSchedule(dateStr, _selectedTime);
-                
                 final booking = ref.read(bookingProvider);
-                ref.read(technicianProvider.notifier).createJobFromBooking(booking);
+                final basePrice = double.tryParse((booking.price ?? '0').replaceAll(RegExp(r'[^0-9.]'), '')) ?? 0.0;
+                final breakdown = PricingService.calculateBill(basePrice);
+                final userData = ref.read(userProvider).user;
                 
-                GSheetsApi.logCustomerActivity(
-                  'SERVICE_BOOKED',
-                  vehicle: booking.vehicleModel,
-                  price: booking.price,
-                  details: 'Date: ${booking.date}, Slot: ${booking.time}, Package: ${booking.packageName}',
+                _paymentService.startPayment(
+                  amount: breakdown.totalPayable,
+                  contact: userData?.phone ?? '9876543210',
+                  email: userData?.email ?? 'customer@example.com',
+                  description: 'Service Booking: ${booking.packageName}',
                 );
-
-                context.push('/live-service-status');
               },
               backgroundColor: AppColors.primaryBlue,
             ),

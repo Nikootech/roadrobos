@@ -4,6 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'dart:math' as math;
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:share_plus/share_plus.dart';
+import '../features/profile/user_provider.dart';
+import '../core/models/ride_booking.dart';
+import '../core/repositories/ride_booking_repository.dart';
+import '../core/repositories/driver_repository.dart';
+import '../core/models/driver_model.dart';
 
 enum RideStatus { 
   idle, 
@@ -52,6 +59,7 @@ class TaxiState {
   final String? pickupAddress;
   final String? dropoffAddress;
   final String? roadroboName;
+  final String? driverId;
   final String? eta;
   final double distance;
   final String? otp;
@@ -69,6 +77,7 @@ class TaxiState {
     this.pickupAddress,
     this.dropoffAddress,
     this.roadroboName,
+    this.driverId,
     this.eta,
     this.distance = 0.0,
     this.otp,
@@ -87,6 +96,7 @@ class TaxiState {
     String? pickupAddress,
     String? dropoffAddress,
     String? roadroboName,
+    String? driverId,
     String? eta,
     double? distance,
     String? otp,
@@ -104,6 +114,7 @@ class TaxiState {
       pickupAddress: pickupAddress ?? this.pickupAddress,
       dropoffAddress: dropoffAddress ?? this.dropoffAddress,
       roadroboName: roadroboName ?? this.roadroboName,
+      driverId: driverId ?? this.driverId,
       eta: eta ?? this.eta,
       distance: distance ?? this.distance,
       otp: otp ?? this.otp,
@@ -117,8 +128,11 @@ class TaxiState {
 }
 
 class TaxiNotifier extends StateNotifier<TaxiState> {
-  TaxiNotifier() : super(TaxiState());
+  final Ref ref;
+  TaxiNotifier(this.ref) : super(TaxiState());
 
+  StreamSubscription? _rideSubscription;
+  StreamSubscription? _driverLocationSubscription;
   Timer? _simulationTimer;
 
   Future<void> initializeLocation() async {
@@ -254,91 +268,83 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
     }
   }
 
-  void bookRide() {
+  Future<void> bookRide() async {
     state = state.copyWith(status: RideStatus.booked);
     
-    // Simulate finding a driver after 2 seconds
-    Future.delayed(const Duration(seconds: 2), () {
-      final pickup = state.pickupLocation!;
-      // Driver starts 500m away
-      final roadroboLoc = LatLng(pickup.latitude + 0.005, pickup.longitude + 0.005);
-      
-      state = state.copyWith(
-        status: RideStatus.tracking,
-        roadroboName: 'Roadrobo',
-        roadroboLocation: roadroboLoc,
-        eta: '3 mins',
-        otp: '1234',
+    try {
+      final user = ref.read(userProvider);
+      if (user == null) throw Exception('User not logged in');
+
+      final booking = RideBooking(
+        id: '', 
+        customerId: user.user?.id ?? 'demo',
+        pickupLocation: '${state.pickupLocation!.latitude},${state.pickupLocation!.longitude}',
+        pickupAddress: state.pickupAddress ?? 'Origin',
+        dropLocation: '${state.dropoffLocation!.latitude},${state.dropoffLocation!.longitude}',
+        dropAddress: state.dropoffAddress ?? 'Destination',
+        fare: state.selectedOption?.price ?? 0.0,
+        createdAt: DateTime.now(),
       );
+
+      final bookingId = await ref.read(rideBookingRepositoryProvider).createRideBooking(booking);
       
-      _startTrackingSimulation();
-    });
+      _rideSubscription?.cancel();
+      _rideSubscription = FirebaseFirestore.instance
+          .collection('ride_bookings')
+          .doc(bookingId)
+          .snapshots()
+          .listen((snapshot) {
+            if (snapshot.exists) {
+              final updatedRide = RideBooking.fromMap(snapshot.data()!, snapshot.id);
+              
+              if (updatedRide.driverId != null && state.status == RideStatus.booked) {
+                _onDriverAssigned(updatedRide);
+              }
+
+              if (updatedRide.status == 'arrived') {
+                state = state.copyWith(status: RideStatus.atPickup, eta: 'Arrived');
+              } else if (updatedRide.status == 'started') {
+                state = state.copyWith(status: RideStatus.headingToDropoff);
+              } else if (updatedRide.status == 'completed') {
+                state = state.copyWith(status: RideStatus.completed);
+                _rideSubscription?.cancel();
+                _driverLocationSubscription?.cancel();
+              }
+            }
+          });
+    } catch (e) {
+      debugPrint('Error booking ride: $e');
+      state = state.copyWith(status: RideStatus.idle);
+    }
   }
 
-  void _startTrackingSimulation() {
-    _simulationTimer?.cancel();
-    _simulationTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
-      if (state.status != RideStatus.tracking || state.roadroboLocation == null || state.pickupLocation == null) {
-        timer.cancel();
-        return;
-      }
-      
-      final current = state.roadroboLocation!;
-      final pickup = state.pickupLocation!;
-      
-      const distanceCalc = Distance();
-      final double meters = distanceCalc.as(LengthUnit.Meter, current, pickup);
-      
-      if (meters < 15) {
-        // Arrived at pickup
-        state = state.copyWith(status: RideStatus.atPickup, eta: 'Arrived');
-        timer.cancel();
-        return;
-      }
+  void _onDriverAssigned(RideBooking ride) {
+    state = state.copyWith(
+      status: RideStatus.tracking,
+      roadroboName: 'Driver Assigned', 
+      otp: '1234', 
+    );
 
-      final newLat = current.latitude + (pickup.latitude - current.latitude) * 0.05;
-      final newLng = current.longitude + (pickup.longitude - current.longitude) * 0.05;
-      
-      state = state.copyWith(
-        roadroboLocation: LatLng(newLat, newLng),
-        eta: '${(meters / 200).ceil()} mins',
-      );
-    });
-  }
-
-  void _startInTripSimulation() {
-    _simulationTimer?.cancel();
-    _simulationTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
-      if (state.status != RideStatus.headingToDropoff || state.roadroboLocation == null || state.dropoffLocation == null) {
-        timer.cancel();
-        return;
-      }
-      
-      final current = state.roadroboLocation!;
-      final dropoff = state.dropoffLocation!;
-      
-      const distanceCalc = Distance();
-      final double mToDrop = distanceCalc.as(LengthUnit.Meter, current, dropoff);
-      
-      if (mToDrop < 20) {
-        state = state.copyWith(eta: 'Arrived at destination');
-        timer.cancel();
-        return;
-      }
-
-      final newLat = current.latitude + (dropoff.latitude - current.latitude) * 0.04;
-      final newLng = current.longitude + (dropoff.longitude - current.longitude) * 0.04;
-      
-      state = state.copyWith(
-        roadroboLocation: LatLng(newLat, newLng),
-        eta: '${(mToDrop / 250).ceil()} mins left',
-      );
-    });
+    _driverLocationSubscription?.cancel();
+    _driverLocationSubscription = ref.read(driverRepositoryProvider)
+        .watchDriver(ride.driverId!)
+        .listen((driver) {
+          if (driver != null && driver.currentPosition != null) {
+            const distanceCalc = Distance();
+            final double meters = distanceCalc.as(LengthUnit.Meter, driver.currentPosition!, state.pickupLocation!);
+            
+            state = state.copyWith(
+              roadroboLocation: driver.currentPosition,
+              eta: '${(meters / 200).ceil()} mins',
+            );
+          }
+        });
   }
 
   void completeRide() {
-    _simulationTimer?.cancel();
     state = state.copyWith(status: RideStatus.completed);
+    _rideSubscription?.cancel();
+    _driverLocationSubscription?.cancel();
   }
 
   void reset() {
@@ -449,11 +455,69 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
     _simulationTimer?.cancel();
     super.dispose();
   }
+
+  void _startTrackingSimulation() {
+    _simulationTimer?.cancel();
+    _simulationTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
+      if (state.roadroboLocation == null || state.pickupLocation == null) return;
+      
+      const distanceCalc = Distance();
+      final double meters = distanceCalc.as(LengthUnit.Meter, state.roadroboLocation!, state.pickupLocation!);
+      
+      if (meters < 50) {
+        arriveAtPickup();
+        return;
+      }
+
+      // Move driver 50m closer to pickup
+      final double latStep = (state.pickupLocation!.latitude - state.roadroboLocation!.latitude) * 0.1;
+      final double lngStep = (state.pickupLocation!.longitude - state.roadroboLocation!.longitude) * 0.1;
+      
+      state = state.copyWith(
+        roadroboLocation: LatLng(
+          state.roadroboLocation!.latitude + latStep,
+          state.roadroboLocation!.longitude + lngStep,
+        ),
+        eta: '${(meters / 100).ceil()} mins',
+      );
+    });
+  }
+
+  void _startInTripSimulation() {
+    _simulationTimer?.cancel();
+    _simulationTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
+      if (state.roadroboLocation == null || state.dropoffLocation == null) return;
+      
+      const distanceCalc = Distance();
+      final double meters = distanceCalc.as(LengthUnit.Meter, state.roadroboLocation!, state.dropoffLocation!);
+      
+      if (meters < 50) {
+        completeRide();
+        return;
+      }
+
+      // Move driver 50m closer to dropoff
+      final double latStep = (state.dropoffLocation!.latitude - state.roadroboLocation!.latitude) * 0.1;
+      final double lngStep = (state.dropoffLocation!.longitude - state.roadroboLocation!.longitude) * 0.1;
+      
+      state = state.copyWith(
+        roadroboLocation: LatLng(
+          state.roadroboLocation!.latitude + latStep,
+          state.roadroboLocation!.longitude + lngStep,
+        ),
+        eta: '${(meters / 100).ceil()} mins',
+      );
+    });
+  }
+
+  void shareTrip(String mapsLink) {
+    Share.share('Track my RoAdRoBo trip live here: $mapsLink');
+  }
 }
 
 // StateNotifierProvider
 final taxiProvider = StateNotifierProvider<TaxiNotifier, TaxiState>((ref) {
-  final notifier = TaxiNotifier();
+  final notifier = TaxiNotifier(ref);
   ref.onDispose(() => notifier.dispose());
   return notifier;
 });

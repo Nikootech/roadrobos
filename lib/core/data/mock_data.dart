@@ -223,4 +223,50 @@ class MockData {
       'isComingSoon': true,
     },
   ];
+
+  // ── Demo Users ──
+  static const List<Map<String, dynamic>> demoUsers = [
+    {
+      'id': 'demo_customer',
+      'name': 'Rahul Sharma (Demo)',
+      'email': 'customer@roadrobos.com',
+      'phone': '9876543210',
+      'role': 'customer',
+      'points': 1250,
+      'totalRides': 42,
+      'createdAt': '2024-01-01T00:00:00Z',
+    },
+    {
+      'id': 'demo_admin',
+      'name': 'System Admin',
+      'email': 'admin@roadrobos.com',
+      'phone': '9999888877',
+      'role': 'admin',
+      'createdAt': '2024-01-01T00:00:00Z',
+    },
+    {
+      'id': 'demo_super_admin',
+      'name': 'Super Admin',
+      'email': 'superadmin@roadrobos.com',
+      'phone': '9999999999',
+      'role': 'superAdmin',
+      'createdAt': '2024-01-01T00:00:00Z',
+    },
+    {
+      'id': 'demo_tech',
+      'name': 'Expert Technician',
+      'email': 'tech@roadrobos.com',
+      'phone': '8888777766',
+      'role': 'technician',
+      'createdAt': '2024-01-01T00:00:00Z',
+    },
+    {
+      'id': 'demo_driver',
+      'name': 'Pro Driver',
+      'email': 'driver@roadrobos.com',
+      'phone': '7777666655',
+      'role': 'driver',
+      'createdAt': '2024-01-01T00:00:00Z',
+    },
+  ];
 }

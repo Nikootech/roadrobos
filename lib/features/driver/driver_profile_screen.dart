@@ -3,15 +3,20 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/bottom_nav_bar.dart';
+import '../profile/user_provider.dart';
 
-/// Driver Profile Screen — Premium Overhaul
-class DriverProfileScreen extends StatelessWidget {
+/// Driver Profile Screen — Premium Overhaul with Real Data
+class DriverProfileScreen extends ConsumerWidget {
   const DriverProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(userProvider);
+    final String name = user?.name ?? 'Driver';
+
     return Scaffold(
       backgroundColor: AppColors.bgLightGrey,
       appBar: AppBar(
@@ -46,11 +51,7 @@ class DriverProfileScreen extends StatelessWidget {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(32),
                 boxShadow: const [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 20,
-                    offset: Offset(0, 10),
-                  )
+                  BoxShadow(color: Colors.black12, blurRadius: 20, offset: Offset(0, 10))
                 ],
               ),
               child: Column(
@@ -64,10 +65,12 @@ class DriverProfileScreen extends StatelessWidget {
                           shape: BoxShape.circle,
                           border: Border.all(color: AppColors.primaryBlue.withOpacity(0.2), width: 2),
                         ),
-                        child: const CircleAvatar(
+                        child: CircleAvatar(
                           radius: 54,
                           backgroundColor: AppColors.bgLightGrey,
-                          backgroundImage: NetworkImage('https://i.pravatar.cc/150?u=roadrobo'),
+                          backgroundImage: (user.profileImageUrl.isNotEmpty)
+                              ? NetworkImage(user.profileImageUrl)
+                              : const NetworkImage('https://i.pravatar.cc/150?u=roadrobo'),
                         ),
                       ),
                       Container(
@@ -78,7 +81,7 @@ class DriverProfileScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 20),
-                  const Text('Rajesh Kumar', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: AppColors.textPrimary)),
+                  Text(name, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: AppColors.textPrimary)),
                   const SizedBox(height: 4),
                   const Text('Senior Roadrobo • ID: BLR-49281', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w600, fontSize: 13)),
                   const SizedBox(height: 16),
@@ -106,7 +109,7 @@ class DriverProfileScreen extends StatelessWidget {
             // Stats Grid
             Row(
               children: [
-                _buildStat('Rides', '1.2k', Iconsax.car, AppColors.primaryBlue),
+                _buildStat('Rides', (user?.totalRides ?? 0).toString(), Iconsax.car, AppColors.primaryBlue),
                 const SizedBox(width: 12),
                 _buildStat('Rating', '4.8', Iconsax.star, Colors.orange),
                 const SizedBox(width: 12),
@@ -135,9 +138,10 @@ class DriverProfileScreen extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: TextButton(
-                onPressed: () {
+                onPressed: () async {
                   HapticFeedback.heavyImpact();
-                  context.go('/auth/login');
+                  await ref.read(userProvider.notifier).logout();
+                  if (context.mounted) context.go('/auth/login');
                 },
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 18),
@@ -276,14 +280,10 @@ class DriverProfileScreen extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 24),
-              // Custom Chart
               Container(
                 height: 200,
                 padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.bgLightGrey,
-                  borderRadius: BorderRadius.circular(24),
-                ),
+                decoration: BoxDecoration(color: AppColors.bgLightGrey, borderRadius: BorderRadius.circular(24)),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -382,14 +382,10 @@ class DriverProfileScreen extends StatelessWidget {
           width: 24,
           height: 140 * percentage,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [AppColors.primaryBlue, AppColors.primaryBlue.withOpacity(0.6)],
-            ),
+            gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [AppColors.primaryBlue, AppColors.primaryBlue.withOpacity(0.6)]),
             borderRadius: BorderRadius.circular(8),
           ),
-        ).animate().scaleY(begin: 0, end: 1, duration: 800.ms, curve: Curves.easeOutBack),
+        ).animate().scaleY(begin: 0, end: 1),
         const SizedBox(height: 8),
         Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.textSecondary)),
       ],
@@ -399,10 +395,7 @@ class DriverProfileScreen extends StatelessWidget {
   Widget _buildStatRow(IconData icon, String label, String value, String trend) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.bgLightGrey,
-        borderRadius: BorderRadius.circular(20),
-      ),
+      decoration: BoxDecoration(color: AppColors.bgLightGrey, borderRadius: BorderRadius.circular(20)),
       child: Row(
         children: [
           Container(
@@ -430,28 +423,13 @@ class DriverProfileScreen extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        border: Border.all(color: AppColors.bgLightGrey),
-        borderRadius: BorderRadius.circular(20),
-      ),
+      decoration: BoxDecoration(border: Border.all(color: AppColors.bgLightGrey), borderRadius: BorderRadius.circular(20)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(name, style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.textPrimary, fontSize: 15)),
-              Text(time, style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
-            ],
-          ),
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text(name, style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.textPrimary, fontSize: 15)), Text(time, style: const TextStyle(fontSize: 11, color: AppColors.textMuted))]),
           const SizedBox(height: 4),
-          Row(
-            children: [
-              const Icon(Iconsax.star1, color: Colors.orange, size: 14),
-              const SizedBox(width: 4),
-              Text(rating, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: AppColors.textPrimary)),
-            ],
-          ),
+          Row(children: [const Icon(Iconsax.star1, color: Colors.orange, size: 14), const SizedBox(width: 4), Text(rating, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: AppColors.textPrimary))]),
           const SizedBox(height: 8),
           Text(comment, style: const TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.4)),
         ],

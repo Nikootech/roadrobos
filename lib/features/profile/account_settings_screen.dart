@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/services/gsheets_api.dart';
 import 'user_provider.dart';
 
 class AccountSettingsScreen extends ConsumerStatefulWidget {
@@ -21,6 +20,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
   late TextEditingController _nameController;
   late TextEditingController _emailController;
   late TextEditingController _phoneController;
+  bool _isBiometricEnabled = false;
 
   @override
   void initState() {
@@ -29,6 +29,20 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
     _nameController = TextEditingController(text: user.name);
     _emailController = TextEditingController(text: user.email);
     _phoneController = TextEditingController(text: user.phone);
+    _loadBiometricSettings();
+  }
+
+  Future<void> _loadBiometricSettings() async {
+    // Actually using SecureStorage would be better, but we'll use SharedPreferences for basic UI state
+    // To match actual biometric capability
+    setState(() {
+      _isBiometricEnabled = false; // Initial
+    });
+  }
+
+  Future<void> _toggleBiometric(bool value) async {
+    setState(() => _isBiometricEnabled = value);
+    // Logic to save preference
   }
 
   @override
@@ -45,11 +59,6 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
         name: _nameController.text,
         email: _emailController.text,
         phone: _phoneController.text,
-      );
-      
-      GSheetsApi.logCustomerActivity(
-        'PROFILE_UPDATED',
-        details: 'Name: ${_nameController.text}, Email: ${_emailController.text}',
       );
       
       if (mounted) {
@@ -125,6 +134,16 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
             },
           ),
           _buildSettingsTile(
+            Iconsax.finger_scan, 
+            'Biometric Login', 
+            'Enable Fingerprint/FaceID for login',
+            trailing: Switch(
+              value: _isBiometricEnabled,
+              onChanged: (val) => _toggleBiometric(val),
+              activeColor: AppColors.primaryBlue,
+            ),
+          ),
+          _buildSettingsTile(
             Iconsax.shield_security, 
             'Two-Factor Authentication', 
             'Add extra layer of security',
@@ -142,23 +161,39 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
         ]),
         const SizedBox(height: 48),
         TextButton(
+          onPressed: () => ref.read(userProvider.notifier).logout(),
+          child: const Text('LOGOUT', style: TextStyle(color: AppColors.dangerRed, fontWeight: FontWeight.bold, letterSpacing: 1)),
+        ),
+        const SizedBox(height: 12),
+        TextButton(
           onPressed: () {
             showDialog(
               context: context,
               builder: (context) => AlertDialog(
-                title: const Text('Logout?'),
-                content: const Text('Are you sure you want to logout?'),
+                title: const Text('Request Account Deletion?', style: TextStyle(color: AppColors.dangerRed)),
+                content: const Text('This will flag your account for permanent deletion. This action cannot be undone once processed by admin.'),
                 actions: [
                   TextButton(onPressed: () => context.pop(), child: const Text('CANCEL')),
                   TextButton(
-                    onPressed: () => context.go('/auth/login'), 
-                    child: const Text('LOGOUT', style: TextStyle(color: AppColors.dangerRed)),
+                    onPressed: () async {
+                      await ref.read(userProvider.notifier).deleteAccountRequest();
+                      if (mounted) context.go('/auth/login');
+                    }, 
+                    child: const Text('CONFIRM DELETION', style: TextStyle(color: AppColors.dangerRed)),
                   ),
                 ],
               ),
             );
           },
-          child: const Text('LOGOUT', style: TextStyle(color: AppColors.dangerRed, fontWeight: FontWeight.bold, letterSpacing: 1)),
+          child: Text(
+            'DELETE ACCOUNT', 
+            style: TextStyle(
+              color: AppColors.dangerRed.withOpacity(0.5), 
+              fontSize: 12, 
+              fontWeight: FontWeight.bold, 
+              letterSpacing: 1,
+            ),
+          ),
         ),
       ],
     );
@@ -261,7 +296,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
     );
   }
 
-  Widget _buildSettingsTile(IconData icon, String title, String subtitle, {VoidCallback? onTap}) {
+  Widget _buildSettingsTile(IconData icon, String title, String subtitle, {VoidCallback? onTap, Widget? trailing}) {
     return ListTile(
       onTap: onTap,
       leading: Container(
@@ -271,7 +306,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
       ),
       title: Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
       subtitle: Text(subtitle, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-      trailing: const Icon(Icons.chevron_right, size: 18, color: AppColors.border),
+      trailing: trailing ?? const Icon(Icons.chevron_right, size: 18, color: AppColors.border),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
     ).animate().fadeIn().slideX(begin: 0.1, end: 0);
   }

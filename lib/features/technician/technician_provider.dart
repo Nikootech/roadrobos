@@ -1,5 +1,11 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/repositories/technician_job_repository.dart';
+import '../../core/models/technician_job_model.dart';
+
+// ─── Legacy UI-compatible wrappers ───
+// These thin wrappers allow existing screens to work unchanged while
+// the data now flows from Firestore underneath.
 
 class TechnicianJob {
   final String id;
@@ -63,6 +69,33 @@ class TechnicianJob {
       price: price ?? this.price,
     );
   }
+
+  /// Convert from Firestore model to UI model
+  factory TechnicianJob.fromFirestore(TechnicianJobModel model) {
+    return TechnicianJob(
+      id: model.id,
+      estimatedCompletion: model.estimatedCompletion,
+      vehicleModel: model.vehicleModel,
+      vehiclePlate: model.vehiclePlate,
+      serviceType: model.serviceType,
+      packageName: model.packageName,
+      date: model.date,
+      time: model.time,
+      progress: model.progress,
+      checklist: model.checklist.map((c) => ChecklistItem(
+        task: c.task,
+        category: c.category,
+        isDone: c.isDone,
+      )).toList(),
+      parts: model.parts.map((p) => SparePart(
+        name: p.name,
+        qty: p.qty,
+        isFound: p.isFound,
+      )).toList(),
+      status: model.status,
+      price: model.price,
+    );
+  }
 }
 
 class ChecklistItem {
@@ -96,6 +129,8 @@ class SparePart {
     this.isFound = true,
   });
 }
+
+// ─── Booking State (unchanged, used by customer flow) ───
 
 class BookingState {
   final String serviceType;
@@ -154,145 +189,68 @@ class BookingNotifier extends StateNotifier<BookingState> {
 
 final bookingProvider = StateNotifierProvider<BookingNotifier, BookingState>((ref) => BookingNotifier());
 
-final selectedJobIdProvider = StateProvider<String?>((ref) => 'JOB-008');
+final selectedJobIdProvider = StateProvider<String?>((ref) => null);
 
 final selectedJobProvider = Provider<TechnicianJob?>((ref) {
   final jobs = ref.watch(technicianProvider);
   final selectedId = ref.watch(selectedJobIdProvider);
+  if (selectedId == null && jobs.isNotEmpty) return jobs.first;
   if (selectedId == null) return null;
-  return jobs.firstWhere((j) => j.id == selectedId, orElse: () => jobs.first);
+  return jobs.cast<TechnicianJob?>().firstWhere((j) => j?.id == selectedId, orElse: () => jobs.isNotEmpty ? jobs.first : null);
 });
 
+// ─── Firestore-Backed Technician Notifier ───
+
 class TechnicianNotifier extends StateNotifier<List<TechnicianJob>> {
-  Timer? _simulationTimer;
+  final Ref ref;
+  StreamSubscription? _subscription;
 
-  TechnicianNotifier() : super(_mockJobs);
-
-  static final _mockJobs = [
-    TechnicianJob(
-      id: 'JOB-008',
-      estimatedCompletion: '4:30 PM',
-      vehicleModel: '2021 Hyundai Creta SX',
-      vehiclePlate: 'MH 12 AB 1234',
-      serviceType: 'General Service',
-      packageName: 'Premium detailing',
-      date: '23 March 2026',
-      time: '02:00 PM',
-      progress: 0.1,
-      checklist: [
-        ChecklistItem(task: 'Vehicle Inspection & Job Card', category: 'Core Service', isDone: true),
-        ChecklistItem(task: 'Surface Cleaning (High Pressure)', category: 'Core Service', isDone: false),
-        ChecklistItem(task: 'Interior Detailing & Polish', category: 'Finishing', isDone: false),
-        ChecklistItem(task: 'Foam Cleaning & Rims Polish', category: 'Finishing', isDone: false),
-        ChecklistItem(task: 'Engine Degreasing & Dressing', category: 'Finishing', isDone: false),
-        ChecklistItem(task: 'Final Inspection & Ready', category: 'Finishing', isDone: false),
-      ],
-      parts: [
-        SparePart(name: 'Ceramic Coating Wax', qty: '1 Box'),
-        SparePart(name: 'Premium Glass Cleaner', qty: '1 Bottle'),
-      ],
-      status: 'ACCEPTED',
-    ),
-    TechnicianJob(
-      id: 'JOB-009',
-      estimatedCompletion: '01:30 PM',
-      vehicleModel: 'Maruti Swift Dzire',
-      vehiclePlate: 'KA 05 MJ 8899',
-      serviceType: 'Brake Service',
-      progress: 0.0,
-      checklist: [
-        ChecklistItem(task: 'Brake Pad Replacement', category: 'Core Service'),
-        ChecklistItem(task: 'Check Rotors', category: 'Inspection'),
-      ],
-      parts: [],
-      status: 'SCHEDULED',
-    ),
-    TechnicianJob(
-      id: 'JOB-010',
-      estimatedCompletion: '03:00 PM',
-      vehicleModel: 'Honda City ZX',
-      vehiclePlate: 'DL 09 CA 5566',
-      serviceType: 'AC Service',
-      progress: 1.0,
-      checklist: [
-        ChecklistItem(task: 'AC Compressor Service', category: 'Core Service', isDone: true),
-        ChecklistItem(task: 'Clean Filters', category: 'Core Service', isDone: true),
-      ],
-      parts: [],
-      status: 'COMPLETED',
-    ),
-  ];
-
-  void toggleChecklistItem(String jobId, int index) {
-    state = [
-      for (final job in state)
-        if (job.id == jobId)
-          _updateJobChecklist(job, index)
-        else
-          job,
-    ];
+  TechnicianNotifier(this.ref) : super([]) {
+    _listenToFirestore();
   }
 
-  TechnicianJob _updateJobChecklist(TechnicianJob job, int index) {
-    final newList = List<ChecklistItem>.from(job.checklist);
-    newList[index] = newList[index].copyWith(isDone: !newList[index].isDone);
-    
-    final doneCount = newList.where((item) => item.isDone).length;
-    final progress = doneCount / newList.length;
-    
-    return job.copyWith(checklist: newList, progress: progress);
-  }
-
-  void startMockProgress(String jobId) {
-    _simulationTimer?.cancel();
-    _simulationTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
-      final jobIndex = state.indexWhere((j) => j.id == jobId);
-      if (jobIndex == -1 || state[jobIndex].progress >= 1.0) {
-        timer.cancel();
-        return;
-      }
-
-      final job = state[jobIndex];
-      final currentIndex = (job.progress * job.checklist.length).floor();
-      if (currentIndex < job.checklist.length) {
-        toggleChecklistItem(jobId, currentIndex);
-        
-        final updatedJob = state.firstWhere((j) => j.id == jobId);
-        String newStatus = 'IN PROGRESS';
-        if (updatedJob.progress > 0.8) {
-          newStatus = 'QUALITY CHECK';
-        } else if (updatedJob.progress == 1.0) {
-          newStatus = 'COMPLETED';
-        }
-        
-        _updateJobStatus(jobId, newStatus);
+  void _listenToFirestore() {
+    final repo = ref.read(technicianJobRepositoryProvider);
+    _subscription = repo.watchAllJobs().listen((firestoreJobs) {
+      state = firestoreJobs.map((m) => TechnicianJob.fromFirestore(m)).toList();
+      
+      // Auto-select first job if none selected
+      if (state.isNotEmpty && ref.read(selectedJobIdProvider) == null) {
+        ref.read(selectedJobIdProvider.notifier).state = state.first.id;
       }
     });
   }
 
-  void _updateJobStatus(String jobId, String status) {
-    state = [
-      for (final job in state)
-        if (job.id == jobId) job.copyWith(status: status) else job,
-    ];
+  void toggleChecklistItem(String jobId, int index) {
+    final repo = ref.read(technicianJobRepositoryProvider);
+    repo.toggleChecklistItem(jobId, index);
+    // State will auto-update via the Firestore stream listener
+  }
+
+  void startMockProgress(String jobId) {
+    // In production, progress comes from checklist completion via Firestore
+    // This is kept for UI compatibility but now uses repository
+    final repo = ref.read(technicianJobRepositoryProvider);
+    repo.updateJobStatus(jobId, 'IN PROGRESS');
   }
 
   void resetProgress(String jobId) {
-    _simulationTimer?.cancel();
-    // This simple mock reset doesn't restore original mock state for specific job
+    // No-op in production; Firestore is the source of truth
   }
 
   void createJobFromBooking(BookingState booking) {
+    final repo = ref.read(technicianJobRepositoryProvider);
+    
     final checklist = booking.packageItems.isNotEmpty 
-      ? booking.packageItems.map((item) => ChecklistItem(task: item, category: 'Service Item')).toList()
+      ? booking.packageItems.map((item) => FirestoreChecklistItem(task: item, category: 'Service Item')).toList()
       : [
-          ChecklistItem(task: 'General Inspection', category: 'Initial'),
-          ChecklistItem(task: 'Service Execution', category: 'Main'),
-          ChecklistItem(task: 'Final Quality Check', category: 'Quality'),
+          FirestoreChecklistItem(task: 'General Inspection', category: 'Initial'),
+          FirestoreChecklistItem(task: 'Service Execution', category: 'Main'),
+          FirestoreChecklistItem(task: 'Final Quality Check', category: 'Quality'),
         ];
 
-    final newJob = TechnicianJob(
-      id: 'JOB-${(100 + (DateTime.now().millisecondsSinceEpoch % 900))}',
+    final newJob = TechnicianJobModel(
+      id: '', // Will be assigned by Firestore
       estimatedCompletion: booking.time, 
       vehicleModel: booking.vehicleModel,
       vehiclePlate: booking.vehiclePlate,
@@ -307,49 +265,62 @@ class TechnicianNotifier extends StateNotifier<List<TechnicianJob>> {
       status: 'SCHEDULED',
     );
     
-    state = [...state, newJob];
+    repo.createJob(newJob);
+    // State will auto-update via the Firestore stream listener
   }
 
   void createJob(TechnicianJob job) {
-    state = [...state, job];
+    final repo = ref.read(technicianJobRepositoryProvider);
+    repo.createJob(TechnicianJobModel(
+      id: '',
+      estimatedCompletion: job.estimatedCompletion,
+      vehicleModel: job.vehicleModel,
+      vehiclePlate: job.vehiclePlate,
+      serviceType: job.serviceType,
+      packageName: job.packageName,
+      date: job.date,
+      time: job.time,
+      progress: job.progress,
+      checklist: job.checklist.map((c) => FirestoreChecklistItem(task: c.task, category: c.category, isDone: c.isDone)).toList(),
+      parts: job.parts.map((p) => FirestoreSparePart(name: p.name, qty: p.qty, isFound: p.isFound)).toList(),
+      status: job.status,
+      price: job.price,
+    ));
   }
 
   void updateJob(TechnicianJob job) {
-    state = [
-      for (final j in state)
-        if (j.id == job.id) job else j,
-    ];
+    // Delegate checklist/status changes individually to repository
+    final repo = ref.read(technicianJobRepositoryProvider);
+    repo.updateJobStatus(job.id, job.status);
+    repo.updateJobProgress(job.id, job.progress);
   }
 
   void acceptJob(String jobId) {
-    _updateJobStatus(jobId, 'ACCEPTED');
+    ref.read(technicianJobRepositoryProvider).updateJobStatus(jobId, 'ACCEPTED');
   }
 
   void startJob(String jobId) {
-    _updateJobStatus(jobId, 'IN PROGRESS');
+    ref.read(technicianJobRepositoryProvider).updateJobStatus(jobId, 'IN PROGRESS');
   }
 
   void finishJob(String jobId) {
-    state = [
-      for (final job in state)
-        if (job.id == jobId) job.copyWith(status: 'COMPLETED', progress: 1.0) else job,
-    ];
+    ref.read(technicianJobRepositoryProvider).completeJob(jobId);
   }
 
   void addSparePart(String jobId, SparePart part) {
-    state = [
-      for (final job in state)
-        if (job.id == jobId) job.copyWith(parts: [...job.parts, part]) else job,
-    ];
+    ref.read(technicianJobRepositoryProvider).addSparePart(
+      jobId,
+      FirestoreSparePart(name: part.name, qty: part.qty, isFound: part.isFound),
+    );
   }
 
   @override
   void dispose() {
-    _simulationTimer?.cancel();
+    _subscription?.cancel();
     super.dispose();
   }
 }
 
 final technicianProvider = StateNotifierProvider<TechnicianNotifier, List<TechnicianJob>>((ref) {
-  return TechnicianNotifier();
+  return TechnicianNotifier(ref);
 });

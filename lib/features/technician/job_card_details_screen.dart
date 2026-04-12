@@ -10,7 +10,6 @@ import '../../navigation/nav_helpers.dart';
 import '../../shared/widgets/custom_button.dart';
 
 import '../../shared/widgets/live_map_widget.dart';
-import '../../core/services/gsheets_api.dart';
 import 'technician_provider.dart';
 
 class JobCardDetailsScreen extends ConsumerStatefulWidget {
@@ -310,12 +309,7 @@ class _JobCardDetailsScreenState extends ConsumerState<JobCardDetailsScreen> {
                       onPressed: () {
                         HapticFeedback.heavyImpact();
                         ref.read(technicianProvider.notifier).acceptJob(jobState.id);
-                        GSheetsApi.logTechWork(
-                          jobState.id, 
-                          jobState.vehiclePlate, 
-                          'TECH-001', 
-                          status: 'ACCEPTED'
-                        );
+                        // Legacy telemetry removed — Firestore handles this now
                         NavHelpers.showSuccess(context, 'Job accepted! You can now start work.');
                       },
                       backgroundColor: AppColors.primaryBlue,
@@ -335,12 +329,7 @@ class _JobCardDetailsScreenState extends ConsumerState<JobCardDetailsScreen> {
                       onPressed: () {
                         HapticFeedback.heavyImpact();
                         ref.read(technicianProvider.notifier).startJob(jobState.id);
-                        GSheetsApi.logTechWork(
-                          jobState.id, 
-                          jobState.vehiclePlate, 
-                          'TECH-001', 
-                          status: 'IN_PROGRESS'
-                        );
+                        // Legacy telemetry removed — Firestore handles this now
                         NavHelpers.showSuccess(context, 'Job started! Complete the checklist.');
                       },
                       backgroundColor: const Color(0xFF1A237E),
@@ -360,13 +349,7 @@ class _JobCardDetailsScreenState extends ConsumerState<JobCardDetailsScreen> {
                     onPressed: jobState.status == 'COMPLETED' ? null : () {
                       HapticFeedback.heavyImpact();
                       ref.read(technicianProvider.notifier).finishJob(jobState.id);
-                      GSheetsApi.logTechWork(
-                        jobState.id, 
-                        jobState.vehiclePlate, 
-                        'TECH-001', 
-                        status: 'COMPLETED',
-                        price: jobState.price
-                      );
+                      // Legacy telemetry removed — Firestore handles this now
                       NavHelpers.showSuccess(context, 'Job marked as complete! Pending QA check.');
                     },
                     backgroundColor: jobState.status == 'COMPLETED' ? AppColors.textMuted : AppColors.successGreen,

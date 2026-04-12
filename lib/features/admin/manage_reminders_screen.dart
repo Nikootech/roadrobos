@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
-import '../../core/services/gsheets_api.dart';
 import '../../core/theme/app_colors.dart';
 
 class ManageRemindersScreen extends StatelessWidget {
@@ -75,7 +74,6 @@ class ManageRemindersScreen extends StatelessWidget {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              GSheetsApi.logAdminAction('ADMIN-01', 'SCHEDULE_NOTIFICATION', 'ALL_USERS', 'New reminder scheduled');
               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Notification scheduled!'), behavior: SnackBarBehavior.floating));
             },
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryBlue, foregroundColor: Colors.white),

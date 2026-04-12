@@ -182,6 +182,61 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Emergency Alerts Section (Phase 3/4)
+            ref.watch(emergencyAlertsProvider).when(
+              data: (alerts) {
+                if (alerts.isEmpty) return const SizedBox.shrink();
+                final latest = alerts.first;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 24),
+                  child: InkWell(
+                    onTap: () {
+                       // Logic to view details
+                    },
+                    borderRadius: BorderRadius.circular(20),
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [AppColors.dangerRed.withOpacity(0.1), Colors.white],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: AppColors.dangerRed, width: 2),
+                      ),
+                      child: Row(
+                        children: [
+                          _AnimatedEmergencyIcon(),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    const Text('🚨 SOS EMERGENCY', style: TextStyle(fontWeight: FontWeight.w900, color: AppColors.dangerRed, fontSize: 16)),
+                                    Text('${latest.timestamp.hour}:${latest.timestamp.minute}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textMuted)),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Text('User: ${latest.userId}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                                Text(latest.message, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                              ],
+                            ),
+                          ),
+                          const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: AppColors.dangerRed),
+                        ],
+                      ),
+                    ),
+                  ),
+                ).animate().shimmer(duration: 2.seconds, color: Colors.white24).shake(offset: const Offset(2, 0));
+              },
+              loading: () => const SizedBox.shrink(),
+              error: (e, s) => const SizedBox.shrink(),
+            ),
+
             // Date Filter
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -754,6 +809,53 @@ class _TechnicianServicesCard extends ConsumerWidget {
         Text(value, style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: color)),
         Text(label, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
       ],
+    );
+  }
+}
+
+class _AnimatedEmergencyIcon extends StatefulWidget {
+  const _AnimatedEmergencyIcon();
+  @override
+  State<_AnimatedEmergencyIcon> createState() => _AnimatedEmergencyIconState();
+}
+
+class _AnimatedEmergencyIconState extends State<_AnimatedEmergencyIcon> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 500))..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: AppColors.dangerRed.withOpacity(0.1 + (_controller.value * 0.2)),
+            shape: BoxShape.circle,
+            border: Border.all(color: AppColors.dangerRed.withOpacity(_controller.value), width: 2),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.dangerRed.withOpacity(0.3 * _controller.value),
+                blurRadius: 10,
+                spreadRadius: 2,
+              )
+            ],
+          ),
+          child: const Icon(Iconsax.danger, color: AppColors.dangerRed, size: 24),
+        );
+      },
     );
   }
 }

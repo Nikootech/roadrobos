@@ -7,21 +7,23 @@ import 'package:image_picker/image_picker.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:io';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/services/gsheets_api.dart';
+import '../../core/repositories/driver_repository.dart';
+import '../profile/user_provider.dart';
 import '../../shared/widgets/custom_button.dart';
 import '../../shared/widgets/custom_text_field.dart';
 import '../../shared/widgets/shimmer_loading.dart';
 
 /// Documents Upload Screen — Premium Driver Overhaul
-class DocumentsUploadScreen extends StatefulWidget {
+class DocumentsUploadScreen extends ConsumerStatefulWidget {
   const DocumentsUploadScreen({super.key});
 
   @override
-  State<DocumentsUploadScreen> createState() => _DocumentsUploadScreenState();
+  ConsumerState<DocumentsUploadScreen> createState() => _DocumentsUploadScreenState();
 }
 
-class _DocumentsUploadScreenState extends State<DocumentsUploadScreen> {
+class _DocumentsUploadScreenState extends ConsumerState<DocumentsUploadScreen> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _bikeModelController = TextEditingController();
@@ -193,7 +195,11 @@ class _DocumentsUploadScreenState extends State<DocumentsUploadScreen> {
                   HapticFeedback.heavyImpact();
                   
                   // Show loading indicator or handle result
-                  final success = await GSheetsApi.registerNewDriver(
+                  final userState = ref.read(userProvider);
+                  if (userState.user == null) return;
+                  
+                  final success = await ref.read(driverRepositoryProvider).registerDriver(
+                    uid: userState.user!.id,
                     name: _nameController.text,
                     phone: _phoneController.text,
                     vehicleModel: _bikeModelController.text,

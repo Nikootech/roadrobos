@@ -4,10 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:shimmer/shimmer.dart';
+
 import 'package:iconsax/iconsax.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+
 
 import '../../core/theme/app_colors.dart';
 import '../../core/constants/app_strings.dart';
@@ -18,6 +18,8 @@ import 'vehicle_provider.dart';
 import '../profile/user_provider.dart';
 import '../rentals/rental_providers.dart';
 import '../technician/technician_provider.dart';
+import '../../core/repositories/wallet_repository.dart';
+import '../../core/services/language_service.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -139,6 +141,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ).animate().fadeIn(duration: 500.ms).scale(begin: const Offset(0.8, 0.8), end: const Offset(1.0, 1.0)),
             const Spacer(),
+            // Language Toggle
+            GestureDetector(
+              onTap: () {
+                final current = ref.read(languageProvider);
+                ref.read(languageProvider.notifier).setLanguage(
+                  current == AppLanguage.en ? AppLanguage.hi : AppLanguage.en,
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryBlue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  ref.watch(languageProvider) == AppLanguage.en ? 'EN' : 'HI',
+                  style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primaryBlue),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
             GestureDetector(
               onTap: () {
                 HapticFeedback.lightImpact();
@@ -182,13 +205,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final user = ref.watch(userProvider);
     final selectedVehicle = ref.watch(vehicleProvider);
     final allVehicles = ref.watch(allVehiclesProvider);
+    final l10n = ref.watch(l10nProvider);
 
     return Padding(
       padding: ResponsiveLayout.responsivePadding(context, horizontal: 20, vertical: 20).copyWith(bottom: 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(AppStrings.goodMorning, style: TextStyle(fontSize: ResponsiveLayout.responsiveFontSize(context, 14), color: AppColors.textSecondary)).animate().fadeIn(duration: 400.ms),
+          Text(l10n.get('good_morning'), style: TextStyle(fontSize: ResponsiveLayout.responsiveFontSize(context, 14), color: AppColors.textSecondary)).animate().fadeIn(duration: 400.ms),
           const SizedBox(height: 4),
           Text(user.name.split(' ')[0], style: TextStyle(fontSize: ResponsiveLayout.responsiveFontSize(context, 28), fontWeight: FontWeight.w800, color: AppColors.textPrimary)).animate(delay: 100.ms).fadeIn(duration: 500.ms).slideX(begin: -0.05, end: 0),
           const SizedBox(height: 16),
@@ -238,7 +262,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               ),
                               title: Text(vehicle.name, style: const TextStyle(fontWeight: FontWeight.w600)),
                               subtitle: Text(vehicle.plate),
-                              trailing: selectedVehicle.plate == vehicle.plate ? const Icon(Icons.check_circle_rounded, color: AppColors.successGreen) : null,
+                              trailing: selectedVehicle?.plate == vehicle.plate ? const Icon(Icons.check_circle_rounded, color: AppColors.successGreen) : null,
                             );
                           },
                         ),
@@ -266,7 +290,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     width: 50,
                     height: 44,
                     decoration: BoxDecoration(color: AppColors.primaryBlue.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-                    child: Icon(selectedVehicle.name.toLowerCase().contains('car') ? Icons.directions_car_rounded : Icons.pedal_bike_rounded, color: AppColors.primaryBlue),
+                    child: Icon(selectedVehicle?.name.toLowerCase().contains('car') ?? false ? Icons.directions_car_rounded : Icons.pedal_bike_rounded, color: AppColors.primaryBlue),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -275,7 +299,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       children: [
                         const Text(AppStrings.selectedVehicle, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.textSecondary, letterSpacing: 1)),
                         const SizedBox(height: 2),
-                        Text('${selectedVehicle.name} - ${selectedVehicle.plate}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary), maxLines: 1, overflow: TextOverflow.ellipsis),
+                        Text('${selectedVehicle?.name ?? ''}  •  ${selectedVehicle?.plate ?? ''}', style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textPrimary), maxLines: 1, overflow: TextOverflow.ellipsis),
                       ],
                     ),
                   ),
@@ -294,6 +318,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildWalletBalanceCard(WidgetRef ref) {
+    final userId = ref.watch(userProvider).user?.id ?? 'demo';
+    final walletAsync = ref.watch(walletStreamProvider(userId));
+    final l10n = ref.watch(l10nProvider);
+
     return Padding(
       padding: ResponsiveLayout.responsivePadding(context, horizontal: 20, vertical: 16).copyWith(bottom: 0),
       child: Container(
@@ -309,11 +337,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Wallet Balance', style: TextStyle(fontSize: ResponsiveLayout.responsiveFontSize(context, 12), color: Colors.white.withOpacity(0.8), fontWeight: FontWeight.w500)),
+                  Text(l10n.get('wallet_balance'), style: TextStyle(fontSize: ResponsiveLayout.responsiveFontSize(context, 12), color: Colors.white.withOpacity(0.8), fontWeight: FontWeight.w500)),
                   const SizedBox(height: 4),
                   FittedBox(
                     fit: BoxFit.scaleDown,
-                    child: Text('₹ 2,450.00', style: TextStyle(fontSize: ResponsiveLayout.responsiveFontSize(context, 24), fontWeight: FontWeight.w700, color: Colors.white)),
+                    child: walletAsync.when(
+                      data: (wallet) => Text('₹ ${(wallet?.balance ?? 0.0).toStringAsFixed(2)}', style: TextStyle(fontSize: ResponsiveLayout.responsiveFontSize(context, 24), fontWeight: FontWeight.w700, color: Colors.white)),
+                      loading: () => const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)),
+                      error: (_, __) => const Text('₹ --', style: TextStyle(color: Colors.white)),
+                    ),
                   ),
                 ],
               ),
@@ -324,7 +356,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(12)),
-                child: const Row(children: [Icon(Icons.add_circle_outline_rounded, size: 18, color: Colors.white), SizedBox(width: 8), Text('Top Up', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white))]),
+                child: Row(children: [const Icon(Icons.add_circle_outline_rounded, size: 18, color: Colors.white), const SizedBox(width: 8), Text(l10n.get('top_up'), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white))]),
               ),
             ),
           ],
@@ -388,7 +420,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(AppStrings.quickActions, style: TextStyle(fontSize: ResponsiveLayout.responsiveFontSize(context, 18), fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+              Text(ref.watch(l10nProvider).get('quick_actions'), style: TextStyle(fontSize: ResponsiveLayout.responsiveFontSize(context, 18), fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
               GestureDetector(onTap: () { HapticFeedback.lightImpact(); context.go('/main/explore'); }, child: const Text(AppStrings.viewAll, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.primaryBlue))),
             ],
           ),
@@ -453,7 +485,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(AppStrings.activeOffers, style: GoogleFonts.outfit(fontSize: ResponsiveLayout.responsiveFontSize(context, 20), fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                Text(ref.watch(l10nProvider).get('active_offers'), style: GoogleFonts.outfit(fontSize: ResponsiveLayout.responsiveFontSize(context, 20), fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
                 GestureDetector(onTap: () { HapticFeedback.lightImpact(); context.push('/loyalty'); }, child: const Text(AppStrings.viewAll, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.primaryBlue))),
               ],
             ),

@@ -4,7 +4,6 @@ import 'package:iconsax/iconsax.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../core/services/gsheets_api.dart';
 import '../../core/theme/app_colors.dart';
 import 'technician_provider.dart';
 
@@ -57,14 +56,7 @@ class _CreateJobCardScreenState extends ConsumerState<CreateJobCardScreen> {
     ref.read(technicianProvider.notifier).createJob(newJob);
     ref.read(selectedJobIdProvider.notifier).state = newJob.id;
     
-    // Log to GSheets
-    GSheetsApi.logTechWork(
-      newJob.id,
-      newJob.vehiclePlate,
-      _selectedTechnician!,
-      status: 'CREATED',
-      task: _scopeItems.isNotEmpty ? _scopeItems.first['title'] : 'General Service'
-    );
+    // Legacy telemetry removed — job is now written to Firestore via the notifier
     
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(

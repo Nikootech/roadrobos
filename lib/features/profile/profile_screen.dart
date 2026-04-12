@@ -8,10 +8,8 @@ import '../../core/theme/app_colors.dart';
 import '../../core/constants/app_strings.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'user_provider.dart';
-import '../../core/services/gsheets_api.dart';
 
 /// Profile Screen matching Figma Screen [55]: "User Profile & Loyalty Rewards"
-/// Dark theme, membership card, loyalty benefits, profile action list
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
@@ -19,16 +17,19 @@ class ProfileScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(userProvider);
     
-    // Log profile view
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      GSheetsApi.logCustomerActivity('VIEW_PROFILE', details: 'User: ${user.name}');
-    });
+    // If user is null, we are likely in a logout transition or loading
+    if (user == null) {
+      return const Scaffold(
+        backgroundColor: AppColors.bgDarkProfile,
+        body: Center(child: CircularProgressIndicator(color: AppColors.brandGreen)),
+      );
+    }
 
     return Scaffold(
       backgroundColor: AppColors.bgDarkProfile,
       body: CustomScrollView(
         slivers: [
-          // Top Header (390x65 from Figma)
+          // Top Header
           SliverToBoxAdapter(
             child: SafeArea(
               bottom: false,
@@ -39,26 +40,15 @@ class ProfileScreen extends ConsumerWidget {
                   children: [
                     const Text(
                       AppStrings.myProfile,
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textOnDark,
-                      ),
+                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: AppColors.textOnDark),
                     ),
                     GestureDetector(
                       onTap: () => context.push('/account-settings'),
                       child: Container(
                         width: 40,
                         height: 40,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.bgDarkSurface,
-                        ),
-                        child: const Icon(
-                          Iconsax.setting_2,
-                          color: AppColors.textOnDark,
-                          size: 20,
-                        ),
+                        decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.bgDarkSurface),
+                        child: const Icon(Iconsax.setting_2, color: AppColors.textOnDark, size: 20),
                       ),
                     ),
                   ],
@@ -67,28 +57,22 @@ class ProfileScreen extends ConsumerWidget {
             ),
           ),
 
-          // Membership Card (358x276, radius 16 from Figma)
+          // Membership Card
           SliverToBoxAdapter(
             child: Container(
               margin: const EdgeInsets.fromLTRB(16, 24, 16, 0),
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [
-                    AppColors.bgDarkSurface,
-                    AppColors.bgDarkSurface.withOpacity(0.8),
-                  ],
+                  colors: [AppColors.bgDarkSurface, AppColors.bgDarkSurface.withOpacity(0.8)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: AppColors.warningAmber.withOpacity(0.3),
-                ),
+                border: Border.all(color: AppColors.warningAmber.withOpacity(0.3)),
               ),
               child: Column(
                 children: [
-                  // Avatar + Name
                   Row(
                     children: [
                       Container(
@@ -96,22 +80,17 @@ class ProfileScreen extends ConsumerWidget {
                         height: 64,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          border: Border.all(
-                            color: AppColors.warningAmber,
-                            width: 2,
-                          ),
+                          border: Border.all(color: AppColors.warningAmber, width: 2),
                         ),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(32),
-                          child: CachedNetworkImage(
-                            imageUrl: user.profileImageUrl,
-                            fit: BoxFit.cover,
-                            errorWidget: (context, url, error) => const Icon(
-                              Icons.person,
-                              color: AppColors.textOnDark,
-                              size: 32,
-                            ),
-                          ),
+                          child: (user.profileImageUrl.isNotEmpty)
+                              ? CachedNetworkImage(
+                                  imageUrl: user.profileImageUrl,
+                                  fit: BoxFit.cover,
+                                  errorWidget: (_, __, ___) => const Icon(Icons.person, color: AppColors.textOnDark, size: 32),
+                                )
+                              : const Icon(Icons.person, color: AppColors.textOnDark, size: 32),
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -123,28 +102,16 @@ class ProfileScreen extends ConsumerWidget {
                               user.name,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.textOnDark,
-                              ),
+                              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textOnDark),
                             ),
                             const SizedBox(height: 4),
                             const Row(
                               children: [
-                                Icon(
-                                  Icons.star_rounded,
-                                  size: 16,
-                                  color: AppColors.warningAmber,
-                                ),
+                                Icon(Icons.star_rounded, size: 16, color: AppColors.warningAmber),
                                 SizedBox(width: 4),
                                 Text(
                                   AppStrings.goldMember,
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.warningAmber,
-                                  ),
+                                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.warningAmber),
                                 ),
                               ],
                             ),
@@ -153,9 +120,7 @@ class ProfileScreen extends ConsumerWidget {
                       ),
                     ],
                   ),
-
                   const SizedBox(height: 20),
-
                   // Points display
                   Container(
                     padding: const EdgeInsets.all(16),
@@ -169,13 +134,7 @@ class ProfileScreen extends ConsumerWidget {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              AppStrings.loyaltyPoints,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: AppColors.textOnDarkMuted,
-                              ),
-                            ),
+                            const Text(AppStrings.loyaltyPoints, style: TextStyle(fontSize: 12, color: AppColors.textOnDarkMuted)),
                             const SizedBox(height: 4),
                             FittedBox(
                               fit: BoxFit.scaleDown,
@@ -184,26 +143,15 @@ class ProfileScreen extends ConsumerWidget {
                                 children: [
                                   Text(
                                     user.points.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},'),
-                                    style: const TextStyle(
-                                      fontSize: 28,
-                                      fontWeight: FontWeight.w700,
-                                      color: AppColors.warningAmber,
-                                    ),
+                                    style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppColors.warningAmber),
                                   ),
                                   const SizedBox(width: 4),
-                                   const Text(
-                                     'pts',
-                                     style: TextStyle(
-                                       fontSize: 14,
-                                       color: AppColors.textOnDarkMuted,
-                                     ),
-                                   ),
+                                  const Text('pts', style: TextStyle(fontSize: 14, color: AppColors.textOnDarkMuted)),
                                 ],
                               ),
                             ),
                           ],
                         ),
-                        // Progress ring
                         const SizedBox(
                           width: 56,
                           height: 56,
@@ -214,18 +162,9 @@ class ProfileScreen extends ConsumerWidget {
                                 value: 0.95,
                                 strokeWidth: 4,
                                 backgroundColor: AppColors.bgDarkSurface,
-                                valueColor: AlwaysStoppedAnimation(
-                                  AppColors.warningAmber,
-                                ),
+                                valueColor: AlwaysStoppedAnimation(AppColors.warningAmber),
                               ),
-                              Text(
-                                '95%',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.warningAmber,
-                                ),
-                              ),
+                              Text('95%', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.warningAmber)),
                             ],
                           ),
                         ),
@@ -234,27 +173,17 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                 ],
               ),
-            )
-                .animate()
-                .fadeIn(duration: 500.ms)
-                .slideY(begin: 0.05, end: 0),
+            ).animate().fadeIn(duration: 500.ms).slideY(begin: 0.05, end: 0),
           ),
 
-          // Loyalty Benefits (358x274 from Figma)
+          // Loyalty Benefits
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Your Gold Privileges',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textOnDark,
-                    ),
-                  ),
+                  const Text('Your Gold Privileges', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textOnDark)),
                   const SizedBox(height: 12),
                   Row(
                     children: [
@@ -267,18 +196,16 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                 ],
               ),
-            )
-                .animate(delay: 200.ms)
-                .fadeIn(duration: 400.ms),
+            ).animate(delay: 200.ms).fadeIn(),
           ),
 
-          // Profile Actions Section (358x556 from Figma)
+          // Profile Actions
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
               child: Column(
                 children: [
-                  _buildMenuItem(Iconsax.user, 'Account Settings', 'Profile, security, and more', () => context.push('/account-settings')),
+                  _buildMenuItem(Iconsax.user, 'Account Settings', 'Profile, security, and more', () => context.push('/account_settings')),
                   _buildMenuItem(Iconsax.car, 'My Garage', 'Manage your vehicles', () => context.push('/my-vehicles')),
                   _buildMenuItem(Iconsax.location, 'Saved Locations', 'Add/edit addresses', () => context.push('/saved-locations')),
                   _buildMenuItem(Iconsax.calendar, 'Ride History', 'View past trips', () => context.push('/ride-history')),
@@ -290,50 +217,32 @@ class ProfileScreen extends ConsumerWidget {
                   const SizedBox(height: 12),
                   // Logout button
                   GestureDetector(
-                    onTap: () {
+                    onTap: () async {
                       HapticFeedback.mediumImpact();
-                      context.go('/auth/login');
+                      await ref.read(userProvider.notifier).logout();
+                      if (context.mounted) context.go('/auth/login');
                     },
                     child: Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: AppColors.dangerRed.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: AppColors.dangerRed.withOpacity(0.2),
-                        ),
+                        border: Border.all(color: AppColors.dangerRed.withOpacity(0.2)),
                       ),
                       child: Row(
                         children: [
-                          const Icon(
-                            Iconsax.logout,
-                            color: AppColors.dangerRed,
-                            size: 22,
-                          ),
+                          const Icon(Iconsax.logout, color: AppColors.dangerRed, size: 22),
                           const SizedBox(width: 14),
-                          const Text(
-                            AppStrings.logout,
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.dangerRed,
-                            ),
-                          ),
+                          const Text(AppStrings.logout, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.dangerRed)),
                           const Spacer(),
-                          Icon(
-                            Icons.arrow_forward_ios_rounded,
-                            size: 14,
-                            color: AppColors.dangerRed.withOpacity(0.5),
-                          ),
+                          Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.dangerRed.withOpacity(0.5)),
                         ],
                       ),
                     ),
                   ),
                 ],
               ),
-            )
-                .animate(delay: 300.ms)
-                .fadeIn(duration: 400.ms),
+            ).animate(delay: 300.ms).fadeIn(),
           ),
 
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
@@ -346,27 +255,14 @@ class ProfileScreen extends ConsumerWidget {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withOpacity(0.2)),
-        ),
+        decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(16), border: Border.all(color: color.withOpacity(0.2))),
         child: Column(
           children: [
             Icon(icon, color: color, size: 24),
             const SizedBox(height: 8),
             FittedBox(
               fit: BoxFit.scaleDown,
-              child: Text(
-                label,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: color,
-                  height: 1.3,
-                ),
-              ),
+              child: Text(label, textAlign: TextAlign.center, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: color, height: 1.3)),
             ),
           ],
         ),
@@ -383,19 +279,13 @@ class ProfileScreen extends ConsumerWidget {
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.bgDarkSurface.withOpacity(0.4),
-          borderRadius: BorderRadius.circular(16),
-        ),
+        decoration: BoxDecoration(color: AppColors.bgDarkSurface.withOpacity(0.4), borderRadius: BorderRadius.circular(16)),
         child: Row(
           children: [
             Container(
               width: 40,
               height: 40,
-              decoration: BoxDecoration(
-                color: AppColors.bgDarkSurface,
-                borderRadius: BorderRadius.circular(12),
-              ),
+              decoration: BoxDecoration(color: AppColors.bgDarkSurface, borderRadius: BorderRadius.circular(12)),
               child: Icon(icon, color: AppColors.textOnDark, size: 20),
             ),
             const SizedBox(width: 14),
@@ -403,33 +293,15 @@ class ProfileScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.textOnDark,
-                    ),
-                  ),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: AppColors.textOnDarkMuted,
-                    ),
-                  ),
+                  Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: AppColors.textOnDark)),
+                  Text(subtitle, style: const TextStyle(fontSize: 12, color: AppColors.textOnDarkMuted)),
                 ],
               ),
             ),
-            const Icon(
-              Icons.arrow_forward_ios_rounded,
-              size: 14,
-              color: AppColors.textMuted,
-            ),
+            const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.textMuted),
           ],
         ),
       ),
     );
   }
 }
-
