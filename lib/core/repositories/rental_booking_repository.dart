@@ -31,4 +31,15 @@ class RentalBookingRepository {
       throw Exception('Failed to update rental status: $e');
     }
   }
+
+  Stream<List<RentalBooking>> getCustomerRentals(String customerId) {
+    return _supabase
+        .from('rental_bookings')
+        .stream(primaryKey: ['id'])
+        .eq('customer_id', customerId)
+        .order('created_at')
+        .map((list) {
+      return list.map((map) => RentalBooking.fromMap(map, map['id'].toString())).toList();
+    });
+  }
 }

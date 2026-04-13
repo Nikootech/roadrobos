@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:iconsax/iconsax.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
@@ -21,7 +20,8 @@ class TechProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(userProvider);
+    final userState = ref.watch(userProvider);
+    final user = userState.user;
     final String name = user?.name ?? 'Guest Technician';
 
     return Scaffold(
@@ -32,7 +32,7 @@ class TechProfileScreen extends ConsumerWidget {
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Iconsax.setting, color: AppColors.textPrimary),
+            icon: const Icon(Icons.settings_outlined, color: AppColors.textPrimary),
             onPressed: () => context.push('/account-settings'),
           ),
         ],
@@ -47,19 +47,19 @@ class TechProfileScreen extends ConsumerWidget {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(24),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+                boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
               ),
               child: Column(
                 children: [
                    CircleAvatar(
                     radius: 50,
                     backgroundColor: AppColors.primaryBlue.withOpacity(0.1),
-                    child: (user.profileImageUrl.isNotEmpty)
+                    child: (user?.profilePic != null)
                         ? ClipRRect(
                             borderRadius: BorderRadius.circular(50),
-                            child: Image.network(user.profileImageUrl, fit: BoxFit.cover),
+                            child: Image.network(user!.profilePic!, fit: BoxFit.cover),
                           )
-                        : const Icon(Iconsax.user, size: 50, color: AppColors.primaryBlue),
+                        : const Icon(Icons.person_outline_rounded, size: 50, color: AppColors.primaryBlue),
                   ),
                   const SizedBox(height: 16),
                   Text(name, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
@@ -77,26 +77,26 @@ class TechProfileScreen extends ConsumerWidget {
             // Stats
             Row(
               children: [
-                _buildStat('Jobs Done', '142', Iconsax.tick_circle),
+                _buildStat('Jobs Done', '142', Icons.task_alt_rounded),
                 const SizedBox(width: 12),
-                _buildStat('Rating', '4.9', Iconsax.star),
+                _buildStat('Rating', '4.9', Icons.star_rounded),
                 const SizedBox(width: 12),
-                _buildStat('Experience', '5Y', Iconsax.timer),
+                _buildStat('Experience', '5Y', Icons.timer_outlined),
               ],
             ),
             const SizedBox(height: 24),
             // Menu
-            _buildMenuItem(Iconsax.book, 'Service Manuals', 'Browse technical guides', () {
+            _buildMenuItem(Icons.menu_book_rounded, 'Service Manuals', 'Browse technical guides', () {
               HapticFeedback.lightImpact();
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Service Manuals coming soon!'), backgroundColor: Color(0xFF1A237E)),
               );
             }),
-            _buildMenuItem(Iconsax.wallet, 'Earnings', 'View your payouts & incentives', () {
+            _buildMenuItem(Icons.account_balance_wallet_outlined, 'Earnings', 'View your payouts & incentives', () {
               HapticFeedback.lightImpact();
               context.push('/tech-earnings');
             }),
-            _buildMenuItem(Iconsax.support, 'Technical Support', 'Contact admin desk', () {
+            _buildMenuItem(Icons.support_agent_rounded, 'Technical Support', 'Contact admin desk', () {
               HapticFeedback.lightImpact();
               context.push('/chat');
             }),
@@ -105,7 +105,10 @@ class TechProfileScreen extends ConsumerWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () => context.go('/auth/login'),
+                onPressed: () async {
+                  await ref.read(userProvider.notifier).logout();
+                  if (context.mounted) context.go('/auth/login');
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.dangerRed.withOpacity(0.1),
                   foregroundColor: AppColors.dangerRed,
@@ -177,10 +180,10 @@ class TechProfileScreen extends ConsumerWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _navItem(context, Iconsax.home, 'Dashboard', 0),
-          _navItem(context, Iconsax.task_square, 'Jobs', 1),
-          _navItem(context, Iconsax.box, 'Parts', 2),
-          _navItem(context, Iconsax.user5, 'Profile', 3),
+          _navItem(context, Icons.home_outlined, 'Dashboard', 0),
+          _navItem(context, Icons.task_alt_rounded, 'Jobs', 1),
+          _navItem(context, Icons.inventory_2_outlined, 'Parts', 2),
+          _navItem(context, Icons.person_rounded, 'Profile', 3),
         ],
       ),
     );

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:iconsax/iconsax.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../../core/theme/app_colors.dart';
@@ -32,6 +31,30 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
   final _modelController = TextEditingController();
   final _plateController = TextEditingController();
   final _yearController = TextEditingController();
+
+  Future<void> _saveVehicle() async {
+    if (_nameController.text.isNotEmpty && _plateController.text.isNotEmpty) {
+      final user = ref.read(userProvider).user;
+      final newVehicle = Vehicle(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        userId: user?.id ?? 'demo',
+        name: _nameController.text,
+        plate: _plateController.text,
+        fuel: _selectedFuelType,
+        year: _yearController.text,
+        type: _selectedCategory,
+      );
+      
+      ref.read(allVehiclesProvider.notifier).addVehicle(newVehicle);
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Vehicle added to your garage!'), backgroundColor: AppColors.successGreen),
+        );
+        context.pop();
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -116,7 +139,7 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                         : const Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Iconsax.camera, color: AppColors.primaryBlue, size: 28),
+                              Icon(Icons.camera_alt_outlined, color: AppColors.primaryBlue, size: 28),
                               SizedBox(height: 8),
                               Text('Upload Photo', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.textSecondary)),
                             ],
@@ -136,28 +159,28 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                         controller: _nameController,
                         label: AppStrings.vehicleName,
                         hint: _selectedCategory == 'Car' ? 'e.g. Hyundai Creta' : (_selectedCategory == 'Bike' ? 'e.g. Royal Enfield' : 'e.g. Revolt RV400'),
-                        prefixIcon: _selectedCategory == 'Car' ? Iconsax.car : Iconsax.record,
+                        prefixIcon: _selectedCategory == 'Car' ? Icons.directions_car_outlined : Icons.pedal_bike_outlined,
                       ),
                       const SizedBox(height: 14),
                       CustomTextField(
                         controller: _modelController,
                         label: AppStrings.vehicleModel,
                         hint: 'e.g. SX (O) 1.5 Turbo',
-                        prefixIcon: Iconsax.tag,
+                        prefixIcon: Icons.label_outline_rounded,
                       ),
                       const SizedBox(height: 14),
                       CustomTextField(
                         controller: _plateController,
                         label: AppStrings.licensePlate,
                         hint: 'e.g. MH 02 AB 1234',
-                        prefixIcon: Iconsax.document_text,
+                        prefixIcon: Icons.badge_outlined,
                       ),
                       const SizedBox(height: 14),
                       CustomTextField(
                         controller: _yearController,
                         label: AppStrings.yearOfManufacture,
                         hint: 'e.g. 2023',
-                        prefixIcon: Iconsax.calendar,
+                        prefixIcon: Icons.calendar_today_outlined,
                         keyboardType: TextInputType.number,
                       ),
                     ],
@@ -215,23 +238,7 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
               decoration: const BoxDecoration(color: AppColors.bgWhite, boxShadow: [BoxShadow(color: AppColors.shadowMedium, blurRadius: 16, offset: Offset(0, -4))]),
               child: CustomButton(
                 label: AppStrings.save,
-                onPressed: () {
-                  if (_nameController.text.isNotEmpty && _plateController.text.isNotEmpty) {
-                    final newVehicle = Vehicle(
-                      id: DateTime.now().millisecondsSinceEpoch.toString(),
-                      userId: ref.read(userProvider).user?.id ?? 'demo',
-                      name: _nameController.text,
-                      plate: _plateController.text,
-                      fuel: _selectedFuelType,
-                      year: _yearController.text,
-                      type: _selectedCategory,
-                    );
-                    ref.read(allVehiclesProvider.notifier).addVehicle(newVehicle);
-                    ref.read(vehicleProvider.notifier).setVehicle(newVehicle);
-                    
-                    context.pop();
-                  }
-                },
+                onPressed: _saveVehicle,
                 backgroundColor: AppColors.deepNavy,
                 height: 48,
                 borderRadius: 12,

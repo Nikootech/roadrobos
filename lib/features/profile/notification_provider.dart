@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:iconsax/iconsax.dart';
 import 'package:flutter/material.dart';
 import '../rentals/rental_providers.dart';
 
@@ -10,7 +9,7 @@ class AppNotification {
   final DateTime timestamp;
   final IconData icon;
   final bool isRead;
-  final String? type; // 'rental_completion', 'offer', etc.
+  final String? type;
 
   AppNotification({
     required this.id,
@@ -37,6 +36,8 @@ class AppNotification {
 
 class NotificationNotifier extends StateNotifier<List<AppNotification>> {
   NotificationNotifier(this.ref) : super([]) {
+    _initMockNotifications();
+    
     // Listen to rental state changes
     ref.listen(activeRentalProvider, (previous, next) {
       if (next?.status == RentalStatus.completed && previous?.status != RentalStatus.completed) {
@@ -47,13 +48,34 @@ class NotificationNotifier extends StateNotifier<List<AppNotification>> {
 
   final Ref ref;
 
+  void _initMockNotifications() {
+    state = [
+      AppNotification(
+        id: '1',
+        title: 'Welcome to RoAd RoBo\'s!',
+        description: 'Thank you for joining us. Book your first ride or service and get 20% off!',
+        timestamp: DateTime.now().subtract(const Duration(hours: 2)),
+        icon: Icons.celebration_rounded,
+        isRead: false,
+      ),
+      AppNotification(
+        id: '2',
+        title: 'Referral Bonus',
+        description: 'Share your referral code and earn ₹500 for every friend who joins.',
+        timestamp: DateTime.now().subtract(const Duration(days: 1)),
+        icon: Icons.card_giftcard_rounded,
+        isRead: true,
+      ),
+    ];
+  }
+
   void _addRentalCompletionNotification(String vehicleName) {
     final notification = AppNotification(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       title: 'Rental Completed',
       description: 'Your rental time for $vehicleName has ended. Please complete payment and confirm drop-off.',
       timestamp: DateTime.now(),
-      icon: Iconsax.timer_1,
+      icon: Icons.timer_rounded,
       type: 'rental_completion',
     );
     state = [notification, ...state];
@@ -65,6 +87,10 @@ class NotificationNotifier extends StateNotifier<List<AppNotification>> {
 
   void markAllAsRead() {
     state = state.map((n) => n.copyWith(isRead: true)).toList();
+  }
+
+  void clearAll() {
+    state = [];
   }
 }
 

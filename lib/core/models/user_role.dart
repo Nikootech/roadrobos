@@ -6,6 +6,42 @@ enum UserRole {
   superAdmin,
 }
 
+class SavedLocation {
+  final String id;
+  final String title;
+  final String address;
+  final double? latitude;
+  final double? longitude;
+
+  const SavedLocation({
+    required this.id,
+    required this.title,
+    required this.address,
+    this.latitude,
+    this.longitude,
+  });
+
+  factory SavedLocation.fromMap(Map<String, dynamic> map) {
+    return SavedLocation(
+      id: map['id'] ?? '',
+      title: map['title'] ?? '',
+      address: map['address'] ?? '',
+      latitude: map['latitude']?.toDouble(),
+      longitude: map['longitude']?.toDouble(),
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'title': title,
+      'address': address,
+      'latitude': latitude,
+      'longitude': longitude,
+    };
+  }
+}
+
 class AppUser {
   final String id;
   final String name;
@@ -15,11 +51,12 @@ class AppUser {
   final String? profilePic;
   final DateTime? createdAt;
   
-  // Stats & Loyalty (from old mock state)
+  // Stats & Loyalty
   final int points;
   final int totalRides;
   final List<String> emergencyContacts;
   final String referralCode;
+  final List<SavedLocation> savedLocations;
 
   const AppUser({
     required this.id,
@@ -33,24 +70,29 @@ class AppUser {
     this.totalRides = 0,
     this.emergencyContacts = const [],
     this.referralCode = '',
+    this.savedLocations = const [],
   });
 
   factory AppUser.fromMap(Map<String, dynamic> map, String id) {
     return AppUser(
       id: id,
       name: map['name'] ?? 'Unknown User',
-      phone: map['phone'] ?? '',
+      phone: map['phone'] ?? map['phone_number'] ?? map['mobile'] ?? '',
       email: map['email'],
       role: UserRole.values.firstWhere(
         (e) => e.toString() == 'UserRole.${map['role']}',
         orElse: () => UserRole.customer,
       ),
-      profilePic: map['profile_pic'],
+      profilePic: map['profile_pic'] ?? map['avatar_url'],
       createdAt: map['created_at'] != null ? DateTime.parse(map['created_at']) : null,
       points: map['points'] ?? 0,
       totalRides: map['total_rides'] ?? 0,
       emergencyContacts: List<String>.from(map['emergency_contacts'] ?? []),
       referralCode: map['referral_code'] ?? '',
+      savedLocations: (map['saved_locations'] as List?)
+              ?.map((x) => SavedLocation.fromMap(x as Map<String, dynamic>))
+              .toList() ??
+          [],
     );
   }
 
@@ -61,11 +103,8 @@ class AppUser {
       'email': email,
       'role': role.toString().split('.').last,
       'profile_pic': profilePic,
-      'created_at': createdAt?.toIso8601String() ?? DateTime.now().toIso8601String(),
-      'points': points,
-      'total_rides': totalRides,
-      'emergency_contacts': emergencyContacts,
-      'referral_code': referralCode,
+      // Note: Other fields like saved_locations, points, etc. are currently 
+      // managed locally or in separate tables to avoid profiles schema errors.
     };
   }
 
@@ -83,6 +122,7 @@ class AppUser {
     DateTime? createdAt,
     int? points,
     int? totalRides,
+    List<SavedLocation>? savedLocations,
   }) {
     return AppUser(
       id: id ?? this.id,
@@ -96,6 +136,7 @@ class AppUser {
       totalRides: totalRides ?? this.totalRides,
       emergencyContacts: emergencyContacts ?? this.emergencyContacts,
       referralCode: referralCode ?? this.referralCode,
+      savedLocations: savedLocations ?? this.savedLocations,
     );
   }
 }

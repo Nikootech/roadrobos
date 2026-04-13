@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
-import 'package:iconsax/iconsax.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../profile/user_provider.dart';
@@ -71,7 +70,7 @@ class _TechnicianDashboardScreenState extends ConsumerState<TechnicianDashboardS
                 const SizedBox(height: 24),
                 const Row(
                   children: [
-                    Icon(Iconsax.car, color: Color(0xFF1A237E), size: 22),
+                    Icon(Icons.directions_car_filled_rounded, color: Color(0xFF1A237E), size: 22),
                     SizedBox(width: 12),
                     Text('Add New Vehicle', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Color(0xFF1A237E))),
                   ],
@@ -79,19 +78,19 @@ class _TechnicianDashboardScreenState extends ConsumerState<TechnicianDashboardS
                 const SizedBox(height: 8),
                 const Text('Enter vehicle details to create a new job card.', style: TextStyle(color: Colors.grey, fontSize: 13)),
                 const SizedBox(height: 28),
-                _buildFormField(modelCtrl, 'Vehicle Model', 'e.g. 2021 Toyota Rav4', Iconsax.car, true),
+                _buildFormField(modelCtrl, 'Vehicle Model', 'e.g. 2021 Toyota Rav4', Icons.directions_car_filled_rounded, true),
                 const SizedBox(height: 16),
-                _buildFormField(regNoCtrl, 'Registration No.', 'e.g. MH 12 AB 1234', Iconsax.document, true),
+                _buildFormField(regNoCtrl, 'Registration No.', 'e.g. MH 12 AB 1234', Icons.description_rounded, true),
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    Expanded(child: _buildFormField(colorCtrl, 'Color', 'e.g. White', Iconsax.colorfilter, false)),
+                    Expanded(child: _buildFormField(colorCtrl, 'Color', 'e.g. White', Icons.palette_rounded, false)),
                     const SizedBox(width: 12),
-                    Expanded(child: _buildFormField(mileageCtrl, 'Mileage (km)', 'e.g. 45000', Iconsax.speedometer, false, isNumber: true)),
+                    Expanded(child: _buildFormField(mileageCtrl, 'Mileage (km)', 'e.g. 45000', Icons.speed_rounded, false, isNumber: true)),
                   ],
                 ),
                 const SizedBox(height: 16),
-                _buildFormField(ownerCtrl, 'Owner Name', 'e.g. Rajesh Kumar', Iconsax.user, false),
+                _buildFormField(ownerCtrl, 'Owner Name', 'e.g. Rajesh Kumar', Icons.person_rounded, false),
                 const SizedBox(height: 32),
                 SizedBox(
                   width: double.infinity,
@@ -133,7 +132,7 @@ class _TechnicianDashboardScreenState extends ConsumerState<TechnicianDashboardS
                     child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Iconsax.add, color: Colors.white, size: 20),
+                        Icon(Icons.add_rounded, color: Colors.white, size: 20),
                         SizedBox(width: 8),
                         Text('Create Vehicle Job', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
                       ],
@@ -201,7 +200,7 @@ class _TechnicianDashboardScreenState extends ConsumerState<TechnicianDashboardS
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Good Morning, ${user?.name.split(' ')[0] ?? 'Technician'}',
+                        Text('Good Morning, ${user?.user?.name.split(' ')[0] ?? 'Technician'}',
                             style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Color(0xFF1A237E))),
                       ],
                     ),
@@ -219,7 +218,7 @@ class _TechnicianDashboardScreenState extends ConsumerState<TechnicianDashboardS
                         ),
                         child: Stack(
                           children: [
-                            const Icon(Iconsax.notification, color: Color(0xFF1A237E), size: 22),
+                            const Icon(Icons.notifications_none_rounded, color: Color(0xFF1A237E), size: 22),
                             Positioned(right: 0, top: 0, child: Container(width: 8, height: 8, decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle))),
                           ],
                         ),
@@ -240,11 +239,11 @@ class _TechnicianDashboardScreenState extends ConsumerState<TechnicianDashboardS
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    Expanded(child: _buildActionCard('Add Vehicle', Iconsax.add_square, const Color(0xFF5E6AD2), _showAddVehicleSheet)),
+                    Expanded(child: _buildActionCard('Add Vehicle', Icons.add_box_rounded, const Color(0xFF5E6AD2), _showAddVehicleSheet)),
                     const SizedBox(width: 12),
-                    Expanded(child: _buildActionCard('Inventory', Iconsax.box, const Color(0xFFFF9F43), () => context.push('/tech-spare-parts'))),
+                    Expanded(child: _buildActionCard('Inventory', Icons.inventory_2_rounded, const Color(0xFFFF9F43), () => context.push('/tech-spare-parts'))),
                     const SizedBox(width: 12),
-                    Expanded(child: _buildActionCard('All Jobs', Iconsax.chart_21, const Color(0xFF28C76F), () => context.push('/tech-tasks'))),
+                    Expanded(child: _buildActionCard('All Jobs', Icons.bar_chart_rounded, const Color(0xFF28C76F), () => context.push('/tech-tasks'))),
                   ],
                 ).animate(delay: 200.ms).fadeIn().slideY(begin: 0.1, end: 0),
 
@@ -267,7 +266,7 @@ class _TechnicianDashboardScreenState extends ConsumerState<TechnicianDashboardS
                           child: const Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Iconsax.edit, size: 14, color: Color(0xFF1A237E)),
+                              Icon(Icons.edit_rounded, size: 14, color: Color(0xFF1A237E)),
                               SizedBox(width: 6),
                               Text('Edit Details', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF1A237E))),
                             ],
@@ -313,7 +312,7 @@ class _TechnicianDashboardScreenState extends ConsumerState<TechnicianDashboardS
           context.push('/tech-create-job');
         },
         backgroundColor: const Color(0xFF1A237E),
-        icon: const Icon(Iconsax.add, color: Colors.white),
+        icon: const Icon(Icons.add_rounded, color: Colors.white),
         label: const Text('Create Job Card', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
     );
@@ -346,7 +345,7 @@ class _TechnicianDashboardScreenState extends ConsumerState<TechnicianDashboardS
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(job.vehicleModel, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: Colors.white)),
+                   Text(job.vehicleModel, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: Colors.white)),
                   const SizedBox(height: 6),
                   Row(
                     children: [
@@ -409,7 +408,7 @@ class _TechnicianDashboardScreenState extends ConsumerState<TechnicianDashboardS
                 decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(20)),
                 child: const Row(
                   children: [
-                    Icon(Icons.trending_up, color: Colors.greenAccent, size: 14),
+                    Icon(Icons.trending_up_rounded, color: Colors.greenAccent, size: 14),
                     SizedBox(width: 4),
                     Text('+20%', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
                   ],
@@ -546,10 +545,10 @@ class _TechnicianDashboardScreenState extends ConsumerState<TechnicianDashboardS
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _navItem(Iconsax.home5, 'Dashboard', 0),
-          _navItem(Iconsax.task_square5, 'Jobs', 1),
-          _navItem(Iconsax.box, 'Parts', 2),
-          _navItem(Iconsax.user, 'Profile', 3),
+          _navItem(Icons.home_rounded, 'Dashboard', 0),
+          _navItem(Icons.task_alt_rounded, 'Jobs', 1),
+          _navItem(Icons.inventory_2_rounded, 'Parts', 2),
+          _navItem(Icons.person_rounded, 'Profile', 3),
         ],
       ),
     );

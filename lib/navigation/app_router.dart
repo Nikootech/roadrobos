@@ -117,9 +117,10 @@ class RouterNotifier extends ChangeNotifier {
 
 final routerNotifierProvider = Provider((ref) => RouterNotifier(ref));
 
+final rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
+final shellNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'shell');
+
 final routerProvider = Provider<GoRouter>((ref) {
-  final rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
-  final shellNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'shell');
   final notifier = ref.watch(routerNotifierProvider);
 
   return GoRouter(

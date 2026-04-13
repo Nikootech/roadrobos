@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
-import 'package:iconsax/iconsax.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/constants/app_strings.dart';
@@ -48,7 +47,7 @@ class ProfileScreen extends ConsumerWidget {
                         width: 40,
                         height: 40,
                         decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.bgDarkSurface),
-                        child: const Icon(Iconsax.setting_2, color: AppColors.textOnDark, size: 20),
+                        child: const Icon(Icons.settings_outlined, color: AppColors.textOnDark, size: 20),
                       ),
                     ),
                   ],
@@ -88,9 +87,19 @@ class ProfileScreen extends ConsumerWidget {
                               ? CachedNetworkImage(
                                   imageUrl: user.profileImageUrl,
                                   fit: BoxFit.cover,
-                                  errorWidget: (_, __, ___) => const Icon(Icons.person, color: AppColors.textOnDark, size: 32),
+                                  placeholder: (context, url) => Container(
+                                    color: AppColors.bgDarkSurface,
+                                    child: const Center(child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.warningAmber)),
+                                  ),
+                                  errorWidget: (_, __, ___) => Container(
+                                    color: AppColors.bgDarkSurface,
+                                    child: const Icon(Icons.person_rounded, color: AppColors.textOnDark, size: 32),
+                                  ),
                                 )
-                              : const Icon(Icons.person, color: AppColors.textOnDark, size: 32),
+                              : Container(
+                                  color: AppColors.bgDarkSurface,
+                                  child: const Icon(Icons.person_rounded, color: AppColors.textOnDark, size: 32),
+                                ),
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -145,7 +154,7 @@ class ProfileScreen extends ConsumerWidget {
                                     user.points.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},'),
                                     style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppColors.warningAmber),
                                   ),
-                                  const SizedBox(width: 4),
+                                  const SizedBox(width: 14),
                                   const Text('pts', style: TextStyle(fontSize: 14, color: AppColors.textOnDarkMuted)),
                                 ],
                               ),
@@ -187,11 +196,11 @@ class ProfileScreen extends ConsumerWidget {
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      _buildBenefitCard(Iconsax.discount_shape, '10% Off\nAll Services', const Color(0xFF3B82F6)),
+                      _buildBenefitCard(Icons.confirmation_num_rounded, '10% Off\nAll Services', const Color(0xFF3B82F6)),
                       const SizedBox(width: 10),
-                      _buildBenefitCard(Iconsax.car, 'Free Pickup\n& Drop', const Color(0xFF10B981)),
+                      _buildBenefitCard(Icons.directions_car_rounded, 'Free Pickup\n& Drop', const Color(0xFF10B981)),
                       const SizedBox(width: 10),
-                      _buildBenefitCard(Iconsax.crown, 'Priority\nBooking', const Color(0xFFF97316)),
+                      _buildBenefitCard(Icons.auto_awesome_rounded, 'Priority\nBooking', const Color(0xFFF97316)),
                     ],
                   ),
                 ],
@@ -205,15 +214,15 @@ class ProfileScreen extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
               child: Column(
                 children: [
-                  _buildMenuItem(Iconsax.user, 'Account Settings', 'Profile, security, and more', () => context.push('/account_settings')),
-                  _buildMenuItem(Iconsax.car, 'My Garage', 'Manage your vehicles', () => context.push('/my-vehicles')),
-                  _buildMenuItem(Iconsax.location, 'Saved Locations', 'Add/edit addresses', () => context.push('/saved-locations')),
-                  _buildMenuItem(Iconsax.calendar, 'Ride History', 'View past trips', () => context.push('/ride-history')),
-                  _buildMenuItem(Iconsax.clock, 'Service Reminders', 'Upcoming maintenance alerts', () => context.push('/service-reminders')),
-                  _buildMenuItem(Iconsax.clipboard_text, 'Service History', 'Maintenance logs & invoices', () => context.push('/service-history')),
-                  _buildMenuItem(Iconsax.notification, 'Notifications', 'Manage alerts', () => context.push('/notifications')),
-                  _buildMenuItem(Iconsax.gift, 'Refer & Earn', 'Invite friends & earn', () => context.push('/referral')),
-                  _buildMenuItem(Iconsax.message_question, 'Help Center', 'FAQ & support chat', () => context.push('/help-center')),
+                  _buildMenuItem(Icons.person_outline_rounded, 'Account Settings', 'Profile, security, and more', () => context.push('/account-settings')),
+                  _buildMenuItem(Icons.directions_car_filled_rounded, 'My Garage', 'Manage your vehicles', () => context.push('/my-vehicles')),
+                  _buildMenuItem(Icons.location_on_outlined, 'Saved Locations', 'Add/edit addresses', () => context.push('/saved-locations')),
+                  _buildMenuItem(Icons.history_rounded, 'Ride History', 'View past trips', () => context.push('/ride-history')),
+                  _buildMenuItem(Icons.notifications_active_outlined, 'Service Reminders', 'Upcoming maintenance alerts', () => context.push('/service-reminders')),
+                  _buildMenuItem(Icons.assignment_outlined, 'Service History', 'Maintenance logs & invoices', () => context.push('/service-history')),
+                  _buildMenuItem(Icons.notifications_none_rounded, 'Notifications', 'Manage alerts', () => context.push('/notifications')),
+                  _buildMenuItem(Icons.card_giftcard_rounded, 'Refer & Earn', 'Invite friends & earn', () => context.push('/referral')),
+                  _buildMenuItem(Icons.help_outline_rounded, 'Help Center', 'FAQ & support chat', () => context.push('/help-center')),
                   const SizedBox(height: 12),
                   // Logout button
                   GestureDetector(
@@ -231,7 +240,7 @@ class ProfileScreen extends ConsumerWidget {
                       ),
                       child: Row(
                         children: [
-                          const Icon(Iconsax.logout, color: AppColors.dangerRed, size: 22),
+                          const Icon(Icons.logout_rounded, color: AppColors.dangerRed, size: 22),
                           const SizedBox(width: 14),
                           const Text(AppStrings.logout, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.dangerRed)),
                           const Spacer(),

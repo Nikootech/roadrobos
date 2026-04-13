@@ -18,29 +18,29 @@ import 'package:flutter/foundation.dart';
 final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
-  // Wrap the app in runZonedGuarded to catch async errors and ensure consistent zone usage
+void main() {
+  // Catch errors and ensure consistent zone usage
   runZonedGuarded(
     () async {
-      // Load environment variables
-      await dotenv.load(fileName: ".env");
+      // Initialize bindings inside the zone to prevent Zone Mismatch
+      WidgetsFlutterBinding.ensureInitialized();
 
-      // Initialize Firebase (Keep for Messaging/Crashlytics)
-      await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
-      );
+      // Parallelize initialization of independent services
+      await Future.wait([
+        dotenv.load(fileName: ".env"),
+        Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform),
+      ]);
 
-      // Initialize Supabase (Primary Database & Auth)
-      await Supabase.initialize(
-        url: dotenv.get('SUPABASE_URL'),
-        anonKey: dotenv.get('SUPABASE_ANON_KEY'),
-      );
+      // Initialize Supabase and Notifications in parallel
+      // (Supabase depends on dotenv, which was loaded in the previous step)
+      await Future.wait([
+        Supabase.initialize(
+          url: dotenv.get('SUPABASE_URL'),
+          anonKey: dotenv.get('SUPABASE_ANON_KEY'),
+        ),
+        (NotificationService()).initialize(),
+      ]);
 
-      // Initialize Notifications
-      final notificationService = NotificationService();
-      await notificationService.initialize();
       FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
       // Pass all uncaught errors to Crashlytics

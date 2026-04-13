@@ -1,17 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:iconsax/iconsax.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/custom_button.dart';
 import '../../navigation/nav_helpers.dart';
+import '../profile/user_provider.dart';
 
 /// Refer & Earn Rewards matching Figma Screen [20]
-class ReferralScreen extends StatelessWidget {
+class ReferralScreen extends ConsumerWidget {
   const ReferralScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(userProvider).user;
+    
+    // Generate a code if one isn't assigned (Fallback)
+    final referralCode = (user?.referralCode != null && user!.referralCode.isNotEmpty) 
+        ? user.referralCode 
+        : 'ROADROBO_${user?.name.split(' ').first.toUpperCase() ?? 'GUEST'}';
+
+    final shareMessage = 'Hey! Use my referral code $referralCode to get ₹500 discount on your first service with RoAd RoBo\'s. Download now: https://roadrobos.com/download';
+
     return Scaffold(
       backgroundColor: AppColors.bgLightGrey,
       appBar: AppBar(
@@ -29,7 +41,7 @@ class ReferralScreen extends StatelessWidget {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Header Image/Illustration area (Simulated)
+            // Header Image/Illustration area
             Container(
               width: double.infinity,
               height: 240,
@@ -39,7 +51,7 @@ class ReferralScreen extends StatelessWidget {
               child: const Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Iconsax.gift5, size: 80, color: AppColors.primaryBlue),
+                  Icon(Icons.card_giftcard_rounded, size: 80, color: AppColors.primaryBlue),
                   SizedBox(height: 16),
                   Text('Invite Friends & Earn', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
                   SizedBox(height: 8),
@@ -69,13 +81,22 @@ class ReferralScreen extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('ROAdROBoS500', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, letterSpacing: 2, color: AppColors.primaryBlue)),
+                        Expanded(
+                          child: Text(
+                            referralCode, 
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, letterSpacing: 2, color: AppColors.primaryBlue),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
                         GestureDetector(
-                          onTap: () => NavHelpers.showSuccess(context, 'Referral code copied to clipboard!'),
+                          onTap: () {
+                            Clipboard.setData(ClipboardData(text: referralCode));
+                            NavHelpers.showSuccess(context, 'Referral code copied to clipboard!');
+                          },
                           child: Container(
                             padding: const EdgeInsets.all(8),
                             decoration: const BoxDecoration(color: AppColors.bgLightGrey, shape: BoxShape.circle),
-                            child: const Icon(Iconsax.copy, size: 20, color: AppColors.textPrimary),
+                            child: const Icon(Icons.copy_rounded, size: 20, color: AppColors.textPrimary),
                           ),
                         )
                       ],
@@ -84,9 +105,9 @@ class ReferralScreen extends StatelessWidget {
 
                   const SizedBox(height: 32),
                   CustomButton(
-                    label: 'Share via WhatsApp',
+                    label: 'Share Invite Link',
                     icon: Icons.share_rounded,
-                    onPressed: () => NavHelpers.showSnackAction(context, 'Sharing via WhatsApp...', icon: Icons.share_rounded, color: AppColors.successGreen),
+                    onPressed: () => Share.share(shareMessage),
                   ).animate(delay: 300.ms).fadeIn().slideY(begin: 0.1, end: 0),
 
                   const SizedBox(height: 48),

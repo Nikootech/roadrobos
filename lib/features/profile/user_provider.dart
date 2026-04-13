@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import 'package:flutter/foundation.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../core/models/user_role.dart';
 import '../../core/services/auth_service.dart';
 import '../../core/repositories/user_repository.dart';
@@ -58,6 +59,11 @@ class UserNotifier extends StateNotifier<UserState> {
       if (sbUser == null) {
         state = UserState(user: null, isLoading: false);
       } else {
+        // Optimization: Skip fetching if the profile for this user is already loaded
+        // BUT: Re-fetch if we are missing a profile picture (to allow sync from OAuth)
+        final hasProfilePic = state.user?.profilePic != null && state.user!.profilePic!.isNotEmpty;
+        if (state.user?.id == sbUser.id && !state.isLoading && hasProfilePic) return;
+        
         await fetchUserProfile(sbUser.id);
       }
     });
@@ -99,29 +105,43 @@ class UserNotifier extends StateNotifier<UserState> {
         String updatedName = user.name;
         String? updatedPic = user.profilePic;
 
-        final oauthName = currentSupabaseUser?.userMetadata?['full_name'];
+        final oauthName = currentSupabaseUser?.userMetadata?['full_name'] ?? 
+                         currentSupabaseUser?.userMetadata?['name'];
         final oauthPic = currentSupabaseUser?.userMetadata?['avatar_url'] ?? 
-                        currentSupabaseUser?.userMetadata?['picture'];
+                        currentSupabaseUser?.userMetadata?['picture'] ?? 
+                        currentSupabaseUser?.userMetadata?['image'] ?? 
+                        currentSupabaseUser?.userMetadata?['photo_url'];
 
-        debugPrint('Supabase Auth Sync: [Name: $oauthName, Pic: $oauthPic]');
+        debugPrint('Supabase Auth Sync: [OAuth Name: $oauthName, OAuth Pic: $oauthPic]');
 
-        if ((user.name == 'New User' || user.name.isEmpty) && oauthName != null) {
+        // Update name if it's missing or generic
+        if ((user.name == 'New User' || user.name.isEmpty || user.name == 'Demo Customer') && oauthName != null) {
           updatedName = oauthName;
           needsUpdate = true;
         }
 
-        // Update if missing or if it's a generic UI avatar (Safely check for null)
+        // Update phone if it's missing (sync from Supabase Auth if available)
+        final authPhone = currentSupabaseUser?.phone;
+        if ((user.phone == '' || user.phone == '9876543210') && authPhone != null && authPhone.isNotEmpty) {
+          debugPrint('Syncing Phone from Auth: $authPhone');
+          user = user.copyWith(phone: authPhone);
+          needsUpdate = true;
+        }
+
+        // Update if missing or if it's a generic UI avatar
         final isGenericAvatar = user.profilePic == null || 
                                user.profilePic!.isEmpty || 
                                user.profilePic!.contains('ui-avatars.com');
-                               
+
         if (isGenericAvatar && oauthPic != null) {
           debugPrint('Syncing Image from OAuth: $oauthPic');
           updatedPic = oauthPic;
           needsUpdate = true;
         }
 
-        if (needsUpdate && !isDemoId) {
+        // Optimization: Only write to database if data actually changed
+        final changesDetected = updatedName != user.name || updatedPic != user.profilePic;
+        if (needsUpdate && changesDetected && !isDemoId) {
           user = user.copyWith(name: updatedName, profilePic: updatedPic);
           await _userRepository.saveUser(user);
         }
@@ -129,12 +149,16 @@ class UserNotifier extends StateNotifier<UserState> {
         state = state.copyWith(user: user, isLoading: false, isDemo: isDemoId);
       } else {
         // Handle case where auth exists but profile doesn't
+        final oauthName = currentSupabaseUser?.userMetadata?['full_name'] ?? 
+                         currentSupabaseUser?.userMetadata?['name'] ?? 'New User';
         final oauthPic = currentSupabaseUser?.userMetadata?['avatar_url'] ?? 
-                        currentSupabaseUser?.userMetadata?['picture'];
+                        currentSupabaseUser?.userMetadata?['picture'] ?? 
+                        currentSupabaseUser?.userMetadata?['image'] ??
+                        currentSupabaseUser?.userMetadata?['photo_url'];
 
         final newUser = AppUser(
           id: uid,
-          name: isDemoId ? 'Demo User' : (currentSupabaseUser?.userMetadata?['full_name'] ?? 'New User'),
+          name: isDemoId ? 'Demo User' : oauthName,
           phone: isDemoId ? '9876543210' : (currentSupabaseUser?.phone ?? ''),
           email: isDemoId ? 'demo@roadrobos.com' : currentSupabaseUser?.email,
           role: UserRole.customer,
@@ -157,7 +181,8 @@ class UserNotifier extends StateNotifier<UserState> {
     final currentAppUser = state.user;
     if (currentAppUser == null) return;
 
-    state = state.copyWith(isLoading: true);
+    // Reset error state before attempt
+    state = state.copyWith(isLoading: true, error: null);
     try {
       final updatedUser = currentAppUser.copyWith(
         name: name,
@@ -165,13 +190,17 @@ class UserNotifier extends StateNotifier<UserState> {
         phone: phone,
       );
       
+      debugPrint('Updating Profile: [Name: ${updatedUser.name}, Phone: ${updatedUser.phone}, Email: ${updatedUser.email}]');
+      
       // Safeguard: Do not attempt database write for Demo Users
       if (!state.isDemo) {
         await _userRepository.saveUser(updatedUser);
+        debugPrint('Profile saved to database successfully.');
       }
       
-      state = UserState(user: updatedUser, isLoading: false, isDemo: state.isDemo);
+      state = state.copyWith(user: updatedUser, isLoading: false, error: null);
     } catch (e) {
+      debugPrint('Profile Update Error: $e');
       state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
@@ -193,6 +222,50 @@ class UserNotifier extends StateNotifier<UserState> {
       }
       await logout();
     } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+
+  Future<void> pickAndUploadProfilePicture() async {
+    final currentAppUser = state.user;
+    if (currentAppUser == null) return;
+
+    final ImagePicker picker = ImagePicker();
+    
+    try {
+      // Pick image (Camera/Gallery selection usually handled by UI or by default here)
+      // For simplicity in this logic, we use standard picking. 
+      // The UI can specify source to this method instead if preferred.
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery, // Default to gallery for reliability on all platforms
+        maxWidth: 512,
+        maxHeight: 512,
+        imageQuality: 75,
+      );
+
+      if (image == null) return;
+
+      state = state.copyWith(isLoading: true, error: null);
+
+      final bytes = await image.readAsBytes();
+      final extension = image.path.split('.').last.toLowerCase();
+
+      final publicUrl = await _userRepository.uploadProfilePicture(
+        currentAppUser.id, 
+        bytes, 
+        extension.isEmpty ? 'jpg' : extension
+      );
+
+      // Update Database
+      await _userRepository.updateField(currentAppUser.id, 'profile_pic', publicUrl);
+      
+      // Update State
+      final updatedUser = currentAppUser.copyWith(profilePic: publicUrl);
+      state = state.copyWith(user: updatedUser, isLoading: false);
+      
+      debugPrint('Profile Picture Uploaded: $publicUrl');
+    } catch (e) {
+      debugPrint('Upload Error: $e');
       state = state.copyWith(isLoading: false, error: e.toString());
     }
   }

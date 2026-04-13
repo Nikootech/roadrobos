@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
-import 'package:iconsax/iconsax.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/bottom_nav_bar.dart';
@@ -14,7 +13,8 @@ class DriverProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(userProvider);
+    final userState = ref.watch(userProvider);
+    final user = userState.user;
     final String name = user?.name ?? 'Driver';
 
     return Scaffold(
@@ -31,7 +31,7 @@ class DriverProfileScreen extends ConsumerWidget {
           Container(
             margin: const EdgeInsets.only(right: 8),
             child: IconButton(
-              icon: const Icon(Iconsax.setting, color: AppColors.textPrimary),
+              icon: const Icon(Icons.settings_outlined, color: AppColors.textPrimary),
               onPressed: () {
                 HapticFeedback.lightImpact();
                 context.push('/account-settings');
@@ -56,7 +56,7 @@ class DriverProfileScreen extends ConsumerWidget {
               ),
               child: Column(
                 children: [
-                  Stack(
+                   Stack(
                     alignment: Alignment.bottomRight,
                     children: [
                       Container(
@@ -68,8 +68,8 @@ class DriverProfileScreen extends ConsumerWidget {
                         child: CircleAvatar(
                           radius: 54,
                           backgroundColor: AppColors.bgLightGrey,
-                          backgroundImage: (user.profileImageUrl.isNotEmpty)
-                              ? NetworkImage(user.profileImageUrl)
+                          backgroundImage: (user?.profilePic != null)
+                              ? NetworkImage(user!.profilePic!)
                               : const NetworkImage('https://i.pravatar.cc/150?u=roadrobo'),
                         ),
                       ),
@@ -109,11 +109,11 @@ class DriverProfileScreen extends ConsumerWidget {
             // Stats Grid
             Row(
               children: [
-                _buildStat('Rides', (user?.totalRides ?? 0).toString(), Iconsax.car, AppColors.primaryBlue),
+                _buildStat('Rides', (user?.totalRides ?? 0).toString(), Icons.directions_car_rounded, AppColors.primaryBlue),
                 const SizedBox(width: 12),
-                _buildStat('Rating', '4.8', Iconsax.star, Colors.orange),
+                _buildStat('Rating', '4.8', Icons.star_rounded, Colors.orange),
                 const SizedBox(width: 12),
-                _buildStat('Exp', '3y', Iconsax.award, AppColors.successGreen),
+                _buildStat('Exp', '3y', Icons.workspace_premium_rounded, AppColors.successGreen),
               ],
             ).animate().fadeIn(delay: 200.ms),
 
@@ -122,15 +122,15 @@ class DriverProfileScreen extends ConsumerWidget {
             // Menu Section
             _buildSectionHeader('Management'),
             const SizedBox(height: 12),
-            _buildPremiumMenuItem(Iconsax.document_text, 'Documents & Verification', 'DL, RC, Insurance', () => context.push('/driver/documents')),
-            _buildPremiumMenuItem(Iconsax.wallet, 'Wallet & Payments', 'Balance, History, Payouts', () => context.pushReplacement('/driver-earnings')),
+            _buildPremiumMenuItem(Icons.description_outlined, 'Documents & Verification', 'DL, RC, Insurance', () => context.push('/driver/documents')),
+            _buildPremiumMenuItem(Icons.account_balance_wallet_outlined, 'Wallet & Payments', 'Balance, History, Payouts', () => context.pushReplacement('/driver-earnings')),
             
             const SizedBox(height: 16),
             _buildSectionHeader('Performance'),
             const SizedBox(height: 12),
-            _buildPremiumMenuItem(Iconsax.chart_2, 'Analytics', 'Weekly reports & stats', () => _showAnalyticsBottomSheet(context)),
-            _buildPremiumMenuItem(Iconsax.star, 'Reviews', 'Passenger feedback', () => _showReviewsBottomSheet(context)),
-            _buildPremiumMenuItem(Iconsax.message_question, 'Help & Support', 'FAQs & Contact Support', () => context.push('/help-center')),
+            _buildPremiumMenuItem(Icons.analytics_outlined, 'Analytics', 'Weekly reports & stats', () => _showAnalyticsBottomSheet(context)),
+            _buildPremiumMenuItem(Icons.star_outline_rounded, 'Reviews', 'Passenger feedback', () => _showReviewsBottomSheet(context)),
+            _buildPremiumMenuItem(Icons.help_outline_rounded, 'Help & Support', 'FAQs & Contact Support', () => context.push('/help-center')),
             
             const SizedBox(height: 32),
             
@@ -158,10 +158,10 @@ class DriverProfileScreen extends ConsumerWidget {
       bottomNavigationBar: CustomBottomNavBar(
         currentIndex: 3,
         items: const [
-          NavItemData(icon: Iconsax.home, activeIcon: Iconsax.home5, label: 'Home'),
-          NavItemData(icon: Iconsax.wallet, activeIcon: Iconsax.wallet5, label: 'Earnings'),
-          NavItemData(icon: Iconsax.star, activeIcon: Iconsax.star5, label: 'Ratings'),
-          NavItemData(icon: Iconsax.user, activeIcon: Iconsax.user, label: 'Account'),
+          NavItemData(icon: Icons.home_outlined, activeIcon: Icons.home_rounded, label: 'Home'),
+          NavItemData(icon: Icons.account_balance_wallet_outlined, activeIcon: Icons.account_balance_wallet_rounded, label: 'Earnings'),
+          NavItemData(icon: Icons.star_outline_rounded, activeIcon: Icons.star_rounded, label: 'Ratings'),
+          NavItemData(icon: Icons.person_outline_rounded, activeIcon: Icons.person_rounded, label: 'Account'),
         ],
         onTap: (index) {
           if (index == 0) context.pushReplacement('/driver-home');
@@ -276,7 +276,7 @@ class DriverProfileScreen extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text('Weekly Analytics', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: AppColors.deepNavy)),
-                  IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Iconsax.close_circle, color: Colors.grey)),
+                  IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close_rounded, color: Colors.grey)),
                 ],
               ),
               const SizedBox(height: 24),
@@ -299,11 +299,11 @@ class DriverProfileScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 32),
-              _buildStatRow(Iconsax.timer_1, 'Online Hours', '42.5h', '+12% from last week'),
+              _buildStatRow(Icons.timer_outlined, 'Online Hours', '42.5h', '+12% from last week'),
               const SizedBox(height: 16),
-              _buildStatRow(Iconsax.car, 'Total Rides', '142', '+8% from last week'),
+              _buildStatRow(Icons.directions_car_outlined, 'Total Rides', '142', '+8% from last week'),
               const SizedBox(height: 16),
-              _buildStatRow(Iconsax.wallet_2, 'Net Earnings', '₹12,450', '₹850/avg daily'),
+              _buildStatRow(Icons.account_balance_wallet_outlined, 'Net Earnings', '₹12,450', '₹850/avg daily'),
             ],
           ),
         ),
@@ -338,7 +338,7 @@ class DriverProfileScreen extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text('Passenger Reviews', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: AppColors.deepNavy)),
-                IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Iconsax.close_circle, color: Colors.grey)),
+                IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close_rounded, color: Colors.grey)),
               ],
             ),
             const SizedBox(height: 16),
@@ -350,7 +350,7 @@ class DriverProfileScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
-                      children: List.generate(5, (index) => Icon(Iconsax.star1, color: index < 4 ? Colors.orange : Colors.grey[300], size: 20)),
+                      children: List.generate(5, (index) => Icon(Icons.star_rounded, color: index < 4 ? Colors.orange : Colors.grey[300], size: 20)),
                     ),
                     const Text('Based on 1,240 reviews', style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
                   ],
@@ -429,7 +429,7 @@ class DriverProfileScreen extends ConsumerWidget {
         children: [
           Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [Text(name, style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.textPrimary, fontSize: 15)), Text(time, style: const TextStyle(fontSize: 11, color: AppColors.textMuted))]),
           const SizedBox(height: 4),
-          Row(children: [const Icon(Iconsax.star1, color: Colors.orange, size: 14), const SizedBox(width: 4), Text(rating, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: AppColors.textPrimary))]),
+          Row(children: [const Icon(Icons.star_rounded, color: Colors.orange, size: 14), const SizedBox(width: 4), Text(rating, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: AppColors.textPrimary))]),
           const SizedBox(height: 8),
           Text(comment, style: const TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.4)),
         ],

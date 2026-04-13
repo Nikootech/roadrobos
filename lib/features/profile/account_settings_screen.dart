@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
-import 'package:iconsax/iconsax.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../core/theme/app_colors.dart';
 import 'user_provider.dart';
 
@@ -33,8 +33,6 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
   }
 
   Future<void> _loadBiometricSettings() async {
-    // Actually using SecureStorage would be better, but we'll use SharedPreferences for basic UI state
-    // To match actual biometric capability
     setState(() {
       _isBiometricEnabled = false; // Initial
     });
@@ -42,7 +40,6 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
 
   Future<void> _toggleBiometric(bool value) async {
     setState(() => _isBiometricEnabled = value);
-    // Logic to save preference
   }
 
   @override
@@ -62,21 +59,91 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
       );
       
       if (mounted) {
-        setState(() => _isEditingProfile = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Profile updated successfully!'),
-            backgroundColor: AppColors.successGreen,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        final userState = ref.read(userProvider);
+        if (userState.error != null) {
+          // Failure State
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to update profile: ${userState.error}'),
+              backgroundColor: AppColors.dangerRed,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        } else {
+          // Success State
+          setState(() => _isEditingProfile = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Profile updated successfully!'),
+              backgroundColor: AppColors.successGreen,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
       }
     }
   }
 
+  Future<void> _updateProfilePhoto() async {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Change Profile Photo', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.deepNavy)),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildPickerOption(
+                  Icons.camera_alt_rounded, 
+                  'Camera', 
+                  () async {
+                    Navigator.pop(context);
+                    await ref.read(userProvider.notifier).pickAndUploadProfilePicture();
+                  }
+                ),
+                _buildPickerOption(
+                  Icons.photo_library_rounded, 
+                  'Gallery', 
+                  () async {
+                    Navigator.pop(context);
+                    await ref.read(userProvider.notifier).pickAndUploadProfilePicture();
+                  }
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPickerOption(IconData icon, String label, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(color: AppColors.primaryBlue.withOpacity(0.1), shape: BoxShape.circle),
+            child: Icon(icon, color: AppColors.primaryBlue, size: 28),
+          ),
+          const SizedBox(height: 8),
+          Text(label, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final user = ref.watch(userProvider);
+    final userState = ref.watch(userProvider);
 
     return Scaffold(
       backgroundColor: AppColors.bgLightGrey,
@@ -89,21 +156,24 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
         ),
         title: Text(
           _isEditingProfile ? 'Edit Profile' : 'Account Settings',
-          style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+          style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w900, fontSize: 18),
         ),
         actions: [
           if (_isEditingProfile)
-            TextButton(
-              onPressed: user.isLoading ? null : _saveProfile,
-              child: user.isLoading 
-                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                : const Text('SAVE', style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.bold)),
+            Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: TextButton(
+                onPressed: userState.isLoading ? null : _saveProfile,
+                child: userState.isLoading 
+                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Text('SAVE', style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.w900, fontSize: 14)),
+              ),
             ),
         ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
-        child: _isEditingProfile ? _buildEditProfileForm(user) : _buildSettingsList(user),
+        child: _isEditingProfile ? _buildEditProfileForm(userState) : _buildSettingsList(userState),
       ),
     );
   }
@@ -113,18 +183,18 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
       children: [
         _buildSettingsGroup('Personal Information', [
           _buildSettingsTile(
-            Iconsax.user, 
+            Icons.person_outline_rounded, 
             'Edit Profile', 
             '${user.name} • ${user.email}',
             onTap: () => setState(() => _isEditingProfile = true),
           ),
-          _buildSettingsTile(Iconsax.location_add, 'Saved Locations', 'Manage home and office addresses', onTap: () => context.push('/saved-locations')),
-          _buildSettingsTile(Iconsax.car, 'My Vehicles', 'Vehicle details and RC docs', onTap: () => context.push('/my-vehicles')),
+          _buildSettingsTile(Icons.add_location_alt_outlined, 'Saved Locations', 'Manage home and office addresses', onTap: () => context.push('/saved-locations')),
+          _buildSettingsTile(Icons.directions_car_filled_rounded, 'My Vehicles', 'Vehicle details and RC docs', onTap: () => context.push('/my-vehicles')),
         ]),
         const SizedBox(height: 24),
         _buildSettingsGroup('Security', [
           _buildSettingsTile(
-            Iconsax.lock_1, 
+            Icons.lock_outline_rounded, 
             'Change Password', 
             'Update your security credentials',
             onTap: () {
@@ -134,7 +204,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
             },
           ),
           _buildSettingsTile(
-            Iconsax.finger_scan, 
+            Icons.fingerprint_rounded, 
             'Biometric Login', 
             'Enable Fingerprint/FaceID for login',
             trailing: Switch(
@@ -144,7 +214,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
             ),
           ),
           _buildSettingsTile(
-            Iconsax.shield_security, 
+            Icons.verified_user_outlined, 
             'Two-Factor Authentication', 
             'Add extra layer of security',
             onTap: () {
@@ -156,13 +226,21 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
         ]),
         const SizedBox(height: 24),
         _buildSettingsGroup('Preferences', [
-          _buildSettingsTile(Iconsax.notification, 'Notification Settings', 'Manage push and email alerts', onTap: () => context.push('/notification-settings')),
-          _buildSettingsTile(Iconsax.language_square, 'Language', 'Choose your preferred language', onTap: () => context.push('/language')),
+          _buildSettingsTile(Icons.notifications_none_rounded, 'Notification Settings', 'Manage push and email alerts', onTap: () => context.push('/notification-settings')),
+          _buildSettingsTile(Icons.language_rounded, 'Language', 'Choose your preferred language', onTap: () => context.push('/language')),
         ]),
         const SizedBox(height: 48),
-        TextButton(
-          onPressed: () => ref.read(userProvider.notifier).logout(),
-          child: const Text('LOGOUT', style: TextStyle(color: AppColors.dangerRed, fontWeight: FontWeight.bold, letterSpacing: 1)),
+        SizedBox(
+          width: double.infinity,
+          child: TextButton(
+            onPressed: () => ref.read(userProvider.notifier).logout(),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 18),
+              backgroundColor: AppColors.dangerRed.withOpacity(0.08),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            ),
+            child: const Text('LOGOUT', style: TextStyle(color: AppColors.dangerRed, fontWeight: FontWeight.w900, letterSpacing: 1)),
+          ),
         ),
         const SizedBox(height: 12),
         TextButton(
@@ -170,16 +248,17 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
             showDialog(
               context: context,
               builder: (context) => AlertDialog(
-                title: const Text('Request Account Deletion?', style: TextStyle(color: AppColors.dangerRed)),
-                content: const Text('This will flag your account for permanent deletion. This action cannot be undone once processed by admin.'),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                title: const Text('Request Account Deletion?', style: TextStyle(color: AppColors.dangerRed, fontWeight: FontWeight.w900)),
+                content: const Text('This will flag your account for permanent deletion. This action cannot be undone once processed by admin.', style: TextStyle(color: AppColors.textSecondary)),
                 actions: [
-                  TextButton(onPressed: () => context.pop(), child: const Text('CANCEL')),
+                  TextButton(onPressed: () => context.pop(), child: const Text('CANCEL', style: TextStyle(color: AppColors.textMuted, fontWeight: FontWeight.bold))),
                   TextButton(
                     onPressed: () async {
                       await ref.read(userProvider.notifier).deleteAccountRequest();
                       if (mounted) context.go('/auth/login');
                     }, 
-                    child: const Text('CONFIRM DELETION', style: TextStyle(color: AppColors.dangerRed)),
+                    child: const Text('CONFIRM DELETION', style: TextStyle(color: AppColors.dangerRed, fontWeight: FontWeight.w900)),
                   ),
                 ],
               ),
@@ -208,28 +287,45 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
           Center(
             child: Stack(
               children: [
-                CircleAvatar(
-                  radius: 50,
-                  backgroundImage: NetworkImage(user.profileImageUrl),
+                Container(
+                   padding: const EdgeInsets.all(4),
+                   decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: AppColors.primaryBlue.withOpacity(0.2), width: 2)),
+                   child: Hero(
+                     tag: 'profile_pic',
+                     child: CircleAvatar(
+                      radius: 54,
+                      backgroundColor: AppColors.bgLightGrey,
+                      backgroundImage: user.profileImageUrl.isNotEmpty ? NetworkImage(user.profileImageUrl) : null,
+                      child: user.isLoading 
+                        ? Container(
+                            decoration: BoxDecoration(color: Colors.black.withOpacity(0.3), shape: BoxShape.circle),
+                            child: const Center(child: CircularProgressIndicator(color: Colors.white)),
+                          )
+                        : (user.profileImageUrl.isEmpty ? const Icon(Icons.person, size: 54, color: AppColors.textMuted) : null),
+                    ),
+                   ),
                 ),
-                const Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: CircleAvatar(
-                    radius: 18,
-                    backgroundColor: AppColors.primaryBlue,
-                    child: Icon(Icons.camera_alt, color: Colors.white, size: 18),
+                Positioned(
+                  bottom: 4,
+                  right: 4,
+                  child: InkWell(
+                    onTap: user.isLoading ? null : _updateProfilePhoto,
+                    child: const CircleAvatar(
+                      radius: 18,
+                      backgroundColor: AppColors.primaryBlue,
+                      child: Icon(Icons.camera_alt_rounded, color: Colors.white, size: 18),
+                    ),
                   ),
                 ),
               ],
             ),
           ),
           const SizedBox(height: 32),
-          _buildTextField('Full Name', _nameController, Iconsax.user),
+          _buildTextField('Full Name', _nameController, Icons.person_outline_rounded),
           const SizedBox(height: 20),
-          _buildTextField('Email Address', _emailController, Iconsax.sms),
+          _buildTextField('Email Address', _emailController, Icons.mail_outline_rounded),
           const SizedBox(height: 20),
-          _buildTextField('Phone Number', _phoneController, Iconsax.call),
+          _buildTextField('Phone Number', _phoneController, Icons.phone_outlined),
           const SizedBox(height: 40),
           SizedBox(
             width: double.infinity,
@@ -245,7 +341,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                 ? const CircularProgressIndicator(color: Colors.white)
                 : const Text(
                     'SAVE CHANGES',
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1),
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: 0.5),
                   ),
             ),
           ),
@@ -253,7 +349,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
           Center(
             child: TextButton(
               onPressed: () => setState(() => _isEditingProfile = false),
-              child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
+              child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.bold)),
             ),
           ),
         ],
@@ -265,16 +361,19 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
-        const SizedBox(height: 8),
+        Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+        const SizedBox(height: 10),
         TextFormField(
           controller: controller,
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
           decoration: InputDecoration(
             prefixIcon: Icon(icon, color: AppColors.primaryBlue, size: 20),
             filled: true,
             fillColor: Colors.white,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+            hintText: 'Enter $label',
+            hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 14, fontWeight: FontWeight.normal),
           ),
           validator: (value) => value == null || value.isEmpty ? 'This field is required' : null,
         ),
@@ -286,10 +385,17 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
+        Padding(
+          padding: const EdgeInsets.only(left: 4.0),
+          child: Text(title.toUpperCase(), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.textSecondary, letterSpacing: 1.2)),
+        ),
         const SizedBox(height: 12),
         Container(
-          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+          decoration: BoxDecoration(
+            color: Colors.white, 
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [BoxShadow(color: Colors.black12.withOpacity(0.03), blurRadius: 15, offset: const Offset(0, 5))],
+          ),
           child: Column(children: children),
         ),
       ],
@@ -300,14 +406,14 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
     return ListTile(
       onTap: onTap,
       leading: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(color: AppColors.bgLightGrey, borderRadius: BorderRadius.circular(8)),
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(color: AppColors.bgLightGrey, borderRadius: BorderRadius.circular(12)),
         child: Icon(icon, color: AppColors.primaryBlue, size: 20),
       ),
-      title: Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-      subtitle: Text(subtitle, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-      trailing: trailing ?? const Icon(Icons.chevron_right, size: 18, color: AppColors.border),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-    ).animate().fadeIn().slideX(begin: 0.1, end: 0);
+      title: Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+      subtitle: Text(subtitle, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w500)),
+      trailing: trailing ?? const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.textMuted),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    ).animate().fadeIn().slideX(begin: 0.05, end: 0);
   }
 }

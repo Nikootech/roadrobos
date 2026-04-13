@@ -1,14 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
+import 'package:roadrobos/core/services/auth_service.dart';
+import '../../core/repositories/ride_booking_repository.dart';
+import '../../core/repositories/service_booking_repository.dart';
+import '../../core/repositories/rental_booking_repository.dart';
 
 /// Ride & Service History matching Figma Screen [21]: My Rides History
-class RideHistoryScreen extends StatelessWidget {
+class RideHistoryScreen extends ConsumerWidget {
   const RideHistoryScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userId = ref.watch(authStateProvider).value?.id;
+
     return DefaultTabController(
       length: 3,
       child: Scaffold(
@@ -36,62 +44,114 @@ class RideHistoryScreen extends StatelessWidget {
             ],
           ),
         ),
-        body: TabBarView(
-          children: [
-            // Rides Tab
-            ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemCount: 5,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                return _buildHistoryCard(
-                  type: 'Ride to Airport',
-                  date: 'Oct 24, 2023 • 10:30 AM',
-                  status: index == 0 ? 'Completed' : 'Cancelled',
-                  price: '₹450',
-                  car: 'White Swift Dzire',
-                  isSuccess: index == 0,
-                ).animate().fadeIn(delay: (100 * index).ms).slideX(begin: 0.1, end: 0);
-              },
+        body: userId == null 
+          ? const Center(child: Text('Please login to view history'))
+          : TabBarView(
+              children: [
+                _buildRidesTab(ref, userId),
+                _buildServicesTab(ref, userId),
+                _buildRentalsTab(ref, userId),
+              ],
             ),
+      ),
+    );
+  }
 
-            // Services Tab
-            ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemCount: 3,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                return _buildHistoryCard(
-                  type: 'General Service',
-                  date: 'Sep 10, 2023 • 09:00 AM',
-                  status: 'Completed',
-                  price: '₹2,499',
-                  car: 'Hyundai Creta',
-                  isSuccess: true,
-                  isService: true,
-                ).animate().fadeIn(delay: (100 * index).ms).slideX(begin: 0.1, end: 0);
-              },
-            ),
+  Widget _buildRidesTab(WidgetRef ref, String userId) {
+    return StreamBuilder(
+      stream: ref.watch(rideBookingRepositoryProvider).getCustomerRides(userId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+        final rides = snapshot.data ?? [];
+        if (rides.isEmpty) return _buildEmptyState('No rides found');
+        
+        return ListView.separated(
+          padding: const EdgeInsets.all(16),
+          itemCount: rides.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 12),
+          itemBuilder: (context, index) {
+            final ride = rides[index];
+            return _buildHistoryCard(
+              type: ride.dropAddress.split(',').first,
+              date: DateFormat('MMM dd, yyyy • hh:mm a').format(ride.createdAt),
+              status: ride.status.toUpperCase(),
+              price: '₹${ride.fare}',
+              car: 'Personal Cab',
+              isSuccess: ride.status.toLowerCase() == 'completed',
+            ).animate().fadeIn(delay: (100 * index).ms).slideX(begin: 0.1, end: 0);
+          },
+        );
+      },
+    );
+  }
 
-            // Rentals Tab
-            ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemCount: 2,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                return _buildHistoryCard(
-                  type: index == 0 ? 'Monthly Rental' : 'Daily Rental',
-                  date: index == 0 ? 'Oct 01 - Oct 31' : 'Nov 05, 2023',
-                  status: 'Completed',
-                  price: index == 0 ? '₹45,000' : '₹2,500',
-                  car: index == 0 ? 'Mahindra Thar' : 'Hyundai Venue',
-                  isSuccess: true,
-                  isRental: true,
-                ).animate().fadeIn(delay: (100 * index).ms).slideX(begin: 0.1, end: 0);
-              },
-            ),
-          ],
-        ),
+  Widget _buildServicesTab(WidgetRef ref, String userId) {
+    return StreamBuilder(
+      stream: ref.watch(serviceBookingRepositoryProvider).getCustomerServiceBookings(userId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+        final services = snapshot.data ?? [];
+        if (services.isEmpty) return _buildEmptyState('No services found');
+        
+        return ListView.separated(
+          padding: const EdgeInsets.all(16),
+          itemCount: services.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 12),
+          itemBuilder: (context, index) {
+            final service = services[index];
+            return _buildHistoryCard(
+              type: service.packageName,
+              date: DateFormat('MMM dd, yyyy').format(service.createdAt),
+              status: service.status.toUpperCase(),
+              price: '₹${service.totalCost}',
+              car: service.vehicleName,
+              isSuccess: service.status.toLowerCase() == 'completed',
+              isService: true,
+            ).animate().fadeIn(delay: (100 * index).ms).slideX(begin: 0.1, end: 0);
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildRentalsTab(WidgetRef ref, String userId) {
+    return StreamBuilder(
+      stream: ref.watch(rentalBookingRepositoryProvider).getCustomerRentals(userId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+        final rentals = snapshot.data ?? [];
+        if (rentals.isEmpty) return _buildEmptyState('No rentals found');
+        
+        return ListView.separated(
+          padding: const EdgeInsets.all(16),
+          itemCount: rentals.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 12),
+          itemBuilder: (context, index) {
+            final rental = rentals[index];
+            return _buildHistoryCard(
+              type: rental.vehicleName,
+              date: DateFormat('MMM dd, yyyy').format(rental.startTime),
+              status: rental.status.toUpperCase(),
+              price: '₹${rental.totalCost}',
+              car: rental.rentalType.toUpperCase(),
+              isSuccess: rental.status.toLowerCase() == 'completed' || rental.status.toLowerCase() == 'paid',
+              isRental: true,
+            ).animate().fadeIn(delay: (100 * index).ms).slideX(begin: 0.1, end: 0);
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildEmptyState(String message) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.history_rounded, size: 64, color: AppColors.textMuted.withOpacity(0.2)),
+          const SizedBox(height: 16),
+          Text(message, style: const TextStyle(color: AppColors.textSecondary, fontSize: 14)),
+        ],
       ),
     );
   }

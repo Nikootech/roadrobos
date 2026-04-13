@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
-import 'package:iconsax/iconsax.dart';
 import '../../core/theme/app_colors.dart';
 
 /// ChatScreen matching Figma Screen [25 & 40] Help & Support / In-App Chat
@@ -55,7 +54,7 @@ class ChatScreen extends StatelessWidget {
           ],
         ),
         actions: [
-          IconButton(icon: const Icon(Iconsax.call, color: AppColors.textPrimary), onPressed: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Calling support agent...'), behavior: SnackBarBehavior.floating))),
+          IconButton(icon: const Icon(Icons.call_outlined, color: AppColors.textPrimary), onPressed: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Calling support agent...'), behavior: SnackBarBehavior.floating))),
         ],
       ),
       body: Column(
@@ -85,7 +84,7 @@ class ChatScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: const BoxDecoration(color: AppColors.bgLightGrey, shape: BoxShape.circle),
-                  child: const Icon(Iconsax.attach_square, color: AppColors.textSecondary, size: 20),
+                  child: const Icon(Icons.attachment_rounded, color: AppColors.textSecondary, size: 20),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -121,7 +120,7 @@ class ChatScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isMe)
-             Container(
+            Container(
               margin: const EdgeInsets.only(right: 8),
               width: 24,
               height: 24,

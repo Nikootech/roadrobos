@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:iconsax/iconsax.dart';
 import '../../shared/widgets/bottom_nav_bar.dart';
 
 class MainShell extends StatefulWidget {
@@ -23,10 +22,10 @@ class _MainShellState extends State<MainShell> {
   ];
 
   static const List<NavItemData> _customerNavItems = [
-    NavItemData(icon: Iconsax.home_2, activeIcon: Iconsax.home_25, label: 'Home'),
-    NavItemData(icon: Iconsax.calendar_1, activeIcon: Iconsax.calendar, label: 'Bookings'),
-    NavItemData(icon: Iconsax.search_normal_1, activeIcon: Iconsax.search_normal, label: 'Explore'),
-    NavItemData(icon: Iconsax.user, activeIcon: Iconsax.user, label: 'Profile'),
+    NavItemData(icon: Icons.home_outlined, activeIcon: Icons.home_rounded, label: 'Home'),
+    NavItemData(icon: Icons.calendar_today_outlined, activeIcon: Icons.calendar_today_rounded, label: 'Bookings'),
+    NavItemData(icon: Icons.explore_outlined, activeIcon: Icons.explore_rounded, label: 'Explore'),
+    NavItemData(icon: Icons.person_outline_rounded, activeIcon: Icons.person_rounded, label: 'Profile'),
   ];
 
   @override

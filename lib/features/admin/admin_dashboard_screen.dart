@@ -3,7 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:iconsax/iconsax.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/glass_card.dart';
 import '../../shared/widgets/custom_button.dart';
@@ -80,7 +79,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(color: AppColors.dangerRed.withOpacity(0.1), shape: BoxShape.circle),
-                  child: const Icon(Iconsax.info_circle, color: AppColors.dangerRed),
+                  child: const Icon(Icons.info_outline_rounded, color: AppColors.dangerRed),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -97,9 +96,9 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
             const SizedBox(height: 24),
             const Divider(),
             const SizedBox(height: 24),
-            _buildDetailRow('Root Cause', 'Potential network congestion or app version mismatch detected among 42 active drivers.', Iconsax.search_status),
+            _buildDetailRow('Root Cause', 'Potential network congestion or app version mismatch detected among 42 active drivers.', Icons.search_rounded),
             const SizedBox(height: 16),
-            _buildDetailRow('Impact', 'Estimated 15% revenue loss in last 30 minutes. Customer wait times increased by 8 mins.', Iconsax.flash),
+            _buildDetailRow('Impact', 'Estimated 15% revenue loss in last 30 minutes. Customer wait times increased by 8 mins.', Icons.flash_on_rounded),
             const Spacer(),
             SizedBox(
               width: double.infinity,
@@ -169,7 +168,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
           IconButton(
             icon: Stack(
               children: [
-                const Icon(Iconsax.notification, color: AppColors.textPrimary),
+                const Icon(Icons.notifications_none_rounded, color: AppColors.textPrimary),
                 Positioned(right: 2, top: 2, child: Container(width: 8, height: 8, decoration: const BoxDecoration(color: AppColors.dangerRed, shape: BoxShape.circle)))
               ],
             ),
@@ -247,10 +246,10 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                   offset: const Offset(0, 40),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   itemBuilder: (context) => [
-                    _buildPopupItem('Today', Iconsax.calendar_1),
-                    _buildPopupItem('Yesterday', Iconsax.calendar_2),
-                    _buildPopupItem('Last 7 Days', Iconsax.calendar_tick),
-                    _buildPopupItem('Custom Range', Iconsax.calendar_search),
+                    _buildPopupItem('Today', Icons.calendar_today_rounded),
+                    _buildPopupItem('Yesterday', Icons.calendar_month_rounded),
+                    _buildPopupItem('Last 7 Days', Icons.event_available_rounded),
+                    _buildPopupItem('Custom Range', Icons.date_range_rounded),
                   ],
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -275,7 +274,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
             // Stat Cards Grid
             Row(
               children: [
-                Expanded(child: _buildStatCard('Total Revenue', '₹84,500', Iconsax.wallet_1, AppColors.successGreen, '+12%')),
+                Expanded(child: _buildStatCard('Total Revenue', '₹84,500', Icons.account_balance_wallet_rounded, AppColors.successGreen, '+12%')),
                 const SizedBox(width: 16),
                 Expanded(child: _buildStatCard('Active Rides', '124', Icons.local_taxi_rounded, AppColors.primaryBlue, '+5%')),
               ],
@@ -313,7 +312,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                     _QuickActionCard(
                       title: 'Revenue',
                       subtitle: 'Analytics',
-                      icon: Iconsax.chart_21,
+                      icon: Icons.bar_chart_rounded,
                       color: AppColors.successGreen,
                       onTap: () => context.push('/admin-revenue-referral'),
                       badge: 'Live',
@@ -329,14 +328,14 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                     _QuickActionCard(
                       title: 'Logistics',
                       subtitle: 'Hub Mgmt',
-                      icon: Iconsax.house_2,
+                      icon: Icons.warehouse_rounded,
                       color: AppColors.deepNavy,
                       onTap: () => context.push('/admin-logistics-hub'),
                     ),
                     _QuickActionCard(
                       title: 'Permissions',
                       subtitle: 'Manage Roles',
-                      icon: Iconsax.security_user,
+                      icon: Icons.admin_panel_settings_rounded,
                       color: AppColors.primaryBlue,
                       onTap: () => context.push('/admin-management'),
                     ),
@@ -351,7 +350,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                     _QuickActionCard(
                       title: 'Offers',
                       subtitle: 'Coupons',
-                      icon: Iconsax.discount_shape,
+                      icon: Icons.local_offer_rounded,
                       color: AppColors.warningAmber,
                       onTap: () => context.push('/admin-manage-offers'),
                       badge: 'Active',
@@ -382,7 +381,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: const BoxDecoration(color: AppColors.dangerRed, shape: BoxShape.circle),
-                      child: const Icon(Iconsax.info_circle, color: Colors.white, size: 18),
+                      child: const Icon(Icons.info_outline_rounded, color: Colors.white, size: 18),
                     ),
                     const SizedBox(width: 12),
                     const Expanded(
@@ -853,7 +852,7 @@ class _AnimatedEmergencyIconState extends State<_AnimatedEmergencyIcon> with Sin
               )
             ],
           ),
-          child: const Icon(Iconsax.danger, color: AppColors.dangerRed, size: 24),
+          child: const Icon(Icons.error_outline_rounded, color: AppColors.dangerRed, size: 24),
         );
       },
     );
