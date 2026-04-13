@@ -11,18 +11,18 @@ class Wallet {
 
   Map<String, dynamic> toMap() {
     return {
-      'userId': userId,
+      'id': userId,
       'balance': balance,
-      'lastUpdated': lastUpdated.toIso8601String(),
+      'updated_at': lastUpdated.toIso8601String(),
     };
   }
 
   factory Wallet.fromMap(Map<String, dynamic> map) {
     return Wallet(
-      userId: map['userId'] ?? '',
+      userId: map['id'] ?? map['userId'] ?? '',
       balance: (map['balance'] ?? 0.0).toDouble(),
-      lastUpdated: map['lastUpdated'] != null 
-          ? DateTime.parse(map['lastUpdated']) 
+      lastUpdated: map['updated_at'] != null 
+          ? DateTime.parse(map['updated_at']) 
           : DateTime.now(),
     );
   }
@@ -49,23 +49,23 @@ class WalletTransaction {
 
   Map<String, dynamic> toMap() {
     return {
-      'walletId': walletId,
+      'wallet_id': walletId,
       'amount': amount,
       'type': type.name,
       'description': description,
-      'timestamp': timestamp.toIso8601String(),
+      'created_at': timestamp.toIso8601String(),
     };
   }
 
   factory WalletTransaction.fromMap(Map<String, dynamic> map, String docId) {
     return WalletTransaction(
       id: docId,
-      walletId: map['walletId'] ?? '',
+      walletId: map['wallet_id'] ?? map['walletId'] ?? '',
       amount: (map['amount'] ?? 0.0).toDouble(),
       type: TransactionType.values.byName(map['type'] ?? 'credit'),
       description: map['description'] ?? '',
-      timestamp: map['timestamp'] != null 
-          ? DateTime.parse(map['timestamp']) 
+      timestamp: map['created_at'] != null 
+          ? DateTime.parse(map['created_at']) 
           : DateTime.now(),
     );
   }

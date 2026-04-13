@@ -1,7 +1,7 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Aggregated admin metrics computed live from Firestore collections
+/// Aggregated admin metrics computed live from Supabase tables
 class AdminLiveMetrics {
   final int activeRides;
   final int pendingServices;
@@ -21,84 +21,98 @@ class AdminLiveMetrics {
 }
 
 class AdminOpsRepository {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final SupabaseClient _supabase = Supabase.instance.client;
 
-  /// Real-time aggregated metrics from all booking collections
+  /// Real-time aggregated metrics (simplified polling/stream for this migration)
   Stream<AdminLiveMetrics> watchMetrics() {
-    // We'll combine multiple collection streams into one metrics object
-    return _firestore.collection('ride_bookings').snapshots().asyncMap((rideSnap) async {
-      final serviceSnap = await _firestore.collection('service_bookings').get();
-      final rentalSnap = await _firestore.collection('rental_bookings').get();
-      final techJobsSnap = await _firestore.collection('technician_jobs').get();
-      final usersSnap = await _firestore.collection('users')
-          .where('role', isEqualTo: 'customer')
-          .get();
-
-      final activeRides = rideSnap.docs
-          .where((d) => d.data()['status'] != 'completed')
-          .length;
-      final pendingServices = serviceSnap.docs
-          .where((d) => d.data()['status'] != 'completed' && d.data()['status'] != 'paid')
-          .length;
-      final activeRentals = rentalSnap.docs
-          .where((d) => d.data()['status'] != 'paid')
-          .length;
-      final completedJobs = techJobsSnap.docs
-          .where((d) => d.data()['status'] == 'COMPLETED')
-          .length;
+    // We'll use a stream on one table as a trigger to re-fetch all counts
+    return _supabase.from('ride_bookings').stream(primaryKey: ['id']).asyncMap((_) async {
+      final rideCount = await _supabase
+          .from('ride_bookings')
+          .select('count')
+          .neq('status', 'completed');
+      
+      final serviceCount = await _supabase
+          .from('service_bookings')
+          .select('count')
+          .not('status', 'in', '("completed", "paid")');
+          
+      final rentalCount = await _supabase
+          .from('rental_bookings')
+          .select('count')
+          .neq('status', 'paid');
+          
+      final jobsCount = await _supabase
+          .from('technician_jobs')
+          .select('count')
+          .eq('status', 'COMPLETED');
+          
+      final usersCount = await _supabase
+          .from('profiles')
+          .select('count')
+          .eq('role', 'customer');
 
       return AdminLiveMetrics(
-        activeRides: activeRides,
-        pendingServices: pendingServices,
-        activeRentals: activeRentals,
-        totalCustomers: usersSnap.docs.length,
-        completedJobs: completedJobs,
+        activeRides: _count(rideCount),
+        pendingServices: _count(serviceCount),
+        activeRentals: _count(rentalCount),
+        totalCustomers: _count(usersCount),
+        completedJobs: _count(jobsCount),
       );
     });
   }
 
-  /// Recent bookings from all collections (combined feed)
+  int _count(dynamic response) {
+    if (response is List && response.isNotEmpty) {
+      return response.first['count'] ?? 0;
+    }
+    return 0;
+  }
+
+  /// Recent bookings (combined feed)
   Stream<List<Map<String, dynamic>>> watchRecentBookings() {
-    return _firestore.collection('service_bookings')
-        .orderBy('createdAt', descending: true)
+    return _supabase
+        .from('service_bookings')
+        .stream(primaryKey: ['id'])
+        .order('created_at')
         .limit(10)
-        .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) {
-          final data = doc.data();
+        .map((list) => list.map((map) {
           return {
-            'id': doc.id,
-            'customer': data['customerId'] ?? 'Unknown',
-            'vehicle': data['vehicleName'] ?? 'N/A',
-            'status': data['status'] ?? 'pending',
-            'date': data['date'] ?? 'Today',
+            'id': map['id'],
+            'customer': map['customer_id'] ?? 'Unknown',
+            'vehicle': map['vehicle_name'] ?? 'N/A',
+            'status': map['status'] ?? 'pending',
+            'date': map['booking_date'] ?? 'Today',
             'type': 'Service',
           };
         }).toList());
   }
 
-  /// Active service operations for admin panel
+  /// Active service operations
   Stream<List<Map<String, dynamic>>> watchActiveServices() {
-    return _firestore.collection('technician_jobs')
-        .where('status', whereIn: ['SCHEDULED', 'ACCEPTED', 'IN PROGRESS'])
-        .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) {
-          final data = doc.data();
-          return {
-            'id': doc.id,
-            'vehicleReg': data['vehiclePlate'] ?? 'N/A',
-            'tech': data['assignedTechId'] ?? 'Unassigned',
-            'status': data['status'] ?? 'Pending',
-            'vehicleModel': data['vehicleModel'] ?? '',
-          };
-        }).toList());
+    return _supabase
+        .from('technician_jobs')
+        .stream(primaryKey: ['id'])
+        .map((list) => list
+            .where((map) => ['SCHEDULED', 'ACCEPTED', 'IN PROGRESS'].contains(map['status']))
+            .map((map) => {
+              'id': map['id'],
+              'vehicleReg': map['vehicle_plate'] ?? 'N/A',
+              'tech': map['assigned_tech_id'] ?? 'Unassigned',
+              'status': map['status'] ?? 'Pending',
+              'vehicleModel': map['vehicle_model'] ?? '',
+            }).toList());
   }
 
-  /// Update service status in Firestore
+  /// Update service status
   Future<void> updateServiceStatus(String id, String status) async {
-    await _firestore.collection('technician_jobs').doc(id).update({
-      'status': status,
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
+    await _supabase
+        .from('technician_jobs')
+        .update({
+          'status': status,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', id);
   }
 }
 

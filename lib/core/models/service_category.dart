@@ -16,7 +16,7 @@ class ServiceCategory {
       id: documentId,
       icon: map['icon'] ?? '',
       label: map['label'] ?? '',
-      count: map['count'] ?? '0',
+      count: map['count']?.toString() ?? '0',
     );
   }
 

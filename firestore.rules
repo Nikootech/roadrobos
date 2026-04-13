@@ -1,0 +1,25 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users can only read and write their own profile
+    match /users/{userId} {
+      allow read, write: if request.auth != null && (request.auth.uid == userId || userId.matches('^demo_.*'));
+    }
+    
+    // Allow reading public configs if needed
+    match /config/{document=**} {
+      allow read: if true;
+    }
+
+    // Wallets: Users can only see their own wallet
+    match /wallets/{userId} {
+      allow read: if request.auth != null && (request.auth.uid == userId || userId.matches('^demo_.*'));
+      allow write: if false; // Only cloud functions/admin should update balance
+    }
+
+    // Default deny for safety
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

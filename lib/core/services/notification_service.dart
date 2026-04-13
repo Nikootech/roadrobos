@@ -55,7 +55,17 @@ class NotificationService {
   }
 
   Future<String?> getToken() async {
-    return await _fcm.getToken();
+    try {
+      if (kIsWeb) {
+        // Safe-guard: VAPID key is required on Web for getToken()
+        // Here we try to get it, but catch if it fails due to missing auth code/unconfigured VAPID
+        return await _fcm.getToken();
+      }
+      return await _fcm.getToken();
+    } catch (e) {
+      debugPrint('FCM Token Error: $e');
+      return null;
+    }
   }
 
   void showError(String title, {String? message, dynamic error, StackTrace? stackTrace}) {

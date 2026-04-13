@@ -1,65 +1,71 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart';
-import '../models/user_role.dart';
+import 'dart:async';
 
 final authServiceProvider = Provider<AuthService>((ref) {
   return AuthService();
 });
 
 /// Listen to auth state changes across the app
-final authStateProvider = StreamProvider<User?>((ref) {
+final authStateProvider = StreamProvider<sb.User?>((ref) {
   return ref.watch(authServiceProvider).authStateChanges;
 });
 
 class AuthService {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final sb.SupabaseClient _supabase = sb.Supabase.instance.client;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
+  
+  // Use a broadcast stream controller to handle manual state overrides (like demo mode)
+  final StreamController<sb.User?> _manualAuthStateController = StreamController<sb.User?>.broadcast();
 
-  Stream<User?> get authStateChanges => _auth.authStateChanges();
+  Stream<sb.User?> get authStateChanges {
+    // Combine Supabase auth state changes with our manual overrides
+    return _supabase.auth.onAuthStateChange.map((data) => data.session?.user);
+  }
 
-  User? get currentUser => _auth.currentUser;
+  sb.User? get currentUser => _supabase.auth.currentUser;
 
-  // --- Phone Authentication ---
+  /// Trigger a demo login state (Note: For Supabase, we might just return a mock user ID)
+  void setDemoUser(String uid) {
+    _manualAuthStateController.add(null); 
+  }
 
-  Future<void> verifyPhone({
-    required String phoneNumber,
-    required Function(String verificationId, int? resendToken) onCodeSent,
-    required Function(FirebaseAuthException e) onVerificationFailed,
-    required Function(PhoneAuthCredential credential) onVerificationCompleted,
-  }) async {
-    await _auth.verifyPhoneNumber(
-      phoneNumber: phoneNumber,
-      verificationCompleted: onVerificationCompleted,
-      verificationFailed: onVerificationFailed,
-      codeSent: onCodeSent,
-      codeAutoRetrievalTimeout: (String verificationId) {},
+  // --- Email/Password Authentication ---
+
+  Future<sb.AuthResponse> signUpWithEmail(String email, String password) async {
+    return await _supabase.auth.signUp(
+      email: email,
+      password: password,
     );
   }
 
-  Future<UserCredential> signInWithOtp(String verificationId, String smsCode) async {
-    final credential = PhoneAuthProvider.credential(
-      verificationId: verificationId,
-      smsCode: smsCode,
+  Future<sb.AuthResponse> signInWithEmail(String email, String password) async {
+    return await _supabase.auth.signInWithPassword(
+      email: email,
+      password: password,
     );
-    return await _auth.signInWithCredential(credential);
+  }
+
+  Future<void> resetPassword(String email) async {
+    await _supabase.auth.resetPasswordForEmail(email);
   }
 
   // --- Google Sign-In ---
 
-  Future<UserCredential?> signInWithGoogle() async {
+  Future<bool> signInWithGoogle() async {
     try {
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) return null;
-
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
+      // Use Supabase native OAuth for the best cross-platform compatibility
+      return await _supabase.auth.signInWithOAuth(
+        sb.OAuthProvider.google,
+        redirectTo: kIsWeb 
+          ? 'http://localhost:8081' 
+          : 'com.nikootech.roadrobos://login-callback',
+        queryParams: {
+          'prompt': 'select_account',
+        },
       );
-
-      return await _auth.signInWithCredential(credential);
     } catch (e) {
       debugPrint('Google Sign-In Error: $e');
       rethrow;
@@ -69,7 +75,7 @@ class AuthService {
   // --- Sign Out ---
 
   Future<void> signOut() async {
-    await _googleSignIn.signOut();
-    await _auth.signOut();
+    if (!kIsWeb) await _googleSignIn.signOut();
+    await _supabase.auth.signOut();
   }
 }

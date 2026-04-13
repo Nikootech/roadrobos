@@ -24,9 +24,9 @@ class ServiceItem {
       id: documentId,
       title: map['title'] ?? '',
       desc: map['desc'] ?? '',
-      price: map['price'] ?? '',
-      rating: (map['rating'] ?? 0.0).toDouble(),
-      image: map['image'] ?? '',
+      price: map['price']?.toString() ?? '',
+      rating: (map['rating'] ?? 5.0).toDouble(),
+      image: map['image_url'] ?? map['image'] ?? '',
       duration: map['duration'] ?? '',
       category: map['category'] ?? '',
     );
@@ -38,7 +38,7 @@ class ServiceItem {
       'desc': desc,
       'price': price,
       'rating': rating,
-      'image': image,
+      'image_url': image,
       'duration': duration,
       'category': category,
     };

@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -6,7 +7,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import 'package:intl/intl.dart';
 
 import '../../core/theme/app_colors.dart';
@@ -32,31 +33,28 @@ class LoginScreen extends ConsumerStatefulWidget {
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
-  final _phoneController = TextEditingController();
-  final _otpController = TextEditingController();
   final _passwordController = TextEditingController();
   
   bool _isLoading = false;
   bool _isCustomer = true;
-  bool _isOtpSent = false;
-  String? _verificationId;
+  bool _isSigningUp = false; // Toggle for register vs login
 
   @override
   void dispose() {
     _emailController.dispose();
-    _phoneController.dispose();
-    _otpController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
+  bool _isDemoMode = false;
+
   void _handleLogin() async {
     if (_formKey.currentState?.validate() ?? false) {
       if (_isCustomer) {
-        if (!_isOtpSent) {
-          _sendOtp();
+        if (_isSigningUp) {
+          _handleEmailSignUp();
         } else {
-          _verifyOtp();
+          _handleEmailLogin();
         }
       } else {
         final email = _emailController.text.trim();
@@ -68,7 +66,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       (email == 'driver@roadrobos.com' && pass == 'driver123');
         
         if (isValid) {
-          _showRoleSelection();
+          // Auto-detect role from email
+          if (email == 'superadmin@roadrobos.com') {
+            _performEmployeeLogin(UserRole.superAdmin, 'Super Admin');
+          } else if (email == 'admin@roadrobos.com') {
+            _performEmployeeLogin(UserRole.admin, 'Admin');
+          } else {
+            _showRoleSelection();
+          }
         } else {
           NavHelpers.showError(context, 'Invalid Employee ID or Password');
         }
@@ -76,72 +81,56 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
-  void _sendOtp() async {
+  void _handleEmailLogin() async {
     setState(() => _isLoading = true);
     try {
-      final phone = '+91${_phoneController.text.trim()}';
-      await ref.read(authServiceProvider).verifyPhone(
-        phoneNumber: phone,
-        onCodeSent: (verificationId, resendToken) {
-          setState(() {
-            _isLoading = false;
-            _isOtpSent = true;
-            _verificationId = verificationId;
-          });
-          NavHelpers.showSuccess(context, 'OTP sent to ${_phoneController.text}');
-        },
-        onVerificationFailed: (e) {
-          setState(() => _isLoading = false);
-          NavHelpers.showError(context, 'Verification failed: ${e.message}');
-        },
-        onVerificationCompleted: (credential) {
-          _signInWithCredential(credential);
-        },
+      await ref.read(authServiceProvider).signInWithEmail(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
       );
+      // userProvider listens to auth changes and will fetch the profile automatically
     } catch (e) {
       setState(() => _isLoading = false);
-      NavHelpers.showError(context, 'Error: $e');
+      NavHelpers.showError(context, 'Login Failed: $e');
     }
   }
 
-  void _verifyOtp() async {
-    if (_verificationId == null) {
-      NavHelpers.showError(context, 'Session expired. Please request a new OTP.');
-      setState(() => _isOtpSent = false);
-      return;
-    }
+  void _handleEmailSignUp() async {
     setState(() => _isLoading = true);
     try {
-      await ref.read(authServiceProvider).signInWithOtp(
-        _verificationId!, 
-        _otpController.text.trim(),
+      final response = await ref.read(authServiceProvider).signUpWithEmail(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
       );
+      
+      if (response.user != null) {
+        // Create initial profile for the email user
+        await ref.read(userProvider.notifier).fetchUserProfile(response.user!.id);
+        // Router will handle navigation automatically upon profile load
+      }
     } catch (e) {
-      setState(() => _isLoading = false);
-      NavHelpers.showError(context, 'Invalid OTP or network error');
+      if (mounted) {
+        setState(() => _isLoading = false);
+        NavHelpers.showError(context, 'Signup Failed: $e');
+      }
     }
   }
 
-  void _signInWithCredential(AuthCredential credential) async {
-    setState(() => _isLoading = true);
-    try {
-      await FirebaseAuth.instance.signInWithCredential(credential);
-    } catch (e) {
-      setState(() => _isLoading = false);
-      NavHelpers.showError(context, 'Auto-sign in failed');
-    }
-  }
 
   void _handleGoogleSignIn() async {
     setState(() => _isLoading = true);
     try {
-      final cred = await ref.read(authServiceProvider).signInWithGoogle();
-      if (cred == null) {
+      final success = await ref.read(authServiceProvider).signInWithGoogle();
+      if (!success) {
         setState(() => _isLoading = false);
       }
+      // On Web, signInWithOAuth will redirect the page, so we don't need manual navigation here.
+      // On Mobile/Desktop, you might need to handle the deep link.
     } catch (e) {
-      setState(() => _isLoading = false);
-      NavHelpers.showError(context, 'Google Sign-In failed');
+      if (mounted) {
+        setState(() => _isLoading = false);
+        NavHelpers.showError(context, 'Google Sign-In failed: $e');
+      }
     }
   }
 
@@ -174,6 +163,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       } finally {
         setState(() => _isLoading = false);
       }
+    }
+  }
+
+  /// Direct login for admin/superAdmin roles (no role selection needed)
+  Future<void> _performEmployeeLogin(UserRole role, [String? label]) async {
+    setState(() => _isLoading = true);
+    try {
+      final roleStr = role.toString().split('.').last.toLowerCase();
+      final demoId = 'demo_${roleStr}_001';
+      
+      await ref.read(userProvider.notifier).loginDemo(demoId, role: role);
+      // Router will handle navigation automatically upon demo profile load
+    } catch (e) {
+      if (mounted) NavHelpers.showError(context, 'Login failed: $e');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -265,7 +270,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: ListView(
                   controller: scrollController,
                   children: [
-                    _buildDemoTile('Standard Customer', '9876543210', 'Any 6-digit OTP', true),
+                    _buildDemoTile('Standard Customer', 'customer@roadrobos.com', 'customer123', true),
                     _buildDemoTile('System Admin', 'admin@roadrobos.com', 'admin123', false),
                     _buildDemoTile('Field Technician', 'tech@roadrobos.com', 'tech123', false),
                     _buildDemoTile('Professional Driver', 'driver@roadrobos.com', 'driver123', false),
@@ -317,14 +322,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               onPressed: () {
                 setState(() {
                   _isCustomer = isCustomer;
-                  _isOtpSent = false;
-                  _verificationId = null;
-                  if (isCustomer) {
-                    _phoneController.text = identifier;
-                  } else {
-                    _emailController.text = identifier;
-                    _passwordController.text = secret;
-                  }
+                  _emailController.text = identifier;
+                  _passwordController.text = secret;
                 });
                 Navigator.pop(context);
                 NavHelpers.showSuccess(context, 'Credentials loaded for $title');
@@ -374,19 +373,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       title: Text(label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
       trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.textMuted),
       onTap: () async {
-        setState(() => _isLoading = true);
-        final user = FirebaseAuth.instance.currentUser;
-        if (user != null) {
-          final userId = user.uid;
-          await ref.read(userRepositoryProvider).updateField(userId, 'role', role.name);
-          await ref.read(userProvider.notifier).fetchUserProfile(userId);
-        }
-        
-        if (mounted) {
-          setState(() => _isLoading = false);
-          Navigator.pop(context);
-          NavHelpers.showSuccess(context, 'Logged in as $label');
-        }
+        Navigator.pop(context);
+        _performEmployeeLogin(role, label);
       },
     );
   }
@@ -478,37 +466,53 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   key: _formKey,
                   child: Column(
                     children: [
-                      if (!_isOtpSent)
-                        CustomTextField(
-                          label: _isCustomer ? 'Mobile Number' : 'Employee ID / Email',
-                          hint: _isCustomer ? 'Enter 10-digit number' : 'Enter employee credentials',
-                          prefixIcon: _isCustomer ? Iconsax.mobile : Iconsax.personalcard,
-                          controller: _isCustomer ? _phoneController : _emailController,
-                          keyboardType: _isCustomer ? TextInputType.phone : TextInputType.emailAddress,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) return 'Required';
-                            if (_isCustomer && value.length != 10) return 'Enter valid 10-digit number';
-                            return null;
-                          },
-                        ),
+                      if (_isCustomer)
+                          Column(
+                            children: [
+                              CustomTextField(
+                                label: 'Email Address',
+                                hint: 'Enter your email',
+                                prefixIcon: Iconsax.sms,
+                                controller: _emailController,
+                                keyboardType: TextInputType.emailAddress,
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) return 'Email is required';
+                                  if (!value.contains('@')) return 'Enter a valid email';
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 16),
+                              CustomTextField(
+                                label: 'Password',
+                                hint: _isSigningUp ? 'Create a password' : 'Enter your password',
+                                prefixIcon: Iconsax.lock,
+                                isPassword: true,
+                                controller: _passwordController,
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) return 'Password is required';
+                                  if (_isSigningUp && value.length < 6) return 'Mini 6 characters';
+                                  return null;
+                                },
+                              ),
+                            ],
+                          ),
 
-                      if (_isCustomer && _isOtpSent)
-                        CustomTextField(
-                          label: 'Verification Code',
-                          hint: 'Enter 6-digit OTP',
-                          prefixIcon: Iconsax.password_check,
-                          controller: _otpController,
-                          keyboardType: TextInputType.number,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) return 'OTP is required';
-                            if (value.length != 6) return 'Enter 6-digit code';
-                            return null;
-                          },
-                        ),
 
                       const SizedBox(height: 16),
 
-                      if (!_isCustomer)
+                      if (!_isCustomer) ...[
+                        CustomTextField(
+                          label: 'Employee ID / Email',
+                          hint: 'Enter employee credentials',
+                          prefixIcon: Iconsax.personalcard,
+                          controller: _emailController,
+                          keyboardType: TextInputType.emailAddress,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) return 'Required';
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
                         CustomTextField(
                           label: AppStrings.password,
                           hint: 'Enter your password',
@@ -516,11 +520,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           isPassword: true,
                           controller: _passwordController,
                         ),
+                      ],
 
                       const SizedBox(height: 8),
 
                       CustomButton(
-                        label: _isCustomer ? (_isOtpSent ? 'Verify OTP' : 'Send OTP') : AppStrings.login,
+                        label: _isCustomer 
+                          ? (_isSigningUp ? 'Join RoAd RoBo\'s' : 'Sign In with Email')
+                          : AppStrings.login,
                         onPressed: _handleLogin,
                         isLoading: _isLoading,
                         backgroundColor: AppColors.brandGreen,
@@ -551,14 +558,42 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(color: AppColors.border),
                           ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Image.network('https://www.gstatic.com/images/branding/product/2x/googleg_48dp.png', width: 24, errorBuilder: (_,__,___) => const Icon(Icons.g_mobiledata)),
-                              const SizedBox(width: 12),
-                              const Text('Continue with Google', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
-                            ],
-                          ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: 24,
+                              height: 24,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.white,
+                              ),
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  Text(
+                                    'G',
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w900,
+                                      foreground: Paint()
+                                        ..shader = const LinearGradient(
+                                          colors: [
+                                            Color(0xFF4285F4), // Blue
+                                            Color(0xFF34A853), // Green
+                                            Color(0xFFFBBC05), // Yellow
+                                            Color(0xFFEA4335), // Red
+                                          ],
+                                        ).createShader(const Rect.fromLTWH(0, 0, 24, 24)),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            const Text('Continue with Google', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                          ],
+                        ),
                         ),
                       ),
 
@@ -599,10 +634,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Text(AppStrings.dontHaveAccount, style: TextStyle(fontSize: 14, color: AppColors.textSecondary)),
+                          Text(
+                            _isSigningUp ? 'Already have an account?' : AppStrings.dontHaveAccount, 
+                            style: const TextStyle(fontSize: 14, color: AppColors.textSecondary)
+                          ),
                           GestureDetector(
-                            onTap: () => context.go('/auth/register'),
-                            child: const Text(' Sign Up', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.brandGreen)),
+                            onTap: () {
+                              setState(() => _isSigningUp = !_isSigningUp);
+                            },
+                            child: Text(
+                              _isSigningUp ? ' Sign In' : ' Sign Up Free', 
+                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.brandGreen)
+                            ),
                           ),
                         ],
                       ),
@@ -656,11 +699,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       ),
       child: Row(
         children: [
-          Expanded(child: _toggleItem('Customer', _isCustomer, () => setState(() => _isCustomer = true))),
-          Expanded(child: _toggleItem('Employee', !_isCustomer, () => setState(() => _isCustomer = false))),
+          Expanded(child: _toggleItem('Customer', _isCustomer, () {
+            if (!_isCustomer) _resetLoginState(true);
+          })),
+          Expanded(child: _toggleItem('Employee', !_isCustomer, () {
+            if (_isCustomer) _resetLoginState(false);
+          })),
         ],
       ),
     );
+  }
+
+  void _resetLoginState(bool isCustomer) {
+    setState(() {
+      _isCustomer = isCustomer;
+      _isSigningUp = false;
+      _isDemoMode = false;
+      _emailController.clear();
+      _passwordController.clear();
+    });
   }
 
   Widget _toggleItem(String label, bool active, VoidCallback onTap) {
@@ -673,6 +730,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         ),
         alignment: Alignment.center,
         child: Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: active ? Colors.white : AppColors.textSecondary)),
+      ),
+    );
+  }
+
+  Widget _buildAuthModeItem(String label, bool active, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: active ? AppColors.brandGreen.withOpacity(0.1) : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: active ? AppColors.brandGreen : AppColors.border),
+        ),
+        child: Text(
+          label, 
+          style: TextStyle(
+            fontSize: 12, 
+            fontWeight: active ? FontWeight.bold : FontWeight.normal,
+            color: active ? AppColors.brandGreen : AppColors.textSecondary
+          )
+        ),
       ),
     );
   }

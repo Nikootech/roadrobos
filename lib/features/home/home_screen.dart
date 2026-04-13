@@ -73,22 +73,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   children: [
                     Text('More Services', style: GoogleFonts.outfit(fontSize: ResponsiveLayout.responsiveFontSize(context, 20), fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
                     const SizedBox(height: 12),
-                    Row(
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
                       children: [
                         _buildMoreTile(context, 'Add Vehicle', Icons.add_circle_outline_rounded, const Color(0xFF3B82F6), '/add-vehicle'),
-                        const SizedBox(width: 12),
                         _buildMoreTile(context, 'Loyalty', Icons.card_membership_rounded, const Color(0xFFF97316), '/loyalty'),
-                        const SizedBox(width: 12),
                         _buildMoreTile(context, 'Help', Iconsax.message_question, const Color(0xFF8B5CF6), '/help-center'),
                       ],
                     ),
                     const SizedBox(height: 12),
-                    Row(
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
                       children: [
                         _buildMoreTile(context, 'History', Icons.history_rounded, const Color(0xFFF97316), '/ride-history'),
-                        const SizedBox(width: 12),
                         _buildMoreTile(context, 'Referral', Icons.card_giftcard_rounded, const Color(0xFFEC4899), '/referral'),
-                        const SizedBox(width: 12),
                         _buildMoreTile(context, 'Emergency', Iconsax.shield_slash, AppColors.dangerRed, '/sos-setup'),
                       ],
                     ),
@@ -104,12 +104,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   children: [
                     Text('Switch View', style: GoogleFonts.outfit(fontSize: ResponsiveLayout.responsiveFontSize(context, 20), fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
                     const SizedBox(height: 12),
-                    Row(
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
                       children: [
                         _buildRoleCard(context, 'Driver', Icons.local_taxi_rounded, const Color(0xFF22C55E), '/driver-home'),
-                        const SizedBox(width: 12),
                         _buildRoleCard(context, 'Technician', Icons.build_rounded, const Color(0xFFF97316), '/tech-tasks'),
-                        const SizedBox(width: 12),
                         _buildRoleCard(context, 'Admin', Icons.shield_rounded, const Color(0xFF6366F1), '/admin-home'),
                       ],
                     ),
@@ -141,58 +141,64 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ).animate().fadeIn(duration: 500.ms).scale(begin: const Offset(0.8, 0.8), end: const Offset(1.0, 1.0)),
             const Spacer(),
-            // Language Toggle
-            GestureDetector(
-              onTap: () {
-                final current = ref.read(languageProvider);
-                ref.read(languageProvider.notifier).setLanguage(
-                  current == AppLanguage.en ? AppLanguage.hi : AppLanguage.en,
-                );
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: AppColors.primaryBlue.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  ref.watch(languageProvider) == AppLanguage.en ? 'EN' : 'HI',
-                  style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primaryBlue),
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            GestureDetector(
-              onTap: () {
-                HapticFeedback.lightImpact();
-                context.push('/notifications');
-              },
-              child: Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.border),
-                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
-                ),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    const Icon(Iconsax.notification, size: 22, color: AppColors.textPrimary),
-                    Positioned(
-                      top: 12,
-                      right: 12,
-                      child: Container(
-                        width: 8,
-                        height: 8,
-                        decoration: BoxDecoration(color: AppColors.dangerRed, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 1.5)),
-                      ),
+            // Trailing Icons Row - Constrained to prevent overflow
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Language Toggle
+                GestureDetector(
+                  onTap: () {
+                    final current = ref.read(languageProvider);
+                    ref.read(languageProvider.notifier).setLanguage(
+                      current == AppLanguage.en ? AppLanguage.hi : AppLanguage.en,
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryBlue.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                  ],
+                    child: Text(
+                      ref.watch(languageProvider) == AppLanguage.en ? 'EN' : 'HI',
+                      style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primaryBlue, fontSize: 13),
+                    ),
+                  ),
                 ),
-              ),
-            ).animate().fadeIn(duration: 500.ms, delay: 100.ms).scale(begin: const Offset(0.8, 0.8), end: const Offset(1.0, 1.0)),
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    context.push('/notifications');
+                  },
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.border),
+                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
+                    ),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        const Icon(Iconsax.notification, size: 20, color: AppColors.textPrimary),
+                        Positioned(
+                          top: 10,
+                          right: 10,
+                          child: Container(
+                            width: 7,
+                            height: 7,
+                            decoration: BoxDecoration(color: AppColors.dangerRed, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 1.5)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ).animate().fadeIn(duration: 500.ms, delay: 100.ms).scale(begin: const Offset(0.8, 0.8), end: const Offset(1.0, 1.0)),
+              ],
+            ),
           ],
         ),
       ),
@@ -332,6 +338,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           boxShadow: [BoxShadow(color: AppColors.primaryBlue.withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 8))],
         ),
         child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Expanded(
               child: Column(
@@ -341,6 +348,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   const SizedBox(height: 4),
                   FittedBox(
                     fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
                     child: walletAsync.when(
                       data: (wallet) => Text('₹ ${(wallet?.balance ?? 0.0).toStringAsFixed(2)}', style: TextStyle(fontSize: ResponsiveLayout.responsiveFontSize(context, 24), fontWeight: FontWeight.w700, color: Colors.white)),
                       loading: () => const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)),
@@ -350,13 +358,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ],
               ),
             ),
-            const Spacer(),
-            GestureDetector(
-              onTap: () => context.push('/wallet'),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(12)),
-                child: Row(children: [const Icon(Icons.add_circle_outline_rounded, size: 18, color: Colors.white), const SizedBox(width: 8), Text(l10n.get('top_up'), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white))]),
+            const SizedBox(width: 12), // Minimum spacing
+            // Top-Up Button - Constrained
+            Flexible(
+              flex: 0,
+              child: GestureDetector(
+                onTap: () => context.push('/wallet'),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(12)),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.add_circle_outline_rounded, size: 18, color: Colors.white), 
+                      const SizedBox(width: 8), 
+                      Flexible(
+                        child: Text(
+                          l10n.get('top_up'), 
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white)
+                        ),
+                      )
+                    ],
+                  ),
+                ),
               ),
             ),
           ],
@@ -381,7 +406,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildLiveStatusCard(WidgetRef ref) {
     final activeRental = ref.watch(activeRentalProvider);
-    final activeJob = ref.watch(selectedJobProvider);
+    final TechnicianJob? activeJob = ref.watch(selectedJobProvider);
     if (activeRental == null && activeJob == null) return const SizedBox.shrink();
     final isRental = activeRental != null;
     final title = isRental ? activeRental.vehicle['name'] : '${activeJob!.serviceType} - ${activeJob.packageName}';
@@ -538,7 +563,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildMoreTile(BuildContext context, String label, IconData icon, Color color, String route) {
-    return Expanded(
+    return SizedBox(
+      width: (MediaQuery.of(context).size.width - 64) / 3,
       child: GestureDetector(
         onTap: () => context.push(route),
         child: Container(
@@ -561,7 +587,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildRoleCard(BuildContext context, String label, IconData icon, Color color, String route) {
-    return Expanded(
+    return SizedBox(
+      width: (MediaQuery.of(context).size.width - 64) / 3,
       child: GestureDetector(
         onTap: () => context.push(route),
         child: Container(

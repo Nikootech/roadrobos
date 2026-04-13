@@ -3,17 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'firebase_options.dart';
 import 'core/theme/app_theme.dart';
-import 'core/data/database_seeder.dart';
 import 'navigation/app_router.dart';
 import 'features/rentals/rental_providers.dart';
 import 'shared/widgets/rental_completion_dialog.dart';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'core/services/notification_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:flutter/foundation.dart';
 final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
@@ -22,44 +21,39 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Load environment variables
-  await dotenv.load(fileName: ".env");
-
-  // Initialize Firebase
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-
-  // Initialize Notifications
-  final notificationService = NotificationService();
-  await notificationService.initialize();
-  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
-
-  // Enable Offline Persistence for Firestore (Be careful on web)
-  try {
-    FirebaseFirestore.instance.settings = const Settings(
-      persistenceEnabled: true,
-      cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
-    );
-  } catch (e) {
-    debugPrint('Firestore persistence error: $e');
-  }
-
-  // Seed the catalog database asynchronously so it doesn't block runApp
-  DatabaseSeeder.seedDatabase().catchError((e) => debugPrint('Error seeding: $e'));
-
-  // Pass all uncaught errors to Crashlytics
-  FlutterError.onError = (errorDetails) {
-    if (kIsWeb) {
-      debugPrint('Web Error: ${errorDetails.exception}');
-    } else {
-      FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
-    }
-  };
-
-  // Wrap the app in runZonedGuarded to catch async errors
+  // Wrap the app in runZonedGuarded to catch async errors and ensure consistent zone usage
   runZonedGuarded(
-    () => runApp(const ProviderScope(child: RoadRobosApp())),
+    () async {
+      // Load environment variables
+      await dotenv.load(fileName: ".env");
+
+      // Initialize Firebase (Keep for Messaging/Crashlytics)
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+
+      // Initialize Supabase (Primary Database & Auth)
+      await Supabase.initialize(
+        url: dotenv.get('SUPABASE_URL'),
+        anonKey: dotenv.get('SUPABASE_ANON_KEY'),
+      );
+
+      // Initialize Notifications
+      final notificationService = NotificationService();
+      await notificationService.initialize();
+      FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+
+      // Pass all uncaught errors to Crashlytics
+      FlutterError.onError = (errorDetails) {
+        if (kIsWeb) {
+          debugPrint('Web Error: ${errorDetails.exception}');
+        } else {
+          FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
+        }
+      };
+
+      runApp(const ProviderScope(child: RoadRobosApp()));
+    },
     (error, stack) {
       if (kIsWeb) {
         debugPrint('Web Zoned Error: $error\n$stack');

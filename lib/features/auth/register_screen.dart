@@ -3,7 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
 import '../../core/theme/app_colors.dart';
 import '../../core/constants/app_strings.dart';
@@ -45,36 +45,31 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     if (_formKey.currentState?.validate() ?? false) {
       setState(() => _isLoading = true);
       try {
-        // 1. Create Auth Account
-        final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-          email: _emailController.text.trim(),
-          password: _passwordController.text.trim(),
+        final response = await ref.read(authServiceProvider).signUpWithEmail(
+          _emailController.text.trim(),
+          _passwordController.text.trim(),
         );
 
-        final user = credential.user;
+        final user = response.user;
         if (user != null) {
-          // 2. Save Profile to Firestore
+          // 2. Save Profile to Supabase
           final appUser = AppUser(
-            id: user.uid,
+            id: user.id,
             name: _nameController.text.trim(),
             phone: _phoneController.text.trim(),
             email: _emailController.text.trim(),
-            role: UserRole.customer, // Default to customer on register
+            role: UserRole.customer,
             createdAt: DateTime.now(),
           );
           await ref.read(userRepositoryProvider).saveUser(appUser);
           
           if (mounted) {
             NavHelpers.showSuccess(context, 'Account created successfully!');
-            // Navigation handled by AppRouter auth guard
           }
         }
-      } on FirebaseAuthException catch (e) {
-        setState(() => _isLoading = false);
-        NavHelpers.showError(context, e.message ?? 'Registration failed');
       } catch (e) {
         setState(() => _isLoading = false);
-        NavHelpers.showError(context, 'An unexpected error occurred');
+        NavHelpers.showError(context, 'Registration failed: $e');
       }
     }
   }

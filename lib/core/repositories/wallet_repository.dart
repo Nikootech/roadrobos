@@ -1,107 +1,107 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/wallet_model.dart';
 
 class WalletRepository {
-  final FirebaseFirestore _firestore;
-
-  WalletRepository(this._firestore);
+  final SupabaseClient _supabase = Supabase.instance.client;
 
   /// Get user wallet stream
   Stream<Wallet?> getWallet(String userId) {
-    return _firestore
-        .collection('wallets')
-        .doc(userId)
-        .snapshots()
-        .map((snapshot) {
-      if (!snapshot.exists) return null;
-      return Wallet.fromMap(snapshot.data()!);
+    return _supabase
+        .from('wallets')
+        .stream(primaryKey: ['id'])
+        .eq('id', userId)
+        .map((list) {
+      if (list.isEmpty) return null;
+      return Wallet.fromMap(list.first);
     });
   }
 
-  /// Atomic Wallet Top-up
+  /// Atomic Wallet Top-up 
+  /// (Note: For high production scale, use a PostgreSQL RPC for strict atomicity)
   Future<void> topUpWallet(String userId, double amount, String paymentId) async {
-    final walletRef = _firestore.collection('wallets').doc(userId);
-    final transactionRef = _firestore.collection('wallet_transactions').doc();
-
-    await _firestore.runTransaction((transaction) async {
-      final snapshot = await transaction.get(walletRef);
+    try {
+      final walletResponse = await _supabase
+          .from('wallets')
+          .select()
+          .eq('id', userId)
+          .maybeSingle();
       
-      double currentBalance = 0.0;
-      if (snapshot.exists) {
-        currentBalance = (snapshot.data()?['balance'] ?? 0.0).toDouble();
-      }
-
+      double currentBalance = (walletResponse?['balance'] ?? 0.0).toDouble();
       final newBalance = currentBalance + amount;
 
-      // Update or create wallet
-      transaction.set(walletRef, {
-        'userId': userId,
+      await _supabase.from('wallets').upsert({
+        'id': userId,
         'balance': newBalance,
-        'lastUpdated': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toIso8601String(),
       });
 
-      // Log transaction
-      transaction.set(transactionRef, {
-        'walletId': userId,
+      await _supabase.from('transactions').insert({
+        'wallet_id': userId,
         'amount': amount,
         'type': 'credit',
+        'category': 'topup',
         'description': 'Wallet Top-up (Ref: $paymentId)',
-        'timestamp': DateTime.now().toIso8601String(),
+        'created_at': DateTime.now().toIso8601String(),
       });
-    });
+    } catch (e) {
+      throw Exception('Failed to top up wallet: $e');
+    }
   }
 
   /// Atomic Wallet Payment
   Future<bool> payFromWallet(String userId, double amount, String description) async {
-    final walletRef = _firestore.collection('wallets').doc(userId);
-    final transactionRef = _firestore.collection('wallet_transactions').doc();
-
-    return await _firestore.runTransaction((transaction) async {
-      final snapshot = await transaction.get(walletRef);
+    try {
+      final walletResponse = await _supabase
+          .from('wallets')
+          .select()
+          .eq('id', userId)
+          .maybeSingle();
       
-      if (!snapshot.exists) return false;
+      if (walletResponse == null) return false;
 
-      double currentBalance = (snapshot.data()?['balance'] ?? 0.0).toDouble();
-
-      if (currentBalance < amount) return false; // Insufficient funds
+      double currentBalance = (walletResponse['balance'] ?? 0.0).toDouble();
+      if (currentBalance < amount) return false;
 
       final newBalance = currentBalance - amount;
 
-      // Update wallet
-      transaction.update(walletRef, {
+      await _supabase.from('wallets').update({
         'balance': newBalance,
-        'lastUpdated': DateTime.now().toIso8601String(),
-      });
+        'updated_at': DateTime.now().toIso8601String(),
+      }).eq('id', userId);
 
-      // Log transaction
-      transaction.set(transactionRef, {
-        'walletId': userId,
+      await _supabase.from('transactions').insert({
+        'wallet_id': userId,
         'amount': amount,
         'type': 'debit',
+        'category': 'payment',
         'description': description,
-        'timestamp': DateTime.now().toIso8601String(),
+        'created_at': DateTime.now().toIso8601String(),
       });
 
       return true;
-    });
+    } catch (e) {
+      debugPrint('Wallet Payment Error: $e');
+      return false;
+    }
   }
 
   /// Get transaction history
   Stream<List<WalletTransaction>> getTransactionHistory(String userId) {
-    return _firestore
-        .collection('wallet_transactions')
-        .where('walletId', isEqualTo: userId)
-        .orderBy('timestamp', descending: true)
-        .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => WalletTransaction.fromMap(doc.data(), doc.id))
+    return _supabase
+        .from('transactions')
+        .stream(primaryKey: ['id'])
+        .eq('wallet_id', userId)
+        .order('created_at')
+        .map((list) => list
+            .map((map) => WalletTransaction.fromMap(map, map['id'].toString()))
             .toList());
   }
 }
 
 final walletRepositoryProvider = Provider<WalletRepository>((ref) {
-  return WalletRepository(FirebaseFirestore.instance);
+  return WalletRepository();
 });
 
 final walletStreamProvider = StreamProvider.family<Wallet?, String>((ref, userId) {

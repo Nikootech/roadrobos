@@ -1,7 +1,6 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class ChatMessage {
   final String id;
+  final String roomId;
   final String senderId;
   final String receiverId;
   final String message;
@@ -10,6 +9,7 @@ class ChatMessage {
 
   ChatMessage({
     required this.id,
+    required this.roomId,
     required this.senderId,
     required this.receiverId,
     required this.message,
@@ -20,21 +20,23 @@ class ChatMessage {
   factory ChatMessage.fromMap(Map<String, dynamic> map, String id) {
     return ChatMessage(
       id: id,
-      senderId: map['senderId'] ?? '',
-      receiverId: map['receiverId'] ?? '',
+      roomId: map['room_id'] ?? '',
+      senderId: map['sender_id'] ?? '',
+      receiverId: map['receiver_id'] ?? '',
       message: map['message'] ?? '',
-      timestamp: (map['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      isRead: map['isRead'] ?? false,
+      timestamp: map['created_at'] != null ? DateTime.parse(map['created_at']) : DateTime.now(),
+      isRead: map['is_read'] ?? false,
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
-      'senderId': senderId,
-      'receiverId': receiverId,
+      'room_id': roomId,
+      'sender_id': senderId,
+      'receiver_id': receiverId,
       'message': message,
-      'timestamp': FieldValue.serverTimestamp(),
-      'isRead': isRead,
+      'created_at': timestamp.toIso8601String(),
+      'is_read': isRead,
     };
   }
 }

@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class FirestoreChecklistItem {
   final String task;
@@ -92,11 +92,11 @@ class TechnicianJobModel {
   }) : createdAt = createdAt ?? DateTime.now();
 
   Map<String, dynamic> toMap() => {
-    'estimatedCompletion': estimatedCompletion,
-    'vehicleModel': vehicleModel,
-    'vehiclePlate': vehiclePlate,
-    'serviceType': serviceType,
-    'packageName': packageName,
+    'estimated_completion': estimatedCompletion,
+    'vehicle_model': vehicleModel,
+    'vehicle_plate': vehiclePlate,
+    'service_type': serviceType,
+    'package_name': packageName,
     'date': date,
     'time': time,
     'progress': progress,
@@ -104,20 +104,20 @@ class TechnicianJobModel {
     'parts': parts.map((p) => p.toMap()).toList(),
     'status': status,
     'price': price,
-    'assignedTechId': assignedTechId,
-    'customerId': customerId,
-    'serviceBookingId': serviceBookingId,
-    'createdAt': Timestamp.fromDate(createdAt),
+    'assigned_tech_id': assignedTechId,
+    'customer_id': customerId,
+    'service_booking_id': serviceBookingId,
+    'created_at': createdAt.toIso8601String(),
   };
 
   factory TechnicianJobModel.fromMap(Map<String, dynamic> map, String docId) {
     return TechnicianJobModel(
       id: docId,
-      estimatedCompletion: map['estimatedCompletion'] ?? '',
-      vehicleModel: map['vehicleModel'] ?? '',
-      vehiclePlate: map['vehiclePlate'] ?? '',
-      serviceType: map['serviceType'] ?? 'General Service',
-      packageName: map['packageName'] ?? 'Basic',
+      estimatedCompletion: map['estimated_completion'] ?? '',
+      vehicleModel: map['vehicle_model'] ?? '',
+      vehiclePlate: map['vehicle_plate'] ?? '',
+      serviceType: map['service_type'] ?? 'General Service',
+      packageName: map['package_name'] ?? 'Basic',
       date: map['date'] ?? '',
       time: map['time'] ?? '',
       progress: (map['progress'] ?? 0.0).toDouble(),
@@ -129,11 +129,11 @@ class TechnicianJobModel {
           .toList() ?? [],
       status: map['status'] ?? 'SCHEDULED',
       price: map['price'] ?? '₹0',
-      assignedTechId: map['assignedTechId'],
-      customerId: map['customerId'],
-      serviceBookingId: map['serviceBookingId'],
-      createdAt: map['createdAt'] != null
-          ? (map['createdAt'] as Timestamp).toDate()
+      assignedTechId: map['assigned_tech_id'],
+      customerId: map['customer_id'],
+      serviceBookingId: map['service_booking_id'],
+      createdAt: map['created_at'] != null 
+          ? DateTime.parse(map['created_at']) 
           : DateTime.now(),
     );
   }

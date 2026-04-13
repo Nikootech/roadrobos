@@ -1,16 +1,16 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/rental_vehicle.dart';
 
 final rentalCatalogRepositoryProvider = Provider((ref) => RentalCatalogRepository());
 
 class RentalCatalogRepository {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final SupabaseClient _supabase = Supabase.instance.client;
 
   Future<List<RentalVehicle>> getRentalFleet() async {
     try {
-      final snapshot = await _firestore.collection('rental_fleet').get(const GetOptions(source: Source.serverAndCache));
-      return snapshot.docs.map((doc) => RentalVehicle.fromMap(doc.data(), doc.id)).toList();
+      final response = await _supabase.from('rental_vehicles').select();
+      return response.map((map) => RentalVehicle.fromMap(map, map['id'].toString())).toList();
     } catch (e) {
       throw Exception('Failed to fetch rental fleet: $e');
     }
@@ -18,11 +18,11 @@ class RentalCatalogRepository {
 
   Future<List<RentalVehicle>> getBikesOnly() async {
     try {
-      final snapshot = await _firestore
-          .collection('rental_fleet')
-          .where('isBike', isEqualTo: true)
-          .get(const GetOptions(source: Source.serverAndCache));
-      return snapshot.docs.map((doc) => RentalVehicle.fromMap(doc.data(), doc.id)).toList();
+      final response = await _supabase
+          .from('rental_vehicles')
+          .select()
+          .eq('is_bike', true);
+      return response.map((map) => RentalVehicle.fromMap(map, map['id'].toString())).toList();
     } catch (e) {
       throw Exception('Failed to fetch rental bikes: $e');
     }
@@ -30,11 +30,11 @@ class RentalCatalogRepository {
 
   Future<List<RentalVehicle>> getCarsOnly() async {
     try {
-      final snapshot = await _firestore
-          .collection('rental_fleet')
-          .where('isBike', isEqualTo: false)
-          .get(const GetOptions(source: Source.serverAndCache));
-      return snapshot.docs.map((doc) => RentalVehicle.fromMap(doc.data(), doc.id)).toList();
+      final response = await _supabase
+          .from('rental_vehicles')
+          .select()
+          .eq('is_bike', false);
+      return response.map((map) => RentalVehicle.fromMap(map, map['id'].toString())).toList();
     } catch (e) {
       throw Exception('Failed to fetch rental cars: $e');
     }

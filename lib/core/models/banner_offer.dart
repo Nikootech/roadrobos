@@ -18,7 +18,7 @@ class BannerOffer {
       id: documentId,
       title: map['title'] ?? '',
       subtitle: map['subtitle'] ?? '',
-      image: map['image'] ?? '',
+      image: map['image_url'] ?? map['image'] ?? '',
       cta: map['cta'] ?? '',
     );
   }
@@ -27,7 +27,7 @@ class BannerOffer {
     return {
       'title': title,
       'subtitle': subtitle,
-      'image': image,
+      'image_url': image,
       'cta': cta,
     };
   }

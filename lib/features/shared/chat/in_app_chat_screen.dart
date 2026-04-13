@@ -32,8 +32,9 @@ class _InAppChatScreenState extends ConsumerState<InAppChatScreen> {
     final userId = ref.read(userProvider).user?.id ?? 'demo';
     ref.read(chatRepositoryProvider).sendMessage(ChatMessage(
       id: '',
+      roomId: widget.chatRoomId,
       senderId: userId,
-      receiverId: 'driver_id', // This should Ideally come from widget, but widget has chatRoomId
+      receiverId: 'driver_id', 
       message: _messageController.text.trim(),
       timestamp: DateTime.now(),
     ));
@@ -212,6 +213,7 @@ class _InAppChatScreenState extends ConsumerState<InAppChatScreen> {
           final userId = ref.read(userProvider).user?.id ?? 'demo';
           ref.read(chatRepositoryProvider).sendMessage(ChatMessage(
             id: '',
+            roomId: widget.chatRoomId,
             senderId: userId,
             receiverId: 'driver_id',
             message: text,

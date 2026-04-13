@@ -5,7 +5,7 @@ import '../../../core/repositories/ride_booking_repository.dart';
 import '../../../features/profile/user_provider.dart';
 import '../../../core/models/driver_model.dart';
 import '../../../core/models/ride_booking.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/services/notification_service.dart';
 
 enum VerificationStatus { pending, approved, rejected }
@@ -33,8 +33,8 @@ class VerificationActionNotifier extends StateNotifier<void> {
   Future<void> updateStatus(DriverApprovalStatus status) async {
     final user = ref.read(userProvider);
     if (user == null) return;
-    await FirebaseFirestore.instance.collection('drivers').doc(user.user?.id ?? 'demo').update({
-      'approvalStatus': status.toString().split('.').last,
+    await ref.read(driverRepositoryProvider).updateDriver(user.user?.id ?? 'demo', {
+      'approval_status': status.toString().split('.').last,
     });
   }
 }

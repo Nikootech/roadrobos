@@ -33,11 +33,11 @@ class RentalVehicle {
       price: map['price'] ?? '',
       rating: map['rating'] ?? '5.0',
       seats: map['seats'],
-      image: map['image'] ?? '',
+      image: map['image_url'] ?? map['image'] ?? '',
       category: map['category'] ?? '',
       spec: map['spec'],
-      isBike: map['isBike'] ?? false,
-      isComingSoon: map['isComingSoon'] ?? false,
+      isBike: map['is_bike'] ?? map['isBike'] ?? false,
+      isComingSoon: map['is_coming_soon'] ?? map['isComingSoon'] ?? false,
     );
   }
 
@@ -48,11 +48,11 @@ class RentalVehicle {
       'price': price,
       'rating': rating,
       'seats': seats,
-      'image': image,
+      'image_url': image,
       'category': category,
       'spec': spec,
-      'isBike': isBike,
-      'isComingSoon': isComingSoon,
+      'is_bike': isBike,
+      'is_coming_soon': isComingSoon,
     };
   }
 }

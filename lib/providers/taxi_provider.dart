@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'dart:math' as math;
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 import '../features/profile/user_provider.dart';
 import '../core/models/ride_booking.dart';
@@ -289,14 +289,10 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
       final bookingId = await ref.read(rideBookingRepositoryProvider).createRideBooking(booking);
       
       _rideSubscription?.cancel();
-      _rideSubscription = FirebaseFirestore.instance
-          .collection('ride_bookings')
-          .doc(bookingId)
-          .snapshots()
-          .listen((snapshot) {
-            if (snapshot.exists) {
-              final updatedRide = RideBooking.fromMap(snapshot.data()!, snapshot.id);
-              
+      _rideSubscription = ref.read(rideBookingRepositoryProvider)
+          .watchBooking(bookingId)
+          .listen((updatedRide) {
+            if (updatedRide != null) {
               if (updatedRide.driverId != null && state.status == RideStatus.booked) {
                 _onDriverAssigned(updatedRide);
               }

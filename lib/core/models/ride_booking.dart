@@ -26,29 +26,29 @@ class RideBooking {
   factory RideBooking.fromMap(Map<String, dynamic> map, String documentId) {
     return RideBooking(
       id: documentId,
-      customerId: map['customerId'] ?? '',
-      driverId: map['driverId'],
-      pickupLocation: map['pickupLocation'] ?? '',
-      pickupAddress: map['pickupAddress'] ?? '',
-      dropLocation: map['dropLocation'] ?? '',
-      dropAddress: map['dropAddress'] ?? '',
+      customerId: map['customer_id'] ?? '',
+      driverId: map['driver_id'],
+      pickupLocation: map['pickup_location'] ?? '',
+      pickupAddress: map['pickup_address'] ?? '',
+      dropLocation: map['destination_location'] ?? map['dropLocation'] ?? '',
+      dropAddress: map['destination_address'] ?? map['dropAddress'] ?? '',
       status: map['status'] ?? 'pending',
       fare: (map['fare'] ?? 0.0).toDouble(),
-      createdAt: map['createdAt'] != null ? DateTime.parse(map['createdAt']) : DateTime.now(),
+      createdAt: map['created_at'] != null ? DateTime.parse(map['created_at']) : DateTime.now(),
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
-      'customerId': customerId,
-      'driverId': driverId,
-      'pickupLocation': pickupLocation,
-      'pickupAddress': pickupAddress,
-      'dropLocation': dropLocation,
-      'dropAddress': dropAddress,
+      'customer_id': customerId,
+      'driver_id': driverId,
+      'pickup_location': pickupLocation,
+      'pickup_address': pickupAddress,
+      'destination_location': dropLocation,
+      'destination_address': dropAddress,
       'status': status,
       'fare': fare,
-      'createdAt': createdAt.toIso8601String(),
+      'created_at': createdAt.toIso8601String(),
     };
   }
 }

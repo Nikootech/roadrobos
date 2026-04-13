@@ -1,59 +1,68 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/technician_job_model.dart';
 
 class TechnicianJobRepository {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  
-  CollectionReference<Map<String, dynamic>> get _collection =>
-      _firestore.collection('technician_jobs');
+  final SupabaseClient _supabase = Supabase.instance.client;
 
   /// Real-time stream of all technician jobs, ordered by creation date
   Stream<List<TechnicianJobModel>> watchAllJobs() {
-    return _collection
-        .orderBy('createdAt', descending: true)
-        .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => TechnicianJobModel.fromMap(doc.data(), doc.id))
+    return _supabase
+        .from('technician_jobs')
+        .stream(primaryKey: ['id'])
+        .order('created_at', ascending: false)
+        .map((list) => list
+            .map((map) => TechnicianJobModel.fromMap(map, map['id'].toString()))
             .toList());
   }
 
   /// Real-time stream of jobs assigned to a specific technician
   Stream<List<TechnicianJobModel>> watchJobsForTech(String techId) {
-    return _collection
-        .where('assignedTechId', isEqualTo: techId)
-        .orderBy('createdAt', descending: true)
-        .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => TechnicianJobModel.fromMap(doc.data(), doc.id))
+    return _supabase
+        .from('technician_jobs')
+        .stream(primaryKey: ['id'])
+        .eq('assigned_tech_id', techId)
+        .order('created_at', ascending: false)
+        .map((list) => list
+            .map((map) => TechnicianJobModel.fromMap(map, map['id'].toString()))
             .toList());
   }
 
   /// Create a new job card
   Future<String> createJob(TechnicianJobModel job) async {
-    final docRef = await _collection.add(job.toMap());
-    return docRef.id;
+    final response = await _supabase
+        .from('technician_jobs')
+        .insert(job.toMap())
+        .select()
+        .single();
+    return response['id'].toString();
   }
 
   /// Update job status (SCHEDULED → ACCEPTED → IN PROGRESS → COMPLETED)
   Future<void> updateJobStatus(String jobId, String status) async {
-    await _collection.doc(jobId).update({'status': status});
+    await _supabase
+        .from('technician_jobs')
+        .update({'status': status})
+        .eq('id', jobId);
   }
 
   /// Update job progress value
   Future<void> updateJobProgress(String jobId, double progress) async {
-    await _collection.doc(jobId).update({'progress': progress});
+    await _supabase
+        .from('technician_jobs')
+        .update({'progress': progress})
+        .eq('id', jobId);
   }
 
   /// Toggle a checklist item at a given index
   Future<void> toggleChecklistItem(String jobId, int index) async {
-    final doc = await _collection.doc(jobId).get();
-    if (!doc.exists) return;
+    final response = await _supabase
+        .from('technician_jobs')
+        .select('checklist')
+        .eq('id', jobId)
+        .single();
     
-    final data = doc.data()!;
-    final checklist = List<Map<String, dynamic>>.from(
-      (data['checklist'] as List<dynamic>).map((e) => Map<String, dynamic>.from(e)),
-    );
+    final checklist = List<Map<String, dynamic>>.from(response['checklist']);
     
     if (index >= 0 && index < checklist.length) {
       checklist[index]['isDone'] = !(checklist[index]['isDone'] ?? false);
@@ -62,43 +71,48 @@ class TechnicianJobRepository {
       final doneCount = checklist.where((item) => item['isDone'] == true).length;
       final progress = doneCount / checklist.length;
       
-      await _collection.doc(jobId).update({
+      await _supabase.from('technician_jobs').update({
         'checklist': checklist,
         'progress': progress,
-      });
+      }).eq('id', jobId);
     }
   }
 
   /// Add a spare part to a job
   Future<void> addSparePart(String jobId, FirestoreSparePart part) async {
-    await _collection.doc(jobId).update({
-      'parts': FieldValue.arrayUnion([part.toMap()]),
-    });
+    final response = await _supabase
+        .from('technician_jobs')
+        .select('parts')
+        .eq('id', jobId)
+        .single();
+    
+    final parts = List<Map<String, dynamic>>.from(response['parts'] ?? []);
+    parts.add(part.toMap());
+
+    await _supabase.from('technician_jobs').update({
+      'parts': parts,
+    }).eq('id', jobId);
   }
 
   /// Complete a job (set progress to 1.0 and status to COMPLETED)
   Future<void> completeJob(String jobId) async {
-    await _collection.doc(jobId).update({
+    await _supabase.from('technician_jobs').update({
       'status': 'COMPLETED',
       'progress': 1.0,
-    });
+    }).eq('id', jobId);
   }
 
-  /// Get count of jobs by status (for admin metrics)
-  Future<int> getJobCountByStatus(String status) async {
-    final snapshot = await _collection.where('status', isEqualTo: status).get();
-    return snapshot.docs.length;
-  }
-
-  /// Stream of active job counts for dashboard metrics
+  /// Active job metrics
   Stream<Map<String, int>> watchJobMetrics() {
-    return _collection.snapshots().map((snapshot) {
-      final jobs = snapshot.docs.map((d) => d.data()).toList();
+    return _supabase
+        .from('technician_jobs')
+        .stream(primaryKey: ['id'])
+        .map((list) {
       return {
-        'scheduled': jobs.where((j) => j['status'] == 'SCHEDULED').length,
-        'inProgress': jobs.where((j) => j['status'] == 'IN PROGRESS' || j['status'] == 'ACCEPTED').length,
-        'completed': jobs.where((j) => j['status'] == 'COMPLETED').length,
-        'total': jobs.length,
+        'scheduled': list.where((j) => j['status'] == 'SCHEDULED').length,
+        'inProgress': list.where((j) => j['status'] == 'IN PROGRESS' || j['status'] == 'ACCEPTED').length,
+        'completed': list.where((j) => j['status'] == 'COMPLETED').length,
+        'total': list.length,
       };
     });
   }

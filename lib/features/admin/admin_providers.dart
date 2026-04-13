@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/repositories/admin_ops_repository.dart';
 import '../../core/repositories/technician_job_repository.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 // --- Models (kept for UI compatibility) ---
 class CustomerOp {
@@ -122,19 +122,19 @@ final techOpProvider = StreamProvider<TechOp>((ref) {
 });
 
 final emergencyAlertsProvider = StreamProvider<List<EmergencyAlert>>((ref) {
-  return FirebaseFirestore.instance
-      .collection('emergency_alerts')
-      .orderBy('timestamp', descending: true)
+  final supabase = Supabase.instance.client;
+  return supabase
+      .from('emergency_alerts')
+      .stream(primaryKey: ['id'])
+      .order('created_at')
       .limit(5)
-      .snapshots()
-      .map((snapshot) => snapshot.docs.map((doc) {
-            final data = doc.data();
+      .map((list) => list.map((data) {
             return EmergencyAlert(
-              doc.id,
-              data['userId'] ?? 'Unknown',
+              data['id'].toString(),
+              data['user_id'] ?? 'Unknown',
               data['message'] ?? 'Emergency Triggered',
-              (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
-              isAcknowledged: data['isAcknowledged'] ?? false,
+              DateTime.parse(data['created_at'] ?? DateTime.now().toIso8601String()),
+              isAcknowledged: data['is_acknowledged'] ?? false,
             );
           }).toList());
 });

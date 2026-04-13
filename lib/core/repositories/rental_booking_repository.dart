@@ -1,28 +1,21 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/rental_booking.dart';
 
 final rentalBookingRepositoryProvider = Provider((ref) => RentalBookingRepository());
 
 class RentalBookingRepository {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final SupabaseClient _supabase = Supabase.instance.client;
 
   Future<String> createRentalBooking(RentalBooking booking) async {
     try {
-      final docRef = _firestore.collection('rental_bookings').doc();
-      final finalBooking = RentalBooking(
-        id: docRef.id,
-        customerId: booking.customerId,
-        vehicleName: booking.vehicleName,
-        rentalType: booking.rentalType,
-        startTime: booking.startTime,
-        duration: booking.duration,
-        totalCost: booking.totalCost,
-        details: booking.details,
-      );
+      final response = await _supabase
+          .from('rental_bookings')
+          .insert(booking.toMap())
+          .select()
+          .single();
       
-      await docRef.set(finalBooking.toMap());
-      return docRef.id;
+      return response['id'].toString();
     } catch (e) {
       throw Exception('Failed to create rental booking: $e');
     }
@@ -30,7 +23,10 @@ class RentalBookingRepository {
 
   Future<void> updateRentalStatus(String bookingId, String status) async {
     try {
-      await _firestore.collection('rental_bookings').doc(bookingId).update({'status': status});
+      await _supabase
+          .from('rental_bookings')
+          .update({'status': status})
+          .eq('id', bookingId);
     } catch (e) {
       throw Exception('Failed to update rental status: $e');
     }

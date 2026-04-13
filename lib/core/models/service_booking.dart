@@ -30,33 +30,33 @@ class ServiceBooking {
   factory ServiceBooking.fromMap(Map<String, dynamic> map, String documentId) {
     return ServiceBooking(
       id: documentId,
-      customerId: map['customerId'] ?? '',
-      techId: map['techId'],
-      vehicleName: map['vehicleName'] ?? '',
-      vehiclePlate: map['vehiclePlate'] ?? '',
-      packageName: map['packageName'] ?? '',
-      date: map['date'] ?? '',
-      time: map['time'] ?? '',
+      customerId: map['customer_id'] ?? '',
+      techId: map['tech_id'],
+      vehicleName: map['vehicle_name'] ?? '',
+      vehiclePlate: map['vehicle_plate'] ?? '',
+      packageName: map['package_name'] ?? '',
+      date: map['booking_date'] ?? '',
+      time: map['booking_time'] ?? '',
       status: map['status'] ?? 'pending',
-      totalCost: (map['totalCost'] ?? 0.0).toDouble(),
-      details: map['details'] ?? '',
-      createdAt: map['createdAt'] != null ? DateTime.parse(map['createdAt']) : DateTime.now(),
+      totalCost: (map['total_cost'] ?? 0.0).toDouble(),
+      details: map['details'].toString(),
+      createdAt: map['created_at'] != null ? DateTime.parse(map['created_at']) : DateTime.now(),
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
-      'customerId': customerId,
-      'techId': techId,
-      'vehicleName': vehicleName,
-      'vehiclePlate': vehiclePlate,
-      'packageName': packageName,
-      'date': date,
-      'time': time,
+      'customer_id': customerId,
+      'tech_id': techId,
+      'vehicle_name': vehicleName,
+      'vehicle_plate': vehiclePlate,
+      'package_name': packageName,
+      'booking_date': date,
+      'booking_time': time,
       'status': status,
-      'totalCost': totalCost,
+      'total_cost': totalCost,
       'details': details,
-      'createdAt': createdAt.toIso8601String(),
+      'created_at': createdAt.toIso8601String(),
     };
   }
 }

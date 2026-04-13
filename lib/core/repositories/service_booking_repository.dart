@@ -1,49 +1,43 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/service_booking.dart';
 
 final serviceBookingRepositoryProvider = Provider((ref) => ServiceBookingRepository());
 
 class ServiceBookingRepository {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final SupabaseClient _supabase = Supabase.instance.client;
 
   Future<String> createServiceBooking(ServiceBooking booking) async {
     try {
-      final docRef = _firestore.collection('service_bookings').doc();
-      final finalBooking = ServiceBooking(
-        id: docRef.id,
-        customerId: booking.customerId,
-        vehicleName: booking.vehicleName,
-        vehiclePlate: booking.vehiclePlate,
-        packageName: booking.packageName,
-        date: booking.date,
-        time: booking.time,
-        totalCost: booking.totalCost,
-        details: booking.details,
-        createdAt: booking.createdAt,
-      );
+      final response = await _supabase
+          .from('service_bookings')
+          .insert(booking.toMap())
+          .select()
+          .single();
       
-      await docRef.set(finalBooking.toMap());
-      return docRef.id;
+      return response['id'].toString();
     } catch (e) {
       throw Exception('Failed to create service booking: $e');
     }
   }
 
   Stream<List<ServiceBooking>> getCustomerServiceBookings(String customerId) {
-    return _firestore
-        .collection('service_bookings')
-        .where('customerId', isEqualTo: customerId)
-        .orderBy('createdAt', descending: true)
-        .snapshots()
-        .map((snapshot) {
-      return snapshot.docs.map((doc) => ServiceBooking.fromMap(doc.data(), doc.id)).toList();
+    return _supabase
+        .from('service_bookings')
+        .stream(primaryKey: ['id'])
+        .eq('customer_id', customerId)
+        .order('created_at')
+        .map((list) {
+      return list.map((map) => ServiceBooking.fromMap(map, map['id'].toString())).toList();
     });
   }
 
   Future<void> updateServiceStatus(String bookingId, String status) async {
     try {
-      await _firestore.collection('service_bookings').doc(bookingId).update({'status': status});
+      await _supabase
+          .from('service_bookings')
+          .update({'status': status})
+          .eq('id', bookingId);
     } catch (e) {
       throw Exception('Failed to update service status: $e');
     }

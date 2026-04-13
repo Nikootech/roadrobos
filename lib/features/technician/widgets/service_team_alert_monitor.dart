@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:iconsax/iconsax.dart';
@@ -12,23 +12,24 @@ class ServiceTeamAlertMonitor extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('technician_emergency_broadcast')
-          .where('isAcknowledge', isEqualTo: false)
-          .orderBy('timestamp', descending: true)
-          .limit(1)
-          .snapshots(),
+    final supabase = Supabase.instance.client;
+    return StreamBuilder<List<Map<String, dynamic>>>(
+      stream: supabase
+          .from('technician_emergency_broadcast')
+          .stream(primaryKey: ['id'])
+          .eq('is_acknowledged', false)
+          .order('created_at')
+          .limit(1),
       builder: (context, snapshot) {
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return const SizedBox.shrink();
         }
 
-        final alert = snapshot.data!.docs.first;
-        final data = alert.data() as Map<String, dynamic>;
+        final data = snapshot.data!.first;
         final location = data['location'] as Map<String, dynamic>;
         final lat = location['lat'];
         final lng = location['lng'];
+        final alertId = data['id'].toString();
 
         return Container(
           width: double.infinity,
@@ -104,10 +105,10 @@ class ServiceTeamAlertMonitor extends ConsumerWidget {
                   const SizedBox(width: 12),
                   IconButton(
                     onPressed: () {
-                      FirebaseFirestore.instance
-                          .collection('technician_emergency_broadcast')
-                          .doc(alert.id)
-                          .update({'isAcknowledge': true});
+                      supabase
+                          .from('technician_emergency_broadcast')
+                          .update({'is_acknowledged': true})
+                          .eq('id', alertId);
                     },
                     icon: const Icon(Iconsax.close_circle, color: Colors.white70),
                     tooltip: 'Dismiss Alert',

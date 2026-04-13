@@ -149,7 +149,7 @@ class _SparePartsScreenState extends ConsumerState<SparePartsScreen> {
       qty: '1 Unit',
     );
     
-    final currentJob = ref.read(selectedJobProvider);
+    final TechnicianJob? currentJob = ref.read(selectedJobProvider);
     if (currentJob == null) return;
 
     ref.read(technicianProvider.notifier).addSparePart(currentJob.id, part);

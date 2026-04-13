@@ -21,7 +21,7 @@ class _LiveServiceStatusScreenState extends ConsumerState<LiveServiceStatusScree
     super.initState();
     // Start the mock progress simulation when the screen is opened
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final job = ref.read(selectedJobProvider);
+      final TechnicianJob? job = ref.read(selectedJobProvider);
       if (job != null) {
         ref.read(technicianProvider.notifier).startMockProgress(job.id);
       }
@@ -30,7 +30,7 @@ class _LiveServiceStatusScreenState extends ConsumerState<LiveServiceStatusScree
 
   @override
   Widget build(BuildContext context) {
-    final job = ref.watch(selectedJobProvider);
+    final TechnicianJob? job = ref.watch(selectedJobProvider);
     
     if (job == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));

@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AppTransaction {
   final String id;
@@ -33,17 +33,17 @@ class AppTransaction {
 
   Map<String, dynamic> toMap() {
     return {
-      'userId': userId,
-      'razoprayPaymentId': razoprayPaymentId,
-      'razorpayOrderId': razorpayOrderId,
-      'razorpaySignature': razorpaySignature,
-      'baseAmount': baseAmount,
-      'gstAmount': gstAmount,
-      'platformFee': platformFee,
-      'handlingCharges': handlingCharges,
-      'totalAmount': totalAmount,
+      'user_id': userId,
+      'razorpay_payment_id': razoprayPaymentId,
+      'razorpay_order_id': razorpayOrderId,
+      'razorpay_signature': razorpaySignature,
+      'base_amount': baseAmount,
+      'gst_amount': gstAmount,
+      'platform_fee': platformFee,
+      'handling_charges': handlingCharges,
+      'total_amount': totalAmount,
       'description': description,
-      'timestamp': timestamp.toIso8601String(),
+      'created_at': timestamp.toIso8601String(),
       'status': status,
     };
   }
@@ -51,17 +51,21 @@ class AppTransaction {
   factory AppTransaction.fromMap(Map<String, dynamic> map, String docId) {
     return AppTransaction(
       id: docId,
-      userId: map['userId'] ?? '',
-      razoprayPaymentId: map['razoprayPaymentId'] ?? '',
-      razorpayOrderId: map['razorpayOrderId'],
-      razorpaySignature: map['razorpaySignature'],
-      baseAmount: (map['baseAmount'] ?? 0.0).toDouble(),
-      gstAmount: (map['gstAmount'] ?? 0.0).toDouble(),
-      platformFee: (map['platformFee'] ?? 0.0).toDouble(),
-      handlingCharges: (map['handlingCharges'] ?? 0.0).toDouble(),
-      totalAmount: (map['totalAmount'] ?? 0.0).toDouble(),
+      userId: map['user_id'] ?? map['userId'] ?? '',
+      razoprayPaymentId: map['razorpay_payment_id'] ?? map['razoprayPaymentId'] ?? '',
+      razorpayOrderId: map['razorpay_order_id'] ?? map['razorpayOrderId'],
+      razorpaySignature: map['razorpay_signature'] ?? map['razorpaySignature'],
+      baseAmount: (map['base_amount'] ?? map['baseAmount'] ?? 0.0).toDouble(),
+      gstAmount: (map['gst_amount'] ?? map['gstAmount'] ?? 0.0).toDouble(),
+      platformFee: (map['platform_fee'] ?? map['platformFee'] ?? 0.0).toDouble(),
+      handlingCharges: (map['handling_charges'] ?? map['handlingCharges'] ?? 0.0).toDouble(),
+      totalAmount: (map['total_amount'] ?? map['totalAmount'] ?? 0.0).toDouble(),
       description: map['description'] ?? '',
-      timestamp: map['timestamp'] != null ? DateTime.parse(map['timestamp']) : DateTime.now(),
+      timestamp: map['created_at'] != null 
+          ? DateTime.parse(map['created_at']) 
+          : map['timestamp'] != null 
+              ? DateTime.parse(map['timestamp']) 
+              : DateTime.now(),
       status: map['status'] ?? 'SUCCESS',
     );
   }

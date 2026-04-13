@@ -135,14 +135,24 @@ final routerProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final authState = ref.read(authStateProvider);
       final userState = ref.read(userProvider);
-      final isLoggedIn = authState.value != null;
+      // A user is "logged in" if:
+      // 1. Firebase Auth has a real user, OR
+      // 2. Demo mode is active with a loaded profile, OR
+      // 3. UserProvider has a user with a demo_ ID (handles race conditions)
+      final hasFirebaseUser = authState.value != null;
+      final hasDemoUser = userState.isDemo && userState.user != null;
+      final hasDemoIdUser = userState.user != null && userState.user!.id.startsWith('demo_');
+      final isLoggedIn = hasFirebaseUser || hasDemoUser || hasDemoIdUser;
       final user = userState.user;
       final location = state.matchedLocation;
+      
+      debugPrint('Router: location=$location, hasFirebaseUser=$hasFirebaseUser, hasDemoUser=$hasDemoUser, hasDemoIdUser=$hasDemoIdUser, isLoggedIn=$isLoggedIn, user=${user?.name}, isDemo=${userState.isDemo}');
       
       final publicPaths = ['/splash', '/onboarding', '/auth/login', '/auth/register'];
       final isPublicPath = publicPaths.contains(location);
       
       if (!isLoggedIn && !isPublicPath) {
+        debugPrint('Router: Not logged in, redirecting to /auth/login');
         return '/auth/login';
       }
       

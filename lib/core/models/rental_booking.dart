@@ -24,26 +24,26 @@ class RentalBooking {
   factory RentalBooking.fromMap(Map<String, dynamic> map, String documentId) {
     return RentalBooking(
       id: documentId,
-      customerId: map['customerId'] ?? '',
-      vehicleName: map['vehicleName'] ?? '',
-      rentalType: map['rentalType'] ?? '',
-      startTime: map['startTime'] != null ? DateTime.parse(map['startTime']) : DateTime.now(),
+      customerId: map['customer_id'] ?? '',
+      vehicleName: map['vehicle_name'] ?? '',
+      rentalType: map['rental_type'] ?? '',
+      startTime: map['start_time'] != null ? DateTime.parse(map['start_time']) : DateTime.now(),
       duration: map['duration'] ?? 1,
       status: map['status'] ?? 'active',
-      totalCost: (map['totalCost'] ?? 0.0).toDouble(),
+      totalCost: (map['total_cost'] ?? 0.0).toDouble(),
       details: map['details'] ?? '',
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
-      'customerId': customerId,
-      'vehicleName': vehicleName,
-      'rentalType': rentalType,
-      'startTime': startTime.toIso8601String(),
+      'customer_id': customerId,
+      'vehicle_name': vehicleName,
+      'rental_type': rentalType,
+      'start_time': startTime.toIso8601String(),
       'duration': duration,
       'status': status,
-      'totalCost': totalCost,
+      'total_cost': totalCost,
       'details': details,
     };
   }

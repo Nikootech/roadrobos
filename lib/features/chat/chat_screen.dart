@@ -38,6 +38,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final currentUserId = ref.read(userProvider).user?.id ?? 'demo';
     final message = ChatMessage(
       id: '',
+      roomId: _getConversationId(currentUserId, widget.otherPartyId),
       senderId: currentUserId,
       receiverId: widget.otherPartyId,
       message: _messageController.text.trim(),
@@ -224,5 +225,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         ],
       ),
     );
+  }
+
+  String _getConversationId(String id1, String id2) {
+    final list = [id1, id2];
+    list.sort();
+    return list.join('_');
   }
 }

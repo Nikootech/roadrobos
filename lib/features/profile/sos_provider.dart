@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -28,25 +28,27 @@ class SosNotifier extends StateNotifier<List<SosContact>> {
     try {
       final position = await Geolocator.getCurrentPosition();
       
-      // Log to Firestore for Admin Dashboard
+      final supabase = Supabase.instance.client;
+      
+      // Log to Supabase for Admin Dashboard
       final alertData = {
-        'userId': userId,
+        'user_id': userId,
         'location': {
           'lat': position.latitude,
           'lng': position.longitude,
         },
-        'timestamp': FieldValue.serverTimestamp(),
-        'contactsNotified': state.map((c) => '${c.name} (${c.phone})').toList(),
+        'contacts_notified': state.map((c) => '${c.name} (${c.phone})').toList(),
         'status': 'pending',
+        'created_at': DateTime.now().toIso8601String(),
       };
 
-      await FirebaseFirestore.instance.collection('emergency_alerts').add(alertData);
+      await supabase.from('emergency_alerts').insert(alertData);
 
       // Broadcast to Nearby Service Team (Technicians)
-      await FirebaseFirestore.instance.collection('technician_emergency_broadcast').add({
+      await supabase.from('technician_emergency_broadcast').insert({
         ...alertData,
         'type': 'ROADSIDE_EMERGENCY',
-        'isAcknowledge': false,
+        'is_acknowledged': false,
       });
 
       // Notify Emergency Contacts via SMS Intent

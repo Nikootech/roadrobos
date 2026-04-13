@@ -1,28 +1,26 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/transaction_model.dart';
 
 class TransactionRepository {
-  final FirebaseFirestore _firestore;
-
-  TransactionRepository(this._firestore);
+  final SupabaseClient _supabase = Supabase.instance.client;
 
   Future<void> logTransaction(AppTransaction transaction) async {
-    await _firestore.collection('transactions').add(transaction.toMap());
+    await _supabase.from('transactions').insert(transaction.toMap());
   }
 
   Stream<List<AppTransaction>> watchUserTransactions(String userId) {
-    return _firestore
-        .collection('transactions')
-        .where('userId', isEqualTo: userId)
-        .orderBy('timestamp', descending: true)
-        .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => AppTransaction.fromMap(doc.data(), doc.id))
+    return _supabase
+        .from('transactions')
+        .stream(primaryKey: ['id'])
+        .eq('user_id', userId)
+        .order('created_at', ascending: false)
+        .map((list) => list
+            .map((map) => AppTransaction.fromMap(map, map['id'].toString()))
             .toList());
   }
 }
 
 final transactionRepositoryProvider = Provider<TransactionRepository>((ref) {
-  return TransactionRepository(FirebaseFirestore.instance);
+  return TransactionRepository();
 });

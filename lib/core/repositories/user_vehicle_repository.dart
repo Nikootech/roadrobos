@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final userVehicleRepositoryProvider = Provider((ref) => UserVehicleRepository());
@@ -25,7 +25,7 @@ class UserVehicle {
   factory UserVehicle.fromMap(Map<String, dynamic> map, String id) {
     return UserVehicle(
       id: id,
-      userId: map['userId'] ?? '',
+      userId: map['user_id'] ?? map['userId'] ?? '',
       name: map['name'] ?? '',
       plate: map['plate'] ?? '',
       fuel: map['fuel'] ?? '',
@@ -36,7 +36,7 @@ class UserVehicle {
 
   Map<String, dynamic> toMap() {
     return {
-      'userId': userId,
+      'user_id': userId,
       'name': name,
       'plate': plate,
       'fuel': fuel,
@@ -47,15 +47,15 @@ class UserVehicle {
 }
 
 class UserVehicleRepository {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final SupabaseClient _supabase = Supabase.instance.client;
 
   Future<List<UserVehicle>> getUserVehicles(String userId) async {
     try {
-      final snapshot = await _firestore
-          .collection('user_vehicles')
-          .where('userId', isEqualTo: userId)
-          .get(const GetOptions(source: Source.serverAndCache));
-      return snapshot.docs.map((doc) => UserVehicle.fromMap(doc.data(), doc.id)).toList();
+      final response = await _supabase
+          .from('user_vehicles')
+          .select()
+          .eq('user_id', userId);
+      return response.map((map) => UserVehicle.fromMap(map, map['id'].toString())).toList();
     } catch (e) {
       throw Exception('Failed to fetch user vehicles: $e');
     }
@@ -63,7 +63,7 @@ class UserVehicleRepository {
 
   Future<void> addVehicle(UserVehicle vehicle) async {
     try {
-      await _firestore.collection('user_vehicles').doc(vehicle.id).set(vehicle.toMap());
+      await _supabase.from('user_vehicles').insert(vehicle.toMap());
     } catch (e) {
       throw Exception('Failed to add user vehicle: $e');
     }

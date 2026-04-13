@@ -45,12 +45,12 @@ class AppUser {
         (e) => e.toString() == 'UserRole.${map['role']}',
         orElse: () => UserRole.customer,
       ),
-      profilePic: map['profilePic'],
-      createdAt: map['createdAt'] != null ? DateTime.parse(map['createdAt']) : null,
+      profilePic: map['profile_pic'],
+      createdAt: map['created_at'] != null ? DateTime.parse(map['created_at']) : null,
       points: map['points'] ?? 0,
-      totalRides: map['totalRides'] ?? 0,
-      emergencyContacts: List<String>.from(map['emergencyContacts'] ?? []),
-      referralCode: map['referralCode'] ?? '',
+      totalRides: map['total_rides'] ?? 0,
+      emergencyContacts: List<String>.from(map['emergency_contacts'] ?? []),
+      referralCode: map['referral_code'] ?? '',
     );
   }
 
@@ -60,12 +60,12 @@ class AppUser {
       'phone': phone,
       'email': email,
       'role': role.toString().split('.').last,
-      'profilePic': profilePic,
-      'createdAt': createdAt?.toIso8601String() ?? DateTime.now().toIso8601String(),
+      'profile_pic': profilePic,
+      'created_at': createdAt?.toIso8601String() ?? DateTime.now().toIso8601String(),
       'points': points,
-      'totalRides': totalRides,
-      'emergencyContacts': emergencyContacts,
-      'referralCode': referralCode,
+      'total_rides': totalRides,
+      'emergency_contacts': emergencyContacts,
+      'referral_code': referralCode,
     };
   }
 
