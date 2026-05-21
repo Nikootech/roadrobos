@@ -123,7 +123,9 @@ class _RentalCheckoutScreenState extends ConsumerState<RentalCheckoutScreen> {
                         color: AppColors.bgLightGrey,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Image.asset(selectedVehicle['image'], fit: BoxFit.contain),
+                      child: selectedVehicle['image_url'].toString().startsWith('http')
+                        ? Image.network(selectedVehicle['image_url'], fit: BoxFit.contain)
+                        : Image.asset(selectedVehicle['image_url'], fit: BoxFit.contain),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -232,6 +234,8 @@ class _RentalCheckoutScreenState extends ConsumerState<RentalCheckoutScreen> {
               contact: userData?.phone ?? '9876543210',
               email: userData?.email ?? 'customer@example.com',
               description: 'Vehicle Rental: ${selectedVehicle?['name']}',
+              bookingId: '00000000-0000-0000-0000-000000000000',
+              userId: userData?.id ?? 'demo',
             );
           },
         ),

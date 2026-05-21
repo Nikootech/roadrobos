@@ -41,7 +41,7 @@ class _LanguageScreenState extends State<LanguageScreen> {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(color: isSelected ? AppColors.primaryBlue : Colors.transparent, width: 2),
-                boxShadow: [BoxShadow(color: Colors.black12.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))],
+                boxShadow: [BoxShadow(color: Colors.black12.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4))],
               ),
               child: ListTile(
                 onTap: () => setState(() => _selected = l),
@@ -49,7 +49,7 @@ class _LanguageScreenState extends State<LanguageScreen> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                 leading: Container(
                   padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(color: isSelected ? AppColors.primaryBlue.withOpacity(0.1) : AppColors.bgLightGrey, shape: BoxShape.circle),
+                  decoration: BoxDecoration(color: isSelected ? AppColors.primaryBlue.withValues(alpha: 0.1) : AppColors.bgLightGrey, shape: BoxShape.circle),
                   child: Icon(Icons.language_rounded, color: isSelected ? AppColors.primaryBlue : AppColors.textMuted, size: 20),
                 ),
                 title: Text(l, style: TextStyle(fontSize: 15, fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600, color: isSelected ? AppColors.primaryBlue : AppColors.textPrimary)),

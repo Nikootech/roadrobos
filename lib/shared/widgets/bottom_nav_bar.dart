@@ -58,7 +58,7 @@ class CustomBottomNavBar extends StatelessWidget {
                       right: (itemWidth - 65) / 2,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.primaryBlue.withOpacity(0.15),
+                      color: AppColors.primaryBlue.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(15),
                     ),
                   ),
@@ -100,7 +100,7 @@ class CustomBottomNavBar extends StatelessWidget {
                               ),
                               child: Icon(
                                 isActive ? item.activeIcon : item.icon,
-                                color: isActive ? AppColors.primaryBlue : Colors.grey.withOpacity(0.8),
+                                color: isActive ? AppColors.primaryBlue : Colors.grey.withValues(alpha: 0.8),
                                 size: 24,
                               ),
                             ),

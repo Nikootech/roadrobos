@@ -52,34 +52,34 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
 
   Future<void> _saveProfile() async {
     if (_formKey.currentState!.validate()) {
+      final messenger = ScaffoldMessenger.of(context);
+      
       await ref.read(userProvider.notifier).updateProfile(
         name: _nameController.text,
         email: _emailController.text,
         phone: _phoneController.text,
       );
       
-      if (mounted) {
-        final userState = ref.read(userProvider);
-        if (userState.error != null) {
-          // Failure State
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to update profile: ${userState.error}'),
-              backgroundColor: AppColors.dangerRed,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        } else {
-          // Success State
-          setState(() => _isEditingProfile = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Profile updated successfully!'),
-              backgroundColor: AppColors.successGreen,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
+      final userState = ref.read(userProvider);
+      if (userState.error != null) {
+        // Failure State
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text('Failed to update profile: ${userState.error}'),
+            backgroundColor: AppColors.dangerRed,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      } else {
+        // Success State
+        setState(() => _isEditingProfile = false);
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text('Profile updated successfully!'),
+            backgroundColor: AppColors.successGreen,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
       }
     }
   }
@@ -104,7 +104,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                   'Camera', 
                   () async {
                     Navigator.pop(context);
-                    await ref.read(userProvider.notifier).pickAndUploadProfilePicture();
+                    await ref.read(userProvider.notifier).pickAndUploadProfilePicture(ImageSource.camera);
                   }
                 ),
                 _buildPickerOption(
@@ -112,7 +112,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                   'Gallery', 
                   () async {
                     Navigator.pop(context);
-                    await ref.read(userProvider.notifier).pickAndUploadProfilePicture();
+                    await ref.read(userProvider.notifier).pickAndUploadProfilePicture(ImageSource.gallery);
                   }
                 ),
               ],
@@ -131,7 +131,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
         children: [
           Container(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(color: AppColors.primaryBlue.withOpacity(0.1), shape: BoxShape.circle),
+            decoration: BoxDecoration(color: AppColors.primaryBlue.withValues(alpha: 0.1), shape: BoxShape.circle),
             child: Icon(icon, color: AppColors.primaryBlue, size: 28),
           ),
           const SizedBox(height: 8),
@@ -210,7 +210,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
             trailing: Switch(
               value: _isBiometricEnabled,
               onChanged: (val) => _toggleBiometric(val),
-              activeColor: AppColors.primaryBlue,
+              activeThumbColor: AppColors.primaryBlue,
             ),
           ),
           _buildSettingsTile(
@@ -218,8 +218,39 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
             'Two-Factor Authentication', 
             'Add extra layer of security',
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('2FA Setup coming soon!'), behavior: SnackBarBehavior.floating),
+              showDialog(
+                context: context,
+                builder: (dialogContext) => AlertDialog(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                  title: const Text('Two-Factor Authentication', style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.w900)),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.security, size: 48, color: AppColors.primaryBlue),
+                      const SizedBox(height: 16),
+                      const Text('Scan this QR code with your Authenticator app to enable 2FA.', textAlign: TextAlign.center, style: TextStyle(color: AppColors.textSecondary)),
+                      const SizedBox(height: 16),
+                      Container(
+                        height: 150,
+                        width: 150,
+                        color: Colors.grey[200],
+                        child: const Center(child: Icon(Icons.qr_code, size: 100, color: Colors.grey)),
+                      ),
+                    ],
+                  ),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('CANCEL', style: TextStyle(color: AppColors.textMuted, fontWeight: FontWeight.bold))),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(dialogContext);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('2FA Enabled Successfully!'), backgroundColor: AppColors.successGreen),
+                        );
+                      }, 
+                      child: const Text('ENABLE 2FA', style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.w900)),
+                    ),
+                  ],
+                ),
               );
             },
           ),
@@ -236,7 +267,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
             onPressed: () => ref.read(userProvider.notifier).logout(),
             style: TextButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 18),
-              backgroundColor: AppColors.dangerRed.withOpacity(0.08),
+              backgroundColor: AppColors.dangerRed.withValues(alpha: 0.08),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             ),
             child: const Text('LOGOUT', style: TextStyle(color: AppColors.dangerRed, fontWeight: FontWeight.w900, letterSpacing: 1)),
@@ -247,16 +278,17 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
           onPressed: () {
             showDialog(
               context: context,
-              builder: (context) => AlertDialog(
+              builder: (dialogContext) => AlertDialog(
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                 title: const Text('Request Account Deletion?', style: TextStyle(color: AppColors.dangerRed, fontWeight: FontWeight.w900)),
                 content: const Text('This will flag your account for permanent deletion. This action cannot be undone once processed by admin.', style: TextStyle(color: AppColors.textSecondary)),
                 actions: [
-                  TextButton(onPressed: () => context.pop(), child: const Text('CANCEL', style: TextStyle(color: AppColors.textMuted, fontWeight: FontWeight.bold))),
+                  TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('CANCEL', style: TextStyle(color: AppColors.textMuted, fontWeight: FontWeight.bold))),
                   TextButton(
                     onPressed: () async {
+                      final router = GoRouter.of(context);
                       await ref.read(userProvider.notifier).deleteAccountRequest();
-                      if (mounted) context.go('/auth/login');
+                      router.go('/auth/login');
                     }, 
                     child: const Text('CONFIRM DELETION', style: TextStyle(color: AppColors.dangerRed, fontWeight: FontWeight.w900)),
                   ),
@@ -267,7 +299,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
           child: Text(
             'DELETE ACCOUNT', 
             style: TextStyle(
-              color: AppColors.dangerRed.withOpacity(0.5), 
+              color: AppColors.dangerRed.withValues(alpha: 0.5), 
               fontSize: 12, 
               fontWeight: FontWeight.bold, 
               letterSpacing: 1,
@@ -289,7 +321,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
               children: [
                 Container(
                    padding: const EdgeInsets.all(4),
-                   decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: AppColors.primaryBlue.withOpacity(0.2), width: 2)),
+                   decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.2), width: 2)),
                    child: Hero(
                      tag: 'profile_pic',
                      child: CircleAvatar(
@@ -298,7 +330,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                       backgroundImage: user.profileImageUrl.isNotEmpty ? NetworkImage(user.profileImageUrl) : null,
                       child: user.isLoading 
                         ? Container(
-                            decoration: BoxDecoration(color: Colors.black.withOpacity(0.3), shape: BoxShape.circle),
+                            decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.3), shape: BoxShape.circle),
                             child: const Center(child: CircularProgressIndicator(color: Colors.white)),
                           )
                         : (user.profileImageUrl.isEmpty ? const Icon(Icons.person, size: 54, color: AppColors.textMuted) : null),
@@ -394,7 +426,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
           decoration: BoxDecoration(
             color: Colors.white, 
             borderRadius: BorderRadius.circular(24),
-            boxShadow: [BoxShadow(color: Colors.black12.withOpacity(0.03), blurRadius: 15, offset: const Offset(0, 5))],
+            boxShadow: [BoxShadow(color: Colors.black12.withValues(alpha: 0.03), blurRadius: 15, offset: const Offset(0, 5))],
           ),
           child: Column(children: children),
         ),

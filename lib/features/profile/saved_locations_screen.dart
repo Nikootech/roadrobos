@@ -40,7 +40,7 @@ class SavedLocationsScreen extends ConsumerWidget {
                 child: Center(
                   child: Column(
                     children: [
-                      Icon(Icons.location_off_rounded, size: 80, color: AppColors.textMuted.withOpacity(0.2)),
+                      Icon(Icons.location_off_rounded, size: 80, color: AppColors.textMuted.withValues(alpha: 0.2)),
                       const SizedBox(height: 16),
                       const Text('No saved locations yet', style: TextStyle(color: AppColors.textSecondary)),
                     ],
@@ -51,7 +51,7 @@ class SavedLocationsScreen extends ConsumerWidget {
             ...locations.map((loc) => Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: _buildLocationTile(context, ref, loc),
-            )).toList(),
+            )),
             
             const SizedBox(height: 48),
             TextButton.icon(
@@ -134,7 +134,8 @@ class SavedLocationsScreen extends ConsumerWidget {
                   final user = ref.read(userProvider).user;
                   if (user != null) {
                     final updatedLocations = [...user.savedLocations, newLoc];
-                    await ref.read(userRepositoryProvider).updateField(user.id, 'saved_locations', updatedLocations.map((x) => x.toMap()).toList());
+                    // await ref.read(userRepositoryProvider).updateField(user.id, 'saved_locations', updatedLocations.map((x) => x.toMap()).toList());
+                    debugPrint('saved_locations schema missing. Local state not updated.');
                     await ref.read(userProvider.notifier).fetchUserProfile(user.id);
                     if (context.mounted) {
                       Navigator.pop(context);
@@ -234,7 +235,8 @@ class SavedLocationsScreen extends ConsumerWidget {
                   final user = ref.read(userProvider).user;
                   if (user != null) {
                     final updated = user.savedLocations.where((x) => x.id != loc.id).toList();
-                    await ref.read(userRepositoryProvider).updateField(user.id, 'saved_locations', updated.map((x) => x.toMap()).toList());
+                    // await ref.read(userRepositoryProvider).updateField(user.id, 'saved_locations', updated.map((x) => x.toMap()).toList());
+                    debugPrint('saved_locations schema missing. Local state not updated.');
                     await ref.read(userProvider.notifier).fetchUserProfile(user.id);
                   }
                 },

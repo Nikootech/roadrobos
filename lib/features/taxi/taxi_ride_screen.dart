@@ -6,21 +6,20 @@ import 'package:iconsax/iconsax.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 
 import '../../shared/widgets/live_map_widget.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../shared/widgets/custom_button.dart';
 import '../../shared/widgets/custom_text_field.dart';
 import '../../shared/widgets/glass_card.dart';
 import '../../shared/widgets/shimmer_loading.dart';
 import '../../shared/widgets/rental_completion_dialog.dart';
 import '../../providers/taxi_provider.dart';
-import '../../core/repositories/ride_booking_repository.dart';
 import '../../core/repositories/transaction_repository.dart';
-import '../../core/models/ride_booking.dart';
 import '../../core/models/transaction_model.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/services/payment_service.dart';
 import '../../core/services/pricing_service.dart';
 import '../../shared/widgets/sos_button.dart';
-import '../chat/chat_screen.dart';
+import '../../shared/widgets/chat/chat_screen.dart';
 import '../profile/user_provider.dart';
 import '../profile/sos_provider.dart';
 
@@ -118,6 +117,7 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
               height: MediaQuery.of(context).size.height,
               showLiveIndicator: taxiState.status == RideStatus.idle || taxiState.status == RideStatus.selectingPickup,
               roadroboLocation: taxiState.roadroboLocation,
+              showNearbyTaxis: true,
               onPositionChanged: (camera, hasGesture) {
                 if (hasGesture && (taxiState.status == RideStatus.selectingPickup || taxiState.status == RideStatus.selectingDrop)) {
                   final center = camera.center;
@@ -206,7 +206,7 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 20)],
+            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 20)],
           ),
           child: ListView(
             controller: scrollController,
@@ -282,7 +282,7 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
   Widget _buildFareEstimate(TaxiState state) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: AppColors.primaryBlue.withOpacity(0.05), borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(color: AppColors.primaryBlue.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(16)),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -327,11 +327,13 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
               IconButton(
                 icon: const Icon(Iconsax.message, color: AppColors.primaryBlue),
                 onPressed: () {
+                  final currentUserId = ref.read(userProvider).user?.id ?? 'demo';
+                  final driverId = state.driverId ?? 'driver_demo';
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => ChatScreen(
-                        otherPartyId: state.driverId ?? 'driver_demo',
+                        roomId: '${currentUserId}_$driverId',
                         otherPartyName: state.roadroboName ?? 'Roadrobo',
                       ),
                     ),
@@ -340,7 +342,18 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
               ),
               IconButton(
                 icon: const Icon(Iconsax.call, color: AppColors.primaryBlue),
-                onPressed: () {},
+                onPressed: () async {
+                  final Uri url = Uri(scheme: 'tel', path: '+919876543210');
+                  final scaffoldMessenger = ScaffoldMessenger.of(context);
+                  try {
+                    final success = await launchUrl(url);
+                    if (!success) {
+                      scaffoldMessenger.showSnackBar(const SnackBar(content: Text('Could not launch dialer')));
+                    }
+                  } catch (e) {
+                    scaffoldMessenger.showSnackBar(const SnackBar(content: Text('Could not launch dialer')));
+                  }
+                },
               ),
             ],
           ),
@@ -371,7 +384,7 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(5, (index) => IconButton(
-            icon: Icon(Icons.star_border_rounded, color: Colors.amber.withOpacity(0.4), size: 32),
+            icon: Icon(Icons.star_border_rounded, color: Colors.amber.withValues(alpha: 0.4), size: 32),
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Thank you for your rating!'), backgroundColor: AppColors.successGreen),
@@ -390,7 +403,7 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
 
   Widget _buildBookingShimmer() {
     return Container(
-      color: Colors.white.withOpacity(0.8),
+      color: Colors.white.withValues(alpha: 0.8),
       child: const Center(
         child: Padding(
           padding: EdgeInsets.all(40),
@@ -474,6 +487,8 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
             contact: userData?.phone ?? '9876543210',
             email: userData?.email ?? 'customer@example.com',
             description: 'Taxi Ride Payment',
+            bookingId: '00000000-0000-0000-0000-000000000000',
+            userId: userData?.id ?? 'demo',
           );
         },
         onReschedule: () {

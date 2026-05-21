@@ -3,7 +3,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
 import '../../core/theme/app_colors.dart';
 import '../../core/constants/app_strings.dart';
@@ -63,11 +62,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           );
           await ref.read(userRepositoryProvider).saveUser(appUser);
           
-          if (mounted) {
-            NavHelpers.showSuccess(context, 'Account created successfully!');
-          }
+          if (!mounted) return;
+          NavHelpers.showSuccess(context, 'Account created successfully!');
         }
       } catch (e) {
+        if (!mounted) return;
         setState(() => _isLoading = false);
         NavHelpers.showError(context, 'Registration failed: $e');
       }
@@ -95,7 +94,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: AppColors.bgWhite,
-                          border: Border.all(color: AppColors.brandGreen.withOpacity(0.2)),
+                          border: Border.all(color: AppColors.brandGreen.withValues(alpha: 0.2)),
                         ),
                         child: const Icon(Icons.arrow_back_ios_new_rounded, size: 16, color: AppColors.brandGreen),
                       ),
@@ -127,7 +126,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     const SizedBox(height: 8),
                     Text(
                       AppStrings.registerSubtitle,
-                      style: TextStyle(fontSize: 15, color: AppColors.textSecondary.withOpacity(0.8)),
+                      style: TextStyle(fontSize: 15, color: AppColors.textSecondary.withValues(alpha: 0.8)),
                     ),
                   ],
                 ),
@@ -243,7 +242,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         children: [
           Container(
             padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
+            decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
             child: Icon(icon, color: color, size: 24),
           ),
           const SizedBox(height: 4),

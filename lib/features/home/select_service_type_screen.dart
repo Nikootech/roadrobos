@@ -4,14 +4,19 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 
+import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/technician/technician_provider.dart';
+import 'home_providers.dart';
 
 class SelectServiceTypeScreen extends ConsumerWidget {
   const SelectServiceTypeScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final categoriesAsync = ref.watch(homeCategoriesProvider);
+    final recentBookingsAsync = ref.watch(recentServiceBookingsProvider);
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -44,45 +49,40 @@ class SelectServiceTypeScreen extends ConsumerWidget {
                 ),
               ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0),
               const SizedBox(height: 24),
-              _buildServiceCategoryCard(
-                context,
-                ref,
-                'EV Bike Service',
-                'Electric vehicle specialized maintenance',
-                Icons.bolt_rounded,
-                AppColors.primaryBlue,
-                '/ev-bike-service-booking',
+              
+              // Dynamic Service Categories
+              categoriesAsync.when(
+                data: (categories) {
+                  final filtered = categories.where((c) => 
+                    ['ev service', 'bike service', 'car service', 'water service'].contains(c.label.toLowerCase())
+                  ).toList();
+
+                  if (filtered.isEmpty) return const SizedBox.shrink();
+
+                  return ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: filtered.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 16),
+                    itemBuilder: (context, index) {
+                      final cat = filtered[index];
+                      final mapping = _getCategoryMapping(cat.label);
+                      return _buildServiceCategoryCard(
+                        context,
+                        ref,
+                        cat.label,
+                        '${cat.count} packages available',
+                        mapping['icon'] as IconData,
+                        mapping['color'] as Color,
+                        mapping['route'] as String,
+                      );
+                    },
+                  );
+                },
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (err, _) => Text('Error: $err'),
               ),
-              const SizedBox(height: 16),
-              _buildServiceCategoryCard(
-                context,
-                ref,
-                'Bike Service',
-                'Comprehensive packages for all bike models',
-                Icons.pedal_bike_rounded,
-                AppColors.primaryBlue,
-                '/bike-service-booking',
-              ),
-              const SizedBox(height: 16),
-              _buildServiceCategoryCard(
-                context,
-                ref,
-                'Car Service',
-                'Premium care and repairs for your car',
-                Icons.directions_car_rounded,
-                AppColors.accentOrange,
-                '/car-service-booking',
-              ),
-              const SizedBox(height: 16),
-              _buildServiceCategoryCard(
-                context,
-                ref,
-                'Water Service',
-                'Professional wash for bikes & cars',
-                Icons.local_car_wash_rounded,
-                const Color(0xFF0EA5E9),
-                '/water-service-booking',
-              ),
+
               const SizedBox(height: 16),
               _buildEmergencyServiceCard(
                 context,
@@ -98,8 +98,28 @@ class SelectServiceTypeScreen extends ConsumerWidget {
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
               ),
               const SizedBox(height: 16),
-              _buildRecentServiceTile('General Service', '12 Jan 2024', 'Completed'),
-              _buildRecentServiceTile('Oil Change', '05 Dec 2023', 'Completed'),
+              
+              // Dynamic Recent Bookings
+              recentBookingsAsync.when(
+                data: (bookings) {
+                  if (bookings.isEmpty) return const Text('No recent services found');
+                  return ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: bookings.length > 3 ? 3 : bookings.length,
+                    itemBuilder: (context, index) {
+                      final b = bookings[index];
+                      return _buildRecentServiceTile(
+                        b.packageName,
+                        DateFormat('dd MMM yyyy').format(b.createdAt),
+                        b.status.toUpperCase(),
+                      );
+                    },
+                  );
+                },
+                loading: () => const ShimmerRecentServices(),
+                error: (err, _) => Text('Error: $err'),
+              ),
             ],
           ),
         ),
@@ -116,11 +136,11 @@ class SelectServiceTypeScreen extends ConsumerWidget {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: AppColors.dangerRed.withOpacity(0.05),
+          color: AppColors.dangerRed.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: AppColors.dangerRed.withOpacity(0.1)),
+          border: Border.all(color: AppColors.dangerRed.withValues(alpha: 0.1)),
           boxShadow: [
-            BoxShadow(color: color.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, 8)),
+            BoxShadow(color: color.withValues(alpha: 0.05), blurRadius: 20, offset: const Offset(0, 8)),
           ],
         ),
         child: Row(
@@ -129,7 +149,7 @@ class SelectServiceTypeScreen extends ConsumerWidget {
               width: 56,
               height: 56,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Icon(icon, color: color, size: 28),
@@ -145,7 +165,7 @@ class SelectServiceTypeScreen extends ConsumerWidget {
                 ],
               ),
             ),
-            Icon(Icons.arrow_forward_ios_rounded, size: 16, color: color.withOpacity(0.5)),
+            Icon(Icons.arrow_forward_ios_rounded, size: 16, color: color.withValues(alpha: 0.5)),
           ],
         ),
       ),
@@ -171,7 +191,7 @@ class SelectServiceTypeScreen extends ConsumerWidget {
               width: 56,
               height: 56,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Icon(icon, color: color, size: 28),
@@ -187,7 +207,7 @@ class SelectServiceTypeScreen extends ConsumerWidget {
                 ],
               ),
             ),
-            Icon(Icons.arrow_forward_ios_rounded, size: 16, color: AppColors.textMuted.withOpacity(0.5)),
+            Icon(Icons.arrow_forward_ios_rounded, size: 16, color: AppColors.textMuted.withValues(alpha: 0.5)),
           ],
         ),
       ),
@@ -199,7 +219,7 @@ class SelectServiceTypeScreen extends ConsumerWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.5),
+        color: Colors.white.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -221,6 +241,47 @@ class SelectServiceTypeScreen extends ConsumerWidget {
           Text(status, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.successGreen)),
         ],
       ),
+    );
+  }
+
+  Map<String, dynamic> _getCategoryMapping(String label) {
+    switch (label.toLowerCase()) {
+      case 'repair':
+      case 'service':
+        return {'icon': Icons.build_rounded, 'color': const Color(0xFF3B82F6), 'route': '/select-service'};
+      case 'rentals':
+        return {'icon': Icons.car_rental_rounded, 'color': const Color(0xFF8B5CF6), 'route': '/rentals'};
+      case 'ev service':
+      case 'ev bike service':
+        return {'icon': Icons.bolt_rounded, 'color': const Color(0xFF06B6D4), 'route': '/ev-bike-service-booking'};
+      case 'bike service':
+        return {'icon': Icons.pedal_bike_rounded, 'color': AppColors.primaryBlue, 'route': '/bike-service-booking'};
+      case 'car service':
+        return {'icon': Icons.directions_car_rounded, 'color': AppColors.accentOrange, 'route': '/car-service-booking'};
+      case 'water service':
+        return {'icon': Icons.local_car_wash_rounded, 'color': const Color(0xFF0EA5E9), 'route': '/water-service-booking'};
+      case 'logistics':
+        return {'icon': Icons.local_shipping_rounded, 'color': const Color(0xFFF97316), 'route': '/delivery-logistics'};
+      default:
+        return {'icon': Icons.category_rounded, 'color': AppColors.primaryBlue, 'route': '/select-service'};
+    }
+  }
+}
+
+class ShimmerRecentServices extends StatelessWidget {
+  const ShimmerRecentServices({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: List.generate(2, (index) => Container(
+        height: 60,
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: Colors.grey[200],
+          borderRadius: BorderRadius.circular(16),
+        ),
+      )),
     );
   }
 }

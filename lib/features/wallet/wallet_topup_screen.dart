@@ -92,7 +92,7 @@ class _WalletTopupScreenState extends ConsumerState<WalletTopupScreen> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: AppColors.border.withOpacity(0.5)),
+                border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -150,6 +150,8 @@ class _WalletTopupScreenState extends ConsumerState<WalletTopupScreen> {
                   contact: userData?.phone ?? '9876543210',
                   email: userData?.email ?? 'customer@example.com',
                   description: 'Wallet Top-up',
+                  userId: userData?.id ?? 'demo',
+                  bookingId: '00000000-0000-0000-0000-000000000000',
                 );
               },
               backgroundColor: AppColors.primaryBlue,
@@ -168,12 +170,12 @@ class _WalletTopupScreenState extends ConsumerState<WalletTopupScreen> {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primaryBlue.withOpacity(0.05) : AppColors.bgWhite,
+          color: isSelected ? AppColors.primaryBlue.withValues(alpha: 0.05) : AppColors.bgWhite,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: isSelected ? AppColors.primaryBlue : AppColors.border.withOpacity(0.5)),
+          border: Border.all(color: isSelected ? AppColors.primaryBlue : AppColors.border.withValues(alpha: 0.5)),
           boxShadow: [
             if (isSelected) 
-              BoxShadow(color: AppColors.primaryBlue.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4))
+              BoxShadow(color: AppColors.primaryBlue.withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, 4))
           ],
         ),
         child: Row(

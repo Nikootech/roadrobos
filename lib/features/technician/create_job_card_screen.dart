@@ -5,6 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/repositories/job_card_repository.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 import 'technician_provider.dart';
 
 class CreateJobCardScreen extends ConsumerStatefulWidget {
@@ -23,6 +27,8 @@ class _CreateJobCardScreenState extends ConsumerState<CreateJobCardScreen> {
   DateTime _estimatedCompletion = DateTime.now().add(const Duration(hours: 4));
   
   final List<Map<String, dynamic>> _scopeItems = [];
+  final List<String> _photoPaths = [];
+  final ImagePicker _picker = ImagePicker();
 
   final List<String> _technicians = ['Arun Kumar', 'Suresh Raina', 'Vikram Singh', 'Manoj Bajpayee'];
 
@@ -34,7 +40,7 @@ class _CreateJobCardScreenState extends ConsumerState<CreateJobCardScreen> {
     super.dispose();
   }
 
-  void _generateJobCard() {
+  Future<void> _generateJobCard() async {
     if (_selectedTechnician == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select a technician'), backgroundColor: Colors.orange),
@@ -42,30 +48,47 @@ class _CreateJobCardScreenState extends ConsumerState<CreateJobCardScreen> {
       return;
     }
 
-    final newJob = TechnicianJob(
-      id: 'JOB-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}',
-      estimatedCompletion: DateFormat('hh:mm a').format(_estimatedCompletion),
-      vehicleModel: _vehicleModelController.text.isEmpty ? 'Unknown Model' : _vehicleModelController.text,
-      vehiclePlate: _regNoController.text.isEmpty ? 'Unknown Plate' : _regNoController.text,
-      progress: 0.0,
-      checklist: _scopeItems.map((item) => ChecklistItem(task: item['title'] as String, category: 'Service')).toList(),
-      parts: [],
-      status: 'CREATED',
-    );
+    try {
+      // Use the new remote repository
+      await ref.read(jobCardRepositoryProvider).createJobCard(
+        techId: _selectedTechnician!,
+        vehicleMake: 'Unknown',
+        vehicleModel: _vehicleModelController.text.isEmpty ? 'Unknown Model' : _vehicleModelController.text,
+        regNo: _regNoController.text.isEmpty ? 'Unknown Plate' : _regNoController.text,
+        notes: _scopeItems.map((e) => e['title']).join(', '),
+      );
 
-    ref.read(technicianProvider.notifier).createJob(newJob);
-    ref.read(selectedJobIdProvider.notifier).state = newJob.id;
-    
-    // Legacy telemetry removed — job is now written to Firestore via the notifier
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Job Card Created successfully!'),
-        backgroundColor: Colors.green,
-      ),
-    );
-    
-    context.pop();
+      // Legacy fallback for UI logic
+      final newJob = TechnicianJob(
+        id: 'JOB-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}',
+        estimatedCompletion: DateFormat('hh:mm a').format(_estimatedCompletion),
+        vehicleModel: _vehicleModelController.text.isEmpty ? 'Unknown Model' : _vehicleModelController.text,
+        vehiclePlate: _regNoController.text.isEmpty ? 'Unknown Plate' : _regNoController.text,
+        progress: 0.0,
+        checklist: _scopeItems.map((item) => ChecklistItem(task: item['title'] as String, category: 'Service')).toList(),
+        parts: [],
+        status: 'CREATED',
+      );
+
+      ref.read(technicianProvider.notifier).createJob(newJob);
+      ref.read(selectedJobIdProvider.notifier).state = newJob.id;
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Job Card Created successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        context.pop();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to create job card: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
   }
 
   Future<void> _selectDate() async {
@@ -102,6 +125,23 @@ class _CreateJobCardScreenState extends ConsumerState<CreateJobCardScreen> {
     );
   }
 
+  Future<void> _pickImage() async {
+    try {
+      final XFile? image = await _picker.pickImage(source: ImageSource.camera);
+      if (image != null) {
+        setState(() {
+          _photoPaths.add(image.path);
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to open camera')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -115,7 +155,7 @@ class _CreateJobCardScreenState extends ConsumerState<CreateJobCardScreen> {
           icon: Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: Colors.grey.withOpacity(0.1),
+              color: Colors.grey.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.close_rounded, color: Colors.grey, size: 18),
@@ -314,7 +354,7 @@ class _CreateJobCardScreenState extends ConsumerState<CreateJobCardScreen> {
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: const Color(0xFF5E81AC).withOpacity(0.3)),
+                              border: Border.all(color: const Color(0xFF5E81AC).withValues(alpha: 0.3)),
                             ),
                             child: Center(
                               child: Row(
@@ -366,15 +406,14 @@ class _CreateJobCardScreenState extends ConsumerState<CreateJobCardScreen> {
                           scrollDirection: Axis.horizontal,
                           children: [
                             GestureDetector(
-                              onTap: () {
-                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Camera picker opened...')));
-                              },
+                              onTap: _pickImage,
                               child: _buildAddPhoto()
                             ),
                             const SizedBox(width: 12),
-                            _buildPhotoThumb(),
-                            const SizedBox(width: 12),
-                            _buildPhotoThumb(),
+                            ..._photoPaths.map((path) => Padding(
+                                  padding: const EdgeInsets.only(right: 12),
+                                  child: _buildPhotoThumb(path),
+                                )),
                           ],
                         ),
                       ),
@@ -421,7 +460,7 @@ class _CreateJobCardScreenState extends ConsumerState<CreateJobCardScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.black.withOpacity(0.05)),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
       ),
       child: child,
     );
@@ -433,7 +472,7 @@ class _CreateJobCardScreenState extends ConsumerState<CreateJobCardScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.black.withOpacity(0.05)),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -487,7 +526,7 @@ class _CreateJobCardScreenState extends ConsumerState<CreateJobCardScreen> {
                 _scopeItems.remove(item);
               });
             },
-            icon: Icon(Icons.remove_circle_outline, color: Colors.red.withOpacity(0.5), size: 20),
+            icon: Icon(Icons.remove_circle_outline, color: Colors.red.withValues(alpha: 0.5), size: 20),
           ),
         ],
       ),
@@ -512,15 +551,18 @@ class _CreateJobCardScreenState extends ConsumerState<CreateJobCardScreen> {
     );
   }
 
-  Widget _buildPhotoThumb() {
+  Widget _buildPhotoThumb(String path) {
     return Container(
       width: 100,
       height: 100,
       decoration: BoxDecoration(
         color: Colors.grey[200],
         borderRadius: BorderRadius.circular(16),
+        image: DecorationImage(
+          image: FileImage(File(path)),
+          fit: BoxFit.cover,
+        ),
       ),
-      child: const Icon(Icons.image, color: Colors.grey),
     );
   }
 }

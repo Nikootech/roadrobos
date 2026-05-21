@@ -1,0 +1,10 @@
+# ═══ RoadRobos Release Signing ═══
+# This file is gitignored. Each developer must create their own.
+#
+# To generate a keystore:
+#   keytool -genkey -v -keystore roadrobos-release.jks -keyalg RSA -keysize 2048 -validity 10000 -alias roadrobos
+#
+storePassword=YOUR_STORE_PASSWORD
+keyPassword=YOUR_KEY_PASSWORD
+keyAlias=roadrobos
+storeFile=roadrobos-release.jks

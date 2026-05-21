@@ -1,16 +1,28 @@
 /// Application environment configuration.
-/// Values are injected at build time via --dart-define flags.
+/// Values are injected at build time via --dart-define-from-file=.dart_defines
 ///
 /// Example build command:
 /// ```
-/// flutter build apk --dart-define=ENV=prod --dart-define=RAZORPAY_KEY=rzp_live_xxx
+/// flutter run --dart-define-from-file=.dart_defines
+/// flutter build apk --dart-define-from-file=.dart_defines
 /// ```
 enum Environment { dev, staging, prod }
 
 class AppConfig {
   static late Environment environment;
-  static late String razorpayKey;
+  static const razorpayKey = String.fromEnvironment('RAZORPAY_KEY_ID');
   static late String mapsApiKey;
+
+  // --- Supabase ---
+  static const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
+  static const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+  static const supabaseServiceKey = String.fromEnvironment('SUPABASE_SERVICE_KEY');
+
+  // --- Google OAuth ---
+  static const googleClientId = String.fromEnvironment('GOOGLE_CLIENT_ID');
+
+  // --- Razorpay ---
+  // (Using razorpayKey defined above)
 
   /// Initialize config from compile-time defines.
   static void init() {
@@ -26,10 +38,7 @@ class AppConfig {
         environment = Environment.dev;
     }
 
-    razorpayKey = const String.fromEnvironment(
-      'RAZORPAY_KEY',
-      defaultValue: 'rzp_test_PLACEHOLDER', // Replace with actual test key
-    );
+
 
     mapsApiKey = const String.fromEnvironment(
       'MAPS_API_KEY',

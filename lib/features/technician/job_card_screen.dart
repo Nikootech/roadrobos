@@ -5,7 +5,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:io';
 import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/custom_button.dart';
+import '../../core/repositories/job_card_repository.dart';
 import 'technician_provider.dart';
 
 /// Job Card Details for Technician matching Figma Screen [88 & 10]
@@ -174,7 +176,7 @@ class _TechnicianJobCardScreenState extends ConsumerState<TechnicianJobCardScree
                const SizedBox(height: 12),
                LinearProgressIndicator(
                  value: progress,
-                 backgroundColor: AppColors.primaryBlue.withOpacity(0.1),
+                 backgroundColor: AppColors.primaryBlue.withValues(alpha: 0.1),
                  color: AppColors.primaryBlue,
                  minHeight: 8,
                  borderRadius: BorderRadius.circular(4),
@@ -266,13 +268,24 @@ class _TechnicianJobCardScreenState extends ConsumerState<TechnicianJobCardScree
               child: CustomButton(
                 label: progress >= 1.0 ? 'FINISH JOB' : 'SAVE DRAFT',
                 backgroundColor: progress >= 1.0 ? AppColors.successGreen : AppColors.deepNavy,
-                onPressed: () { 
+                onPressed: () async { 
                   if(progress >= 1.0) {
-                    ref.read(technicianProvider.notifier).finishJob(activeJob.id);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Job completed successfully!'), backgroundColor: AppColors.successGreen),
-                    );
-                    context.pop(); 
+                    try {
+                      await ref.read(jobCardRepositoryProvider).completeJob(activeJob.id);
+                      ref.read(technicianProvider.notifier).finishJob(activeJob.id);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Job completed successfully!'), backgroundColor: AppColors.successGreen),
+                        );
+                        context.pop(); 
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Failed to complete: $e'), backgroundColor: AppColors.dangerRed),
+                        );
+                      }
+                    }
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Draft saved!'), backgroundColor: AppColors.primaryBlue),

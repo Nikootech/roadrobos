@@ -228,7 +228,7 @@ class _SparePartsScreenState extends ConsumerState<SparePartsScreen> {
           border: Border.all(color: const Color(0xFFE8EAF6)),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF1A237E).withOpacity(0.04),
+              color: const Color(0xFF1A237E).withValues(alpha: 0.04),
               blurRadius: 12,
               offset: const Offset(0, 4),
             )
@@ -240,7 +240,7 @@ class _SparePartsScreenState extends ConsumerState<SparePartsScreen> {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [const Color(0xFF1A237E).withOpacity(0.1), const Color(0xFF3949AB).withOpacity(0.05)],
+                  colors: [const Color(0xFF1A237E).withValues(alpha: 0.1), const Color(0xFF3949AB).withValues(alpha: 0.05)],
                 ),
                 borderRadius: BorderRadius.circular(14),
               ),

@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/live_map_widget.dart';
 import '../../navigation/nav_helpers.dart';
@@ -62,8 +63,16 @@ class DeliveryLogisticsScreen extends ConsumerWidget {
                        ],
                      ),
                    ),
-                   IconButton(icon: const Icon(Iconsax.call, color: AppColors.successGreen), onPressed: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Calling delivery partner...'), behavior: SnackBarBehavior.floating))),
-                   IconButton(icon: const Icon(Iconsax.message_text, color: AppColors.primaryBlue), onPressed: () => context.push('/chat')),
+                   IconButton(icon: const Icon(Iconsax.call, color: AppColors.successGreen), onPressed: () async {
+                     final Uri url = Uri(scheme: 'tel', path: '+18005550199');
+                     if (await canLaunchUrl(url)) {
+                       await launchUrl(url);
+                     } else {
+                       if (context.mounted) {
+                         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not launch dialer')));
+                       }
+                     }
+                   }),                   IconButton(icon: const Icon(Iconsax.message_text, color: AppColors.primaryBlue), onPressed: () => context.push('/chat')),
                  ],
                ),
              ),

@@ -3,18 +3,33 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
-import 'package:iconsax/iconsax.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'wallet_providers.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/models/wallet_model.dart';
+import 'package:iconsax/iconsax.dart';
+import 'package:intl/intl.dart';
+import '../../core/services/biometric_service.dart';
+import '../../core/services/notification_service.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Wallet & Transactions Screen matching Figma Screen [7]
-class WalletScreen extends StatelessWidget {
+class WalletScreen extends ConsumerWidget {
   const WalletScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final walletAsync = ref.watch(walletProvider);
+    final transactionsAsync = ref.watch(walletTransactionsProvider);
     return Scaffold(
       backgroundColor: Colors.white,
-      body: CustomScrollView(
+      body: RefreshIndicator(
+        onRefresh: () async {
+          ref.refresh(walletProvider);
+          ref.refresh(walletTransactionsProvider);
+        },
+        color: AppColors.primaryBlue,
+        child: CustomScrollView(
         slivers: [
           // Premium Header with Mesh-style Gradient
           SliverAppBar(
@@ -45,7 +60,7 @@ class WalletScreen extends StatelessWidget {
                       width: 200,
                       height: 200,
                       decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
+                      color: Colors.white.withValues(alpha: 0.15),
                       shape: BoxShape.circle,
                     ),
                     ),
@@ -59,10 +74,10 @@ class WalletScreen extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          'Available Balance',
+                          AppLocalizations.of(context)?.lblAvailableBalance ?? 'Available Balance',
                           style: GoogleFonts.inter(
                             fontSize: 14,
-                          color: Colors.white.withOpacity(0.8),
+                          color: Colors.white.withValues(alpha: 0.8),
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -70,13 +85,17 @@ class WalletScreen extends StatelessWidget {
                         FittedBox(
                           fit: BoxFit.scaleDown,
                           alignment: Alignment.centerLeft,
-                          child: Text(
-                            '₹4,500.00',
-                            style: GoogleFonts.outfit(
-                              fontSize: 42,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white,
+                          child: walletAsync.when(
+                            data: (wallet) => Text(
+                              NumberFormat.simpleCurrency(name: 'INR').format(wallet?.balance ?? 0.0),
+                              style: GoogleFonts.outfit(
+                                fontSize: 42,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                              ),
                             ),
+                            loading: () => const SizedBox(height: 42, width: 100, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)),
+                            error: (_, __) => const Text('₹--'),
                           ),
                         ),
                       ],
@@ -88,9 +107,9 @@ class WalletScreen extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.white.withOpacity(0.3)),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
                       ),
                       child: Row(
                         children: [
@@ -127,30 +146,35 @@ class WalletScreen extends StatelessWidget {
                       Expanded(
                         child: _buildActionTile(
                           context,
-                          'Top Up',
+                          AppLocalizations.of(context)?.lblTopUp ?? 'Top Up',
                           Iconsax.add,
                           AppColors.primaryBlue,
                           '/wallet/topup',
+                          ref,
                         ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
                         child: _buildActionTile(
                           context,
-                          'Transfer',
+                          AppLocalizations.of(context)?.lblTransfer ?? 'Transfer',
                           Iconsax.send_2,
                           AppColors.successGreen,
-                          null,
+                          '/wallet/transfer',
+                          ref,
+                          requiresBiometric: true,
                         ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
                         child: _buildActionTile(
                           context,
-                          'Rewards',
-                          Iconsax.medal_star,
+                          'Withdraw',
+                          Iconsax.money_send,
                           AppColors.accentOrange,
-                          null,
+                          '/wallet/withdraw',
+                          ref,
+                          requiresBiometric: true,
                         ),
                       ),
                     ],
@@ -177,23 +201,29 @@ class WalletScreen extends StatelessWidget {
                   const SizedBox(height: 16),
 
                   // Transaction List
-                  ListView.separated(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    padding: EdgeInsets.zero,
-                    itemCount: 5,
-                    separatorBuilder: (_, __) => const SizedBox(height: 16),
-                    itemBuilder: (context, index) {
-                      final transactions = [
-                        {'title': 'General Service', 'subtitle': 'Hyundai Creta', 'amount': '-₹2,419', 'isDebit': true, 'time': '10:45 AM'},
-                        {'title': 'Wallet Top up', 'subtitle': 'HDFC Bank', 'amount': '+₹5,000', 'isDebit': false, 'time': 'Yesterday'},
-                        {'title': 'Ride Fare', 'subtitle': 'Airport Drop', 'amount': '-₹350', 'isDebit': true, 'time': '24 Oct'},
-                        {'title': 'Cashback', 'subtitle': 'Promotional Reward', 'amount': '+₹17', 'isDebit': false, 'time': '24 Oct'},
-                        {'title': 'EV Charging', 'subtitle': 'Fast Charge Station', 'amount': '-₹120', 'isDebit': true, 'time': '22 Oct'},
-                      ];
-                      final data = transactions[index % transactions.length];
-                      return _buildTransactionCard(data);
+                  transactionsAsync.when(
+                    data: (transactions) {
+                      if (transactions.isEmpty) return const Center(child: Text('No transactions yet'));
+                      return ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        padding: EdgeInsets.zero,
+                        itemCount: transactions.length > 10 ? 10 : transactions.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 16),
+                        itemBuilder: (context, index) {
+                          final t = transactions[index];
+                          return _buildTransactionCard({
+                            'title': t.description,
+                            'subtitle': t.type == TransactionType.credit ? 'Credit' : 'Debit',
+                            'amount': '${t.type == TransactionType.credit ? '+' : '-'}₹${t.amount.toStringAsFixed(0)}',
+                            'isDebit': t.type == TransactionType.debit,
+                            'time': DateFormat('dd MMM').format(t.timestamp),
+                          });
+                        },
+                      );
                     },
+                    loading: () => const Center(child: CircularProgressIndicator()),
+                    error: (err, _) => Text('Error: $err'),
                   ),
                   
                   const SizedBox(height: 100),
@@ -203,23 +233,53 @@ class WalletScreen extends StatelessWidget {
           ),
         ],
       ),
+      ),
     );
   }
 
-  Widget _buildActionTile(BuildContext context, String label, IconData icon, Color color, String? route) {
+  Widget _buildActionTile(BuildContext context, String label, IconData icon, Color color, String? route, WidgetRef ref, {bool requiresBiometric = false}) {
     return GestureDetector(
-      onTap: () {
+      onTap: () async {
         HapticFeedback.lightImpact();
-        if (route != null) context.push(route);
+        
+        if (requiresBiometric) {
+          final bioService = ref.read(biometricServiceProvider);
+          final isAvailable = await bioService.isAvailable();
+          
+          if (isAvailable) {
+            final authenticated = await bioService.authenticate(
+              localizedReason: 'Please authenticate to perform $label',
+            );
+            
+            if (!authenticated) {
+              ref.read(notificationServiceProvider).showError(
+                'Authentication Failed',
+                message: 'Could not verify your identity. Action cancelled.',
+              );
+              return;
+            }
+          }
+        }
+
+        if (!context.mounted) return;
+
+        if (route != null) {
+          context.push(route);
+        } else {
+          // Placeholder for non-routed actions
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('$label feature coming soon!')),
+          );
+        }
       },
       child: Column(
         children: [
           Container(
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: color.withOpacity(0.15)),
+              border: Border.all(color: color.withValues(alpha: 0.15)),
             ),
             child: Icon(icon, color: color, size: 26),
           ),
@@ -247,10 +307,10 @@ class WalletScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border.withOpacity(0.5)),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -261,7 +321,7 @@ class WalletScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: isDebit ? AppColors.dangerRed.withOpacity(0.1) : AppColors.successGreen.withOpacity(0.1),
+              color: isDebit ? AppColors.dangerRed.withValues(alpha: 0.1) : AppColors.successGreen.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(

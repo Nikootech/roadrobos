@@ -47,7 +47,7 @@ class _SOSButtonState extends State<SOSButton> with SingleTickerProviderStateMix
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.alertRed.withOpacity(0.4),
+                  color: AppColors.alertRed.withValues(alpha: 0.4),
                   blurRadius: 20,
                   spreadRadius: 5,
                 ),

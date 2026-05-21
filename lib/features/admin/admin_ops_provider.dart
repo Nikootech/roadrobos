@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/repositories/admin_ops_repository.dart';
 import '../profile/user_provider.dart';
 import '../../core/models/user_role.dart';
+import '../../core/providers/rbac_provider.dart';
 
 class AdminOpsMetrics {
   final int activeRides;
@@ -32,8 +33,8 @@ class ServiceOp {
 
 final adminMetricsStreamProvider = StreamProvider<AdminOpsMetrics>((ref) {
   // Permission Guard
-  final userRole = ref.watch(userProvider).user?.role;
-  if (userRole != UserRole.admin && userRole != UserRole.superAdmin) {
+  final hasAdminAccess = ref.watch(hasPermissionProvider('admin_access'));
+  if (!hasAdminAccess) {
     return Stream.error('Security Violation: Unauthorized Access');
   }
 
@@ -47,9 +48,9 @@ final adminMetricsStreamProvider = StreamProvider<AdminOpsMetrics>((ref) {
 
 final adminBookingsProvider = StreamProvider<List<BookingOp>>((ref) {
   // Permission Guard
-  final userRole = ref.watch(userProvider).user?.role;
-  if (userRole != UserRole.admin && userRole != UserRole.superAdmin) {
-    return Stream.error('Access Denied');
+  final hasAdminAccess = ref.watch(hasPermissionProvider('admin_access'));
+  if (!hasAdminAccess) {
+    throw Exception('Unauthorized: Admin access required');
   }
 
   final repo = ref.watch(adminOpsRepositoryProvider);
@@ -68,8 +69,8 @@ class ServiceOpsNotifier extends Notifier<AsyncValue<List<ServiceOp>>> {
   @override
   AsyncValue<List<ServiceOp>> build() {
     // Permission Guard
-    final userRole = ref.watch(userProvider).user?.role;
-    if (userRole != UserRole.admin && userRole != UserRole.superAdmin) {
+    final hasAdminAccess = ref.watch(hasPermissionProvider('admin_access'));
+    if (!hasAdminAccess) {
       return const AsyncValue.error('Access Denied', StackTrace.empty);
     }
 

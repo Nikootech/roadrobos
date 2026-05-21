@@ -1,6 +1,7 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
-import '../rentals/rental_providers.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/repositories/notification_repository.dart';
+import '../profile/user_provider.dart';
 
 class AppNotification {
   final String id;
@@ -35,58 +36,66 @@ class AppNotification {
 }
 
 class NotificationNotifier extends StateNotifier<List<AppNotification>> {
+  final Ref ref;
+  
   NotificationNotifier(this.ref) : super([]) {
-    _initMockNotifications();
-    
-    // Listen to rental state changes
-    ref.listen(activeRentalProvider, (previous, next) {
-      if (next?.status == RentalStatus.completed && previous?.status != RentalStatus.completed) {
-        _addRentalCompletionNotification(next!.vehicle['name'] ?? 'Vehicle');
+    _listenToNotifications();
+  }
+
+  void _listenToNotifications() {
+    final user = ref.watch(userProvider).user;
+    if (user == null) return;
+
+    ref.read(notificationRepositoryProvider).watchNotifications(user.id).listen((models) {
+      state = models.map((m) => AppNotification(
+        id: m.id,
+        title: m.title,
+        description: m.description,
+        timestamp: m.timestamp,
+        icon: _getIconForType(m.type),
+        isRead: m.isRead,
+        type: m.type,
+      )).toList();
+      
+      // Fallback if empty (keep welcome message for new users)
+      if (state.isEmpty) {
+        _addWelcomeNotification();
       }
     });
   }
 
-  final Ref ref;
-
-  void _initMockNotifications() {
+  void _addWelcomeNotification() {
     state = [
       AppNotification(
-        id: '1',
+        id: 'welcome',
         title: 'Welcome to RoAd RoBo\'s!',
         description: 'Thank you for joining us. Book your first ride or service and get 20% off!',
-        timestamp: DateTime.now().subtract(const Duration(hours: 2)),
+        timestamp: DateTime.now(),
         icon: Icons.celebration_rounded,
         isRead: false,
-      ),
-      AppNotification(
-        id: '2',
-        title: 'Referral Bonus',
-        description: 'Share your referral code and earn ₹500 for every friend who joins.',
-        timestamp: DateTime.now().subtract(const Duration(days: 1)),
-        icon: Icons.card_giftcard_rounded,
-        isRead: true,
       ),
     ];
   }
 
-  void _addRentalCompletionNotification(String vehicleName) {
-    final notification = AppNotification(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      title: 'Rental Completed',
-      description: 'Your rental time for $vehicleName has ended. Please complete payment and confirm drop-off.',
-      timestamp: DateTime.now(),
-      icon: Icons.timer_rounded,
-      type: 'rental_completion',
-    );
-    state = [notification, ...state];
+  IconData _getIconForType(String? type) {
+    switch (type) {
+      case 'rental': return Icons.car_rental;
+      case 'service': return Icons.build;
+      case 'ride': return Icons.local_taxi;
+      case 'wallet': return Icons.account_balance_wallet;
+      default: return Icons.notifications_active;
+    }
   }
 
-  void markAsRead(String id) {
-    state = state.map((n) => n.id == id ? n.copyWith(isRead: true) : n).toList();
+  Future<void> markAsRead(String id) async {
+    await ref.read(notificationRepositoryProvider).markAsRead(id);
   }
 
-  void markAllAsRead() {
-    state = state.map((n) => n.copyWith(isRead: true)).toList();
+  Future<void> markAllAsRead() async {
+    final user = ref.read(userProvider).user;
+    if (user != null) {
+      await ref.read(notificationRepositoryProvider).markAllAsRead(user.id);
+    }
   }
 
   void clearAll() {

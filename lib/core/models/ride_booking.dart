@@ -2,24 +2,30 @@ class RideBooking {
   final String id;
   final String customerId;
   final String? driverId;
-  final String pickupLocation;
   final String pickupAddress;
-  final String dropLocation;
-  final String dropAddress;
+  final String destinationAddress;
+  final double pickupLat;
+  final double pickupLng;
+  final double destLat;
+  final double destLng;
   final String status;
   final double fare;
+  final String? vehicleType;
   final DateTime createdAt;
 
   RideBooking({
     required this.id,
     required this.customerId,
     this.driverId,
-    required this.pickupLocation,
     required this.pickupAddress,
-    required this.dropLocation,
-    required this.dropAddress,
-    this.status = 'pending',
+    required this.destinationAddress,
+    required this.pickupLat,
+    required this.pickupLng,
+    required this.destLat,
+    required this.destLng,
+    this.status = 'searching',
     required this.fare,
+    this.vehicleType,
     required this.createdAt,
   });
 
@@ -28,12 +34,15 @@ class RideBooking {
       id: documentId,
       customerId: map['customer_id'] ?? '',
       driverId: map['driver_id'],
-      pickupLocation: map['pickup_location'] ?? '',
       pickupAddress: map['pickup_address'] ?? '',
-      dropLocation: map['destination_location'] ?? map['dropLocation'] ?? '',
-      dropAddress: map['destination_address'] ?? map['dropAddress'] ?? '',
-      status: map['status'] ?? 'pending',
+      destinationAddress: map['destination_address'] ?? '',
+      pickupLat: (map['pickup_lat'] ?? 0.0).toDouble(),
+      pickupLng: (map['pickup_lng'] ?? 0.0).toDouble(),
+      destLat: (map['dest_lat'] ?? 0.0).toDouble(),
+      destLng: (map['dest_lng'] ?? 0.0).toDouble(),
+      status: map['status'] ?? 'searching',
       fare: (map['fare'] ?? 0.0).toDouble(),
+      vehicleType: map['vehicle_type'],
       createdAt: map['created_at'] != null ? DateTime.parse(map['created_at']) : DateTime.now(),
     );
   }
@@ -42,12 +51,15 @@ class RideBooking {
     return {
       'customer_id': customerId,
       'driver_id': driverId,
-      'pickup_location': pickupLocation,
       'pickup_address': pickupAddress,
-      'destination_location': dropLocation,
-      'destination_address': dropAddress,
+      'destination_address': destinationAddress,
+      'pickup_lat': pickupLat,
+      'pickup_lng': pickupLng,
+      'dest_lat': destLat,
+      'dest_lng': destLng,
       'status': status,
       'fare': fare,
+      'vehicle_type': vehicleType,
       'created_at': createdAt.toIso8601String(),
     };
   }

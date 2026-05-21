@@ -1,17 +1,32 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart';
+import 'package:drift/drift.dart' hide Column;
 import '../models/user_role.dart';
 
+import '../data/local_database.dart';
+
 final userRepositoryProvider = Provider<UserRepository>((ref) {
-  return UserRepository();
+  return UserRepository(ref.watch(localDatabaseProvider));
 });
 
 class UserRepository {
   final SupabaseClient _supabase = Supabase.instance.client;
+  final AppDatabase _db;
+
+  UserRepository(this._db);
 
   /// Fetch user profile from Supabase profiles table
   Future<AppUser?> getUser(String uid) async {
+    // 1. Check local cache first
+    final local = await (_db.select(_db.cachedProfiles)..where((t) => t.id.equals(uid))).getSingleOrNull();
+    if (local != null) {
+      debugPrint('UserRepository: Returning Cached Profile for $uid');
+      // Background refresh
+      _fetchAndCache(uid).catchError((e) => debugPrint('Background Fetch Error: $e'));
+      return _fromCached(local);
+    }
+
     try {
       final response = await _supabase
           .from('profiles')
@@ -20,7 +35,9 @@ class UserRepository {
           .maybeSingle();
       
       if (response != null) {
-        return AppUser.fromMap(response, uid);
+        final user = AppUser.fromMap(response, uid);
+        await _cacheUser(user);
+        return user;
       }
       return null;
     } catch (e) {
@@ -28,26 +45,85 @@ class UserRepository {
     }
   }
 
+  Future<void> _fetchAndCache(String uid) async {
+    final response = await _supabase.from('profiles').select().eq('id', uid).maybeSingle();
+    if (response != null) {
+      await _cacheUser(AppUser.fromMap(response, uid));
+    }
+  }
+
+  Future<void> _cacheUser(AppUser user) async {
+    await _db.into(_db.cachedProfiles).insertOnConflictUpdate(CachedProfilesCompanion.insert(
+      id: user.id,
+      name: user.name,
+      email: Value(user.email),
+      phone: user.phone,
+      role: user.role.name,
+      profilePic: Value(user.profilePic),
+      points: Value(user.points),
+    ));
+  }
+
+  AppUser _fromCached(CachedProfile local) {
+    return AppUser(
+      id: local.id,
+      name: local.name,
+      email: local.email,
+      phone: local.phone,
+      role: UserRole.values.firstWhere((e) => e.name == local.role, orElse: () => UserRole.customer),
+      profilePic: local.profilePic,
+      points: local.points,
+    );
+  }
+
+  /// Get real-time stream for user profile
+  Stream<AppUser?> getUserStream(String uid) {
+    return _supabase
+        .from('profiles')
+        .stream(primaryKey: ['id'])
+        .eq('id', uid)
+        .map((data) => data.isNotEmpty ? AppUser.fromMap(data.first, uid) : null);
+  }
+
   /// Create or update user profile
   Future<void> saveUser(AppUser user) async {
+    // Optimistic local update
+    await _cacheUser(user);
+
     try {
       final userMap = user.toMap();
       debugPrint('UserRepository: Updating Profile [ID: ${user.id}]: $userMap');
       
-      // Explicit update is often safer for RLS 'update' policies than 'upsert'
-      final response = await _supabase.from('profiles')
-          .update(userMap)
-          .eq('id', user.id)
-          .select()
-          .maybeSingle();
+      try {
+        // Explicit update is often safer for RLS 'update' policies than 'upsert'
+        final response = await _supabase.from('profiles')
+            .update(userMap)
+            .eq('id', user.id)
+            .select()
+            .maybeSingle();
 
-      if (response == null) {
-        debugPrint('UserRepository Warning: No rows affected by update. Profile might not exist yet.');
-        // Fallback to upsert if update didn't find the row (unlikely for logged-in user)
-        await _supabase.from('profiles').upsert(
-          userMap..addEntries([MapEntry('id', user.id)]),
-          onConflict: 'id',
-        );
+        if (response == null) {
+          await _supabase.from('profiles').upsert(
+            userMap..addEntries([MapEntry('id', user.id)]),
+            onConflict: 'id',
+          );
+        }
+      } catch (e) {
+        if (e.toString().contains('400') || e.toString().contains('Bad Request')) {
+          debugPrint('UserRepository: 400 Bad Request with full payload. Trying safe payload.');
+          // If 400 Bad Request, it usually means a column doesn't exist (e.g. role, email)
+          // Try updating only safe fields
+          final safeMap = {
+            'name': user.name,
+            'phone': user.phone,
+          };
+          
+          await _supabase.from('profiles')
+            .update(safeMap)
+            .eq('id', user.id);
+        } else {
+          rethrow;
+        }
       }
     } catch (e) {
       debugPrint('Supabase Persistence Failure: $e');
@@ -85,15 +161,15 @@ class UserRepository {
       
       // Upload to 'profiles' bucket
       // We use upsert: true to overwrite existing avatar for this user
-      await _supabase.storage.from('profiles').upload(
+      await _supabase.storage.from('profiles').uploadBinary(
         fileName,
         fileBytes,
         fileOptions: const FileOptions(upsert: true, contentType: 'image/*'),
       );
 
-      // Get public URL
+      // Get public URL with cache buster to ensure real-time UI updates
       final publicUrl = _supabase.storage.from('profiles').getPublicUrl(fileName);
-      return publicUrl;
+      return '$publicUrl?t=${DateTime.now().millisecondsSinceEpoch}';
     } catch (e) {
       debugPrint('Supabase Storage Upload Failure: $e');
       throw Exception('Failed to upload image: $e');

@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/repositories/admin_ops_repository.dart';
 import '../../core/theme/app_colors.dart';
 
 // --- MOCK DATA ---
@@ -35,40 +36,60 @@ class AdminDriversNotifier extends Notifier<AsyncValue<List<AdminDriver>>> {
   }
 
   void _init() async {
-    await Future.delayed(const Duration(milliseconds: 600));
-    state = AsyncValue.data([
-      AdminDriver('D201', 'Rajesh S.', 'Oct 2023', 4.8, 142, 2, 4500, [
-        DriverDocument('Driving License', 'Pending', 'Yesterday'),
-        DriverDocument('Vehicle RC', 'Pending', 'Yesterday'),
-        DriverDocument('Aadhar Card', 'Approved', 'Oct 15'),
-      ]),
-      AdminDriver('D202', 'Vikas P.', 'Nov 2023', 4.5, 89, 0, 12000, [
-        DriverDocument('Driving License', 'Approved', 'Nov 12'),
-      ]),
-      AdminDriver('D203', 'Arun M.', 'Jan 2024', 4.9, 320, 1, 0, [
-        DriverDocument('Background Check', 'Pending', '2 days ago'),
-      ]),
-    ]);
+    try {
+      final repo = ref.read(adminOpsRepositoryProvider);
+      final drivers = await repo.getAllDrivers();
+      
+      state = AsyncValue.data(drivers.map((map) {
+        final id = map['id']?.toString().substring(0, 4).toUpperCase() ?? 'NEW';
+        final name = map['name'] ?? 'Pro Driver';
+        final createdAt = map['created_at'] != null 
+            ? DateTime.parse(map['created_at']) 
+            : DateTime.now();
+        
+        final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        final dateStr = '${months[createdAt.month - 1]} ${createdAt.year}';
+
+        final docs = (map['kyc_documents'] as List?)?.map((d) {
+          return DriverDocument(
+            d['title'] ?? 'Document',
+            d['status'] ?? 'Pending',
+            d['uploaded_at']?.toString().split('T')[0] ?? 'Recently',
+          );
+        }).toList() ?? [];
+
+        return AdminDriver(
+          id,
+          name,
+          dateStr,
+          (map['rating'] ?? 5.0).toDouble(),
+          map['total_rides'] ?? 0,
+          docs.where((d) => d.status == 'Pending').length,
+          (map['wallet_request'] ?? 0.0).toDouble(),
+          docs,
+        );
+      }).toList());
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
+    }
   }
 
-  void approveDoc(String driverId, String docTitle) {
-    if (state.value == null) return;
-    final current = state.value!;
-    state = AsyncValue.data(current.map((d) {
-      if (d.id != driverId) return d;
-      final newDocs = d.documents.map((doc) => doc.title == docTitle ? DriverDocument(doc.title, 'Approved', doc.date) : doc).toList();
-      final newPending = newDocs.where((doc) => doc.status == 'Pending').length;
-      return AdminDriver(d.id, d.name, d.joinDate, d.rating, d.rides, newPending, d.walletRequest, newDocs);
-    }).toList());
+  Future<void> approveDoc(String driverId, String docTitle) async {
+    try {
+      await ref.read(adminOpsRepositoryProvider).updateDriverKycStatus(driverId, docTitle, 'Approved');
+      _init(); // Refresh data
+    } catch (e) {
+      debugPrint('Error approving doc: $e');
+    }
   }
 
-  void approveWallet(String driverId) {
-    if (state.value == null) return;
-    final current = state.value!;
-    state = AsyncValue.data(current.map((d) {
-      if (d.id != driverId) return d;
-      return AdminDriver(d.id, d.name, d.joinDate, d.rating, d.rides, d.docsPending, 0, d.documents);
-    }).toList());
+  Future<void> approveWallet(String driverId) async {
+    try {
+      await ref.read(adminOpsRepositoryProvider).approveWalletWithdrawal(driverId);
+      _init(); // Refresh data
+    } catch (e) {
+      debugPrint('Error approving wallet: $e');
+    }
   }
 }
 
@@ -141,7 +162,7 @@ class DriverDatabaseScreen extends ConsumerWidget {
 
   Widget _buildDriverCard(BuildContext context, WidgetRef ref, AdminDriver d) {
     return Container(
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.primaryBlue.withOpacity(0.1)), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))]),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.1)), boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4))]),
       child: Theme(
         data: ThemeData(dividerColor: Colors.transparent),
         child: ExpansionTile(
@@ -150,7 +171,7 @@ class DriverDatabaseScreen extends ConsumerWidget {
           collapsedIconColor: AppColors.textSecondary,
           title: Row(
             children: [
-              CircleAvatar(radius: 20, backgroundColor: AppColors.primaryBlue.withOpacity(0.1), child: const Text('🚗', style: TextStyle(fontSize: 18))),
+              CircleAvatar(radius: 20, backgroundColor: AppColors.primaryBlue.withValues(alpha: 0.1), child: const Text('🚗', style: TextStyle(fontSize: 18))),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
@@ -187,7 +208,7 @@ class DriverDatabaseScreen extends ConsumerWidget {
               const SizedBox(height: 12),
               Container(
                 padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(color: AppColors.warningAmber.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                decoration: BoxDecoration(color: AppColors.warningAmber.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -293,7 +314,7 @@ class DriverDatabaseScreen extends ConsumerWidget {
                         ] else
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(color: AppColors.successGreen.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
+                            decoration: BoxDecoration(color: AppColors.successGreen.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
                             child: const Text('Approved', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.successGreen)),
                           )
                       ],
@@ -310,7 +331,7 @@ class DriverDatabaseScreen extends ConsumerWidget {
   Widget _buildBadge(String emoji, String text, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: color.withOpacity(0.05), borderRadius: BorderRadius.circular(12), border: Border.all(color: color.withOpacity(0.1))),
+      decoration: BoxDecoration(color: color.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(12), border: Border.all(color: color.withValues(alpha: 0.1))),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

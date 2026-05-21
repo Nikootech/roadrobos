@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/custom_button.dart';
+import '../../core/services/payment_service.dart';
 
 class SecurePaymentScreen extends StatefulWidget {
   const SecurePaymentScreen({super.key});
@@ -15,17 +16,36 @@ class _SecurePaymentScreenState extends State<SecurePaymentScreen> {
   bool _isProcessing = false;
   bool _isSuccess = false;
 
-  void _startPayment() async {
+  void _startPayment() {
     setState(() => _isProcessing = true);
-    await Future.delayed(const Duration(seconds: 3));
-    setState(() {
-      _isProcessing = false;
-      _isSuccess = true;
-    });
-    await Future.delayed(const Duration(seconds: 2));
-    if (mounted) {
-       context.pop(); // Return to previous screen after success
-    }
+    final paymentService = PaymentService(
+      onSuccess: (response) {
+        if (mounted) {
+          setState(() {
+            _isProcessing = false;
+            _isSuccess = true;
+          });
+          Future.delayed(const Duration(seconds: 2), () {
+            if (mounted) context.pop(true);
+          });
+        }
+      },
+      onFailure: (error) {
+        if (mounted) {
+          setState(() => _isProcessing = false);
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Payment failed: $error')));
+        }
+      },
+    );
+
+    paymentService.startPayment(
+      amount: 500, // Example amount
+      contact: '9999999999',
+      email: 'user@example.com',
+      description: 'Secure Payment',
+      bookingId: '00000000-0000-0000-0000-000000000000',
+      userId: '00000000-0000-0000-0000-000000000000',
+    );
   }
 
   @override

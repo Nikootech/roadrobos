@@ -40,7 +40,7 @@ class _DriverRideRequestScreenState extends State<DriverRideRequestScreen> with 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black.withOpacity(0.8),
+      backgroundColor: Colors.black.withValues(alpha: 0.8),
       body: Stack(
         children: [
           // Background Gradient/Blur effect
@@ -50,7 +50,7 @@ class _DriverRideRequestScreenState extends State<DriverRideRequestScreen> with 
                 gradient: RadialGradient(
                   center: Alignment.center,
                   radius: 1.5,
-                  colors: [AppColors.primaryBlue.withOpacity(0.2), Colors.black],
+                  colors: [AppColors.primaryBlue.withValues(alpha: 0.2), Colors.black],
                 ),
               ),
             ),
@@ -64,7 +64,7 @@ class _DriverRideRequestScreenState extends State<DriverRideRequestScreen> with 
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(36),
                 boxShadow: [
-                  BoxShadow(color: AppColors.primaryBlue.withOpacity(0.3), blurRadius: 40, offset: const Offset(0, 10)),
+                  BoxShadow(color: AppColors.primaryBlue.withValues(alpha: 0.3), blurRadius: 40, offset: const Offset(0, 10)),
                 ],
               ),
               child: Column(
@@ -96,7 +96,7 @@ class _DriverRideRequestScreenState extends State<DriverRideRequestScreen> with 
                         ),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(24),
-                          child: Icon(Iconsax.map_1, color: AppColors.primaryBlue.withOpacity(0.3), size: 60),
+                          child: Icon(Iconsax.map_1, color: AppColors.primaryBlue.withValues(alpha: 0.3), size: 60),
                         ),
                       ),
                       const Icon(Icons.circle, color: AppColors.primaryBlue, size: 12)

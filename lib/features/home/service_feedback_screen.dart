@@ -217,7 +217,7 @@ class ServiceFeedbackScreen extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.bgDarkSurface.withOpacity(0.5),
+        color: AppColors.bgDarkSurface.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
@@ -261,7 +261,7 @@ class ServiceFeedbackScreen extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.bgDarkSurface.withOpacity(0.4),
+        color: AppColors.bgDarkSurface.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
@@ -271,7 +271,7 @@ class ServiceFeedbackScreen extends StatelessWidget {
             height: 32,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: rankColors[rank - 1].withOpacity(0.15),
+              color: rankColors[rank - 1].withValues(alpha: 0.15),
             ),
             child: Center(
               child: Text(

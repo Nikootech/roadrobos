@@ -1,9 +1,20 @@
+import 'package:shared_preferences/shared_preferences.dart';
+
 enum UserRole {
   customer,
   driver,
   technician,
-  admin,
   superAdmin,
+  founderAdmin,
+  opsHead,
+  cityManager,
+  areaManager,
+  financeManager,
+  supportManager,
+  marketingAdmin,
+  auditor,
+  analyst,
+  admin, // Legacy support
 }
 
 class SavedLocation {
@@ -79,10 +90,7 @@ class AppUser {
       name: map['name'] ?? 'Unknown User',
       phone: map['phone'] ?? map['phone_number'] ?? map['mobile'] ?? '',
       email: map['email'],
-      role: UserRole.values.firstWhere(
-        (e) => e.toString() == 'UserRole.${map['role']}',
-        orElse: () => UserRole.customer,
-      ),
+      role: _parseRole(map['role']),
       profilePic: map['profile_pic'] ?? map['avatar_url'],
       createdAt: map['created_at'] != null ? DateTime.parse(map['created_at']) : null,
       points: map['points'] ?? 0,
@@ -96,16 +104,37 @@ class AppUser {
     );
   }
 
+  static UserRole _parseRole(String? role) {
+    if (role == null) return UserRole.customer;
+    final normalized = role.toLowerCase().replaceAll('_', '');
+    return UserRole.values.firstWhere(
+      (e) => e.name.toLowerCase() == normalized,
+      orElse: () => UserRole.customer,
+    );
+  }
+
   Map<String, dynamic> toMap() {
     return {
       'name': name,
       'phone': phone,
       'email': email,
-      'role': role.toString().split('.').last,
+      'role': _roleToDb(role),
       'profile_pic': profilePic,
-      // Note: Other fields like saved_locations, points, etc. are currently 
-      // managed locally or in separate tables to avoid profiles schema errors.
     };
+  }
+
+  static String _roleToDb(UserRole role) {
+    switch (role) {
+      case UserRole.superAdmin: return 'super_admin';
+      case UserRole.founderAdmin: return 'founder_admin';
+      case UserRole.opsHead: return 'ops_head';
+      case UserRole.cityManager: return 'city_manager';
+      case UserRole.areaManager: return 'area_manager';
+      case UserRole.financeManager: return 'finance_manager';
+      case UserRole.supportManager: return 'support_manager';
+      case UserRole.marketingAdmin: return 'marketing_admin';
+      default: return role.name;
+    }
   }
 
   factory AppUser.empty() {
@@ -122,6 +151,8 @@ class AppUser {
     DateTime? createdAt,
     int? points,
     int? totalRides,
+    List<String>? emergencyContacts,
+    String? referralCode,
     List<SavedLocation>? savedLocations,
   }) {
     return AppUser(
@@ -138,5 +169,30 @@ class AppUser {
       referralCode: referralCode ?? this.referralCode,
       savedLocations: savedLocations ?? this.savedLocations,
     );
+  }
+}
+
+extension UserRoleExtension on UserRole {
+  bool get isAdmin => [
+    UserRole.admin,
+    UserRole.superAdmin,
+    UserRole.founderAdmin,
+    UserRole.opsHead,
+    UserRole.cityManager,
+    UserRole.areaManager,
+    UserRole.financeManager,
+    UserRole.supportManager,
+    UserRole.marketingAdmin,
+  ].contains(this);
+
+  bool get isFieldStaff => [
+    UserRole.driver,
+    UserRole.technician,
+  ].contains(this);
+
+  Future<bool> hasPermission(String permission) async {
+    final prefs = await SharedPreferences.getInstance();
+    final cached = prefs.getStringList('user_permissions') ?? [];
+    return cached.contains(permission);
   }
 }

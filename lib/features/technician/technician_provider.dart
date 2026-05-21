@@ -1,7 +1,8 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/repositories/technician_job_repository.dart';
+import 'package:roadrobos/core/repositories/technician_job_repository.dart';
 import '../../core/models/technician_job_model.dart';
+import '../profile/user_provider.dart';
 
 // ─── Legacy UI-compatible wrappers ───
 // These thin wrappers allow existing screens to work unchanged while
@@ -203,15 +204,21 @@ final selectedJobProvider = Provider<TechnicianJob?>((ref) {
 
 class TechnicianNotifier extends StateNotifier<List<TechnicianJob>> {
   final Ref ref;
+  final String? userId;
   StreamSubscription? _subscription;
 
-  TechnicianNotifier(this.ref) : super([]) {
+  TechnicianNotifier(this.ref, this.userId) : super([]) {
     _listenToFirestore();
   }
 
   void _listenToFirestore() {
     final repo = ref.read(technicianJobRepositoryProvider);
-    _subscription = repo.watchAllJobs().listen((firestoreJobs) {
+    final stream = userId != null
+        ? repo.watchJobsForTech(userId!)
+        : repo.watchAllJobs();
+
+    _subscription?.cancel();
+    _subscription = stream.listen((firestoreJobs) {
       state = firestoreJobs.map((m) => TechnicianJob.fromFirestore(m)).toList();
       
       // Auto-select first job if none selected
@@ -263,6 +270,7 @@ class TechnicianNotifier extends StateNotifier<List<TechnicianJob>> {
       checklist: checklist,
       parts: [],
       status: 'SCHEDULED',
+      assignedTechId: userId,
     );
     
     repo.createJob(newJob);
@@ -285,6 +293,7 @@ class TechnicianNotifier extends StateNotifier<List<TechnicianJob>> {
       parts: job.parts.map((p) => FirestoreSparePart(name: p.name, qty: p.qty, isFound: p.isFound)).toList(),
       status: job.status,
       price: job.price,
+      assignedTechId: userId,
     ));
   }
 
@@ -293,6 +302,11 @@ class TechnicianNotifier extends StateNotifier<List<TechnicianJob>> {
     final repo = ref.read(technicianJobRepositoryProvider);
     repo.updateJobStatus(job.id, job.status);
     repo.updateJobProgress(job.id, job.progress);
+  }
+
+  Future<void> updateVehicleDetails(String jobId, String model, String plate) async {
+    final repo = ref.read(technicianJobRepositoryProvider);
+    await repo.updateVehicleDetails(jobId, model, plate);
   }
 
   void acceptJob(String jobId) {
@@ -322,5 +336,7 @@ class TechnicianNotifier extends StateNotifier<List<TechnicianJob>> {
 }
 
 final technicianProvider = StateNotifierProvider<TechnicianNotifier, List<TechnicianJob>>((ref) {
-  return TechnicianNotifier(ref);
+  final userState = ref.watch(userProvider);
+  final userId = userState.user?.id;
+  return TechnicianNotifier(ref, userId);
 });

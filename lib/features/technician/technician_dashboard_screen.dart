@@ -4,9 +4,12 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../profile/user_provider.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/repositories/job_card_repository.dart';
 import 'technician_provider.dart';
+import '../profile/user_provider.dart';
 import 'widgets/service_team_alert_monitor.dart';
+import '../../core/services/tracking_service.dart';
 
 class TechnicianDashboardScreen extends ConsumerStatefulWidget {
   const TechnicianDashboardScreen({super.key});
@@ -17,6 +20,15 @@ class TechnicianDashboardScreen extends ConsumerStatefulWidget {
 
 class _TechnicianDashboardScreenState extends ConsumerState<TechnicianDashboardScreen> {
   int _bottomNavIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final techId = ref.read(userProvider).user?.id ?? 'demo';
+      ref.read(trackingServiceProvider).startTracking(techId);
+    });
+  }
 
   // — Nav handler —
   void _onBottomNavTap(int index) {
@@ -95,32 +107,50 @@ class _TechnicianDashboardScreenState extends ConsumerState<TechnicianDashboardS
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
                       if (formKey.currentState!.validate()) {
                         HapticFeedback.heavyImpact();
-                        // Create a new job with the vehicle info
-                        final newJob = TechnicianJob(
-                          id: 'JOB-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}',
-                          estimatedCompletion: DateFormat('hh:mm a').format(DateTime.now().add(const Duration(hours: 3))),
-                          vehicleModel: modelCtrl.text,
-                          vehiclePlate: regNoCtrl.text,
-                          progress: 0.0,
-                          checklist: [
-                            ChecklistItem(task: 'Pre-service Inspection', category: 'Initial'),
-                            ChecklistItem(task: 'Engine Diagnosis', category: 'Core Service'),
-                            ChecklistItem(task: 'Wait for Customer Approval', category: 'Communication'),
-                            ChecklistItem(task: 'Final Quality Check', category: 'Quality'),
-                          ],
-                          parts: [],
-                          status: 'ACCEPTED',
-                        );
-                        ref.read(technicianProvider.notifier).createJob(newJob);
-                        ref.read(selectedJobIdProvider.notifier).state = newJob.id;
-                        Navigator.pop(ctx);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Vehicle "${modelCtrl.text}" added & job created!'), backgroundColor: const Color(0xFF28C76F)),
-                        );
-                        context.push('/tech-job-card');
+                        try {
+                          await ref.read(jobCardRepositoryProvider).createJobCard(
+                            techId: 'self', // Technician ID 
+                            vehicleMake: 'Unknown',
+                            vehicleModel: modelCtrl.text,
+                            regNo: regNoCtrl.text,
+                            notes: 'Dashboard Job',
+                          );
+
+                          // Create a new job with the vehicle info
+                          final newJob = TechnicianJob(
+                            id: 'JOB-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}',
+                            estimatedCompletion: DateFormat('hh:mm a').format(DateTime.now().add(const Duration(hours: 3))),
+                            vehicleModel: modelCtrl.text,
+                            vehiclePlate: regNoCtrl.text,
+                            progress: 0.0,
+                            checklist: [
+                              ChecklistItem(task: 'Pre-service Inspection', category: 'Initial'),
+                              ChecklistItem(task: 'Engine Diagnosis', category: 'Core Service'),
+                              ChecklistItem(task: 'Wait for Customer Approval', category: 'Communication'),
+                              ChecklistItem(task: 'Final Quality Check', category: 'Quality'),
+                            ],
+                            parts: [],
+                            status: 'ACCEPTED',
+                          );
+                          ref.read(technicianProvider.notifier).createJob(newJob);
+                          ref.read(selectedJobIdProvider.notifier).state = newJob.id;
+                          if (ctx.mounted) Navigator.pop(ctx);
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Vehicle "${modelCtrl.text}" added & job created!'), backgroundColor: const Color(0xFF28C76F)),
+                            );
+                            context.push('/tech-job-card');
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Failed to create job: $e'), backgroundColor: Colors.red),
+                            );
+                          }
+                        }
                       }
                     },
                     style: ElevatedButton.styleFrom(
@@ -200,7 +230,7 @@ class _TechnicianDashboardScreenState extends ConsumerState<TechnicianDashboardS
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Good Morning, ${user?.user?.name.split(' ')[0] ?? 'Technician'}',
+                        Text('Good Morning, ${user.user?.name.split(' ')[0] ?? 'Technician'}',
                             style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Color(0xFF1A237E))),
                       ],
                     ),
@@ -214,7 +244,7 @@ class _TechnicianDashboardScreenState extends ConsumerState<TechnicianDashboardS
                         decoration: BoxDecoration(
                           color: Colors.white,
                           shape: BoxShape.circle,
-                          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+                          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)],
                         ),
                         child: Stack(
                           children: [
@@ -331,7 +361,7 @@ class _TechnicianDashboardScreenState extends ConsumerState<TechnicianDashboardS
         decoration: BoxDecoration(
           gradient: const LinearGradient(colors: [Color(0xFF1A237E), Color(0xFF3949AB)]),
           borderRadius: BorderRadius.circular(24),
-          boxShadow: [BoxShadow(color: const Color(0xFF1A237E).withOpacity(0.2), blurRadius: 20, offset: const Offset(0, 10))],
+          boxShadow: [BoxShadow(color: const Color(0xFF1A237E).withValues(alpha: 0.2), blurRadius: 20, offset: const Offset(0, 10))],
         ),
         child: Row(
           children: [
@@ -351,14 +381,14 @@ class _TechnicianDashboardScreenState extends ConsumerState<TechnicianDashboardS
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                        decoration: BoxDecoration(color: Colors.white.withOpacity(0.15), borderRadius: BorderRadius.circular(6)),
+                        decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(6)),
                         child: Text(job.vehiclePlate, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white70)),
                       ),
                       const SizedBox(width: 12),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: (job.status == 'COMPLETED' ? Colors.greenAccent : Colors.amberAccent).withOpacity(0.2),
+                          color: (job.status == 'COMPLETED' ? Colors.greenAccent : Colors.amberAccent).withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
@@ -387,7 +417,7 @@ class _TechnicianDashboardScreenState extends ConsumerState<TechnicianDashboardS
       decoration: BoxDecoration(
         gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF1A237E), Color(0xFF3949AB)]),
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [BoxShadow(color: const Color(0xFF1A237E).withOpacity(0.2), blurRadius: 20, offset: const Offset(0, 10))],
+        boxShadow: [BoxShadow(color: const Color(0xFF1A237E).withValues(alpha: 0.2), blurRadius: 20, offset: const Offset(0, 10))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -405,7 +435,7 @@ class _TechnicianDashboardScreenState extends ConsumerState<TechnicianDashboardS
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(20)),
+                decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(20)),
                 child: const Row(
                   children: [
                     Icon(Icons.trending_up_rounded, color: Colors.greenAccent, size: 14),
@@ -442,7 +472,7 @@ class _TechnicianDashboardScreenState extends ConsumerState<TechnicianDashboardS
           width: 25,
           height: 80 * percent,
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(percent > 0.8 ? 1.0 : 0.4),
+            color: Colors.white.withValues(alpha: percent > 0.8 ? 1.0 : 0.4),
             borderRadius: BorderRadius.circular(6),
           ),
         ),
@@ -466,13 +496,13 @@ class _TechnicianDashboardScreenState extends ConsumerState<TechnicianDashboardS
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: const Color(0xFFE5E9F0)),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4))],
         ),
         child: Column(
           children: [
             Container(
               padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
+              decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
               child: Icon(icon, color: color, size: 24),
             ),
             const SizedBox(height: 12),
@@ -503,13 +533,13 @@ class _TechnicianDashboardScreenState extends ConsumerState<TechnicianDashboardS
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: const Color(0xFFE5E9F0)),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4))],
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+              decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
               child: Icon(Icons.directions_car_rounded, color: statusColor),
             ),
             const SizedBox(width: 16),
@@ -524,7 +554,7 @@ class _TechnicianDashboardScreenState extends ConsumerState<TechnicianDashboardS
             ),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
+              decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(20)),
               child: Text(status, style: TextStyle(color: statusColor, fontSize: 11, fontWeight: FontWeight.bold)),
             ),
           ],

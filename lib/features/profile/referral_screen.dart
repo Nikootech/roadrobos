@@ -46,7 +46,7 @@ class ReferralScreen extends ConsumerWidget {
               width: double.infinity,
               height: 240,
               decoration: BoxDecoration(
-                color: AppColors.primaryBlue.withOpacity(0.05),
+                color: AppColors.primaryBlue.withValues(alpha: 0.05),
               ),
               child: const Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -75,7 +75,7 @@ class ReferralScreen extends ConsumerWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      border: Border.all(color: AppColors.primaryBlue.withOpacity(0.3), width: 2),
+                      border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.3), width: 2),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Row(
@@ -166,7 +166,7 @@ class ReferralScreen extends ConsumerWidget {
               width: 28,
               height: 28,
               decoration: BoxDecoration(
-                color: AppColors.primaryBlue.withOpacity(0.1),
+                color: AppColors.primaryBlue.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Center(child: Text('$number', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primaryBlue))),
@@ -175,7 +175,7 @@ class ReferralScreen extends ConsumerWidget {
               Container(
                 width: 2,
                 height: 40,
-                color: AppColors.primaryBlue.withOpacity(0.1),
+                color: AppColors.primaryBlue.withValues(alpha: 0.1),
               )
           ],
         ),

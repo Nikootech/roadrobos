@@ -1,25 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/constants/app_strings.dart';
+import '../../core/services/local_storage_service.dart';
 
 /// Splash Screen - Animated logo reveal with auto-navigation
 /// Matches precisely with user-provided image (Light theme, small blue circles)
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends ConsumerState<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(milliseconds: 1000), () {
-      if (mounted) context.go('/onboarding');
-    });
+    _handleNavigation();
+  }
+
+  Future<void> _handleNavigation() async {
+    final localStorage = ref.read(localStorageServiceProvider);
+    final isFirstLaunch = await localStorage.isFirstLaunch();
+    
+    // Maintain splash for at least 1500ms for branding
+    await Future.delayed(const Duration(milliseconds: 1500));
+    
+    if (mounted) {
+      if (isFirstLaunch) {
+        context.go('/onboarding');
+      } else {
+        context.go('/auth/login');
+      }
+    }
   }
 
   @override
@@ -52,7 +68,7 @@ class _SplashScreenState extends State<SplashScreen> {
               height: size.width * 0.45,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFFE0F2FE).withOpacity(0.6), // Soft sky blue
+                color: const Color(0xFFE0F2FE).withValues(alpha: 0.6), // Soft sky blue
               ),
             ),
           ).animate(delay: 200.ms).fadeIn(duration: 800.ms),
@@ -85,7 +101,7 @@ class _SplashScreenState extends State<SplashScreen> {
                     borderRadius: BorderRadius.circular(32),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.primaryBlue.withOpacity(0.08),
+                        color: AppColors.primaryBlue.withValues(alpha: 0.08),
                         blurRadius: 30,
                         spreadRadius: 2,
                         offset: const Offset(0, 10),
@@ -140,7 +156,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 child: CircularProgressIndicator(
                   strokeWidth: 1.2,
                   valueColor: AlwaysStoppedAnimation<Color>(
-                    AppColors.primaryBlue.withOpacity(0.4),
+                    AppColors.primaryBlue.withValues(alpha: 0.4),
                   ),
                 ),
               ),

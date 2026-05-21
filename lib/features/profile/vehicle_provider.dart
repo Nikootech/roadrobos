@@ -24,7 +24,7 @@ class VehicleNotifier extends StateNotifier<AsyncValue<List<UserVehicle>>> {
     
     state = const AsyncValue.loading();
     try {
-      final vehicles = await _repository.getUserVehicles(_userId!);
+      final vehicles = await _repository.getUserVehicles(_userId);
       state = AsyncValue.data(vehicles);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -43,7 +43,7 @@ class VehicleNotifier extends StateNotifier<AsyncValue<List<UserVehicle>>> {
     try {
       final newVehicle = UserVehicle(
         id: '', // Supabase will generate this
-        userId: _userId!,
+        userId: _userId,
         name: name,
         plate: plate,
         fuel: fuel,

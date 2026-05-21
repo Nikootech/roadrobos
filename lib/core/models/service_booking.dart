@@ -9,7 +9,7 @@ class ServiceBooking {
   final String time;
   final String status;
   final double totalCost;
-  final String details;
+  final Map<String, dynamic> details;
   final DateTime createdAt;
 
   ServiceBooking({
@@ -39,7 +39,7 @@ class ServiceBooking {
       time: map['booking_time'] ?? '',
       status: map['status'] ?? 'pending',
       totalCost: (map['total_cost'] ?? 0.0).toDouble(),
-      details: map['details'].toString(),
+      details: map['details'] is Map ? Map<String, dynamic>.from(map['details']) : {},
       createdAt: map['created_at'] != null ? DateTime.parse(map['created_at']) : DateTime.now(),
     );
   }

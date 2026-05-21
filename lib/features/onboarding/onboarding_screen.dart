@@ -1,21 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/constants/app_strings.dart';
+import '../../core/services/local_storage_service.dart';
 import '../../shared/widgets/custom_button.dart';
 
 /// Onboarding Screen - 3-slide PageView matching Figma Screens [52], [57], [58]
 /// Secure Payments → Ease of Booking → Live Tracking
-class OnboardingScreen extends StatefulWidget {
+class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
 
   @override
-  State<OnboardingScreen> createState() => _OnboardingScreenState();
+  ConsumerState<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen> {
+class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
@@ -52,14 +54,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     super.dispose();
   }
 
-  void _onNext() {
+  void _onNext() async {
     if (_currentPage < 2) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 400),
         curve: Curves.easeInOutCubic,
       );
     } else {
-      context.go('/auth/login');
+      final router = GoRouter.of(context);
+      await ref.read(localStorageServiceProvider).setOnboardingComplete();
+      router.go('/auth/login');
     }
   }
 
@@ -76,7 +80,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: GestureDetector(
-                  onTap: () => context.go('/auth/login'),
+                    onTap: () async {
+                    final router = GoRouter.of(context);
+                    await ref.read(localStorageServiceProvider).setOnboardingComplete();
+                    router.go('/auth/login');
+                  },
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
@@ -84,7 +92,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(9999),
-                      color: AppColors.textPrimary.withOpacity(0.05),
+                      color: AppColors.textPrimary.withValues(alpha: 0.05),
                     ),
                     child: const Text(
                       AppStrings.skip,
@@ -193,8 +201,8 @@ class _OnboardingPage extends StatelessWidget {
                   shape: BoxShape.circle,
                   gradient: LinearGradient(
                     colors: [
-                      data.color.withOpacity(0.1),
-                      data.color.withOpacity(0.05),
+                      data.color.withValues(alpha: 0.1),
+                      data.color.withValues(alpha: 0.05),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -225,7 +233,7 @@ class _OnboardingPage extends StatelessWidget {
                         width: 52,
                         height: 52,
                         decoration: BoxDecoration(
-                          color: data.color.withOpacity(0.15),
+                          color: data.color.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Icon(
@@ -276,7 +284,7 @@ class _OnboardingPage extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w400,
-                    color: AppColors.textSecondary.withOpacity(0.8),
+                    color: AppColors.textSecondary.withValues(alpha: 0.8),
                     height: 1.5,
                   ),
                 )

@@ -53,12 +53,10 @@ class _JobCardDetailsScreenState extends ConsumerState<JobCardDetailsScreen> {
     setState(() => _isSaving = true);
     final model = _modelController.text;
     final plate = _plateController.text;
-    await Future.delayed(const Duration(milliseconds: 400)); // Simulate save
+    
     final job = ref.read(selectedJobProvider);
     if (job != null) {
-      ref.read(technicianProvider.notifier).updateJob(
-        job.copyWith(vehicleModel: model, vehiclePlate: plate),
-      );
+      await ref.read(technicianProvider.notifier).updateVehicleDetails(job.id, model, plate);
     }
     if (mounted) {
       setState(() { _isEditing = false; _isSaving = false; });
@@ -137,7 +135,7 @@ class _JobCardDetailsScreenState extends ConsumerState<JobCardDetailsScreen> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(24),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
+                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4))],
               ),
               child: Column(
                 children: [
@@ -154,7 +152,7 @@ class _JobCardDetailsScreenState extends ConsumerState<JobCardDetailsScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: (jobState.status == 'COMPLETED' ? AppColors.successGreen : AppColors.warningAmber).withOpacity(0.1),
+                          color: (jobState.status == 'COMPLETED' ? AppColors.successGreen : AppColors.warningAmber).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(jobState.status, style: GoogleFonts.outfit(color: jobState.status == 'COMPLETED' ? AppColors.successGreen : AppColors.warningAmber, fontSize: 11, fontWeight: FontWeight.bold)),
@@ -181,7 +179,7 @@ class _JobCardDetailsScreenState extends ConsumerState<JobCardDetailsScreen> {
               decoration: BoxDecoration(
                 gradient: const LinearGradient(colors: [Color(0xFF1A237E), Color(0xFF3949AB)]),
                 borderRadius: BorderRadius.circular(24),
-                boxShadow: [BoxShadow(color: const Color(0xFF1A237E).withOpacity(0.15), blurRadius: 15, offset: const Offset(0, 8))],
+                boxShadow: [BoxShadow(color: const Color(0xFF1A237E).withValues(alpha: 0.15), blurRadius: 15, offset: const Offset(0, 8))],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

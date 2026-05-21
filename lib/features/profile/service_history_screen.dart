@@ -15,8 +15,8 @@ class ServiceHistoryScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final userId = ref.watch(authStateProvider).value?.id;
     final servicesAsync = userId != null 
-        ? ref.watch(serviceBookingRepositoryProvider).getCustomerServiceBookings(userId) 
-        : const Stream<List>.empty();
+        ? ref.watch(serviceBookingRepositoryProvider).getPagedCustomerServiceBookings(userId, limit: 50) 
+        : Future<List>.value([]);
 
     return Scaffold(
       backgroundColor: AppColors.bgLightGrey,
@@ -29,21 +29,21 @@ class ServiceHistoryScreen extends ConsumerWidget {
         ),
         title: const Text('Service History', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
       ),
-      body: StreamBuilder(
-        stream: servicesAsync,
+      body: FutureBuilder(
+        future: servicesAsync,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
           
-          final services = snapshot.data ?? [];
+          final services = snapshot.data as List? ?? [];
           
           if (services.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.history_rounded, size: 80, color: AppColors.textMuted.withOpacity(0.2)),
+                  Icon(Icons.history_rounded, size: 80, color: AppColors.textMuted.withValues(alpha: 0.2)),
                   const SizedBox(height: 16),
                   const Text('No service history found', style: TextStyle(color: AppColors.textSecondary)),
                 ],
@@ -87,7 +87,7 @@ class ServiceHistoryScreen extends ConsumerWidget {
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(color: AppColors.primaryBlue.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
+                decoration: BoxDecoration(color: AppColors.primaryBlue.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
                 child: Text('₹${service.totalCost}', style: const TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.bold, fontSize: 12)),
               ),
             ],

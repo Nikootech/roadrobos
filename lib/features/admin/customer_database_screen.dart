@@ -6,6 +6,7 @@ import 'package:iconsax/iconsax.dart';
 import '../../core/theme/app_colors.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/repositories/admin_ops_repository.dart';
 
 // --- MOCK DATA ---
 class AdminCustomer {
@@ -31,25 +32,35 @@ class CustomerActivity {
 }
 
 final adminCustomersProvider = StreamProvider<List<AdminCustomer>>((ref) async* {
-  yield [
-    AdminCustomer('C101', 'Ananya Roy', 'Oct 2023', 12400, 12, 2, 1, [
-      CustomerActivity('Service', 'Swift Dzire - General Service', 'Scheduled (Today, 14:00)', 'Oct 24'),
-      CustomerActivity('Rental', 'Innova Crysta - 3 Days', 'Ongoing', 'Oct 23'),
-      CustomerActivity('Ride', 'City Center Drop', 'Completed', 'Oct 20'),
-    ]),
-    AdminCustomer('C102', 'Vikram Seth', 'Nov 2023', 4500, 4, 1, 0, [
-      CustomerActivity('Rental', 'Honda City - 1 Day', 'Completed', 'Oct 22'),
-      CustomerActivity('Ride', 'Airport Transfer', 'Completed', 'Oct 15'),
-    ]),
-    AdminCustomer('C103', 'Neha Gupta', 'Jan 2024', 8500, 8, 0, 2, [
-      CustomerActivity('Service', 'i20 - Full Wash', 'In Progress', 'Oct 24'),
-      CustomerActivity('Service', 'i20 - Oil Change', 'Completed', 'Sep 10'),
-    ]),
-    AdminCustomer('C104', 'Amit Singh', 'Feb 2024', 3200, 5, 0, 0, [
-      CustomerActivity('Ride', 'Bandra West', 'Completed', 'Oct 21'),
-      CustomerActivity('Ride', 'Andheri East', 'Completed', 'Oct 18'),
-    ]),
-  ];
+  final repo = ref.read(adminOpsRepositoryProvider);
+  
+  // For a production app, we would use a real-time stream if needed, 
+  // but for a database view, a Future converted to a Stream is often enough 
+  // or we can use a polling mechanism.
+  final customers = await repo.getAllCustomers();
+  
+  yield customers.map((map) {
+    final id = map['id']?.toString().substring(0, 4).toUpperCase() ?? 'NEW';
+    final name = map['name'] ?? 'Unknown User';
+    final createdAt = map['created_at'] != null 
+        ? DateTime.parse(map['created_at']) 
+        : DateTime.now();
+    
+    // Format date as "Oct 2023"
+    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    final dateStr = '${months[createdAt.month - 1]} ${createdAt.year}';
+
+    return AdminCustomer(
+      id,
+      name,
+      dateStr,
+      (map['ltv'] ?? 0).toDouble(),
+      map['total_rides'] ?? 0,
+      map['total_rentals'] ?? 0,
+      map['total_services'] ?? 0,
+      [], // Activities could be fetched separately if needed
+    );
+  }).toList();
 });
 
 final customerSearchProvider = StateProvider<String>((ref) => '');
@@ -120,7 +131,7 @@ class CustomerDatabaseScreen extends ConsumerWidget {
 
   Widget _buildCustomerCard(AdminCustomer c) {
     return Container(
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.primaryBlue.withOpacity(0.1)), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))]),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.1)), boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4))]),
       child: Theme(
         data: ThemeData(dividerColor: Colors.transparent),
         child: ExpansionTile(
@@ -129,7 +140,7 @@ class CustomerDatabaseScreen extends ConsumerWidget {
           collapsedIconColor: AppColors.textSecondary,
           title: Row(
             children: [
-              CircleAvatar(radius: 20, backgroundColor: AppColors.primaryBlue.withOpacity(0.1), child: const Icon(Icons.person, color: AppColors.primaryBlue, size: 20)),
+              CircleAvatar(radius: 20, backgroundColor: AppColors.primaryBlue.withValues(alpha: 0.1), child: const Icon(Icons.person, color: AppColors.primaryBlue, size: 20)),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
@@ -197,7 +208,7 @@ class CustomerDatabaseScreen extends ConsumerWidget {
   Widget _buildBadge(String emoji, String text, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: color.withOpacity(0.05), borderRadius: BorderRadius.circular(12), border: Border.all(color: color.withOpacity(0.1))),
+      decoration: BoxDecoration(color: color.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(12), border: Border.all(color: color.withValues(alpha: 0.1))),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -218,13 +229,13 @@ class CustomerDatabaseScreen extends ConsumerWidget {
       case 'Service': icon = Icons.build_rounded; color = AppColors.warningAmber; break;
       default: icon = Icons.history; color = AppColors.textSecondary;
     }
-    return Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle), child: Icon(icon, color: color, size: 16));
+    return Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle), child: Icon(icon, color: color, size: 16));
   }
 
   Color _getStatusBg(String status) {
-    if (status.contains('Ongoing') || status.contains('Progress')) return AppColors.primaryBlue.withOpacity(0.1);
-    if (status.contains('Completed')) return AppColors.successGreen.withOpacity(0.1);
-    if (status.contains('Scheduled')) return AppColors.warningAmber.withOpacity(0.1);
+    if (status.contains('Ongoing') || status.contains('Progress')) return AppColors.primaryBlue.withValues(alpha: 0.1);
+    if (status.contains('Completed')) return AppColors.successGreen.withValues(alpha: 0.1);
+    if (status.contains('Scheduled')) return AppColors.warningAmber.withValues(alpha: 0.1);
     return AppColors.bgLightGrey;
   }
 

@@ -8,6 +8,7 @@ import '../../shared/widgets/glass_card.dart';
 import '../../shared/widgets/custom_button.dart';
 import '../../shared/widgets/shimmer_loading.dart';
 import 'admin_providers.dart';
+import '../../core/repositories/admin_ops_repository.dart';
 
 /// Admin Dashboard Overview matching Figma Screen [87]
 class AdminDashboardScreen extends ConsumerStatefulWidget {
@@ -78,7 +79,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
               children: [
                 Container(
                   padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(color: AppColors.dangerRed.withOpacity(0.1), shape: BoxShape.circle),
+                  decoration: BoxDecoration(color: AppColors.dangerRed.withValues(alpha: 0.1), shape: BoxShape.circle),
                   child: const Icon(Icons.info_outline_rounded, color: AppColors.dangerRed),
                 ),
                 const SizedBox(width: 16),
@@ -145,7 +146,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 1,
-        shadowColor: Colors.black.withOpacity(0.05),
+        shadowColor: Colors.black.withValues(alpha: 0.05),
         title: Row(
           children: [
             Container(
@@ -197,7 +198,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [AppColors.dangerRed.withOpacity(0.1), Colors.white],
+                          colors: [AppColors.dangerRed.withValues(alpha: 0.1), Colors.white],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
@@ -206,7 +207,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                       ),
                       child: Row(
                         children: [
-                          _AnimatedEmergencyIcon(),
+                          const _AnimatedEmergencyIcon(),
                           const SizedBox(width: 16),
                           Expanded(
                             child: Column(
@@ -284,7 +285,10 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
               children: [
                 Expanded(child: _buildStatCard('Services Pending', '32', Icons.build_rounded, AppColors.warningAmber, '-2%')),
                 const SizedBox(width: 16),
-                Expanded(child: _buildStatCard('KYC Approvals', '18', Icons.document_scanner_rounded, AppColors.dangerRed, '+8%')),
+                Expanded(child: InkWell(
+                  onTap: () => context.push('/admin-approvals'),
+                  child: _buildStatCard('KYC Approvals', '18', Icons.document_scanner_rounded, AppColors.dangerRed, '+8%'),
+                )),
               ],
             ).animate(delay: 100.ms).slideY(begin: 0.1, end: 0).fadeIn(),
 
@@ -332,12 +336,20 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                       color: AppColors.deepNavy,
                       onTap: () => context.push('/admin-logistics-hub'),
                     ),
-                    _QuickActionCard(
+                     _QuickActionCard(
                       title: 'Permissions',
                       subtitle: 'Manage Roles',
                       icon: Icons.admin_panel_settings_rounded,
                       color: AppColors.primaryBlue,
                       onTap: () => context.push('/admin-management'),
+                    ),
+                    _QuickActionCard(
+                      title: 'Approvals',
+                      subtitle: 'Maker Checker',
+                      icon: Icons.check_circle_outline_rounded,
+                      color: AppColors.successGreen,
+                      onTap: () => context.push('/admin-approvals'),
+                      badge: 'New',
                     ),
                     _QuickActionCard(
                       title: 'Feedback',
@@ -355,6 +367,14 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                       onTap: () => context.push('/admin-manage-offers'),
                       badge: 'Active',
                     ),
+                    _QuickActionCard(
+                      title: 'Audit Logs',
+                      subtitle: 'Activity Trail',
+                      icon: Icons.history_rounded,
+                      color: AppColors.deepNavy,
+                      onTap: () => context.push('/admin/audit-logs'),
+                      badge: 'New',
+                    ),
                   ],
                 );
               },
@@ -369,12 +389,12 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [AppColors.dangerRed.withOpacity(0.05), Colors.white],
+                    colors: [AppColors.dangerRed.withValues(alpha: 0.05), Colors.white],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppColors.dangerRed.withOpacity(0.1)),
+                  border: Border.all(color: AppColors.dangerRed.withValues(alpha: 0.1)),
                 ),
                 child: Row(
                   children: [
@@ -435,7 +455,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 4))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -443,8 +463,8 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle), child: Icon(icon, color: color, size: 20)),
-              Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), decoration: BoxDecoration(color: trend.startsWith('+') ? AppColors.successGreen.withOpacity(0.1) : AppColors.dangerRed.withOpacity(0.1), borderRadius: BorderRadius.circular(4)), child: Text(trend, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: trend.startsWith('+') ? AppColors.successGreen : AppColors.dangerRed))),
+              Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle), child: Icon(icon, color: color, size: 20)),
+              Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), decoration: BoxDecoration(color: trend.startsWith('+') ? AppColors.successGreen.withValues(alpha: 0.1) : AppColors.dangerRed.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(4)), child: Text(trend, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: trend.startsWith('+') ? AppColors.successGreen : AppColors.dangerRed))),
             ],
           ),
           const SizedBox(height: 16),
@@ -489,7 +509,7 @@ class _QuickActionCard extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+                decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
                 child: Icon(icon, color: color, size: 20),
               ),
               const SizedBox(height: 12),
@@ -503,7 +523,7 @@ class _QuickActionCard extends StatelessWidget {
               right: 0,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(color: color.withOpacity(0.15), borderRadius: BorderRadius.circular(6)),
+                decoration: BoxDecoration(color: color.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(6)),
                 child: Text(badge!, style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: color)),
               ),
             ),
@@ -599,7 +619,7 @@ class _CustomerOperationsCard extends ConsumerWidget {
                           ),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(color: ride.status == 'Active' ? AppColors.successGreen.withOpacity(0.1) : AppColors.primaryBlue.withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
+                            decoration: BoxDecoration(color: ride.status == 'Active' ? AppColors.successGreen.withValues(alpha: 0.1) : AppColors.primaryBlue.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(4)),
                             child: Text(ride.status, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: ride.status == 'Active' ? AppColors.successGreen : AppColors.primaryBlue)),
                           )
                         ],
@@ -692,7 +712,7 @@ class _DriverManagementCard extends ConsumerWidget {
                             ),
                             ElevatedButton(
                               style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryBlue, minimumSize: const Size(60, 28), padding: const EdgeInsets.symmetric(horizontal: 10)),
-                              onPressed: () => ref.read(driversOpProvider.notifier).approve(driver.id),
+                              onPressed: () => ref.read(adminOpsRepositoryProvider).approveDriver(driver.id),
                               child: const Text('Approve', style: TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold)),
                             )
                           ],
@@ -841,12 +861,12 @@ class _AnimatedEmergencyIconState extends State<_AnimatedEmergencyIcon> with Sin
         return Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: AppColors.dangerRed.withOpacity(0.1 + (_controller.value * 0.2)),
+            color: AppColors.dangerRed.withValues(alpha: 0.1 + (_controller.value * 0.2)),
             shape: BoxShape.circle,
-            border: Border.all(color: AppColors.dangerRed.withOpacity(_controller.value), width: 2),
+            border: Border.all(color: AppColors.dangerRed.withValues(alpha: _controller.value), width: 2),
             boxShadow: [
               BoxShadow(
-                color: AppColors.dangerRed.withOpacity(0.3 * _controller.value),
+                color: AppColors.dangerRed.withValues(alpha: 0.3 * _controller.value),
                 blurRadius: 10,
                 spreadRadius: 2,
               )

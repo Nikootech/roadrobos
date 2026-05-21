@@ -31,7 +31,19 @@ class AdminManagementScreen extends StatelessWidget {
           children: [
             // Add New Admin Button
             ElevatedButton.icon(
-              onPressed: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Admin invitation — coming soon!'), behavior: SnackBarBehavior.floating)),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Add New Admin'),
+                    content: const TextField(decoration: InputDecoration(hintText: 'Enter Admin Email')),
+                    actions: [
+                      TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+                      ElevatedButton(onPressed: () => Navigator.pop(context), child: const Text('Send Invite')),
+                    ],
+                  ),
+                );
+              },
               icon: const Icon(Iconsax.user_add, size: 20),
               label: const Text('Add New Admin'),
               style: ElevatedButton.styleFrom(
@@ -88,7 +100,7 @@ class AdminManagementScreen extends StatelessWidget {
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border)),
       child: Row(
         children: [
-          CircleAvatar(backgroundColor: AppColors.primaryBlue.withOpacity(0.1), child: Text(admin['name']![0], style: const TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.bold))),
+          CircleAvatar(backgroundColor: AppColors.primaryBlue.withValues(alpha: 0.1), child: Text(admin['name']![0], style: const TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.bold))),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
@@ -99,7 +111,21 @@ class AdminManagementScreen extends StatelessWidget {
               ],
             ),
           ),
-          IconButton(icon: const Icon(Iconsax.setting_2, size: 20, color: AppColors.textSecondary), onPressed: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Admin settings — coming soon!'), behavior: SnackBarBehavior.floating))),
+          IconButton(
+            icon: const Icon(Iconsax.setting_2, size: 20, color: AppColors.textSecondary), 
+            onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: Text('${admin['name']} Settings'),
+                    content: const Text('Manage permissions and access levels.'),
+                    actions: [
+                      TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
+                    ],
+                  ),
+                );
+            }
+          ),
         ],
       ),
     ).animate().fadeIn().slideX(begin: 0.1, end: 0);

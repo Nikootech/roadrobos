@@ -2,9 +2,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
+import 'dart:async';
 import '../../core/models/user_role.dart';
-import '../../core/services/auth_service.dart';
 import '../../core/repositories/user_repository.dart';
+import '../../core/services/auth_service.dart';
+import '../../core/services/notification_service.dart';
 
 /// State wrapper for user data to maintain UI compatibility
 class UserState {
@@ -21,6 +23,7 @@ class UserState {
   });
 
   // Helper getters for stable UI access
+  String get id => user?.id ?? '';
   String get name => user?.name ?? 'Guest User';
   String get email => user?.email ?? '';
   String get phone => user?.phone ?? '';
@@ -46,17 +49,35 @@ class UserState {
 class UserNotifier extends StateNotifier<UserState> {
   final AuthService _authService;
   final UserRepository _userRepository;
+  StreamSubscription<AppUser?>? _profileSubscription;
+  StreamSubscription? _authSubscription;
 
   UserNotifier(this._authService, this._userRepository) : super(UserState(isLoading: true)) {
     _init();
   }
 
+  @override
+  void dispose() {
+    _authSubscription?.cancel();
+    _profileSubscription?.cancel();
+    super.dispose();
+  }
+
   void _init() {
-    _authService.authStateChanges.listen((sb.User? sbUser) async {
+    // Cold start: Check for an existing valid session before the stream fires
+    final restoredUser = _authService.restoredUser;
+    if (restoredUser != null) {
+      fetchUserProfile(restoredUser.id).then((_) {
+        _setupRealtimeListener(restoredUser.id);
+      });
+    }
+
+    _authSubscription = _authService.authStateChanges.listen((sb.User? sbUser) async {
       // If we are in demo mode, ignore null auth states
       if (state.isDemo && sbUser == null) return;
       
       if (sbUser == null) {
+        _profileSubscription?.cancel();
         state = UserState(user: null, isLoading: false);
       } else {
         // Optimization: Skip fetching if the profile for this user is already loaded
@@ -65,39 +86,46 @@ class UserNotifier extends StateNotifier<UserState> {
         if (state.user?.id == sbUser.id && !state.isLoading && hasProfilePic) return;
         
         await fetchUserProfile(sbUser.id);
+        _setupRealtimeListener(sbUser.id);
       }
     });
   }
 
-  Future<void> loginDemo(String uid, {UserRole role = UserRole.customer}) async {
-    state = state.copyWith(isLoading: true, isDemo: true);
+  void _setupRealtimeListener(String uid) {
+    if (uid.startsWith('demo_')) return;
     
-    final demoUser = AppUser(
-      id: uid,
-      name: role == UserRole.admin ? 'System Admin' 
-          : role == UserRole.superAdmin ? 'Root SuperAdmin'
-          : role == UserRole.driver ? 'John Doe (Rider)'
-          : role == UserRole.technician ? 'Alex Tech'
-          : 'Demo Customer',
-      phone: '9876543210',
-      email: role == UserRole.customer ? 'demo@roadrobos.com' : '${role.name}@roadrobos.com',
-      role: role,
-      points: role == UserRole.customer ? 2450 : 0,
-      totalRides: role == UserRole.customer ? 12 : 84,
-      referralCode: 'ROAD${role.name.toUpperCase()}007',
-      profilePic: 'https://ui-avatars.com/api/?name=${role.name == 'customer' ? 'Demo' : role.name}&background=random',
-    );
-    
-    state = UserState(user: demoUser, isLoading: false, isDemo: true);
-    debugPrint('loginDemo: [SAFE] State set in-memory for role: ${role.name}');
+    _profileSubscription?.cancel();
+    _profileSubscription = _userRepository.getUserStream(uid).listen((updatedUser) {
+      if (updatedUser != null && !state.isLoading) {
+        // Only update if data actually changed to avoid UI flickers
+        if (updatedUser.profilePic != state.user?.profilePic || 
+            updatedUser.points != state.user?.points ||
+            updatedUser.name != state.user?.name) {
+          state = state.copyWith(user: updatedUser);
+          debugPrint('Real-time Profile Update Received: ${updatedUser.name}');
+        }
+      }
+    });
   }
+
+
 
   Future<void> fetchUserProfile(String uid) async {
     state = state.copyWith(isLoading: true);
+    if (kDebugMode) {
+      debugPrint('UserNotifier: fetchUserProfile started for uid=$uid');
+    }
     try {
       final currentSupabaseUser = _authService.currentUser;
       final isDemoId = uid.startsWith('demo_');
+      
+      if (kDebugMode) {
+        debugPrint('UserNotifier: Fetching user profile from repository...');
+      }
       AppUser? user = await _userRepository.getUser(uid);
+      if (kDebugMode) {
+        debugPrint('UserNotifier: getUser returned user=${user?.name} (id=${user?.id}, role=${user?.role})');
+      }
 
       if (user != null) {
         // Auto-sync: If the existing profile has generic data, update from OAuth metadata
@@ -112,7 +140,9 @@ class UserNotifier extends StateNotifier<UserState> {
                         currentSupabaseUser?.userMetadata?['image'] ?? 
                         currentSupabaseUser?.userMetadata?['photo_url'];
 
-        debugPrint('Supabase Auth Sync: [OAuth Name: $oauthName, OAuth Pic: $oauthPic]');
+        if (kDebugMode) {
+          debugPrint('UserNotifier: Supabase Auth Sync: [OAuth Name: $oauthName, OAuth Pic: $oauthPic]');
+        }
 
         // Update name if it's missing or generic
         if ((user.name == 'New User' || user.name.isEmpty || user.name == 'Demo Customer') && oauthName != null) {
@@ -123,7 +153,9 @@ class UserNotifier extends StateNotifier<UserState> {
         // Update phone if it's missing (sync from Supabase Auth if available)
         final authPhone = currentSupabaseUser?.phone;
         if ((user.phone == '' || user.phone == '9876543210') && authPhone != null && authPhone.isNotEmpty) {
-          debugPrint('Syncing Phone from Auth: $authPhone');
+          if (kDebugMode) {
+            debugPrint('UserNotifier: Syncing Phone from Auth: $authPhone');
+          }
           user = user.copyWith(phone: authPhone);
           needsUpdate = true;
         }
@@ -134,20 +166,39 @@ class UserNotifier extends StateNotifier<UserState> {
                                user.profilePic!.contains('ui-avatars.com');
 
         if (isGenericAvatar && oauthPic != null) {
-          debugPrint('Syncing Image from OAuth: $oauthPic');
+          if (kDebugMode) {
+            debugPrint('UserNotifier: Syncing Image from OAuth: $oauthPic');
+          }
           updatedPic = oauthPic;
           needsUpdate = true;
         }
 
         // Optimization: Only write to database if data actually changed
         final changesDetected = updatedName != user.name || updatedPic != user.profilePic;
+        if (kDebugMode) {
+          debugPrint('UserNotifier: Sync check - needsUpdate=$needsUpdate, changesDetected=$changesDetected, isDemoId=$isDemoId');
+        }
         if (needsUpdate && changesDetected && !isDemoId) {
           user = user.copyWith(name: updatedName, profilePic: updatedPic);
+          if (kDebugMode) {
+            debugPrint('UserNotifier: Saving updated profile to database: ${user.toMap()}');
+          }
           await _userRepository.saveUser(user);
+          if (kDebugMode) {
+            debugPrint('UserNotifier: Save profile successful.');
+          }
         }
         
         state = state.copyWith(user: user, isLoading: false, isDemo: isDemoId);
+        
+        // Sync FCM token to backend (P0 Integration)
+        if (!isDemoId) {
+          NotificationService().syncTokenToBackend(uid);
+        }
       } else {
+        if (kDebugMode) {
+          debugPrint('UserNotifier: Profile is null. Creating new profile for uid=$uid');
+        }
         // Handle case where auth exists but profile doesn't
         final oauthName = currentSupabaseUser?.userMetadata?['full_name'] ?? 
                          currentSupabaseUser?.userMetadata?['name'] ?? 'New User';
@@ -167,12 +218,22 @@ class UserNotifier extends StateNotifier<UserState> {
         
         // ONLY save to Supabase if NOT a demo user
         if (!isDemoId) {
+          if (kDebugMode) {
+            debugPrint('UserNotifier: Saving new user profile to database: ${newUser.toMap()}');
+          }
           await _userRepository.saveUser(newUser);
+          if (kDebugMode) {
+            debugPrint('UserNotifier: Save new profile successful.');
+          }
         }
         
         state = state.copyWith(user: newUser, isLoading: false, isDemo: isDemoId);
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      if (kDebugMode) {
+        debugPrint('UserNotifier: ERROR in fetchUserProfile: $e');
+        debugPrint('UserNotifier: StackTrace: $stackTrace');
+      }
       state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
@@ -226,18 +287,15 @@ class UserNotifier extends StateNotifier<UserState> {
     }
   }
 
-  Future<void> pickAndUploadProfilePicture() async {
+  Future<void> pickAndUploadProfilePicture([ImageSource source = ImageSource.gallery]) async {
     final currentAppUser = state.user;
     if (currentAppUser == null) return;
 
     final ImagePicker picker = ImagePicker();
     
     try {
-      // Pick image (Camera/Gallery selection usually handled by UI or by default here)
-      // For simplicity in this logic, we use standard picking. 
-      // The UI can specify source to this method instead if preferred.
       final XFile? image = await picker.pickImage(
-        source: ImageSource.gallery, // Default to gallery for reliability on all platforms
+        source: source,
         maxWidth: 512,
         maxHeight: 512,
         imageQuality: 75,
@@ -259,11 +317,11 @@ class UserNotifier extends StateNotifier<UserState> {
       // Update Database
       await _userRepository.updateField(currentAppUser.id, 'profile_pic', publicUrl);
       
-      // Update State
+      // Update State immediately for real-time UI feel
       final updatedUser = currentAppUser.copyWith(profilePic: publicUrl);
       state = state.copyWith(user: updatedUser, isLoading: false);
       
-      debugPrint('Profile Picture Uploaded: $publicUrl');
+      debugPrint('Profile Picture Uploaded & State Updated: $publicUrl');
     } catch (e) {
       debugPrint('Upload Error: $e');
       state = state.copyWith(isLoading: false, error: e.toString());

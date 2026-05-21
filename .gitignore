@@ -61,10 +61,20 @@ GoogleService-Info.plist
 key.properties
 
 # Firebase generated config (regenerate with flutterfire configure)
-lib/core/config/firebase_options.dart
+lib/firebase_options.dart
 
 # Analysis artifacts (stale)
 analysis_results.txt
 
+# Dart-define secrets file
+.dart_defines
+
+# Demo credentials (never commit)
+DEMO_CREDENTIALS.md
+
+# Diagnostic / build log text files
+*.txt
+
 # Web build
 build/web/
+

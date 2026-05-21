@@ -21,15 +21,19 @@ class ServiceBookingRepository {
     }
   }
 
-  Stream<List<ServiceBooking>> getCustomerServiceBookings(String customerId) {
-    return _supabase
-        .from('service_bookings')
-        .stream(primaryKey: ['id'])
-        .eq('customer_id', customerId)
-        .order('created_at')
-        .map((list) {
-      return list.map((map) => ServiceBooking.fromMap(map, map['id'].toString())).toList();
-    });
+  Future<List<ServiceBooking>> getPagedCustomerServiceBookings(String customerId, {int limit = 20, int offset = 0}) async {
+    try {
+      final response = await _supabase
+          .from('service_bookings')
+          .select()
+          .eq('customer_id', customerId)
+          .order('created_at', ascending: false)
+          .range(offset, offset + limit - 1);
+      
+      return response.map((map) => ServiceBooking.fromMap(map, map['id'].toString())).toList();
+    } catch (e) {
+      throw Exception('Failed to fetch service bookings: $e');
+    }
   }
 
   Future<void> updateServiceStatus(String bookingId, String status) async {

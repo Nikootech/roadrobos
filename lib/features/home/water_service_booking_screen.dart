@@ -137,7 +137,7 @@ class _WaterServiceBookingScreenState extends ConsumerState<WaterServiceBookingS
             decoration: BoxDecoration(
               color: Colors.white,
               boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, -5)),
+                BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 20, offset: const Offset(0, -5)),
               ],
             ),
             child: CustomButton(
@@ -246,7 +246,7 @@ class _WaterServiceBookingScreenState extends ConsumerState<WaterServiceBookingS
             boxShadow: isActive
                 ? [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -306,7 +306,7 @@ class _WaterServiceBookingScreenState extends ConsumerState<WaterServiceBookingS
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.02),
+              color: Colors.black.withValues(alpha: 0.02),
               blurRadius: 15,
               offset: const Offset(0, 8),
             ),
@@ -320,13 +320,13 @@ class _WaterServiceBookingScreenState extends ConsumerState<WaterServiceBookingS
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(24),
                     gradient: LinearGradient(
-                      colors: [const Color(0xFF0EA5E9).withOpacity(0.02), Colors.transparent],
+                      colors: [const Color(0xFF0EA5E9).withValues(alpha: 0.02), Colors.transparent],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                   ),
                 ).animate(onPlay: (controller) => controller.repeat())
-                 .shimmer(duration: 2.seconds, color: Colors.blue.withOpacity(0.05)),
+                 .shimmer(duration: 2.seconds, color: Colors.blue.withValues(alpha: 0.05)),
               ),
             if (pkg['isPremium'] == true)
               Positioned(
@@ -362,7 +362,7 @@ class _WaterServiceBookingScreenState extends ConsumerState<WaterServiceBookingS
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: (pkg['color'] as Color).withOpacity(0.1),
+                          color: (pkg['color'] as Color).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: Icon(

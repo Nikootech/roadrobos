@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:async';
 
+import '../../core/config/app_config.dart';
+
 final authServiceProvider = Provider<AuthService>((ref) {
   return AuthService();
 });
@@ -13,23 +15,41 @@ final authStateProvider = StreamProvider<sb.User?>((ref) {
   return ref.watch(authServiceProvider).authStateChanges;
 });
 
+/// Google Client ID injected at compile time via --dart-define-from-file
+const _googleClientId = String.fromEnvironment('GOOGLE_CLIENT_ID');
+
 class AuthService {
   final sb.SupabaseClient _supabase = sb.Supabase.instance.client;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    clientId: kIsWeb && _googleClientId.isNotEmpty ? _googleClientId : null,
+  );
   
-  // Use a broadcast stream controller to handle manual state overrides (like demo mode)
-  final StreamController<sb.User?> _manualAuthStateController = StreamController<sb.User?>.broadcast();
+
 
   Stream<sb.User?> get authStateChanges {
-    // Combine Supabase auth state changes with our manual overrides
-    return _supabase.auth.onAuthStateChange.map((data) => data.session?.user);
+    // Emit current session immediately on subscribe, then listen for changes
+    return _supabase.auth.onAuthStateChange.map((data) {
+      if (kDebugMode) {
+        if (data.event == sb.AuthChangeEvent.tokenRefreshed) {
+          debugPrint('Supabase Auth: Token Refreshed successfully.');
+        } else if (data.event == sb.AuthChangeEvent.signedIn) {
+          debugPrint('Supabase Auth: User Signed In.');
+        } else if (data.event == sb.AuthChangeEvent.signedOut) {
+          debugPrint('Supabase Auth: User Signed Out.');
+        }
+      }
+      return data.session?.user;
+    });
   }
+
+  /// Check if we have an existing valid session (cold start restore)
+  sb.User? get restoredUser => _supabase.auth.currentSession?.user;
 
   sb.User? get currentUser => _supabase.auth.currentUser;
 
-  /// Trigger a demo login state (Note: For Supabase, we might just return a mock user ID)
+  /// Trigger a demo login state (Note: For Supabase, this is a no-op marker)
   void setDemoUser(String uid) {
-    _manualAuthStateController.add(null); 
+    // Demo mode is handled by UserNotifier state, not auth stream
   }
 
   // --- Email/Password Authentication ---
@@ -60,14 +80,14 @@ class AuthService {
       return await _supabase.auth.signInWithOAuth(
         sb.OAuthProvider.google,
         redirectTo: kIsWeb 
-          ? 'http://localhost:8081' 
-          : 'com.nikootech.roadrobos://login-callback',
+          ? Uri.base.origin
+          : 'com.roadrobos.app://login-callback',
         queryParams: {
           'prompt': 'select_account',
         },
       );
     } catch (e) {
-      debugPrint('Google Sign-In Error: $e');
+      if (kDebugMode) debugPrint('Google Sign-In Error: $e');
       rethrow;
     }
   }

@@ -36,7 +36,7 @@ class _ScheduleAppointmentScreenState extends ConsumerState<ScheduleAppointmentS
         ref.read(bookingProvider.notifier).setSchedule(dateStr, _selectedTime);
         
         final booking = ref.read(bookingProvider);
-        final basePrice = double.tryParse((booking.price ?? '0').replaceAll(RegExp(r'[^0-9.]'), '')) ?? 0.0;
+        final basePrice = double.tryParse(booking.price.replaceAll(RegExp(r'[^0-9.]'), '')) ?? 0.0;
         final breakdown = PricingService.calculateBill(basePrice);
         final userId = ref.read(userProvider).user?.id ?? 'demo';
 
@@ -62,13 +62,13 @@ class _ScheduleAppointmentScreenState extends ConsumerState<ScheduleAppointmentS
         await ref.read(serviceBookingRepositoryProvider).createServiceBooking(ServiceBooking(
           id: '',
           customerId: userId,
-          vehicleName: booking.vehicleModel ?? 'Unknown Vehicle',
-          vehiclePlate: booking.vehiclePlate ?? 'Unknown Plate',
-          packageName: booking.packageName ?? 'Custom Service',
-          date: booking.date ?? dateStr,
-          time: booking.time ?? _selectedTime,
+          vehicleName: booking.vehicleModel,
+          vehiclePlate: booking.vehiclePlate,
+          packageName: booking.packageName,
+          date: booking.date.isEmpty ? dateStr : booking.date,
+          time: booking.time.isEmpty ? _selectedTime : booking.time,
           totalCost: breakdown.totalPayable,
-          details: 'Paid via Razorpay (ID: ${response?.paymentId ?? 'Direct'})',
+          details: {'payment_id': response?.paymentId ?? 'Direct', 'method': 'Razorpay'},
           status: 'paid',
           createdAt: DateTime.now(),
         ));
@@ -173,7 +173,7 @@ class _ScheduleAppointmentScreenState extends ConsumerState<ScheduleAppointmentS
               label: 'Book Appointment',
               onPressed: _selectedTime.isEmpty ? null : () {
                 final booking = ref.read(bookingProvider);
-                final basePrice = double.tryParse((booking.price ?? '0').replaceAll(RegExp(r'[^0-9.]'), '')) ?? 0.0;
+                final basePrice = double.tryParse(booking.price.replaceAll(RegExp(r'[^0-9.]'), '')) ?? 0.0;
                 final breakdown = PricingService.calculateBill(basePrice);
                 final userData = ref.read(userProvider).user;
                 
@@ -182,6 +182,8 @@ class _ScheduleAppointmentScreenState extends ConsumerState<ScheduleAppointmentS
                   contact: userData?.phone ?? '9876543210',
                   email: userData?.email ?? 'customer@example.com',
                   description: 'Service Booking: ${booking.packageName}',
+                  bookingId: '00000000-0000-0000-0000-000000000000',
+                  userId: userData?.id ?? 'demo',
                 );
               },
               backgroundColor: AppColors.primaryBlue,
@@ -198,7 +200,7 @@ class _ScheduleAppointmentScreenState extends ConsumerState<ScheduleAppointmentS
       decoration: BoxDecoration(
         color: AppColors.bgSkyLight,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.primaryBlue.withOpacity(0.1)),
+        border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.1)),
       ),
       child: Column(
         children: [
@@ -239,7 +241,7 @@ class _ScheduleAppointmentScreenState extends ConsumerState<ScheduleAppointmentS
                         DateFormat('E').format(date)[0],
                         style: TextStyle(
                           fontSize: 12,
-                          color: isSelected ? Colors.white.withOpacity(0.8) : AppColors.textSecondary,
+                          color: isSelected ? Colors.white.withValues(alpha: 0.8) : AppColors.textSecondary,
                         ),
                       ),
                       const SizedBox(height: 4),

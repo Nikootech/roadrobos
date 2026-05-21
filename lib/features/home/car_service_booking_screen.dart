@@ -123,12 +123,12 @@ class _CarServiceBookingScreenState extends ConsumerState<CarServiceBookingScree
           color: Colors.white,
           borderRadius: BorderRadius.circular(32),
           border: Border.all(
-            color: isSelected ? AppColors.primaryBlue : Colors.grey.withOpacity(0.1),
+            color: isSelected ? AppColors.primaryBlue : Colors.grey.withValues(alpha: 0.1),
             width: isSelected ? 2 : 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withValues(alpha: 0.03),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),
@@ -143,7 +143,7 @@ class _CarServiceBookingScreenState extends ConsumerState<CarServiceBookingScree
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
-                    color: (pkg['color'] as Color).withOpacity(0.8),
+                    color: (pkg['color'] as Color).withValues(alpha: 0.8),
                     borderRadius: const BorderRadius.only(
                       topRight: Radius.circular(32),
                       bottomLeft: Radius.circular(24),
@@ -171,7 +171,7 @@ class _CarServiceBookingScreenState extends ConsumerState<CarServiceBookingScree
                         width: 60,
                         height: 60,
                         decoration: BoxDecoration(
-                          color: (pkg['color'] as Color).withOpacity(0.1),
+                          color: (pkg['color'] as Color).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Icon(

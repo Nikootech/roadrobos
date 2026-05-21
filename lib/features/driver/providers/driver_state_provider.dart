@@ -1,11 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:async';
 import '../../../core/repositories/driver_repository.dart';
-import '../../../core/repositories/ride_booking_repository.dart';
 import '../../../features/profile/user_provider.dart';
 import '../../../core/models/driver_model.dart';
-import '../../../core/models/ride_booking.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/services/notification_service.dart';
 
 enum VerificationStatus { pending, approved, rejected }
@@ -13,7 +10,6 @@ enum VerificationStatus { pending, approved, rejected }
 // Verification Status Provider (Stream-based)
 final verificationProvider = StreamProvider<VerificationStatus>((ref) {
   final user = ref.watch(userProvider);
-  if (user == null) return Stream.value(VerificationStatus.pending);
 
   return ref.watch(driverRepositoryProvider).watchDriver(user.user?.id ?? 'demo').map((driver) {
     if (driver == null) return VerificationStatus.pending;
@@ -32,7 +28,6 @@ class VerificationActionNotifier extends StateNotifier<void> {
 
   Future<void> updateStatus(DriverApprovalStatus status) async {
     final user = ref.read(userProvider);
-    if (user == null) return;
     await ref.read(driverRepositoryProvider).updateDriver(user.user?.id ?? 'demo', {
       'approval_status': status.toString().split('.').last,
     });
@@ -54,7 +49,6 @@ class DriverEarnings {
 
 final earningsProvider = StreamProvider<DriverEarnings>((ref) {
   final user = ref.watch(userProvider);
-  if (user == null) return Stream.value(DriverEarnings(todayEarnings: 0, bonusTarget: 1000, bonusAchieved: 0));
 
   return ref.watch(driverRepositoryProvider).watchDriver(user.user?.id ?? 'demo').map((driver) {
     return DriverEarnings(
@@ -95,7 +89,7 @@ final rideRequestsProvider = StreamProvider<List<RideRequest>>((ref) {
       fare: r.fare,
       rating: 4.8,
       pickup: r.pickupAddress,
-      dropoff: r.dropAddress,
+      dropoff: r.destinationAddress,
     )).toList();
   });
 });
@@ -107,7 +101,6 @@ class RideRequestsActionNotifier extends StateNotifier<void> {
 
   Future<void> acceptRequest(String id) async {
     final user = ref.read(userProvider);
-    if (user == null) return;
     await ref.read(driverRepositoryProvider).acceptRide(id, user.user?.id ?? 'demo');
   }
 
@@ -147,24 +140,21 @@ class MapStateNotifier extends StateNotifier<MapState> {
 
   void _init() {
     final user = ref.read(userProvider);
-    if (user != null) {
-      ref.listen(driverRepositoryProvider.select((repo) => repo.watchDriver(user.user?.id ?? 'demo')), (prev, next) {
-        next.listen((driver) {
-          if (driver != null && mounted) {
-            state = state.copyWith(
-              isOnline: driver.isOnline,
-              lat: driver.currentPosition?.latitude,
-              lng: driver.currentPosition?.longitude,
-            );
-          }
-        });
+    ref.listen(driverRepositoryProvider.select((repo) => repo.watchDriver(user.user?.id ?? 'demo')), (prev, next) {
+      next.listen((driver) {
+        if (driver != null && mounted) {
+          state = state.copyWith(
+            isOnline: driver.isOnline,
+            lat: driver.currentPosition?.latitude,
+            lng: driver.currentPosition?.longitude,
+          );
+        }
       });
+    });
     }
-  }
 
   Future<void> toggleOnline() async {
     final user = ref.read(userProvider);
-    if (user == null) return;
     
     final newStatus = !state.isOnline;
     await ref.read(driverRepositoryProvider).updateOnlineStatus(user.user?.id ?? 'demo', newStatus);
