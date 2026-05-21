@@ -122,7 +122,7 @@ class AppMapController extends StateNotifier<AppMapState> {
     
     final route = Polyline(
       points: [state.userLocation, state.destination!],
-      color: AppColors.textPrimary.withOpacity(0.7),
+      color: AppColors.textPrimary.withValues(alpha: 0.7),
       strokeWidth: 5,
     );
     state = state.copyWith(polylines: [route]);
@@ -142,10 +142,10 @@ class AppMapController extends StateNotifier<AppMapState> {
             height: 45,
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.9),
+                color: Colors.white.withValues(alpha: 0.9),
                 borderRadius: const BorderRadius.all(Radius.circular(16)),
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10),
+                  BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10),
                 ],
               ),
               child: const Icon(Icons.electric_rickshaw_rounded, color: AppColors.accentOrange, size: 28),

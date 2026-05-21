@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:path_provider/path_provider.dart';
 
 class StorageService {
   final SupabaseClient _client = Supabase.instance.client;
@@ -21,6 +23,37 @@ class StorageService {
       return _client.storage.from(_bucketName).getPublicUrl(fullPath);
     } catch (e) {
       debugPrint('Supabase Storage Error: $e');
+      return null;
+    }
+  }
+
+  /// Uploads and compresses an avatar, returning the public URL
+  Future<String?> uploadAvatar(File imageFile, String userId) async {
+    try {
+      final tempDir = await getTemporaryDirectory();
+      final tempPath = '${tempDir.path}/avatar_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      
+      final result = await FlutterImageCompress.compressAndGetFile(
+        imageFile.absolute.path, 
+        tempPath,
+        quality: 80,
+        minWidth: 800,
+        minHeight: 800,
+      );
+
+      if (result == null) return null;
+
+      final fullPath = '$userId/avatar.jpg';
+
+      await _client.storage.from('avatars').upload(
+            fullPath,
+            File(result.path),
+            fileOptions: const FileOptions(cacheControl: '3600', upsert: true),
+          );
+
+      return _client.storage.from('avatars').getPublicUrl(fullPath);
+    } catch (e) {
+      debugPrint('Supabase Avatar Upload Error: $e');
       return null;
     }
   }

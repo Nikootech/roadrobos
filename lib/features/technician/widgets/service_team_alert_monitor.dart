@@ -44,7 +44,7 @@ class ServiceTeamAlertMonitor extends ConsumerWidget {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: AppColors.dangerRed.withOpacity(0.4),
+                color: AppColors.dangerRed.withValues(alpha: 0.4),
                 blurRadius: 20,
                 spreadRadius: 5,
               )
@@ -151,9 +151,9 @@ class _PulseIconState extends State<_PulseIcon> with SingleTickerProviderStateMi
         return Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.2 + (_controller.value * 0.2)),
+            color: Colors.white.withValues(alpha: 0.2 + (_controller.value * 0.2)),
             shape: BoxShape.circle,
-            border: Border.all(color: Colors.white.withOpacity(_controller.value), width: 2),
+            border: Border.all(color: Colors.white.withValues(alpha: _controller.value), width: 2),
           ),
           child: const Icon(Iconsax.danger, color: Colors.white, size: 28),
         );

@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:latlong2/latlong.dart';
 import '../models/technician_job_model.dart';
 
 class TechnicianJobRepository {
@@ -44,6 +45,14 @@ class TechnicianJobRepository {
         .from('technician_jobs')
         .update({'status': status})
         .eq('id', jobId);
+  }
+
+  /// Update vehicle details
+  Future<void> updateVehicleDetails(String jobId, String model, String plate) async {
+    await _supabase.from('technician_jobs').update({
+      'vehicleModel': model,
+      'vehiclePlate': plate,
+    }).eq('id', jobId);
   }
 
   /// Update job progress value
@@ -115,6 +124,19 @@ class TechnicianJobRepository {
         'total': list.length,
       };
     });
+  }
+
+  /// Update technician's real-time location
+  Future<void> updateTechnicianPosition(String uid, LatLng position) async {
+    try {
+      await _supabase.from('technicians').update({
+        'lat': position.latitude,
+        'lng': position.longitude,
+        'last_active': DateTime.now().toIso8601String(),
+      }).eq('id', uid);
+    } catch (e) {
+      // Silent fail for background updates
+    }
   }
 }
 

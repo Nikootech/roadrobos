@@ -1,4 +1,3 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class FirestoreChecklistItem {
   final String task;

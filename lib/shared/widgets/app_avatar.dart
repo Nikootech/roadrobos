@@ -43,7 +43,7 @@ class AppAvatar extends StatelessWidget {
       child: Icon(
         fallbackIcon,
         size: radius * 0.8,
-        color: isPlaceholder ? AppColors.textMuted.withOpacity(0.3) : AppColors.primaryBlue,
+        color: isPlaceholder ? AppColors.textMuted.withValues(alpha: 0.3) : AppColors.primaryBlue,
       ),
     );
   }

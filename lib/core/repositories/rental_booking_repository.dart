@@ -32,14 +32,18 @@ class RentalBookingRepository {
     }
   }
 
-  Stream<List<RentalBooking>> getCustomerRentals(String customerId) {
-    return _supabase
-        .from('rental_bookings')
-        .stream(primaryKey: ['id'])
-        .eq('customer_id', customerId)
-        .order('created_at')
-        .map((list) {
-      return list.map((map) => RentalBooking.fromMap(map, map['id'].toString())).toList();
-    });
+  Future<List<RentalBooking>> getPagedCustomerRentals(String customerId, {int limit = 20, int offset = 0}) async {
+    try {
+      final response = await _supabase
+          .from('rental_bookings')
+          .select()
+          .eq('customer_id', customerId)
+          .order('created_at', ascending: false)
+          .range(offset, offset + limit - 1);
+      
+      return response.map((map) => RentalBooking.fromMap(map, map['id'].toString())).toList();
+    } catch (e) {
+      throw Exception('Failed to fetch rental bookings: $e');
+    }
   }
 }

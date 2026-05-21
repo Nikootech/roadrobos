@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-enum AppLanguage { en, hi }
+enum AppLanguage { en, hi, kn, ta, te }
 
 class LanguageNotifier extends StateNotifier<AppLanguage> {
   static const String _prefKey = 'app_language';
@@ -58,6 +58,39 @@ class Lo {
       'book_now': 'अभी बुक करें',
       'settings': 'सेटिंग्स',
       'language': 'भाषा',
+    },
+    AppLanguage.kn: {
+      'welcome': 'ಮತ್ತೆ ಸ್ವಾಗತ!',
+      'good_morning': 'ಶುಭೋದಯ,',
+      'wallet_balance': 'ವಾಲೆಟ್ ಬ್ಯಾಲೆನ್ಸ್',
+      'top_up': 'ಟಾಪ್ ಅಪ್',
+      'quick_actions': 'ತ್ವರಿತ ಕ್ರಿಯೆಗಳು',
+      'active_offers': 'ಸಕ್ರಿಯ ಕೊಡುಗೆಗಳು',
+      'book_now': 'ಈಗ ಬುಕ್ ಮಾಡಿ',
+      'settings': 'ಸೆಟ್ಟಿಂಗ್‌ಗಳು',
+      'language': 'ಭಾಷೆ',
+    },
+    AppLanguage.ta: {
+      'welcome': 'மீண்டும் நல்வரவு!',
+      'good_morning': 'காலை வணக்கம்,',
+      'wallet_balance': 'வாலட் இருப்பு',
+      'top_up': 'டாப் அப்',
+      'quick_actions': 'விரைவான செயல்கள்',
+      'active_offers': 'சலுகைகள்',
+      'book_now': 'இப்போதே பதிவு செய்',
+      'settings': 'அமைப்புகள்',
+      'language': 'மொழி',
+    },
+    AppLanguage.te: {
+      'welcome': 'మరలా స్వాగతం!',
+      'good_morning': 'శుభోదయం,',
+      'wallet_balance': 'వాలెట్ బ్యాలెన్స్',
+      'top_up': 'టాప్ అప్',
+      'quick_actions': 'త్వరిత చర్యలు',
+      'active_offers': 'సక్రియ ఆఫర్‌లు',
+      'book_now': 'ఇప్పుడే బుక్ చేయండి',
+      'settings': 'సెట్టింగ్‌లు',
+      'language': 'భాష',
     },
   };
 

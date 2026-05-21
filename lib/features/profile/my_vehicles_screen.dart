@@ -33,7 +33,7 @@ class MyVehiclesScreen extends ConsumerWidget {
                     itemCount: vehicles.length,
                     separatorBuilder: (_, __) => const SizedBox(height: 16),
                     itemBuilder: (context, index) {
-                      return _buildVehicleCard(vehicles[index]);
+                      return _buildVehicleCard(context, vehicles[index]);
                     },
                   ),
           ),
@@ -62,7 +62,7 @@ class MyVehiclesScreen extends ConsumerWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.directions_car_filled_outlined, size: 64, color: AppColors.textMuted.withOpacity(0.3)),
+          Icon(Icons.directions_car_filled_outlined, size: 64, color: AppColors.textMuted.withValues(alpha: 0.3)),
           const SizedBox(height: 16),
           const Text('No vehicles found', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
           const SizedBox(height: 8),
@@ -72,14 +72,14 @@ class MyVehiclesScreen extends ConsumerWidget {
     ).animate().fadeIn();
   }
 
-  Widget _buildVehicleCard(Vehicle v) {
+  Widget _buildVehicleCard(BuildContext context, Vehicle v) {
     final isCar = v.type.toLowerCase().contains('car');
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white, 
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 4))],
       ),
       child: Column(
         children: [
@@ -88,7 +88,7 @@ class MyVehiclesScreen extends ConsumerWidget {
               Container(
                 width: 48,
                 height: 48,
-                decoration: BoxDecoration(color: AppColors.primaryBlue.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                decoration: BoxDecoration(color: AppColors.primaryBlue.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
                 child: Icon(isCar ? Icons.directions_car_rounded : Icons.directions_bike_rounded, color: AppColors.primaryBlue, size: 24),
               ),
               const SizedBox(width: 16),
@@ -103,7 +103,7 @@ class MyVehiclesScreen extends ConsumerWidget {
               ),
               IconButton(
                 icon: const Icon(Icons.edit_note_rounded, size: 22, color: AppColors.textMuted),
-                onPressed: () {},
+                onPressed: () => context.push('/add-vehicle'),
               ),
             ],
           ),
@@ -120,7 +120,7 @@ class MyVehiclesScreen extends ConsumerWidget {
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(color: AppColors.dangerRed.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
+                decoration: BoxDecoration(color: AppColors.dangerRed.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
                 child: const Text('In 45 Days', style: TextStyle(color: AppColors.dangerRed, fontWeight: FontWeight.bold, fontSize: 11)),
               ),
             ],

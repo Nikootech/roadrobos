@@ -8,6 +8,7 @@ import 'package:iconsax/iconsax.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/live_map_widget.dart';
+import '../../core/providers/favorites_provider.dart';
 import 'rental_providers.dart';
 
 class RentalVehicleDetailScreen extends ConsumerWidget {
@@ -21,14 +22,14 @@ class RentalVehicleDetailScreen extends ConsumerWidget {
     // Default placeholder vehicle if none selected
     final displayVehicle = vehicle ?? {
       'name': 'Maruti Baleno',
-      'image': 'assets/icons/baleno.png',
+      'image_url': 'assets/icons/baleno.png',
       'price': '₹159/hr',
       'rating': '4.9',
       'seats': '5 Seats',
       'type': 'Hatchback',
     };
 
-    final bool isBike = displayVehicle['isBike'] == true;
+    final bool isBike = displayVehicle['is_bike'] == true;
     final bool isEV = displayVehicle['type'] == 'EV Bike' || displayVehicle['category'] == 'EV';
 
     final String description = isBike 
@@ -61,9 +62,31 @@ class RentalVehicleDetailScreen extends ConsumerWidget {
               onPressed: () => context.pop(),
             ),
             actions: [
-              IconButton(
-                icon: const CircleAvatar(backgroundColor: Colors.white, child: Icon(Iconsax.heart, size: 20, color: AppColors.textPrimary)),
-                onPressed: () {},
+              Consumer(
+                builder: (context, ref, _) {
+                  final vehicleId = displayVehicle['name'].toString();
+                  final isFav = ref.watch(favoritesProvider).contains(vehicleId);
+                  
+                  return IconButton(
+                    icon: CircleAvatar(
+                      backgroundColor: Colors.white,
+                      child: Icon(
+                        isFav ? Iconsax.heart5 : Iconsax.heart, 
+                        size: 20, 
+                        color: isFav ? AppColors.dangerRed : AppColors.textPrimary
+                      ),
+                    ),
+                    onPressed: () {
+                      ref.read(favoritesProvider.notifier).toggleFavorite(vehicleId);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(isFav ? 'Removed from favorites' : 'Added to favorites!'), 
+                          behavior: SnackBarBehavior.floating
+                        )
+                      );
+                    },
+                  );
+                }
               ),
               const SizedBox(width: 8),
             ],
@@ -73,10 +96,9 @@ class RentalVehicleDetailScreen extends ConsumerWidget {
                 children: [
                    Hero(
                     tag: 'vehicle_${displayVehicle['name']}',
-                    child: Image.asset(
-                      displayVehicle['image'],
-                      fit: BoxFit.contain,
-                    ),
+                    child: displayVehicle['image_url'].toString().startsWith('http')
+                      ? Image.network(displayVehicle['image_url'], fit: BoxFit.contain)
+                      : Image.asset(displayVehicle['image_url'], fit: BoxFit.contain),
                   ),
                   Positioned(
                     bottom: 40,
@@ -88,7 +110,7 @@ class RentalVehicleDetailScreen extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(30),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.08),
+                            color: Colors.black.withValues(alpha: 0.08),
                             blurRadius: 16,
                             offset: const Offset(0, 8),
                           ),
@@ -165,9 +187,9 @@ class RentalVehicleDetailScreen extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.green.withOpacity(0.05),
+                        color: Colors.green.withValues(alpha: 0.05),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.green.withOpacity(0.1)),
+                        border: Border.all(color: Colors.green.withValues(alpha: 0.1)),
                       ),
                       child: const Column(
                         children: [
@@ -203,7 +225,7 @@ class RentalVehicleDetailScreen extends ConsumerWidget {
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: AppColors.primaryBlue.withOpacity(0.1),
+                              color: AppColors.primaryBlue.withValues(alpha: 0.1),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(Icons.location_on_rounded, color: AppColors.primaryBlue),
@@ -254,7 +276,7 @@ class RentalVehicleDetailScreen extends ConsumerWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 16, offset: const Offset(0, -5))],
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 16, offset: const Offset(0, -5))],
         ),
         child: SafeArea(
           child: Row(

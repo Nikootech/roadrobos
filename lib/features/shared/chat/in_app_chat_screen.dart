@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/repositories/chat_repository.dart';
@@ -61,7 +62,7 @@ class _InAppChatScreenState extends ConsumerState<InAppChatScreen> {
           children: [
             CircleAvatar(
               radius: 18,
-              backgroundColor: AppColors.primaryBlue.withOpacity(0.1),
+              backgroundColor: AppColors.primaryBlue.withValues(alpha: 0.1),
               child: const Icon(Icons.person, color: AppColors.primaryBlue, size: 20),
             ),
             const SizedBox(width: 12),
@@ -81,8 +82,19 @@ class _InAppChatScreenState extends ConsumerState<InAppChatScreen> {
           ],
         ),
         actions: [
-          IconButton(icon: const Icon(Iconsax.call, color: AppColors.primaryBlue), onPressed: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Calling driver...'), behavior: SnackBarBehavior.floating))),
-        ],
+          IconButton(icon: const Icon(Iconsax.call, color: AppColors.primaryBlue), onPressed: () async {
+            final Uri url = Uri(scheme: 'tel', path: '+18005550199');
+            try {
+              final success = await launchUrl(url);
+              if (!success && context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not launch dialer')));
+              }
+            } catch (e) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not launch dialer')));
+              }
+            }
+          }),        ],
       ),
       body: Column(
         children: [

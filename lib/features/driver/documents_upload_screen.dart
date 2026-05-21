@@ -105,14 +105,14 @@ class _DocumentsUploadScreenState extends ConsumerState<DocumentsUploadScreen> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(28),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 20, offset: const Offset(0, 8))],
-                border: Border.all(color: AppColors.primaryBlue.withOpacity(0.1), width: 1),
+                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 20, offset: const Offset(0, 8))],
+                border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.1), width: 1),
               ),
               child: Row(
                 children: [
                   Container(
                     padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(color: AppColors.primaryBlue.withOpacity(0.1), borderRadius: BorderRadius.circular(16)),
+                    decoration: BoxDecoration(color: AppColors.primaryBlue.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(16)),
                     child: const Icon(Iconsax.verify, color: AppColors.primaryBlue, size: 28),
                   ),
                   const SizedBox(width: 16),
@@ -150,7 +150,7 @@ class _DocumentsUploadScreenState extends ConsumerState<DocumentsUploadScreen> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(24),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)],
+                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10)],
               ),
               child: Column(
                 children: [
@@ -252,7 +252,7 @@ class _DocumentsUploadScreenState extends ConsumerState<DocumentsUploadScreen> {
           fit: StackFit.expand,
           children: [
             Image.file(File(file.path), fit: BoxFit.cover),
-            Container(color: AppColors.deepNavy.withOpacity(0.7)),
+            Container(color: AppColors.deepNavy.withValues(alpha: 0.7)),
             const Center(child: Icon(Iconsax.tick_circle, color: Colors.white, size: 32)).animate().scale(curve: Curves.elasticOut),
           ],
         ),
@@ -282,7 +282,7 @@ class _DocumentsUploadScreenState extends ConsumerState<DocumentsUploadScreen> {
             color: file != null ? AppColors.primaryBlue : Colors.transparent, 
             width: 2
           ),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))]
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4))]
         ),
         child: content,
       ),

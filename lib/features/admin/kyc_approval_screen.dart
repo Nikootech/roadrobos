@@ -1,21 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/models/approval.dart';
+import '../../core/repositories/approval_repository.dart';
 import '../../shared/widgets/custom_button.dart';
 
 /// KYC Document Approval matching Figma Screen [95]
-class KycApprovalScreen extends StatelessWidget {
-  const KycApprovalScreen({super.key});
+/// Now dynamicized to handle real ApprovalRequest data.
+class KycApprovalScreen extends ConsumerWidget {
+  final ApprovalRequest request;
+  
+  const KycApprovalScreen({super.key, required this.request});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final payload = request.payload;
+    final applicantName = payload['applicant_name'] ?? 'New Applicant';
+    final applicantRole = payload['applicant_role'] ?? 'Partner';
+    final applicantId = request.entityId ?? 'N/A';
+    final submittedAt = _formatLongDate(request.createdAt);
+
     return Scaffold(
       backgroundColor: AppColors.bgLightGrey,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 1,
-        shadowColor: Colors.black.withOpacity(0.05),
+        shadowColor: Colors.black.withValues(alpha: 0.05),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: AppColors.textPrimary),
           onPressed: () => context.pop(),
@@ -39,19 +51,19 @@ class KycApprovalScreen extends StatelessWidget {
                         Container(
                           width: 60,
                           height: 60,
-                          decoration: BoxDecoration(color: AppColors.primaryBlue.withOpacity(0.1), shape: BoxShape.circle),
+                          decoration: BoxDecoration(color: AppColors.primaryBlue.withValues(alpha: 0.1), shape: BoxShape.circle),
                           child: const Icon(Icons.person, color: AppColors.primaryBlue, size: 30),
                         ),
                         const SizedBox(width: 16),
-                        const Expanded(
+                        Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Vikas Singh', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
-                              SizedBox(height: 4),
-                              Text('Driver Application • ID: DRV-8492', style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
-                              SizedBox(height: 4),
-                              Text('Applied: Oct 24, 2023', style: TextStyle(fontSize: 12, color: AppColors.primaryBlue)),
+                              Text(applicantName, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                              const SizedBox(height: 4),
+                              Text('$applicantRole Application • ID: $applicantId', style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                              const SizedBox(height: 4),
+                              Text('Applied: $submittedAt', style: const TextStyle(fontSize: 12, color: AppColors.primaryBlue)),
                             ],
                           ),
                         )
@@ -71,13 +83,17 @@ class KycApprovalScreen extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                _buildDocCard('Driving License (Front)', 'Verified by AI', true, Icons.badge_outlined, context),
-                const SizedBox(height: 12),
-                _buildDocCard('Driving License (Back)', 'Verified by AI', true, Icons.badge_outlined, context),
-                const SizedBox(height: 12),
-                _buildDocCard('Aadhar Card / Gov ID', 'Pending manual review', false, Icons.contact_page_outlined, context),
-                const SizedBox(height: 12),
-                _buildDocCard('Vehicle RC Print', 'Verified by AI', true, Icons.description_outlined, context),
+                if (payload.containsKey('document_url'))
+                  _buildDocCard('Main Document', 'Manual Review Required', false, Icons.badge_outlined, context, payload['document_url']),
+                
+                if (payload.containsKey('license_front'))
+                  _buildDocCard('Driving License (Front)', 'Verified by AI', true, Icons.badge_outlined, context, payload['license_front']),
+                
+                if (payload.containsKey('license_back'))
+                  _buildDocCard('Driving License (Back)', 'Verified by AI', true, Icons.badge_outlined, context, payload['license_back']),
+                
+                if (payload.containsKey('rc_document'))
+                  _buildDocCard('Vehicle RC Print', 'Pending review', false, Icons.description_outlined, context, payload['rc_document']),
               ]),
             ),
           ),
@@ -98,7 +114,7 @@ class KycApprovalScreen extends StatelessWidget {
                 label: 'REJECT',
                 backgroundColor: AppColors.bgLightGrey,
                 textColor: AppColors.dangerRed,
-                onPressed: () => _showRejectionDialog(context),
+                onPressed: () => _showRejectionDialog(context, ref),
               ),
             ),
             const SizedBox(width: 16),
@@ -106,10 +122,7 @@ class KycApprovalScreen extends StatelessWidget {
               child: CustomButton(
                 label: 'APPROVE',
                 backgroundColor: AppColors.successGreen,
-                onPressed: () {
-                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('KYC Approved successfully!')));
-                   context.pop();
-                },
+                onPressed: () => _handleApproval(context, ref),
               ),
             ),
           ],
@@ -118,7 +131,33 @@ class KycApprovalScreen extends StatelessWidget {
     );
   }
 
-  void _showRejectionDialog(BuildContext context) {
+  String _formatLongDate(DateTime date) {
+    return '${date.day} ${_getMonth(date.month)}, ${date.year}';
+  }
+
+  String _getMonth(int month) {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return months[month - 1];
+  }
+
+  void _handleApproval(BuildContext context, WidgetRef ref) async {
+    try {
+      await ref.read(approvalRepositoryProvider).updateApprovalStatus(
+        id: request.id,
+        status: ApprovalStatus.approved,
+      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('KYC Approved. User is now LIVE!')));
+        context.pop();
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
+    }
+  }
+
+  void _showRejectionDialog(BuildContext context, WidgetRef ref) {
     final TextEditingController reasonController = TextEditingController();
     showDialog(
       context: context,
@@ -145,10 +184,23 @@ class KycApprovalScreen extends StatelessWidget {
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
           ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Application rejected.')));
-              context.pop();
+            onPressed: () async {
+              try {
+                await ref.read(approvalRepositoryProvider).updateApprovalStatus(
+                  id: request.id,
+                  status: ApprovalStatus.rejected,
+                  reason: reasonController.text,
+                );
+                if (context.mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Application rejected.')));
+                  context.pop();
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+                }
+              }
             },
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.dangerRed, foregroundColor: Colors.white),
             child: const Text('Confirm Reject'),
@@ -158,7 +210,7 @@ class KycApprovalScreen extends StatelessWidget {
     );
   }
 
-  void _showDocumentPreview(BuildContext context, String title) {
+  void _showDocumentPreview(BuildContext context, String title, String? url) {
     showDialog(
       context: context,
       builder: (context) => Dialog(
@@ -178,11 +230,16 @@ class KycApprovalScreen extends StatelessWidget {
               width: double.infinity,
               margin: const EdgeInsets.all(16),
               decoration: BoxDecoration(color: AppColors.bgLightGrey, borderRadius: BorderRadius.circular(16)),
-              child: const Center(child: Icon(Icons.image_outlined, size: 80, color: AppColors.textMuted)),
+              child: url != null && url.startsWith('http')
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Image.network(url, fit: BoxFit.contain, errorBuilder: (c, e, s) => const Center(child: Icon(Icons.broken_image, size: 80, color: AppColors.textMuted))),
+                    )
+                  : const Center(child: Icon(Icons.image_outlined, size: 80, color: AppColors.textMuted)),
             ),
             const Padding(
               padding: EdgeInsets.all(16.0),
-              child: Text('Document verified by AI: 94% Match', style: TextStyle(color: AppColors.successGreen, fontWeight: FontWeight.w600)),
+              child: Text('Document provided for verification', style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.w600)),
             ),
           ],
         ),
@@ -190,9 +247,10 @@ class KycApprovalScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDocCard(String title, String status, bool isValid, IconData icon, BuildContext context) {
+  Widget _buildDocCard(String title, String status, bool isValid, IconData icon, BuildContext context, String? url) {
     return Container(
       padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border)),
       child: Column(
         children: [
@@ -216,18 +274,22 @@ class KycApprovalScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              IconButton(icon: const Icon(Icons.remove_red_eye_outlined, color: AppColors.primaryBlue), onPressed: () => _showDocumentPreview(context, title))
+              IconButton(icon: const Icon(Icons.remove_red_eye_outlined, color: AppColors.primaryBlue), onPressed: () => _showDocumentPreview(context, title, url))
             ],
           ),
-          if (!isValid) ...[
+          if (url != null && url.startsWith('http')) ...[
             const SizedBox(height: 16),
             GestureDetector(
-              onTap: () => _showDocumentPreview(context, title),
+              onTap: () => _showDocumentPreview(context, title, url),
               child: Container(
                 width: double.infinity,
                 height: 140,
-                decoration: BoxDecoration(color: AppColors.bgLightGrey, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.border)),
-                child: const Center(child: Icon(Icons.image_not_supported_outlined, size: 40, color: AppColors.textMuted)),
+                decoration: BoxDecoration(
+                  color: AppColors.bgLightGrey,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.border),
+                  image: DecorationImage(image: NetworkImage(url), fit: BoxFit.cover),
+                ),
               ),
             )
           ]
@@ -236,4 +298,5 @@ class KycApprovalScreen extends StatelessWidget {
     ).animate().fadeIn().slideY(begin: 0.1, end: 0);
   }
 }
+
 

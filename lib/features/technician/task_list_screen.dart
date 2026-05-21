@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-// import '../profile/user_provider.dart'; // Removed unused import
+import '../../core/repositories/job_card_repository.dart';
 import 'technician_provider.dart';
 
 /// Technician Task List matching Figma Screen [86] & [78]
@@ -139,7 +139,7 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         shape: BoxShape.circle,
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)],
       ),
       child: Stack(
         children: [
@@ -224,7 +224,7 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: const Color(0xFFE5E9F0)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4))],
       ),
       child: Column(
         children: [
@@ -318,14 +318,25 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
                       HapticFeedback.mediumImpact();
                       ref.read(selectedJobIdProvider.notifier).state = job.id;
                       if (statusLabel == 'To-Do') {
-                        ref.read(technicianProvider.notifier).startJob(job.id);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Job started!'), backgroundColor: Color(0xFF1A237E)),
-                        );
+                        try {
+                          await ref.read(jobCardRepositoryProvider).startJob(job.id);
+                          ref.read(technicianProvider.notifier).startJob(job.id);
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Job started!'), backgroundColor: Color(0xFF1A237E)),
+                            );
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Failed to start: $e'), backgroundColor: Colors.red),
+                            );
+                          }
+                        }
                       } else {
                         context.push('/tech-job-card-details');
                       }
@@ -371,7 +382,7 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
         decoration: BoxDecoration(
           color: isActive ? Colors.white : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
-          boxShadow: isActive ? [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4)] : null,
+          boxShadow: isActive ? [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4)] : null,
         ),
         child: Text(
           label,

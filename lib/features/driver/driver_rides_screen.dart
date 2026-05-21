@@ -51,7 +51,7 @@ class DriverRidesScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 4,
                       offset: const Offset(0, 2),
                     ),
@@ -164,7 +164,7 @@ class DriverRidesScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
@@ -189,7 +189,7 @@ class DriverRidesScreen extends StatelessWidget {
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
-                        color: AppColors.primaryBlue.withOpacity(0.1),
+                        color: AppColors.primaryBlue.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
                       child: const Center(
@@ -240,7 +240,7 @@ class DriverRidesScreen extends StatelessWidget {
                     Column(
                       children: [
                         const Icon(Icons.circle, color: AppColors.primaryBlue, size: 8),
-                        Container(width: 1.5, height: 28, color: AppColors.border.withOpacity(0.5)),
+                        Container(width: 1.5, height: 28, color: AppColors.border.withValues(alpha: 0.5)),
                         const Icon(Icons.location_on_rounded, color: AppColors.dangerRed, size: 14),
                       ],
                     ),
@@ -270,9 +270,9 @@ class DriverRidesScreen extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                           decoration: BoxDecoration(
-                            color: statusColor.withOpacity(0.08),
+                            color: statusColor.withValues(alpha: 0.08),
                             borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: statusColor.withOpacity(0.1), width: 1),
+                            border: Border.all(color: statusColor.withValues(alpha: 0.1), width: 1),
                           ),
                           child: Text(
                             status,

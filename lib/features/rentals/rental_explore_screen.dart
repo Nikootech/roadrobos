@@ -7,7 +7,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import 'rental_providers.dart';
-import '../../core/data/mock_data.dart';
+import '../../core/models/rental_vehicle.dart';
 import '../../shared/widgets/responsive_utils.dart';
 
 class RentalExploreScreen extends ConsumerStatefulWidget {
@@ -20,13 +20,21 @@ class RentalExploreScreen extends ConsumerStatefulWidget {
 class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
   String _selectedCategory = 'All';
 
-  final List<Map<String, dynamic>> _topVehicles = MockData.rentalVehicles;
-
-  List<Map<String, dynamic>> get _filteredVehicles {
-    if (_selectedCategory == 'All') return _topVehicles;
-    if (_selectedCategory == 'Cars') return _topVehicles.where((v) => v['isBike'] != true).toList();
-    if (_selectedCategory == 'Bikes') return _topVehicles.where((v) => v['isBike'] == true && v['category'] != 'EV' && v['type'] != 'EV Bike').toList();
-    return _topVehicles.where((v) => v['category'] == _selectedCategory || (v['isBike'] == true && _selectedCategory == 'EV' && v['type'] == 'EV Bike')).toList();
+  List<Map<String, dynamic>> _processFleet(List<RentalVehicle> fleet) {
+    List<RentalVehicle> filtered;
+    if (_selectedCategory == 'All') {
+      filtered = fleet;
+    } else if (_selectedCategory == 'Cars') {
+      filtered = fleet.where((v) => !v.isBike).toList();
+    } else if (_selectedCategory == 'Bikes') {
+      filtered = fleet.where((v) => v.isBike && v.category != 'EV').toList();
+    } else if (_selectedCategory == 'EV') {
+      filtered = fleet.where((v) => v.category == 'EV').toList();
+    } else {
+      filtered = fleet.where((v) => v.category == _selectedCategory).toList();
+    }
+    // Include the Supabase id so the router can fetch by ID
+    return filtered.map((v) => v.toMap()..['id'] = v.id).toList();
   }
 
   @override
@@ -124,13 +132,21 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
 
             const SizedBox(height: 32),
 
-            // Section 1: Top Recommendations (Figma [96]: FRAME: "list")
+            // Section 1: Top Recommendations
             _buildSectionHeader('Top Recommendations', () => context.push('/rentals-selection')),
-            _buildVehicleList(context),
+            ref.watch(rentalCatalogProvider).when(
+              data: (fleet) {
+                final vehicles = _processFleet(fleet);
+                if (vehicles.isEmpty) return const Center(child: Padding(padding: EdgeInsets.all(20), child: Text('No vehicles available in this category')));
+                return _buildVehicleList(context, vehicles);
+              },
+              loading: () => const Center(child: Padding(padding: EdgeInsets.all(40), child: CircularProgressIndicator())),
+              error: (err, _) => Center(child: Text('Error: $err')),
+            ),
 
             const SizedBox(height: 32),
 
-            // Section 2: Recently Viewed (Figma [96]: FRAME: "list")
+            // Section 2: Recently Viewed
             _buildSectionHeader('Recently Viewed', () => context.push('/rentals-selection')),
             _buildRecentList(context),
 
@@ -144,7 +160,7 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -4)),
+            BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, -4)),
           ],
         ),
         child: ElevatedButton(
@@ -180,8 +196,8 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
         decoration: BoxDecoration(
           color: isSelected ? AppColors.primaryBlue : AppColors.bgLightGrey,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: isSelected ? AppColors.primaryBlue : AppColors.border.withOpacity(0.5)),
-          boxShadow: isSelected ? [BoxShadow(color: AppColors.primaryBlue.withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 4))] : null,
+          border: Border.all(color: isSelected ? AppColors.primaryBlue : AppColors.border.withValues(alpha: 0.5)),
+          boxShadow: isSelected ? [BoxShadow(color: AppColors.primaryBlue.withValues(alpha: 0.3), blurRadius: 12, offset: const Offset(0, 4))] : null,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -228,26 +244,26 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
     );
   }
 
-  Widget _buildVehicleList(BuildContext context) {
+  Widget _buildVehicleList(BuildContext context, List<Map<String, dynamic>> vehicles) {
     return SizedBox(
       height: ResponsiveLayout.responsiveHeight(context, 55),
       child: ListView.separated(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         scrollDirection: Axis.horizontal,
-        itemCount: _filteredVehicles.length,
+        itemCount: vehicles.length,
         separatorBuilder: (_, __) => const SizedBox(width: 16),
         itemBuilder: (context, index) {
-            final vehicle = _filteredVehicles[index];
+            final vehicle = vehicles[index];
             final isZeelio = vehicle['name'].toString().contains('Zelio');
             
             return GestureDetector(
             onTap: () {
-              if (vehicle['isComingSoon'] == true) return;
+              if (vehicle['is_coming_soon'] == true) return;
               HapticFeedback.lightImpact();
-              final slug = vehicle['name'].toString().toLowerCase().replaceAll(' ', '-');
+              final vehicleId = vehicle['id']?.toString() ?? '';
               ref.read(recentlyViewedProvider.notifier).addView(vehicle);
               ref.read(selectedVehicleProvider.notifier).state = vehicle;
-              context.push('/rental-detail/$slug');
+              context.push('/rental-detail/$vehicleId');
             },
             child: Container(
               width: ResponsiveLayout.responsiveWidth(context, 80),
@@ -258,14 +274,14 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
                 boxShadow: [
                   BoxShadow(
                     color: isZeelio 
-                        ? AppColors.primaryBlue.withOpacity(0.12) 
-                        : Colors.black.withOpacity(0.04),
+                        ? AppColors.primaryBlue.withValues(alpha: 0.12) 
+                        : Colors.black.withValues(alpha: 0.04),
                     blurRadius: 24,
                     offset: const Offset(0, 10),
                   ),
                 ],
                 border: isZeelio 
-                    ? Border.all(color: AppColors.primaryBlue.withOpacity(0.15), width: 1)
+                    ? Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.15), width: 1)
                     : null,
               ),
               child: Column(
@@ -284,10 +300,9 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
                         ),
                         child: Hero(
                           tag: 'vehicle_${vehicle['name']}',
-                          child: Image.asset(
-                            vehicle['image'],
-                            fit: BoxFit.contain,
-                          ),
+                          child: vehicle['image_url'].toString().startsWith('http')
+                            ? Image.network(vehicle['image_url'], fit: BoxFit.contain)
+                            : Image.asset(vehicle['image_url'], fit: BoxFit.contain),
                         ),
                       ),
                       Positioned(
@@ -296,11 +311,11 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                           decoration: BoxDecoration(
-                            color: vehicle['isComingSoon'] == true ? AppColors.textMuted : AppColors.primaryBlue,
+                            color: vehicle['is_coming_soon'] == true ? AppColors.textMuted : AppColors.primaryBlue,
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
-                            vehicle['isComingSoon'] == true ? 'Coming Soon' : vehicle['price'],
+                            vehicle['is_coming_soon'] == true ? 'Coming Soon' : vehicle['price'],
                             style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w900,
@@ -318,8 +333,8 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
-                                  AppColors.primaryBlue.withOpacity(0.9),
-                                  AppColors.primaryBlue.withOpacity(0.7),
+                                  AppColors.primaryBlue.withValues(alpha: 0.9),
+                                  AppColors.primaryBlue.withValues(alpha: 0.7),
                                 ],
                               ),
                               borderRadius: BorderRadius.circular(8),
@@ -330,7 +345,7 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
                             ),
                           ),
                         ),
-                      if (vehicle['isComingSoon'] == true)
+                      if (vehicle['is_coming_soon'] == true)
                         Positioned.fill(
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(24),
@@ -338,9 +353,9 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
                               filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
                               child: Container(
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
+                                  color: Colors.white.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(24),
-                                  border: Border.all(color: Colors.white.withOpacity(0.3), width: 1.5),
+                                  border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1.5),
                                 ),
                                 child: Center(
                                   child: Container(
@@ -348,13 +363,13 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
                                     decoration: BoxDecoration(
                                       gradient: LinearGradient(
                                         colors: [
-                                          AppColors.primaryBlue.withOpacity(0.9),
-                                          AppColors.primaryBlue.withOpacity(0.7),
+                                          AppColors.primaryBlue.withValues(alpha: 0.9),
+                                          AppColors.primaryBlue.withValues(alpha: 0.7),
                                         ],
                                       ),
                                       borderRadius: BorderRadius.circular(12),
                                       boxShadow: [
-                                        BoxShadow(color: AppColors.primaryBlue.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4)),
+                                        BoxShadow(color: AppColors.primaryBlue.withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, 4)),
                                       ],
                                     ),
                                     child: const Row(
@@ -416,7 +431,7 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
                         const SizedBox(height: 6),
                         Row(
                           children: [
-                            Icon(vehicle['isBike'] == true ? Icons.speed_rounded : Iconsax.user, size: 14, color: AppColors.textSecondary),
+                            Icon(vehicle['is_bike'] == true ? Icons.speed_rounded : Iconsax.user, size: 14, color: AppColors.textSecondary),
                             const SizedBox(width: 4),
                             Text(
                               vehicle['spec'] ?? vehicle['seats'] ?? '',
@@ -427,7 +442,7 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
                               ),
                             ),
                             const SizedBox(width: 10),
-                            Icon(vehicle['isBike'] == true ? Icons.pedal_bike_rounded : Iconsax.car, size: 14, color: AppColors.textSecondary),
+                            Icon(vehicle['is_bike'] == true ? Icons.pedal_bike_rounded : Iconsax.car, size: 14, color: AppColors.textSecondary),
 
                             const SizedBox(width: 4),
                             Text(
@@ -444,7 +459,7 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
                         ElevatedButton(
                           onPressed: () {
                             HapticFeedback.mediumImpact();
-                            if (vehicle['isComingSoon'] == true) {
+                            if (vehicle['is_coming_soon'] == true) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text('We will notify you when ${vehicle['name']} is available!'),
@@ -455,31 +470,31 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
                               );
                               return;
                             }
-                            final slug = vehicle['name'].toString().toLowerCase().replaceAll(' ', '-');
+                            final vehicleId = vehicle['id']?.toString() ?? '';
                             ref.read(recentlyViewedProvider.notifier).addView(vehicle);
                             ref.read(selectedVehicleProvider.notifier).state = vehicle;
-                            context.push('/rental-detail/$slug');
+                            context.push('/rental-detail/$vehicleId');
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: vehicle['isComingSoon'] == true ? Colors.white : AppColors.primaryBlue,
-                            foregroundColor: vehicle['isComingSoon'] == true ? AppColors.primaryBlue : Colors.white,
+                            backgroundColor: vehicle['is_coming_soon'] == true ? Colors.white : AppColors.primaryBlue,
+                            foregroundColor: vehicle['is_coming_soon'] == true ? AppColors.primaryBlue : Colors.white,
                             minimumSize: const Size(double.infinity, 48),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
-                              side: vehicle['isComingSoon'] == true ? const BorderSide(color: AppColors.primaryBlue, width: 2) : BorderSide.none,
+                              side: vehicle['is_coming_soon'] == true ? const BorderSide(color: AppColors.primaryBlue, width: 2) : BorderSide.none,
                             ),
-                            elevation: vehicle['isComingSoon'] == true ? 0 : 2,
+                            elevation: vehicle['is_coming_soon'] == true ? 0 : 2,
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(
-                                vehicle['isComingSoon'] == true ? Icons.notifications_active_outlined : Icons.bolt_rounded,
+                                vehicle['is_coming_soon'] == true ? Icons.notifications_active_outlined : Icons.bolt_rounded,
                                 size: 16,
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                vehicle['isComingSoon'] == true ? 'Notify Me' : 'Book Now',
+                                vehicle['is_coming_soon'] == true ? 'Notify Me' : 'Book Now',
                                 style: const TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w800,
@@ -512,7 +527,7 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
           decoration: BoxDecoration(
             color: AppColors.bgLightGrey,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.border.withOpacity(0.5)),
+            border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
           ),
           child: const Center(
             child: Text(
@@ -536,10 +551,10 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
         return GestureDetector(
           onTap: () {
             HapticFeedback.lightImpact();
-            final slug = vehicle['name'].toString().toLowerCase().replaceAll(' ', '-');
+            final vehicleId = vehicle['id']?.toString() ?? '';
             ref.read(recentlyViewedProvider.notifier).addView(vehicle);
             ref.read(selectedVehicleProvider.notifier).state = vehicle;
-            context.push('/rental-detail/$slug');
+            context.push('/rental-detail/$vehicleId');
           },
           child: Container(
             padding: const EdgeInsets.all(12),
@@ -559,8 +574,10 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12),
-                    child: vehicle['image'] != null 
-                      ? Image.asset(vehicle['image'], fit: BoxFit.contain)
+                    child: vehicle['image_url'] != null 
+                      ? (vehicle['image_url'].toString().startsWith('http')
+                        ? Image.network(vehicle['image_url'], fit: BoxFit.contain)
+                        : Image.asset(vehicle['image_url'], fit: BoxFit.contain))
                       : const Icon(Icons.car_rental, color: AppColors.textMuted),
                   ),
                 ),

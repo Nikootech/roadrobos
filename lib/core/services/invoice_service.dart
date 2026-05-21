@@ -1,8 +1,6 @@
 import 'dart:io';
-import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:printing/printing.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -35,14 +33,14 @@ class InvoiceService {
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
                       pw.Text('RoAdRoBos', style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold, color: PdfColors.blue900)),
-                      pw.Text('Vehicle Service & Mobility Solutions', style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
+                      pw.Text('Vehicle Service & Mobility Solutions', style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
                     ],
                   ),
                   pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.end,
                     children: [
                       pw.Text('INVOICE', style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold)),
-                      pw.Text('ID: #$bookingId', style: pw.TextStyle(fontSize: 10)),
+                      pw.Text('ID: #$bookingId', style: const pw.TextStyle(fontSize: 10)),
                     ],
                   ),
                 ],
@@ -57,16 +55,16 @@ class InvoiceService {
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
                       pw.Text('BILLED TO:', style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
-                      pw.Text(customerName, style: pw.TextStyle(fontSize: 12)),
-                      pw.Text('Date: ${dateFormat.format(date)}', style: pw.TextStyle(fontSize: 10)),
+                      pw.Text(customerName, style: const pw.TextStyle(fontSize: 12)),
+                      pw.Text('Date: ${dateFormat.format(date)}', style: const pw.TextStyle(fontSize: 10)),
                     ],
                   ),
                   pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.end,
                     children: [
                       pw.Text('FROM:', style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
-                      pw.Text('RoAdRoBos Services Pvt Ltd', style: pw.TextStyle(fontSize: 12)),
-                      pw.Text('Tech Park, Block B, Delhi, IN', style: pw.TextStyle(fontSize: 10)),
+                      pw.Text('RoAdRoBos Services Pvt Ltd', style: const pw.TextStyle(fontSize: 12)),
+                      pw.Text('Tech Park, Block B, Delhi, IN', style: const pw.TextStyle(fontSize: 10)),
                     ],
                   ),
                 ],
@@ -109,7 +107,7 @@ class InvoiceService {
               pw.Center(child: pw.Text('Thank you for choosing RoAdRoBos!', style: pw.TextStyle(fontSize: 10, fontStyle: pw.FontStyle.italic))),
               pw.SizedBox(height: 10),
               pw.Divider(),
-              pw.Center(child: pw.Text('This is a computer-generated invoice and requires no signature.', style: pw.TextStyle(fontSize: 8, color: PdfColors.grey500))),
+              pw.Center(child: pw.Text('This is a computer-generated invoice and requires no signature.', style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey500))),
             ],
           );
         },

@@ -4,13 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'dart:math' as math;
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 import '../features/profile/user_provider.dart';
 import '../core/models/ride_booking.dart';
 import '../core/repositories/ride_booking_repository.dart';
 import '../core/repositories/driver_repository.dart';
-import '../core/models/driver_model.dart';
+import '../core/services/user_tracking_service.dart';
+
 
 enum RideStatus { 
   idle, 
@@ -131,9 +131,9 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
   final Ref ref;
   TaxiNotifier(this.ref) : super(TaxiState());
 
-  StreamSubscription? _rideSubscription;
   StreamSubscription? _driverLocationSubscription;
-  Timer? _simulationTimer;
+  StreamSubscription? _rideSubscription;
+  final _trackingService = UserTrackingService();
 
   Future<void> initializeLocation() async {
     try {
@@ -157,18 +157,8 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
         return;
       }
 
-      final position = await Geolocator.getCurrentPosition(
-        timeLimit: const Duration(seconds: 5),
-      ).catchError((e) {
-        debugPrint('Location timeout or error: $e');
-        return Position(
-          longitude: 77.5946, latitude: 12.9716, 
-          timestamp: DateTime.now(), accuracy: 0, altitude: 0, 
-          heading: 0, speed: 0, speedAccuracy: 0, altitudeAccuracy: 0, headingAccuracy: 0
-        );
-      });
-
-      final location = LatLng(position.latitude, position.longitude);
+      final location = await _trackingService.getCurrentLocation() ?? const LatLng(12.9716, 77.5946);
+      
       state = state.copyWith(
         pickupLocation: location,
         pickupAddress: 'Current Location',
@@ -221,7 +211,7 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
     _calculateDistance();
   }
 
-  void _calculateDistance() {
+  void _calculateDistance() async {
     if (state.pickupLocation != null && state.dropoffLocation != null) {
       const distanceCalc = Distance();
       final double meters = distanceCalc.as(LengthUnit.Meter, state.pickupLocation!, state.dropoffLocation!);
@@ -236,7 +226,7 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
   }
 
   void acceptRideRequest(LatLng pickup, LatLng dropoff) {
-    // For driver use
+    // For driver use - rely on live location updates
     state = state.copyWith(
       status: RideStatus.tracking, // Heading to pickup
       pickupLocation: pickup,
@@ -245,12 +235,10 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
       otp: '1234',
       isOtpVerified: false,
     );
-    _startTrackingSimulation();
   }
 
   void arriveAtPickup() {
     state = state.copyWith(status: RideStatus.atPickup, eta: 'Arrived');
-    _simulationTimer?.cancel();
   }
 
   bool verifyOtp(String enteredOtp) {
@@ -264,7 +252,7 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
   void startTrip() {
     if (state.isOtpVerified) {
       state = state.copyWith(status: RideStatus.headingToDropoff);
-      _startInTripSimulation();
+      // Wait for backend updates for live tracking
     }
   }
 
@@ -273,15 +261,16 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
     
     try {
       final user = ref.read(userProvider);
-      if (user == null) throw Exception('User not logged in');
 
       final booking = RideBooking(
         id: '', 
         customerId: user.user?.id ?? 'demo',
-        pickupLocation: '${state.pickupLocation!.latitude},${state.pickupLocation!.longitude}',
         pickupAddress: state.pickupAddress ?? 'Origin',
-        dropLocation: '${state.dropoffLocation!.latitude},${state.dropoffLocation!.longitude}',
-        dropAddress: state.dropoffAddress ?? 'Destination',
+        destinationAddress: state.dropoffAddress ?? 'Destination',
+        pickupLat: state.pickupLocation!.latitude,
+        pickupLng: state.pickupLocation!.longitude,
+        destLat: state.dropoffLocation!.latitude,
+        destLng: state.dropoffLocation!.longitude,
         fare: state.selectedOption?.price ?? 0.0,
         createdAt: DateTime.now(),
       );
@@ -344,7 +333,6 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
   }
 
   void reset() {
-    _simulationTimer?.cancel();
     state = TaxiState();
     initializeLocation();
   }
@@ -409,15 +397,6 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
 
   void selectOption(RideOption option) {
     state = state.copyWith(selectedOption: option);
-    if (state.pickupLocation != null) {
-      String type = 'car';
-      if (option.id.contains('bike')) {
-        type = 'bike';
-      } else if (option.id.contains('auto')) {
-        type = 'auto';
-      }
-      _generateNearbyVehicles(state.pickupLocation!, type);
-    }
   }
 
   void setFocus(bool isPickup) {
@@ -433,78 +412,9 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
     bookRide();
   }
 
-  void _generateNearbyVehicles(LatLng center, String type) {
-    final math.Random random = math.Random();
-    final List<NearbyVehicle> vehicles = List.generate(5, (index) {
-      final double latOffset = (random.nextDouble() - 0.5) * 0.008;
-      final double lngOffset = (random.nextDouble() - 0.5) * 0.008;
-      return NearbyVehicle(
-        position: LatLng(center.latitude + latOffset, center.longitude + lngOffset),
-        type: type,
-      );
-    });
-    state = state.copyWith(nearbyVehicles: vehicles);
-  }
 
-  @override
-  void dispose() {
-    _simulationTimer?.cancel();
-    super.dispose();
-  }
 
-  void _startTrackingSimulation() {
-    _simulationTimer?.cancel();
-    _simulationTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
-      if (state.roadroboLocation == null || state.pickupLocation == null) return;
-      
-      const distanceCalc = Distance();
-      final double meters = distanceCalc.as(LengthUnit.Meter, state.roadroboLocation!, state.pickupLocation!);
-      
-      if (meters < 50) {
-        arriveAtPickup();
-        return;
-      }
 
-      // Move driver 50m closer to pickup
-      final double latStep = (state.pickupLocation!.latitude - state.roadroboLocation!.latitude) * 0.1;
-      final double lngStep = (state.pickupLocation!.longitude - state.roadroboLocation!.longitude) * 0.1;
-      
-      state = state.copyWith(
-        roadroboLocation: LatLng(
-          state.roadroboLocation!.latitude + latStep,
-          state.roadroboLocation!.longitude + lngStep,
-        ),
-        eta: '${(meters / 100).ceil()} mins',
-      );
-    });
-  }
-
-  void _startInTripSimulation() {
-    _simulationTimer?.cancel();
-    _simulationTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
-      if (state.roadroboLocation == null || state.dropoffLocation == null) return;
-      
-      const distanceCalc = Distance();
-      final double meters = distanceCalc.as(LengthUnit.Meter, state.roadroboLocation!, state.dropoffLocation!);
-      
-      if (meters < 50) {
-        completeRide();
-        return;
-      }
-
-      // Move driver 50m closer to dropoff
-      final double latStep = (state.dropoffLocation!.latitude - state.roadroboLocation!.latitude) * 0.1;
-      final double lngStep = (state.dropoffLocation!.longitude - state.roadroboLocation!.longitude) * 0.1;
-      
-      state = state.copyWith(
-        roadroboLocation: LatLng(
-          state.roadroboLocation!.latitude + latStep,
-          state.roadroboLocation!.longitude + lngStep,
-        ),
-        eta: '${(meters / 100).ceil()} mins',
-      );
-    });
-  }
 
   void shareTrip(String mapsLink) {
     Share.share('Track my RoAdRoBo trip live here: $mapsLink');

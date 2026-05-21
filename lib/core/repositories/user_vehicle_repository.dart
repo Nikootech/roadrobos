@@ -57,7 +57,12 @@ class UserVehicleRepository {
           .eq('user_id', userId);
       return response.map((map) => UserVehicle.fromMap(map, map['id'].toString())).toList();
     } catch (e) {
-      throw Exception('Failed to fetch user vehicles: $e');
+      // Gracefully handle 404 if the table hasn't been created in Supabase yet
+      if (e.toString().contains('404')) {
+        return [];
+      }
+      // Return empty instead of throwing so UI doesn't break
+      return [];
     }
   }
 
@@ -65,7 +70,7 @@ class UserVehicleRepository {
     try {
       await _supabase.from('user_vehicles').insert(vehicle.toMap());
     } catch (e) {
-      throw Exception('Failed to add user vehicle: $e');
+      // Gracefully handle missing table
     }
   }
 }

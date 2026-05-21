@@ -7,6 +7,10 @@ import '../../core/theme/app_colors.dart';
 import '../../core/constants/app_strings.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'user_provider.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import '../../core/services/storage_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Profile Screen matching Figma Screen [55]: "User Profile & Loyalty Rewards"
 class ProfileScreen extends ConsumerWidget {
@@ -15,14 +19,6 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(userProvider);
-    
-    // If user is null, we are likely in a logout transition or loading
-    if (user == null) {
-      return const Scaffold(
-        backgroundColor: AppColors.bgDarkProfile,
-        body: Center(child: CircularProgressIndicator(color: AppColors.brandGreen)),
-      );
-    }
 
     return Scaffold(
       backgroundColor: AppColors.bgDarkProfile,
@@ -63,24 +59,37 @@ class ProfileScreen extends ConsumerWidget {
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [AppColors.bgDarkSurface, AppColors.bgDarkSurface.withOpacity(0.8)],
+                  colors: [AppColors.bgDarkSurface, AppColors.bgDarkSurface.withValues(alpha: 0.8)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.warningAmber.withOpacity(0.3)),
+                border: Border.all(color: AppColors.warningAmber.withValues(alpha: 0.3)),
               ),
               child: Column(
                 children: [
                   Row(
                     children: [
-                      Container(
-                        width: 64,
-                        height: 64,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: AppColors.warningAmber, width: 2),
-                        ),
+                      GestureDetector(
+                        onTap: () async {
+                          final picker = ImagePicker();
+                          final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+                          if (image != null) {
+                            final storageService = StorageService();
+                            final url = await storageService.uploadAvatar(File(image.path), user.id);
+                            if (url != null) {
+                              await Supabase.instance.client.from('profiles').update({'profile_pic': url}).eq('id', user.id);
+                              ref.invalidate(userProvider);
+                            }
+                          }
+                        },
+                        child: Container(
+                          width: 64,
+                          height: 64,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: AppColors.warningAmber, width: 2),
+                          ),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(32),
                           child: (user.profileImageUrl.isNotEmpty)
@@ -102,6 +111,7 @@ class ProfileScreen extends ConsumerWidget {
                                 ),
                         ),
                       ),
+                      ),
                       const SizedBox(width: 16),
                       Expanded(
                         child: Column(
@@ -114,13 +124,13 @@ class ProfileScreen extends ConsumerWidget {
                               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textOnDark),
                             ),
                             const SizedBox(height: 4),
-                            const Row(
+                             Row(
                               children: [
-                                Icon(Icons.star_rounded, size: 16, color: AppColors.warningAmber),
-                                SizedBox(width: 4),
+                                Icon(Icons.star_rounded, size: 16, color: user.points > 5000 ? AppColors.warningAmber : (user.points > 2000 ? Colors.grey[400] : Colors.brown[400])),
+                                const SizedBox(width: 4),
                                 Text(
-                                  AppStrings.goldMember,
-                                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.warningAmber),
+                                  user.points > 5000 ? 'Gold Member' : (user.points > 2000 ? 'Silver Member' : 'Bronze Member'),
+                                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: user.points > 5000 ? AppColors.warningAmber : (user.points > 2000 ? Colors.grey[400] : Colors.brown[400])),
                                 ),
                               ],
                             ),
@@ -134,7 +144,7 @@ class ProfileScreen extends ConsumerWidget {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppColors.bgDarkProfile.withOpacity(0.5),
+                      color: AppColors.bgDarkProfile.withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
@@ -161,19 +171,19 @@ class ProfileScreen extends ConsumerWidget {
                             ),
                           ],
                         ),
-                        const SizedBox(
+                        SizedBox(
                           width: 56,
                           height: 56,
                           child: Stack(
                             alignment: Alignment.center,
                             children: [
                               CircularProgressIndicator(
-                                value: 0.95,
+                                value: (user.points % 1000) / 1000,
                                 strokeWidth: 4,
                                 backgroundColor: AppColors.bgDarkSurface,
-                                valueColor: AlwaysStoppedAnimation(AppColors.warningAmber),
+                                valueColor: const AlwaysStoppedAnimation(AppColors.warningAmber),
                               ),
-                              Text('95%', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.warningAmber)),
+                              Text('${((user.points % 1000) / 10).toStringAsFixed(0)}%', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.warningAmber)),
                             ],
                           ),
                         ),
@@ -234,9 +244,9 @@ class ProfileScreen extends ConsumerWidget {
                     child: Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: AppColors.dangerRed.withOpacity(0.1),
+                        color: AppColors.dangerRed.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppColors.dangerRed.withOpacity(0.2)),
+                        border: Border.all(color: AppColors.dangerRed.withValues(alpha: 0.2)),
                       ),
                       child: Row(
                         children: [
@@ -244,7 +254,7 @@ class ProfileScreen extends ConsumerWidget {
                           const SizedBox(width: 14),
                           const Text(AppStrings.logout, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.dangerRed)),
                           const Spacer(),
-                          Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.dangerRed.withOpacity(0.5)),
+                          Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.dangerRed.withValues(alpha: 0.5)),
                         ],
                       ),
                     ),
@@ -264,7 +274,7 @@ class ProfileScreen extends ConsumerWidget {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(16), border: Border.all(color: color.withOpacity(0.2))),
+        decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(16), border: Border.all(color: color.withValues(alpha: 0.2))),
         child: Column(
           children: [
             Icon(icon, color: color, size: 24),
@@ -288,7 +298,7 @@ class ProfileScreen extends ConsumerWidget {
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: AppColors.bgDarkSurface.withOpacity(0.4), borderRadius: BorderRadius.circular(16)),
+        decoration: BoxDecoration(color: AppColors.bgDarkSurface.withValues(alpha: 0.4), borderRadius: BorderRadius.circular(16)),
         child: Row(
           children: [
             Container(

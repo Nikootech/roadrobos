@@ -105,7 +105,7 @@ class ManageRemindersScreen extends StatelessWidget {
         children: [
           Container(
             padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(color: (isUpcoming ? AppColors.primaryBlue : AppColors.textMuted).withOpacity(0.1), shape: BoxShape.circle),
+            decoration: BoxDecoration(color: (isUpcoming ? AppColors.primaryBlue : AppColors.textMuted).withValues(alpha: 0.1), shape: BoxShape.circle),
             child: Icon(Iconsax.notification_bing, color: isUpcoming ? AppColors.primaryBlue : AppColors.textMuted, size: 20),
           ),
           const SizedBox(width: 16),

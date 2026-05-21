@@ -14,8 +14,8 @@ class ServiceRemindersScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final userId = ref.watch(authStateProvider).value?.id;
     final servicesAsync = userId != null 
-        ? ref.watch(serviceBookingRepositoryProvider).getCustomerServiceBookings(userId) 
-        : const Stream<List>.empty();
+        ? ref.watch(serviceBookingRepositoryProvider).getPagedCustomerServiceBookings(userId, limit: 50) 
+        : Future<List>.value([]);
 
     return Scaffold(
       backgroundColor: AppColors.bgLightGrey,
@@ -31,10 +31,10 @@ class ServiceRemindersScreen extends ConsumerWidget {
           style: GoogleFonts.outfit(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
         ),
       ),
-      body: StreamBuilder(
-        stream: servicesAsync,
+      body: FutureBuilder(
+        future: servicesAsync,
         builder: (context, snapshot) {
-          final services = snapshot.data ?? [];
+          final services = snapshot.data as List? ?? [];
           
           // Simple Health Calculation (Just for demo logic)
           double healthScore = 0.50; // Default: Needs attention
@@ -129,7 +129,7 @@ class ServiceRemindersScreen extends ConsumerWidget {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primaryBlue.withOpacity(0.3),
+            color: AppColors.primaryBlue.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -158,7 +158,7 @@ class ServiceRemindersScreen extends ConsumerWidget {
             borderRadius: BorderRadius.circular(10),
             child: LinearProgressIndicator(
               value: score,
-              backgroundColor: Colors.white.withOpacity(0.2),
+              backgroundColor: Colors.white.withValues(alpha: 0.2),
               valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
               minHeight: 8,
             ),
@@ -179,14 +179,14 @@ class ServiceRemindersScreen extends ConsumerWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border.withOpacity(0.5)),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Icon(icon, color: color, size: 24),

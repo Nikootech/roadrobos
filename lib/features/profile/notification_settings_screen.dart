@@ -37,7 +37,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
               decoration: BoxDecoration(
                 color: Colors.white, 
                 borderRadius: BorderRadius.circular(24),
-                boxShadow: [BoxShadow(color: Colors.black12.withOpacity(0.04), blurRadius: 15, offset: const Offset(0, 5))],
+                boxShadow: [BoxShadow(color: Colors.black12.withValues(alpha: 0.04), blurRadius: 15, offset: const Offset(0, 5))],
               ),
               child: Column(
                 children: [
@@ -54,12 +54,12 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
             const SizedBox(height: 32),
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(color: AppColors.primaryBlue.withOpacity(0.05), borderRadius: BorderRadius.circular(16)),
-              child: Row(
+              decoration: BoxDecoration(color: AppColors.primaryBlue.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(16)),
+              child: const Row(
                 children: [
-                  const Icon(Icons.info_outline_rounded, color: AppColors.primaryBlue, size: 18),
-                  const SizedBox(width: 12),
-                  const Expanded(
+                  Icon(Icons.info_outline_rounded, color: AppColors.primaryBlue, size: 18),
+                  SizedBox(width: 12),
+                  Expanded(
                     child: Text(
                       'System alerts and critical updates cannot be disabled.',
                       style: TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
@@ -93,7 +93,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
         padding: const EdgeInsets.only(left: 44.0),
         child: Text(subtitle, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary, fontWeight: FontWeight.w500)),
       ),
-      activeColor: AppColors.primaryBlue,
+      activeThumbColor: AppColors.primaryBlue,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
     ).animate().fadeIn().slideY(begin: 0.1, end: 0);
   }

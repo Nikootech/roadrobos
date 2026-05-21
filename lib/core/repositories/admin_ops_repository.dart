@@ -27,47 +27,42 @@ class AdminOpsRepository {
   Stream<AdminLiveMetrics> watchMetrics() {
     // We'll use a stream on one table as a trigger to re-fetch all counts
     return _supabase.from('ride_bookings').stream(primaryKey: ['id']).asyncMap((_) async {
-      final rideCount = await _supabase
+      final rideRes = await _supabase
           .from('ride_bookings')
-          .select('count')
+          .select('id')
           .neq('status', 'completed');
       
-      final serviceCount = await _supabase
+      final serviceRes = await _supabase
           .from('service_bookings')
-          .select('count')
+          .select('id')
           .not('status', 'in', '("completed", "paid")');
           
-      final rentalCount = await _supabase
+      final rentalRes = await _supabase
           .from('rental_bookings')
-          .select('count')
+          .select('id')
           .neq('status', 'paid');
           
-      final jobsCount = await _supabase
+      final jobsRes = await _supabase
           .from('technician_jobs')
-          .select('count')
+          .select('id')
           .eq('status', 'COMPLETED');
           
-      final usersCount = await _supabase
+      final usersRes = await _supabase
           .from('profiles')
-          .select('count')
+          .select('id')
           .eq('role', 'customer');
 
       return AdminLiveMetrics(
-        activeRides: _count(rideCount),
-        pendingServices: _count(serviceCount),
-        activeRentals: _count(rentalCount),
-        totalCustomers: _count(usersCount),
-        completedJobs: _count(jobsCount),
+        activeRides: rideRes.length,
+        pendingServices: serviceRes.length,
+        activeRentals: rentalRes.length,
+        totalCustomers: usersRes.length,
+        completedJobs: jobsRes.length,
       );
     });
   }
 
-  int _count(dynamic response) {
-    if (response is List && response.isNotEmpty) {
-      return response.first['count'] ?? 0;
-    }
-    return 0;
-  }
+  // Removed _count helper as it's no longer needed
 
   /// Recent bookings (combined feed)
   Stream<List<Map<String, dynamic>>> watchRecentBookings() {
@@ -113,6 +108,108 @@ class AdminOpsRepository {
           'updated_at': DateTime.now().toIso8601String(),
         })
         .eq('id', id);
+  }
+
+  /// Approve a pending driver
+  Future<void> approveDriver(String id) async {
+    await _supabase
+        .from('drivers')
+        .update({
+          'approval_status': 'approved',
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', id);
+
+    // Synchronize KYC status in profile
+    await _supabase
+        .from('profiles')
+        .update({'kyc_status': 'verified'})
+        .eq('id', id);
+  }
+
+  /// Real-time driver operations metrics
+  Stream<Map<String, dynamic>> watchDriverMetrics() {
+    return _supabase.from('drivers').stream(primaryKey: ['id']).map((list) {
+      final total = list.length;
+      final online = list.where((d) => d['is_online'] == true).length;
+      final pending = list.where((d) => d['approval_status'] == 'pending').length;
+      
+      final topPending = list
+          .where((d) => d['approval_status'] == 'pending')
+          .take(5)
+          .map((d) => {
+                'id': d['id'].toString(),
+                'name': d['name'] ?? 'New Driver',
+                'uploadDate': d['created_at'] != null 
+                    ? d['created_at'].toString().split('T')[0] 
+                    : 'Today',
+                'docsCount': (d['kyc_documents'] as List?)?.length ?? 0,
+              })
+          .toList();
+
+      return {
+        'online': online,
+        'pending': pending,
+        'total': total,
+        'topPending': topPending,
+      };
+    });
+  }
+
+  /// Get all customers from profiles table
+  Future<List<Map<String, dynamic>>> getAllCustomers() async {
+    final response = await _supabase
+        .from('profiles')
+        .select()
+        .eq('role', 'customer')
+        .order('created_at', ascending: false);
+    return response;
+  }
+
+  /// Get all technicians from profiles table
+  Future<List<Map<String, dynamic>>> getAllTechnicians() async {
+    final response = await _supabase
+        .from('profiles')
+        .select()
+        .eq('role', 'technician')
+        .order('created_at', ascending: false);
+    return response;
+  }
+
+  /// Get all drivers with their stats
+  Future<List<Map<String, dynamic>>> getAllDrivers() async {
+    final response = await _supabase
+        .from('drivers')
+        .select()
+        .order('created_at', ascending: false);
+    return response;
+  }
+
+  /// Update driver KYC document status
+  Future<void> updateDriverKycStatus(String driverId, String docTitle, String status) async {
+    // 1. Fetch current docs
+    final res = await _supabase.from('drivers').select('kyc_documents').eq('id', driverId).single();
+    List docs = res['kyc_documents'] as List? ?? [];
+    
+    // 2. Update the specific doc
+    final updatedDocs = docs.map((d) {
+      if (d['title'] == docTitle) {
+        return {...d, 'status': status, 'updated_at': DateTime.now().toIso8601String()};
+      }
+      return d;
+    }).toList();
+
+    // 3. Save back
+    await _supabase.from('drivers').update({'kyc_documents': updatedDocs}).eq('id', driverId);
+  }
+
+  /// Approve wallet withdrawal
+  Future<void> approveWalletWithdrawal(String driverId) async {
+    // In a real app, this would trigger a payment gateway or ledger entry
+    await _supabase.from('drivers').update({
+      'wallet_request': 0,
+      'updated_at': DateTime.now().toIso8601String(),
+    }).eq('id', driverId);
   }
 }
 

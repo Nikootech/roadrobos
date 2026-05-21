@@ -1,7 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:async';
 import '../../core/repositories/rental_booking_repository.dart';
+import '../../core/repositories/rental_catalog_repository.dart';
 import '../../core/models/rental_booking.dart';
+import '../../core/models/rental_vehicle.dart';
 import '../profile/user_provider.dart';
 
 enum RentalType { hourly, daily }
@@ -62,17 +64,20 @@ class ActiveRentalNotifier extends StateNotifier<ActiveRental?> {
     if (state != null) {
       final custId = ref.read(userProvider).user?.id ?? 'demo';
       
-      await ref.read(rentalBookingRepositoryProvider).createRentalBooking(RentalBooking(
-        id: '',
-        customerId: custId,
-        vehicleName: state!.vehicle['name'] ?? 'Unknown',
-        rentalType: 'hourly',
-        startTime: state!.startTime,
-        duration: state!.duration.inHours,
-        totalCost: totalCost,
-        details: paymentId != null ? 'Razorpay ID: $paymentId' : '',
-        status: 'paid'
-      ));
+      // Safeguard: Only save to Supabase if we have a real UUID
+      if (custId != 'demo' && !custId.startsWith('demo')) {
+        await ref.read(rentalBookingRepositoryProvider).createRentalBooking(RentalBooking(
+          id: '',
+          customerId: custId,
+          vehicleName: state!.vehicle['name'] ?? 'Unknown',
+          rentalType: 'hourly',
+          startTime: state!.startTime,
+          duration: state!.duration.inHours,
+          totalCost: totalCost,
+          details: {'payment_id': paymentId ?? 'Direct', 'method': 'Razorpay'},
+          status: 'paid'
+        ));
+      }
       
       _timer?.cancel();
       _timer = null;
@@ -83,7 +88,15 @@ class ActiveRentalNotifier extends StateNotifier<ActiveRental?> {
 
   void clearRental() {
     _timer?.cancel();
+    _timer = null;
     state = null;
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _timer = null;
+    super.dispose();
   }
 }
 
@@ -128,9 +141,22 @@ final rentalPriceProvider = Provider<String>((ref) {
   if (vehicle == null) return '₹0';
   
   if (type == RentalType.hourly) {
-    return vehicle['price'] ?? '₹150';
+    return (vehicle['price'] ?? '₹150').toString();
   } else {
     final hourly = int.tryParse((vehicle['price'] as String).replaceAll(RegExp(r'[^0-9]'), '')) ?? 150;
     return '₹${hourly * 6}';
   }
+});
+
+final rentalCatalogProvider = FutureProvider<List<RentalVehicle>>((ref) async {
+  return ref.watch(rentalCatalogRepositoryProvider).getRentalFleet();
+});
+
+/// Fetch a single vehicle by its Supabase UUID.
+/// Used by the /rental-detail/:id route to load the detail screen
+/// without relying on MockData or name-slug lookups.
+final rentalVehicleByIdProvider =
+    FutureProvider.family<RentalVehicle?, String>((ref, id) async {
+  if (id.isEmpty) return null;
+  return ref.read(rentalCatalogRepositoryProvider).fetchVehicleById(id);
 });

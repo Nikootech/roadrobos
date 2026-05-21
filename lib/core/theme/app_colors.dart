@@ -57,9 +57,9 @@ class AppColors {
   // These are now legacy but redirected to maintain compatibility
   static const Color bgDark = Color(0xFFF8FAFC); 
   static const Color bgDarkAlt = Color(0xFFF1F5F9);
-  static const Color bgDarkDeep = Color(0xFFFFFFFF);
-  static const Color bgDarkSurface = Color(0xFFF0F9FF);
-  static const Color bgDarkCard = Color(0xFFFFFFFF);
+  static const Color bgDarkDeep = Color(0xFF0F1117);
+  static const Color bgDarkSurface = Color(0xFF1A1D27);
+  static const Color bgDarkCard = Color(0xFF222533);
   static const Color bgDarkNavy = Color(0xFF0EA5E9);
   static const Color bgDarkNav = Color(0xFFF8FAFC);
   static const Color bgDarkDeepest = Color(0xFFFFFFFF);
@@ -73,8 +73,8 @@ class AppColors {
   static const Color textSecondary = Color(0xFF475569);
   static const Color textTertiary = Color(0xFF64748B);
   static const Color textMuted = Color(0xFF94A3B8);
-  static const Color textOnDark = Color(0xFF111827); // Reverted to primary for visibility
-  static const Color textOnDarkMuted = Color(0xFF475569);
+  static const Color textOnDark = Color(0xFFF9FAFB); 
+  static const Color textOnDarkMuted = Color(0xFF9CA3AF);
 
   // ── Border / Divider ──
   static const Color border = Color(0xFFE2E8F0);

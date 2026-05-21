@@ -7,7 +7,7 @@ class RentalBooking {
   final int duration; // in hours or days
   final String status; // active, completed, paid
   final double totalCost;
-  final String details;
+  final Map<String, dynamic> details;
 
   RentalBooking({
     required this.id,
@@ -31,7 +31,7 @@ class RentalBooking {
       duration: map['duration'] ?? 1,
       status: map['status'] ?? 'active',
       totalCost: (map['total_cost'] ?? 0.0).toDouble(),
-      details: map['details'] ?? '',
+      details: map['details'] is Map ? Map<String, dynamic>.from(map['details']) : {},
     );
   }
 

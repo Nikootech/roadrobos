@@ -65,7 +65,7 @@ class NotificationCenterScreen extends ConsumerWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.notifications_none_rounded, size: 80, color: AppColors.textMuted.withOpacity(0.2)),
+          Icon(Icons.notifications_none_rounded, size: 80, color: AppColors.textMuted.withValues(alpha: 0.2)),
           const SizedBox(height: 16),
           const Text('No notifications yet', style: TextStyle(color: AppColors.textSecondary, fontSize: 16, fontWeight: FontWeight.w500)),
         ],
@@ -86,7 +86,7 @@ class NotificationCenterScreen extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: notification.isRead ? AppColors.bgLightGrey : AppColors.primaryBlue.withOpacity(0.1), 
+                color: notification.isRead ? AppColors.bgLightGrey : AppColors.primaryBlue.withValues(alpha: 0.1), 
                 borderRadius: BorderRadius.circular(12)
               ),
               child: Icon(notification.icon, color: AppColors.primaryBlue, size: 20),

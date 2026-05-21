@@ -1,7 +1,6 @@
-import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/repositories/admin_ops_repository.dart';
-import '../../core/repositories/technician_job_repository.dart';
+import 'package:roadrobos/core/repositories/technician_job_repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 // --- Models (kept for UI compatibility) ---
@@ -86,28 +85,24 @@ final customersOpProvider = StreamProvider<CustomerOp>((ref) {
   });
 });
 
-class DriversOpNotifier extends Notifier<AsyncValue<DriverOp>> {
-  @override
-  AsyncValue<DriverOp> build() {
-    _init();
-    return const AsyncValue.loading();
-  }
+final driversOpProvider = StreamProvider<DriverOp>((ref) {
+  final repo = ref.watch(adminOpsRepositoryProvider);
+  return repo.watchDriverMetrics().map((data) {
+    final topPending = (data['topPending'] as List).map((d) => PendingDriver(
+      d['id'],
+      d['name'],
+      d['uploadDate'],
+      d['docsCount'],
+    )).toList();
 
-  void _init() async {
-    // TODO: When driver collection is fully migrated, stream from Firestore
-    // For now, provide reasonable defaults so UI doesn't crash
-    await Future.delayed(const Duration(milliseconds: 500));
-    state = AsyncValue.data(DriverOp(0, 0, 0, []));
-  }
-
-  void approve(String id) {
-    if (state.value == null) return;
-    final current = state.value!;
-    final newPending = current.topPending.where((d) => d.id != id).toList();
-    state = AsyncValue.data(DriverOp(current.online + 1, current.pending - 1, current.total, newPending));
-  }
-}
-final driversOpProvider = NotifierProvider<DriversOpNotifier, AsyncValue<DriverOp>>(() => DriversOpNotifier());
+    return DriverOp(
+      data['online'] ?? 0,
+      data['pending'] ?? 0,
+      data['total'] ?? 0,
+      topPending,
+    );
+  });
+});
 
 final techOpProvider = StreamProvider<TechOp>((ref) {
   final repo = ref.watch(technicianJobRepositoryProvider);

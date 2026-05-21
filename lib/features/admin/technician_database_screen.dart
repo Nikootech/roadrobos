@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/repositories/admin_ops_repository.dart';
 import '../../core/theme/app_colors.dart';
 
 // --- MOCK DATA ---
@@ -29,17 +30,29 @@ class TechJob {
 }
 
 final adminTechProvider = StreamProvider<List<AdminTechnician>>((ref) async* {
-  yield [
-    AdminTechnician('T101', 'Karan Mehta', 'Aug 2023', 2, 1, 15, [
-      TechJob('MH 02 AB 1234', 'Swift Dzire (Full Wash)', 'In Progress', 0, 'Today, 14:00'),
-      TechJob('TS 09 GH 2345', 'Innova (Oil Change)', 'Scheduled', 0, 'Today, 16:30'),
-      TechJob('KA 05 EF 6789', 'Hyundai i20 (AC Repair)', 'Completed', 4500, 'Yesterday'),
-    ]),
-    AdminTechnician('T102', 'Ravi Kumar', 'Sep 2023', 1, 0, 8, [
-      TechJob('DL 1C CC 1234', 'Honda City (Brake Pads)', 'Scheduled', 0, 'Tomorrow, 10:00'),
-      TechJob('HR 26 DQ 5555', 'Scorpio (Engine Check)', 'Completed', 12400, 'Oct 20'),
-    ]),
-  ];
+  final repo = ref.read(adminOpsRepositoryProvider);
+  final techs = await repo.getAllTechnicians();
+  
+  yield techs.map((map) {
+    final id = map['id']?.toString().substring(0, 4).toUpperCase() ?? 'NEW';
+    final name = map['name'] ?? 'Expert Technician';
+    final createdAt = map['created_at'] != null 
+        ? DateTime.parse(map['created_at']) 
+        : DateTime.now();
+    
+    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    final dateStr = '${months[createdAt.month - 1]} ${createdAt.year}';
+
+    return AdminTechnician(
+      id,
+      name,
+      dateStr,
+      map['booked_jobs'] ?? 0,
+      map['ongoing_jobs'] ?? 0,
+      map['completed_jobs'] ?? 0,
+      [], // Jobs could be fetched separately
+    );
+  }).toList();
 });
 
 final techSearchProvider = StateProvider<String>((ref) => '');
@@ -110,7 +123,7 @@ class TechnicianDatabaseScreen extends ConsumerWidget {
 
   Widget _buildTechCard(BuildContext context, AdminTechnician t) {
     return Container(
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.primaryBlue.withOpacity(0.1)), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))]),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.1)), boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4))]),
       child: Theme(
         data: ThemeData(dividerColor: Colors.transparent),
         child: ExpansionTile(
@@ -119,7 +132,7 @@ class TechnicianDatabaseScreen extends ConsumerWidget {
           collapsedIconColor: AppColors.textSecondary,
           title: Row(
             children: [
-              CircleAvatar(radius: 20, backgroundColor: AppColors.primaryBlue.withOpacity(0.1), child: const Text('🔧', style: TextStyle(fontSize: 18))),
+              CircleAvatar(radius: 20, backgroundColor: AppColors.primaryBlue.withValues(alpha: 0.1), child: const Text('🔧', style: TextStyle(fontSize: 18))),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
@@ -191,7 +204,7 @@ class TechnicianDatabaseScreen extends ConsumerWidget {
                       Container(
                         margin: const EdgeInsets.only(top: 4),
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(color: job.status == 'In Progress' ? AppColors.primaryBlue.withOpacity(0.1) : AppColors.warningAmber.withOpacity(0.1), borderRadius: const BorderRadius.all(Radius.circular(6))),
+                        decoration: BoxDecoration(color: job.status == 'In Progress' ? AppColors.primaryBlue.withValues(alpha: 0.1) : AppColors.warningAmber.withValues(alpha: 0.1), borderRadius: const BorderRadius.all(Radius.circular(6))),
                         child: Text(job.status, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: job.status == 'In Progress' ? AppColors.primaryBlue : AppColors.warningAmber)),
                       )
                   ],
@@ -206,7 +219,7 @@ class TechnicianDatabaseScreen extends ConsumerWidget {
   Widget _buildBadge(String emoji, String text, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: color.withOpacity(0.05), borderRadius: BorderRadius.circular(12), border: Border.all(color: color.withOpacity(0.1))),
+      decoration: BoxDecoration(color: color.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(12), border: Border.all(color: color.withValues(alpha: 0.1))),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

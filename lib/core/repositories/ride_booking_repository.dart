@@ -21,15 +21,19 @@ class RideBookingRepository {
     }
   }
 
-  Stream<List<RideBooking>> getCustomerRides(String customerId) {
-    return _supabase
-        .from('ride_bookings')
-        .stream(primaryKey: ['id'])
-        .eq('customer_id', customerId)
-        .order('created_at')
-        .map((list) {
-      return list.map((map) => RideBooking.fromMap(map, map['id'].toString())).toList();
-    });
+  Future<List<RideBooking>> getPagedCustomerRides(String customerId, {int limit = 20, int offset = 0}) async {
+    try {
+      final response = await _supabase
+          .from('ride_bookings')
+          .select()
+          .eq('customer_id', customerId)
+          .order('created_at', ascending: false)
+          .range(offset, offset + limit - 1);
+      
+      return response.map((map) => RideBooking.fromMap(map, map['id'].toString())).toList();
+    } catch (e) {
+      throw Exception('Failed to fetch rides: $e');
+    }
   }
 
   Future<void> updateRideStatus(String bookingId, String status) async {

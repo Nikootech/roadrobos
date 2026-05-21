@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/repositories/user_vehicle_repository.dart';
 import '../profile/user_provider.dart';
-import '../../core/data/mock_data.dart';
 
 // Alias for backward compatibility across the app
 typedef Vehicle = UserVehicle;

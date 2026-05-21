@@ -47,13 +47,13 @@ class TechProfileScreen extends ConsumerWidget {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(24),
-                boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
+                boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10)],
               ),
               child: Column(
                 children: [
                    CircleAvatar(
                     radius: 50,
-                    backgroundColor: AppColors.primaryBlue.withOpacity(0.1),
+                    backgroundColor: AppColors.primaryBlue.withValues(alpha: 0.1),
                     child: (user?.profilePic != null)
                         ? ClipRRect(
                             borderRadius: BorderRadius.circular(50),
@@ -67,7 +67,7 @@ class TechProfileScreen extends ConsumerWidget {
                   const SizedBox(height: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    decoration: BoxDecoration(color: AppColors.successGreen.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                    decoration: BoxDecoration(color: AppColors.successGreen.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
                     child: const Text('ACTIVE', style: TextStyle(color: AppColors.successGreen, fontSize: 12, fontWeight: FontWeight.bold)),
                   ),
                 ],
@@ -88,8 +88,38 @@ class TechProfileScreen extends ConsumerWidget {
             // Menu
             _buildMenuItem(Icons.menu_book_rounded, 'Service Manuals', 'Browse technical guides', () {
               HapticFeedback.lightImpact();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Service Manuals coming soon!'), backgroundColor: Color(0xFF1A237E)),
+              showModalBottomSheet(
+                context: context,
+                shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+                backgroundColor: Colors.white,
+                builder: (modalContext) => Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('Service Manuals', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.primaryBlue)),
+                      const SizedBox(height: 16),
+                      ListTile(
+                        leading: const Icon(Icons.picture_as_pdf, color: Colors.red),
+                        title: const Text('Hyundai Creta 2021 Service Guide'),
+                        trailing: const Icon(Icons.download_rounded),
+                        onTap: () => Navigator.pop(modalContext),
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.picture_as_pdf, color: Colors.red),
+                        title: const Text('Honda City Electrical Diagram'),
+                        trailing: const Icon(Icons.download_rounded),
+                        onTap: () => Navigator.pop(modalContext),
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.picture_as_pdf, color: Colors.red),
+                        title: const Text('Tata Nexon Routine Maintenance'),
+                        trailing: const Icon(Icons.download_rounded),
+                        onTap: () => Navigator.pop(modalContext),
+                      ),
+                    ],
+                  ),
+                ),
               );
             }),
             _buildMenuItem(Icons.account_balance_wallet_outlined, 'Earnings', 'View your payouts & incentives', () {
@@ -110,7 +140,7 @@ class TechProfileScreen extends ConsumerWidget {
                   if (context.mounted) context.go('/auth/login');
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.dangerRed.withOpacity(0.1),
+                  backgroundColor: AppColors.dangerRed.withValues(alpha: 0.1),
                   foregroundColor: AppColors.dangerRed,
                   elevation: 0,
                   padding: const EdgeInsets.symmetric(vertical: 16),

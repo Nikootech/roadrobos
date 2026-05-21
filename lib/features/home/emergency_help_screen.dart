@@ -57,7 +57,7 @@ class _EmergencyHelpScreenState extends State<EmergencyHelpScreen> {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 40),
               decoration: BoxDecoration(
-                color: AppColors.dangerRed.withOpacity(0.05),
+                color: AppColors.dangerRed.withValues(alpha: 0.05),
                 borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(40),
                   bottomRight: Radius.circular(40),
@@ -90,7 +90,7 @@ class _EmergencyHelpScreenState extends State<EmergencyHelpScreen> {
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: AppColors.dangerRed.withOpacity(0.1 - (i * 0.03)),
+                                color: AppColors.dangerRed.withValues(alpha: 0.1 - (i * 0.03)),
                                 width: 2,
                               ),
                             ),
@@ -110,7 +110,7 @@ class _EmergencyHelpScreenState extends State<EmergencyHelpScreen> {
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.dangerRed.withOpacity(0.4),
+                                color: AppColors.dangerRed.withValues(alpha: 0.4),
                                 blurRadius: 30,
                                 offset: const Offset(0, 10),
                               ),
@@ -168,7 +168,7 @@ class _EmergencyHelpScreenState extends State<EmergencyHelpScreen> {
                     decoration: BoxDecoration(
                       color: AppColors.bgLightGrey,
                       borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: AppColors.border.withOpacity(0.5)),
+                      border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
                     ),
                     child: Row(
                       children: [
@@ -229,14 +229,14 @@ class _EmergencyHelpScreenState extends State<EmergencyHelpScreen> {
       },
       child: Container(
         decoration: BoxDecoration(
-          color: isSelected ? color.withOpacity(0.1) : Colors.white,
+          color: isSelected ? color.withValues(alpha: 0.1) : Colors.white,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: isSelected ? color : AppColors.border.withOpacity(0.5),
+            color: isSelected ? color : AppColors.border.withValues(alpha: 0.5),
             width: 2,
           ),
           boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4)),
+            BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
           ],
         ),
         child: Column(
@@ -258,7 +258,7 @@ class _EmergencyHelpScreenState extends State<EmergencyHelpScreen> {
         color: color,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(color: color.withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 8)),
+          BoxShadow(color: color.withValues(alpha: 0.3), blurRadius: 15, offset: const Offset(0, 8)),
         ],
       ),
       child: Row(

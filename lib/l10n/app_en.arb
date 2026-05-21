@@ -1,0 +1,92 @@
+{
+  "@@locale": "en",
+  "appName": "RoAdRoBos",
+  "@appName": { "description": "Application name" },
+
+  "btnBook": "Book Now",
+  "@btnBook": { "description": "Book now button label" },
+
+  "btnCancel": "Cancel",
+  "@btnCancel": { "description": "Cancel button label" },
+
+  "btnProceed": "Proceed",
+  "@btnProceed": { "description": "Proceed button label" },
+
+  "btnSave": "Save",
+  "@btnSave": { "description": "Save button label" },
+
+  "btnSignIn": "Sign In",
+  "@btnSignIn": { "description": "Sign in button label" },
+
+  "btnSignUp": "Sign Up",
+  "@btnSignUp": { "description": "Sign up button label" },
+
+  "btnLogout": "Logout",
+  "@btnLogout": { "description": "Logout button label" },
+
+  "lblPickup": "Pickup Location",
+  "@lblPickup": { "description": "Pickup location label" },
+
+  "lblDropoff": "Drop-off Location",
+  "@lblDropoff": { "description": "Drop-off location label" },
+
+  "lblEmail": "Email",
+  "@lblEmail": { "description": "Email field label" },
+
+  "lblPassword": "Password",
+  "@lblPassword": { "description": "Password field label" },
+
+  "titleWallet": "Wallet",
+  "@titleWallet": { "description": "Wallet screen title" },
+
+  "titleHome": "Home",
+  "@titleHome": { "description": "Home tab title" },
+
+  "titleBookings": "Bookings",
+  "@titleBookings": { "description": "Bookings tab title" },
+
+  "titleProfile": "My Profile",
+  "@titleProfile": { "description": "Profile screen title" },
+
+  "titleExplore": "Explore",
+  "@titleExplore": { "description": "Explore tab title" },
+
+  "titleWelcomeBack": "Welcome Back!",
+  "@titleWelcomeBack": { "description": "Login screen welcome title" },
+
+  "lblLoginSubtitle": "Sign in to continue your journey",
+  "@lblLoginSubtitle": { "description": "Login screen subtitle" },
+
+  "lblOrContinueWith": "Or continue with",
+  "@lblOrContinueWith": { "description": "Social login divider text" },
+
+  "lblDontHaveAccount": "Don't have an account? ",
+  "@lblDontHaveAccount": { "description": "Prompt to sign up" },
+
+  "lblAvailableBalance": "Available Balance",
+  "@lblAvailableBalance": { "description": "Wallet balance label" },
+
+  "titleRecentTransactions": "Recent Transactions",
+  "@titleRecentTransactions": { "description": "Wallet transactions header" },
+
+  "lblTopUp": "Top Up",
+  "@lblTopUp": { "description": "Wallet top up action" },
+
+  "lblTransfer": "Transfer",
+  "@lblTransfer": { "description": "Wallet transfer action" },
+
+  "lblWithdraw": "Withdraw",
+  "@lblWithdraw": { "description": "Wallet withdraw action" },
+
+  "titleQuickActions": "Quick Actions",
+  "@titleQuickActions": { "description": "Home screen quick actions section" },
+
+  "titleActiveOffers": "Active Offers",
+  "@titleActiveOffers": { "description": "Home screen offers section" },
+
+  "lblViewAll": "View All",
+  "@lblViewAll": { "description": "View all link text" },
+
+  "lblSearchServices": "Search services, repairs...",
+  "@lblSearchServices": { "description": "Home search bar hint text" }
+}

@@ -138,7 +138,7 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
                           borderRadius: BorderRadius.circular(32),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.primaryBlue.withOpacity(0.3),
+                              color: AppColors.primaryBlue.withValues(alpha: 0.3),
                               blurRadius: 12,
                               offset: const Offset(0, 4),
                             )
@@ -294,14 +294,14 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primaryBlue.withOpacity(0.05) : Colors.white,
+          color: isSelected ? AppColors.primaryBlue.withValues(alpha: 0.05) : Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? AppColors.primaryBlue : Colors.black.withOpacity(0.05),
+            color: isSelected ? AppColors.primaryBlue : Colors.black.withValues(alpha: 0.05),
             width: isSelected ? 2 : 1,
           ),
           boxShadow: isSelected ? [
-            BoxShadow(color: AppColors.primaryBlue.withOpacity(0.1), blurRadius: 15, offset: const Offset(0, 5))
+            BoxShadow(color: AppColors.primaryBlue.withValues(alpha: 0.1), blurRadius: 15, offset: const Offset(0, 5))
           ] : null,
         ),
         child: Row(
@@ -314,7 +314,7 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
                   width: 60,
                   height: 60,
                   decoration: BoxDecoration(
-                    color: isSelected ? AppColors.primaryBlue.withOpacity(0.1) : const Color(0xFFF3F4F6),
+                    color: isSelected ? AppColors.primaryBlue.withValues(alpha: 0.1) : const Color(0xFFF3F4F6),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Center(
@@ -362,7 +362,7 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: AppColors.primaryBlue.withOpacity(0.1),
+                            color: AppColors.primaryBlue.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(

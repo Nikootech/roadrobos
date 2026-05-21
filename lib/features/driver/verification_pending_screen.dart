@@ -87,7 +87,7 @@ class _VerificationPendingScreenState extends ConsumerState<VerificationPendingS
                     Container(
                       width: 160, height: 160,
                       decoration: BoxDecoration(
-                        color: AppColors.primaryBlue.withOpacity(0.05),
+                        color: AppColors.primaryBlue.withValues(alpha: 0.05),
                         shape: BoxShape.circle,
                       ),
                     ).animate(onPlay: (c) => c.repeat(reverse: true)).scale(duration: 2.seconds, begin: const Offset(1, 1), end: const Offset(1.1, 1.1)),
@@ -97,8 +97,8 @@ class _VerificationPendingScreenState extends ConsumerState<VerificationPendingS
                       decoration: BoxDecoration(
                         color: Colors.white,
                         shape: BoxShape.circle,
-                        boxShadow: [BoxShadow(color: AppColors.primaryBlue.withOpacity(0.1), blurRadius: 30)],
-                        border: Border.all(color: AppColors.primaryBlue.withOpacity(0.2), width: 2),
+                        boxShadow: [BoxShadow(color: AppColors.primaryBlue.withValues(alpha: 0.1), blurRadius: 30)],
+                        border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.2), width: 2),
                       ),
                       child: Icon(
                         status == VerificationStatus.rejected ? Iconsax.shield_cross : Iconsax.shield_search,
@@ -140,9 +140,9 @@ class _VerificationPendingScreenState extends ConsumerState<VerificationPendingS
               Container(
                 padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 24),
                 decoration: BoxDecoration(
-                  color: AppColors.bgLightGrey.withOpacity(0.8),
+                  color: AppColors.bgLightGrey.withValues(alpha: 0.8),
                   borderRadius: BorderRadius.circular(32),
-                  border: Border.all(color: AppColors.border.withOpacity(0.5)),
+                  border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
                 ),
                 child: Column(
                   children: [
@@ -182,14 +182,14 @@ class _VerificationPendingScreenState extends ConsumerState<VerificationPendingS
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border.withOpacity(0.5)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)],
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10)],
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+            decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
             child: Icon(icon, color: color, size: 20),
           ),
           const SizedBox(width: 16),

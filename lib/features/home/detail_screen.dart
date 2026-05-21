@@ -98,7 +98,7 @@ class _DetailScreenState extends State<DetailScreen> {
                   decoration: BoxDecoration(
                     color: AppColors.bgSkyLight,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.primaryBlue.withOpacity(0.1)),
+                    border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.1)),
                   ),
                   child: Row(
                     children: [
@@ -140,7 +140,7 @@ class _DetailScreenState extends State<DetailScreen> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
-                                color: AppColors.warningAmber.withOpacity(0.1),
+                                color: AppColors.warningAmber.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: const Text(
@@ -189,8 +189,8 @@ class _DetailScreenState extends State<DetailScreen> {
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: item.isChecked
-                                  ? AppColors.successDark.withOpacity(0.2)
-                                  : AppColors.warningAmber.withOpacity(0.2),
+                                  ? AppColors.successDark.withValues(alpha: 0.2)
+                                  : AppColors.warningAmber.withValues(alpha: 0.2),
                             ),
                           ),
                           child: Row(
@@ -202,7 +202,7 @@ class _DetailScreenState extends State<DetailScreen> {
                                   shape: BoxShape.circle,
                                   color: item.isChecked
                                       ? AppColors.successDark
-                                      : AppColors.warningAmber.withOpacity(0.2),
+                                      : AppColors.warningAmber.withValues(alpha: 0.2),
                                 ),
                                 child: Icon(
                                   item.isChecked
@@ -255,7 +255,7 @@ class _DetailScreenState extends State<DetailScreen> {
                   decoration: BoxDecoration(
                     color: AppColors.bgSkyLight,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.primaryBlue.withOpacity(0.1)),
+                    border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.1)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

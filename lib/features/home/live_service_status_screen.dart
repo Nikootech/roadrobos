@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/custom_button.dart';
 import '../../shared/widgets/app_avatar.dart';
-import '../../navigation/nav_helpers.dart';
 import '../technician/technician_provider.dart';
 
 class LiveServiceStatusScreen extends ConsumerStatefulWidget {
@@ -71,7 +71,7 @@ class _LiveServiceStatusScreenState extends ConsumerState<LiveServiceStatusScree
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
-                    color: AppColors.primaryBlue.withOpacity(0.1),
+                    color: AppColors.primaryBlue.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
@@ -136,7 +136,7 @@ class _LiveServiceStatusScreenState extends ConsumerState<LiveServiceStatusScree
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 20, offset: const Offset(0, 10)),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 20, offset: const Offset(0, 10)),
         ],
       ),
       child: Column(
@@ -148,13 +148,13 @@ class _LiveServiceStatusScreenState extends ConsumerState<LiveServiceStatusScree
                 height: 50,
                 decoration: BoxDecoration(
                   color: (job.vehicleModel.toLowerCase().contains('car') || job.vehicleModel.toLowerCase().contains('creta')) 
-                    ? AppColors.primaryBlue.withOpacity(0.1)
-                    : AppColors.accentOrange.withOpacity(0.1),
+                    ? AppColors.primaryBlue.withValues(alpha: 0.1)
+                    : AppColors.accentOrange.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
                     color: (job.vehicleModel.toLowerCase().contains('car') || job.vehicleModel.toLowerCase().contains('creta'))
-                      ? AppColors.primaryBlue.withOpacity(0.2)
-                      : AppColors.accentOrange.withOpacity(0.2),
+                      ? AppColors.primaryBlue.withValues(alpha: 0.2)
+                      : AppColors.accentOrange.withValues(alpha: 0.2),
                     width: 1,
                   ),
                 ),
@@ -231,7 +231,7 @@ class _LiveServiceStatusScreenState extends ConsumerState<LiveServiceStatusScree
               decoration: BoxDecoration(
                 color: completed ? AppColors.successGreen : (current ? AppColors.primaryBlue : AppColors.bgLightGrey),
                 shape: BoxShape.circle,
-                border: current ? Border.all(color: AppColors.primaryBlue.withOpacity(0.2), width: 4) : null,
+                border: current ? Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.2), width: 4) : null,
               ),
               child: completed 
                 ? const Icon(Icons.check, size: 14, color: Colors.white)
@@ -263,7 +263,7 @@ class _LiveServiceStatusScreenState extends ConsumerState<LiveServiceStatusScree
                 subtitle,
                 style: TextStyle(
                   fontSize: 12,
-                  color: AppColors.textSecondary.withOpacity(0.8),
+                  color: AppColors.textSecondary.withValues(alpha: 0.8),
                 ),
               ),
               const SizedBox(height: 20),
@@ -299,8 +299,16 @@ class _LiveServiceStatusScreenState extends ConsumerState<LiveServiceStatusScree
             ),
           ),
           IconButton(
-            onPressed: () => NavHelpers.showSnackAction(context, 'Calling technician...', icon: Icons.call_rounded, color: AppColors.successGreen),
-            icon: const Icon(Icons.call_rounded, color: AppColors.successGreen),
+            onPressed: () async {
+              final Uri url = Uri(scheme: 'tel', path: '+18005550199');
+              if (await canLaunchUrl(url)) {
+                await launchUrl(url);
+              } else {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not launch dialer')));
+                }
+              }
+            },            icon: const Icon(Icons.call_rounded, color: AppColors.successGreen),
           ),
         ],
       ),

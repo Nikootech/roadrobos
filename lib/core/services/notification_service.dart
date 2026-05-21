@@ -1,11 +1,13 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:iconsax/iconsax.dart';
-import '../../main.dart' show scaffoldMessengerKey;
+import 'package:go_router/go_router.dart';
+import '../../main.dart' show scaffoldMessengerKey, navigatorKey;
 import '../theme/app_colors.dart';
 
 final notificationServiceProvider = Provider<NotificationService>((ref) {
@@ -35,36 +37,100 @@ class NotificationService {
     }
 
     // 2. Local Notifications Setup (for foreground alerts)
-    const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
-    const InitializationSettings initializationSettings =
-        InitializationSettings(android: initializationSettingsAndroid);
-    await _localNotifications.initialize(initializationSettings);
+    if (!kIsWeb) {
+      const AndroidInitializationSettings initializationSettingsAndroid =
+          AndroidInitializationSettings('@mipmap/ic_launcher');
+      const InitializationSettings initializationSettings =
+          InitializationSettings(android: initializationSettingsAndroid);
+      await _localNotifications.initialize(initializationSettings);
+    }
 
     // 3. Handle Foreground Messages
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      _showLocalNotification(message);
+      if (!kIsWeb) {
+        _showLocalNotification(message);
+      } else {
+        debugPrint('Foreground Message: ${message.notification?.title}');
+      }
     });
 
     // 4. Handle Background Messages (Open App)
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      if (kDebugMode) {
-        print('Message clicked!');
-      }
-    });
+    FirebaseMessaging.onMessageOpenedApp.listen(handleNotificationNavigation);
+
+    // 5. Handle Cold Start
+    final initialMessage = await _fcm.getInitialMessage();
+    if (initialMessage != null) {
+      Future.delayed(const Duration(milliseconds: 500), () {
+        handleNotificationNavigation(initialMessage);
+      });
+    }
+  }
+
+  void handleNotificationNavigation(RemoteMessage message) {
+    final type = message.data['type'] as String?;
+    final id = message.data['id'] as String?;
+    
+    final context = navigatorKey.currentContext;
+    if (context == null || type == null) return;
+
+    switch (type) {
+      case 'ride_request':
+        context.push('/taxi/home');
+        break;
+      case 'booking_update':
+        context.push('/main/bookings');
+        break;
+      case 'payment_success':
+        context.push('/wallet');
+        break;
+      case 'kyc_approved':
+        context.push('/account-settings');
+        break;
+      case 'chat_message':
+        final roomId = id ?? 'default_room';
+        context.push('/chat/$roomId');
+        break;
+    }
   }
 
   Future<String?> getToken() async {
+    String? token;
     try {
       if (kIsWeb) {
         // Safe-guard: VAPID key is required on Web for getToken()
-        // Here we try to get it, but catch if it fails due to missing auth code/unconfigured VAPID
-        return await _fcm.getToken();
+        token = await _fcm.getToken();
+      } else {
+        token = await _fcm.getToken();
       }
-      return await _fcm.getToken();
+      debugPrint('FCM Token: $token');
+      return token;
     } catch (e) {
       debugPrint('FCM Token Error: $e');
       return null;
+    }
+  }
+
+  /// Sync the FCM token to the user's profile in Supabase
+  Future<void> syncTokenToBackend(String uid) async {
+    if (uid.isEmpty) return;
+    
+    try {
+      final token = await getToken();
+      if (token != null) {
+        // We use a low-level Supabase call or a repository here
+        // For clean architecture, we'll assume the caller passes the repository or we use a static update
+        await Supabase.instance.client
+            .from('profiles')
+            .update({'fcm_token': token})
+            .eq('id', uid);
+        debugPrint('FCM Token synced for user: $uid');
+      }
+    } catch (e, stack) {
+      if (kDebugMode) {
+        debugPrint('FCM Token Sync Failure: $e');
+      } else if (!kIsWeb) {
+        FirebaseCrashlytics.instance.recordError(e, stack, reason: 'FCM token sync failed for user: $uid');
+      }
     }
   }
 
@@ -93,7 +159,7 @@ class NotificationService {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: AppColors.dangerRed.withOpacity(0.3),
+                color: AppColors.dangerRed.withValues(alpha: 0.3),
                 blurRadius: 15,
                 offset: const Offset(0, 8),
               ),
@@ -120,7 +186,7 @@ class NotificationService {
                       Text(
                         message,
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha: 0.9),
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
                         ),
