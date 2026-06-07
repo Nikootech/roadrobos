@@ -33,7 +33,25 @@ flutter --version
 # Enable Web support
 flutter config --enable-web
 
-# 2. Build compile-time configurations (.dart_defines) from Vercel environment variables
+# 2. Validate that required Vercel environment variables are set
+echo "Validating required environment variables..."
+MISSING_VARS=0
+for VAR in SUPABASE_URL SUPABASE_ANON_KEY RAZORPAY_KEY_ID GOOGLE_CLIENT_ID MAPS_API_KEY FIREBASE_API_KEY_WEB SENTRY_DSN; do
+  if [ -z "${!VAR}" ]; then
+    echo "  ❌ ERROR: Required environment variable '$VAR' is not set in Vercel."
+    MISSING_VARS=1
+  else
+    echo "  ✅ $VAR is set."
+  fi
+done
+if [ "$MISSING_VARS" -eq 1 ]; then
+  echo ""
+  echo "Build aborted: One or more required environment variables are missing."
+  echo "Please add them in Vercel Dashboard → Project → Settings → Environment Variables."
+  exit 1
+fi
+
+# 3. Build compile-time configurations (.dart_defines) from Vercel environment variables
 echo "Generating .dart_defines file..."
 cat <<EOF > .dart_defines
 SUPABASE_URL=$SUPABASE_URL
@@ -41,15 +59,17 @@ SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
 RAZORPAY_KEY_ID=$RAZORPAY_KEY_ID
 GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID
 MAPS_API_KEY=$MAPS_API_KEY
+SENTRY_DSN=$SENTRY_DSN
+FIREBASE_API_KEY_WEB=$FIREBASE_API_KEY_WEB
 ENV=prod
 EOF
 
-# 3. Clean and get dependencies
+# 4. Clean and get dependencies
 echo "Cleaning workspace and downloading dependencies..."
 flutter clean
 flutter pub get
 
-# 4. Build Flutter web release
+# 5. Build Flutter web release
 echo "Building Flutter Web application (Release)..."
 flutter build web --release --dart-define-from-file=.dart_defines --no-tree-shake-icons
 

@@ -61,6 +61,7 @@ class AppUser {
   final UserRole role;
   final String? profilePic;
   final DateTime? createdAt;
+  final String kycStatus;
   
   // Stats & Loyalty
   final int points;
@@ -82,6 +83,7 @@ class AppUser {
     this.emergencyContacts = const [],
     this.referralCode = '',
     this.savedLocations = const [],
+    this.kycStatus = 'not_started',
   });
 
   factory AppUser.fromMap(Map<String, dynamic> map, String id) {
@@ -101,6 +103,7 @@ class AppUser {
               ?.map((x) => SavedLocation.fromMap(x as Map<String, dynamic>))
               .toList() ??
           [],
+      kycStatus: map['kyc_status'] ?? 'not_started',
     );
   }
 
@@ -154,6 +157,7 @@ class AppUser {
     List<String>? emergencyContacts,
     String? referralCode,
     List<SavedLocation>? savedLocations,
+    String? kycStatus,
   }) {
     return AppUser(
       id: id ?? this.id,
@@ -168,6 +172,7 @@ class AppUser {
       emergencyContacts: emergencyContacts ?? this.emergencyContacts,
       referralCode: referralCode ?? this.referralCode,
       savedLocations: savedLocations ?? this.savedLocations,
+      kycStatus: kycStatus ?? this.kycStatus,
     );
   }
 }

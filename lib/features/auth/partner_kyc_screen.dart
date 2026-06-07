@@ -7,6 +7,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/repositories/storage_repository.dart';
 import '../../core/repositories/kyc_repository.dart';
+import '../../core/security/jailbreak_guard.dart';
 import '../../shared/widgets/custom_button.dart';
 import '../../core/services/auth_service.dart';
 
@@ -36,6 +37,13 @@ class _PartnerKycScreenState extends ConsumerState<PartnerKycScreen> {
   }
 
   Future<void> _handleSubmit() async {
+    if (ref.read(jailbreakProvider)) {
+      if (mounted) {
+        JailbreakGuard.showDisallowedDialog(context);
+      }
+      return;
+    }
+
     if (_aadharFront == null || _aadharBack == null || _drivingLicense == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please upload all required documents')),

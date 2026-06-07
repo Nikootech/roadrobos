@@ -48,6 +48,9 @@ import '../../features/profile/account_settings_screen.dart';
 import '../../features/profile/service_history_screen.dart';
 import '../../features/profile/my_vehicles_screen.dart';
 import '../../features/profile/saved_locations_screen.dart';
+import '../../features/vehicles/vehicle_list_screen.dart';
+import '../../features/vehicles/add_vehicle_screen.dart' as new_vehicles;
+import '../../core/repositories/user_vehicle_repository.dart';
 import '../../features/profile/notification_center_screen.dart';
 import '../../features/profile/notification_settings_screen.dart';
 import '../../features/profile/language_screen.dart';
@@ -55,8 +58,12 @@ import '../../features/profile/sos_setup_screen.dart';
 import '../../features/profile/service_reminders_screen.dart';
 import '../../features/support/help_center_screen.dart';
 import '../../features/home/emergency_help_screen.dart';
-import '../../shared/widgets/chat/chat_screen.dart';
+import '../../features/chat/screens/chat_screen.dart';
 import '../../core/repositories/rental_catalog_repository.dart';
+import '../../features/delivery/create_delivery_screen.dart';
+import '../../features/delivery/delivery_tracking_screen.dart';
+import '../../features/services/service_type_selector.dart';
+import '../../features/services/book_service_screen.dart';
 import '../app_transitions.dart';
 
 // Navigator key for shell route — shared with app_router.dart
@@ -173,6 +180,30 @@ final List<RouteBase> customerRoutes = [
       state: state,
     ),
   ),
+  GoRoute(
+    path: '/services',
+    pageBuilder: (context, state) => AppTransitions.slideRight(
+      child: const ServiceTypeSelectorScreen(),
+      state: state,
+    ),
+  ),
+  GoRoute(
+    path: '/book_service/:serviceId',
+    pageBuilder: (context, state) {
+      final serviceId = state.pathParameters['serviceId'] ?? '';
+      final extra = state.extra as Map<String, dynamic>?;
+      final title = extra?['title'] ?? 'Service';
+      final basePrice = extra?['basePrice'] ?? 0.0;
+      return AppTransitions.slideUp(
+        child: BookServiceScreen(
+          serviceId: serviceId,
+          title: title,
+          basePrice: basePrice,
+        ),
+        state: state,
+      );
+    },
+  ),
 
   // ── Ride / Taxi screens ──
   GoRoute(
@@ -278,10 +309,14 @@ final List<RouteBase> customerRoutes = [
   ),
   GoRoute(
     path: '/wallet/topup',
-    pageBuilder: (context, state) => AppTransitions.slideUp(
-      child: const WalletTopupScreen(),
-      state: state,
-    ),
+    pageBuilder: (context, state) {
+      final amountStr = state.uri.queryParameters['amount'];
+      final amount = amountStr != null ? double.tryParse(amountStr) : null;
+      return AppTransitions.slideUp(
+        child: WalletTopupScreen(initialAmount: amount),
+        state: state,
+      );
+    },
   ),
   GoRoute(
     path: '/wallet/transfer',
@@ -416,6 +451,25 @@ final List<RouteBase> customerRoutes = [
     ),
   ),
 
+  // ── Delivery module ──
+  GoRoute(
+    path: '/delivery/create',
+    pageBuilder: (context, state) => AppTransitions.slideUp(
+      child: const CreateDeliveryScreen(),
+      state: state,
+    ),
+  ),
+  GoRoute(
+    path: '/delivery/tracking/:orderId',
+    pageBuilder: (context, state) {
+      final orderId = state.pathParameters['orderId'] ?? '';
+      return AppTransitions.slideUp(
+        child: DeliveryTrackingScreen(orderId: orderId),
+        state: state,
+      );
+    },
+  ),
+
   // ── Profile screens ──
   GoRoute(
     path: '/ride-history',
@@ -437,6 +491,23 @@ final List<RouteBase> customerRoutes = [
       child: const MyVehiclesScreen(),
       state: state,
     ),
+  ),
+  GoRoute(
+    path: '/vehicles',
+    pageBuilder: (context, state) => AppTransitions.slideRight(
+      child: const VehicleListScreen(),
+      state: state,
+    ),
+  ),
+  GoRoute(
+    path: '/vehicles/add',
+    pageBuilder: (context, state) {
+      final vehicle = state.extra as UserVehicle?;
+      return AppTransitions.slideUp(
+        child: new_vehicles.AddVehicleScreen(vehicle: vehicle),
+        state: state,
+      );
+    },
   ),
   GoRoute(
     path: '/saved-locations',
@@ -509,11 +580,19 @@ final List<RouteBase> customerRoutes = [
     ),
   ),
   GoRoute(
-    path: '/chat/:roomId',
+    path: '/chat',
     pageBuilder: (context, state) {
-      final roomId = state.pathParameters['roomId'] ?? 'default_room';
+      final extra = state.extra as Map<String, dynamic>? ?? {};
+      final bookingId = extra['bookingId'] as String? ?? '';
+      final receiverId = extra['receiverId'] as String? ?? '';
+      final receiverName = extra['receiverName'] as String? ?? 'User';
+      
       return AppTransitions.slideUp(
-        child: ChatScreen(roomId: roomId),
+        child: ChatScreen(
+          bookingId: bookingId,
+          receiverId: receiverId,
+          receiverName: receiverName,
+        ),
         state: state,
       );
     },

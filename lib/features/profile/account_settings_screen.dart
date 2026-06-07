@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
 import 'user_provider.dart';
 
@@ -260,6 +261,27 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
         _buildSettingsGroup('Preferences', [
           _buildSettingsTile(Icons.notifications_none_rounded, 'Notification Settings', 'Manage push and email alerts', onTap: () => context.push('/notification-settings')),
           _buildSettingsTile(Icons.language_rounded, 'Language', 'Choose your preferred language', onTap: () => context.push('/language')),
+        ]),
+        const SizedBox(height: 24),
+        _buildSettingsGroup('Legal', [
+          _buildSettingsTile(
+            Icons.privacy_tip_outlined,
+            'Privacy Policy',
+            'How we collect, use, and protect your data',
+            onTap: () => launchUrl(
+              Uri.parse('https://roadrobos.com/privacy'),
+              mode: LaunchMode.externalApplication,
+            ),
+          ),
+          _buildSettingsTile(
+            Icons.description_outlined,
+            'Terms of Service',
+            'Read our terms and conditions',
+            onTap: () => launchUrl(
+              Uri.parse('https://roadrobos.com/terms'),
+              mode: LaunchMode.externalApplication,
+            ),
+          ),
         ]),
         const SizedBox(height: 48),
         SizedBox(

@@ -10,6 +10,8 @@ import '../../features/driver/driver_verification_success_screen.dart';
 import '../../features/driver/driver_ride_request_screen.dart';
 import '../../features/driver/driver_bank_withdrawal_screen.dart';
 import '../../features/driver/driver_profile_screen.dart';
+import '../../features/auth/kyc/kyc_upload_screen.dart';
+import '../../features/auth/kyc/kyc_status_screen.dart';
 import '../app_transitions.dart';
 
 /// Driver portal routes.
@@ -89,6 +91,23 @@ final List<RouteBase> driverRoutes = [
     path: '/driver-profile',
     pageBuilder: (context, state) => AppTransitions.slideRight(
       child: const DriverProfileScreen(),
+      state: state,
+    ),
+  ),
+  GoRoute(
+    path: '/driver/kyc-upload',
+    pageBuilder: (context, state) {
+      final extra = state.extra as String?;
+      return AppTransitions.slideUp(
+        child: KycUploadScreen(initialStep: extra),
+        state: state,
+      );
+    },
+  ),
+  GoRoute(
+    path: '/driver/kyc-status',
+    pageBuilder: (context, state) => AppTransitions.fade(
+      child: const KycStatusScreen(),
       state: state,
     ),
   ),

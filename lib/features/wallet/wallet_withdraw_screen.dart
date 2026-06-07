@@ -5,7 +5,10 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/repositories/wallet_repository.dart';
+import '../../core/security/jailbreak_guard.dart';
 import '../profile/user_provider.dart';
+import 'wallet_providers.dart';
+import 'widgets/insufficient_balance_sheet.dart';
 
 class WalletWithdrawScreen extends ConsumerStatefulWidget {
   const WalletWithdrawScreen({super.key});
@@ -27,6 +30,13 @@ class _WalletWithdrawScreenState extends ConsumerState<WalletWithdrawScreen> {
   }
 
   Future<void> _withdraw() async {
+    if (ref.read(jailbreakProvider)) {
+      if (mounted) {
+        JailbreakGuard.showDisallowedDialog(context);
+      }
+      return;
+    }
+
     final bankDetails = _bankDetailsController.text.trim();
     final amountStr = _amountController.text.trim();
     final amount = double.tryParse(amountStr);
@@ -56,6 +66,14 @@ class _WalletWithdrawScreenState extends ConsumerState<WalletWithdrawScreen> {
           const SnackBar(content: Text('Insufficient funds'), backgroundColor: AppColors.dangerRed),
         );
       }
+    } on InsufficientBalanceException catch (_) {
+      if (!mounted) return;
+      final currentBalance = ref.read(walletProvider).value?.balance ?? 0.0;
+      InsufficientBalanceSheet.show(
+        context,
+        currentBalance: currentBalance,
+        requiredAmount: amount,
+      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

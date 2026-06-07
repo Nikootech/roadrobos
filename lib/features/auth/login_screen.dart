@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,6 +15,7 @@ import '../../core/services/auth_service.dart';
 import '../../core/services/biometric_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -77,12 +79,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         _passwordController.text.trim(),
       );
       
+      unawaited(Sentry.addBreadcrumb(
+        Breadcrumb(
+          message: 'Login succeeded',
+          category: 'auth',
+          data: const {'method': 'email'},
+        ),
+      ));
+
       await _promptBiometricSetup();
       
       // userProvider listens to auth changes and will fetch the profile automatically
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
+      unawaited(Sentry.addBreadcrumb(
+        Breadcrumb(
+          message: 'Login failed',
+          category: 'auth',
+          level: SentryLevel.warning,
+          data: {'method': 'email', 'error': e.toString()},
+        ),
+      ));
       NavHelpers.showError(context, 'Login Failed: $e');
     }
   }
@@ -184,15 +202,38 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (email != null && password != null) {
         try {
           await ref.read(authServiceProvider).signInWithEmail(email, password);
+          unawaited(Sentry.addBreadcrumb(
+            Breadcrumb(
+              message: 'Login succeeded',
+              category: 'auth',
+              data: const {'method': 'biometric'},
+            ),
+          ));
         } catch (e) {
           if (mounted) {
             setState(() => _isLoading = false);
+            unawaited(Sentry.addBreadcrumb(
+              Breadcrumb(
+                message: 'Login failed',
+                category: 'auth',
+                level: SentryLevel.warning,
+                data: {'method': 'biometric', 'error': e.toString()},
+              ),
+            ));
             NavHelpers.showError(context, 'Biometric Login Failed: $e');
           }
         }
       } else {
         if (mounted) {
           setState(() => _isLoading = false);
+          unawaited(Sentry.addBreadcrumb(
+            Breadcrumb(
+              message: 'Login failed',
+              category: 'auth',
+              level: SentryLevel.warning,
+              data: const {'method': 'biometric', 'error': 'No credentials found'},
+            ),
+          ));
           NavHelpers.showError(context, 'No credentials found for Biometric Login');
         }
       }
@@ -203,12 +244,36 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() => _isLoading = true);
     try {
       final success = await ref.read(authServiceProvider).signInWithGoogle();
-      if (!success) {
+      if (success) {
+        unawaited(Sentry.addBreadcrumb(
+          Breadcrumb(
+            message: 'Login succeeded',
+            category: 'auth',
+            data: const {'method': 'google'},
+          ),
+        ));
+      } else {
         setState(() => _isLoading = false);
+        unawaited(Sentry.addBreadcrumb(
+          Breadcrumb(
+            message: 'Login failed',
+            category: 'auth',
+            level: SentryLevel.warning,
+            data: const {'method': 'google', 'error': 'Cancelled or failed'},
+          ),
+        ));
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
+        unawaited(Sentry.addBreadcrumb(
+          Breadcrumb(
+            message: 'Login failed',
+            category: 'auth',
+            level: SentryLevel.warning,
+            data: {'method': 'google', 'error': e.toString()},
+          ),
+        ));
         NavHelpers.showError(context, 'Google Sign-In failed: $e');
       }
     }

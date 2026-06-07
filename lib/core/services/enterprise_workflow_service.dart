@@ -1,6 +1,8 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
+import '../extensions/datetime_extensions.dart';
+
 
 /// A consolidated service for Enterprise workflows:
 /// 1. Password Reset
@@ -84,7 +86,7 @@ class EnterpriseWorkflowService {
         'payload': {
           'document_url': documentUrl,
           ...?additionalData,
-          'submitted_at': DateTime.now().toIso8601String(),
+          'submitted_at': DateTime.now().utcIso,
         },
       });
     } catch (e) {

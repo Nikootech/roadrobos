@@ -1,3 +1,6 @@
+// IMPORTANT: All StreamSubscription fields must be cancelled in dispose/onDispose.
+
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/repositories/notification_repository.dart';
@@ -37,16 +40,24 @@ class AppNotification {
 
 class NotificationNotifier extends StateNotifier<List<AppNotification>> {
   final Ref ref;
+  StreamSubscription? _subscription;
   
   NotificationNotifier(this.ref) : super([]) {
     _listenToNotifications();
+  }
+
+  @override
+  void dispose() {
+    _subscription?.cancel();
+    super.dispose();
   }
 
   void _listenToNotifications() {
     final user = ref.watch(userProvider).user;
     if (user == null) return;
 
-    ref.read(notificationRepositoryProvider).watchNotifications(user.id).listen((models) {
+    _subscription?.cancel();
+    _subscription = ref.read(notificationRepositoryProvider).watchNotifications(user.id).listen((models) {
       state = models.map((m) => AppNotification(
         id: m.id,
         title: m.title,
@@ -63,6 +74,7 @@ class NotificationNotifier extends StateNotifier<List<AppNotification>> {
       }
     });
   }
+
 
   void _addWelcomeNotification() {
     state = [

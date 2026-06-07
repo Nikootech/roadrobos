@@ -1,3 +1,5 @@
+// IMPORTANT: All StreamSubscription fields must be cancelled in dispose/onDispose.
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:async';
 import '../../../core/repositories/driver_repository.dart';
@@ -134,24 +136,32 @@ class MapState {
 
 class MapStateNotifier extends StateNotifier<MapState> {
   final Ref ref;
+  StreamSubscription? _driverSubscription;
+
   MapStateNotifier(this.ref) : super(MapState(lat: 12.9716, lng: 77.5946, isOnline: false)) {
     _init();
   }
 
   void _init() {
     final user = ref.read(userProvider);
-    ref.listen(driverRepositoryProvider.select((repo) => repo.watchDriver(user.user?.id ?? 'demo')), (prev, next) {
-      next.listen((driver) {
-        if (driver != null && mounted) {
-          state = state.copyWith(
-            isOnline: driver.isOnline,
-            lat: driver.currentPosition?.latitude,
-            lng: driver.currentPosition?.longitude,
-          );
-        }
-      });
+    final driverId = user.user?.id ?? 'demo';
+    _driverSubscription?.cancel();
+    _driverSubscription = ref.read(driverRepositoryProvider).watchDriver(driverId).listen((driver) {
+      if (driver != null && mounted) {
+        state = state.copyWith(
+          isOnline: driver.isOnline,
+          lat: driver.currentPosition?.latitude,
+          lng: driver.currentPosition?.longitude,
+        );
+      }
     });
-    }
+  }
+
+  @override
+  void dispose() {
+    _driverSubscription?.cancel();
+    super.dispose();
+  }
 
   Future<void> toggleOnline() async {
     final user = ref.read(userProvider);
@@ -172,6 +182,7 @@ class MapStateNotifier extends StateNotifier<MapState> {
 }
 
 final mapStateProvider = StateNotifierProvider<MapStateNotifier, MapState>((ref) {
+  ref.watch(userProvider);
   return MapStateNotifier(ref);
 });
 

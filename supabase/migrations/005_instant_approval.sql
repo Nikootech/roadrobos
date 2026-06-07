@@ -1,12 +1,23 @@
 -- ROADROBOS INSTANT APPROVAL ENGINE
 -- This script ensures that once an admin approves a request, the changes go live instantly.
 
+-- Create table to log trigger errors so they don't block main transactions
+CREATE TABLE IF NOT EXISTS public.trigger_errors (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  trigger_name TEXT NOT NULL,
+  entity_id UUID,
+  error_message TEXT NOT NULL,
+  error_detail TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- 1. Function to handle approval outcomes
 CREATE OR REPLACE FUNCTION public.handle_approval_outcome()
 RETURNS trigger AS $$
 DECLARE
   v_entity_id UUID;
   v_payload JSONB;
+  v_customer_id UUID;
 BEGIN
   -- Only trigger on status change to 'approved'
   IF (NEW.status = 'approved' AND OLD.status = 'pending') THEN
@@ -16,37 +27,63 @@ BEGIN
     CASE NEW.type
       -- A. Driver / Technician KYC Approval
       WHEN 'partner_kyc' THEN
-        UPDATE public.profiles 
-        SET is_verified = true,
-            status = 'active',
-            metadata = metadata || v_payload
-        WHERE id = v_entity_id;
+        BEGIN
+          UPDATE public.profiles 
+          SET kyc_status = 'verified',
+              updated_at = NOW()
+          WHERE id = v_entity_id;
+        EXCEPTION WHEN OTHERS THEN
+          INSERT INTO public.trigger_errors (trigger_name, entity_id, error_message, error_detail)
+          VALUES ('partner_kyc_approval', v_entity_id, SQLERRM, SQLSTATE);
+        END;
 
       -- B. Pricing Update Approval
       WHEN 'pricing' THEN
-        UPDATE public.service_items
-        SET price = (v_payload->>'new_price')::NUMERIC,
-            updated_at = NOW()
-        WHERE id = v_entity_id;
+        BEGIN
+          UPDATE public.service_items
+          SET base_price = (v_payload->>'new_price')::NUMERIC
+          WHERE id = v_entity_id;
+        EXCEPTION WHEN OTHERS THEN
+          INSERT INTO public.trigger_errors (trigger_name, entity_id, error_message, error_detail)
+          VALUES ('pricing_approval', v_entity_id, SQLERRM, SQLSTATE);
+        END;
 
       -- C. Refund Approval
       WHEN 'refund' THEN
-        -- Logic to insert into transactions or trigger a payment gateway hook
-        INSERT INTO public.transactions (user_id, amount, type, status, description)
-        VALUES (
-          (SELECT user_id FROM public.bookings WHERE id = v_entity_id),
-          (v_payload->>'amount')::NUMERIC,
-          'REFUND',
-          'COMPLETED',
-          'Refund approved for booking: ' || v_entity_id
-        );
+        BEGIN
+          -- Find the customer_id from service_bookings or ride_bookings
+          SELECT customer_id INTO v_customer_id FROM public.service_bookings WHERE id = v_entity_id;
+          IF v_customer_id IS NULL THEN
+            SELECT customer_id INTO v_customer_id FROM public.ride_bookings WHERE id = v_entity_id;
+          END IF;
+
+          IF v_customer_id IS NOT NULL THEN
+            INSERT INTO public.transactions (wallet_id, amount, type, status, description)
+            VALUES (
+              v_customer_id,
+              (v_payload->>'amount')::NUMERIC,
+              'credit',
+              'completed',
+              'Refund approved for booking: ' || v_entity_id
+            );
+          ELSE
+            RAISE EXCEPTION 'Customer not found for booking ID %', v_entity_id;
+          END IF;
+        EXCEPTION WHEN OTHERS THEN
+          INSERT INTO public.trigger_errors (trigger_name, entity_id, error_message, error_detail)
+          VALUES ('refund_approval', v_entity_id, SQLERRM, SQLSTATE);
+        END;
 
       -- D. Vehicle Attachment Approval
       WHEN 'vehicle_attachment' THEN
-        UPDATE public.vehicles
-        SET status = 'verified',
-            verified_at = NOW()
-        WHERE id = v_entity_id;
+        BEGIN
+          UPDATE public.rental_vehicles
+          SET is_available = true
+          WHERE id = v_entity_id;
+        EXCEPTION WHEN OTHERS THEN
+          INSERT INTO public.trigger_errors (trigger_name, entity_id, error_message, error_detail)
+          VALUES ('vehicle_attachment_approval', v_entity_id, SQLERRM, SQLSTATE);
+        END;
 
       ELSE
         -- Fallback or log unknown type
@@ -54,12 +91,11 @@ BEGIN
     END CASE;
 
     -- Update the checker_id if not already set (safety check)
-    NEW.checker_id := auth.uid();
+    NEW.checker_id := COALESCE(NEW.checker_id, auth.uid());
     NEW.updated_at := NOW();
 
   ELSIF (NEW.status = 'rejected' AND OLD.status = 'pending') THEN
     -- Optional: Notify the user about rejection
-    -- This could be handled by a separate trigger or edge function listening to this table
     NULL;
   END IF;
 

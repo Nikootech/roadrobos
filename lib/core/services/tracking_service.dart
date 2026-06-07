@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../extensions/datetime_extensions.dart';
+
 
 final trackingServiceProvider = Provider<TrackingService>((ref) {
   return TrackingService();
@@ -43,7 +45,7 @@ class TrackingService {
           'driver_id': _trackingDriverId,
           'lat': _latestPosition!.latitude,
           'lng': _latestPosition!.longitude,
-          'updated_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now().utcIso,
           'status': 'active',
         }).catchError((e) => null);
       }
@@ -62,7 +64,7 @@ class TrackingService {
       await _supabase.from('driver_locations').upsert({
         'driver_id': _trackingDriverId,
         'status': 'offline',
-        'updated_at': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().utcIso,
       }).catchError((e) => null);
       _trackingDriverId = null;
     }

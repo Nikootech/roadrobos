@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import '../models/ride_booking.dart';
 
 final rideBookingRepositoryProvider = Provider((ref) => RideBookingRepository());
@@ -15,7 +17,19 @@ class RideBookingRepository {
           .select()
           .single();
       
-      return response['id'].toString();
+      final bookingId = response['id'].toString();
+      unawaited(Sentry.addBreadcrumb(
+        Breadcrumb(
+          message: 'Booking created',
+          category: 'booking',
+          data: {
+            'booking_id': bookingId,
+            'customer_id': booking.customerId,
+            'status': booking.status,
+          },
+        ),
+      ));
+      return bookingId;
     } catch (e) {
       throw Exception('Failed to create ride booking: $e');
     }

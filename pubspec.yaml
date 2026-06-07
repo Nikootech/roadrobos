@@ -86,15 +86,17 @@ dependencies:
   sqlite3_flutter_libs: ^0.5.25
   path: ^1.9.0
   connectivity_plus: ^6.0.3
+  mutex: ^3.1.0
 
   # ── Security & Encryption ────────────────────────────────────────────────────
   pointycastle: ^3.9.1            # AES-256-GCM for SQLite column encryption (E1)
   cryptography: ^2.7.0            # X25519 + AES-256-GCM for chat E2E (E5)
-  # flutter_jailbreak_detection: ^1.9.0  # Uncomment to enable root detection (S3)
+  flutter_jailbreak_detection: ^1.9.0  # Uncomment to enable root detection (S3)
 
   # ── Misc ─────────────────────────────────────────────────────────────────────
   flutter_image_compress: ^2.4.0
   screen_protector: ^1.5.2
+  sentry_flutter: ^8.0.0
 
 dev_dependencies:
   flutter_test:
@@ -103,6 +105,7 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^3.0.0
   flutter_launcher_icons: ^0.14.3
+  flutter_native_splash: ^2.4.0
   mocktail: ^1.0.4
   # Drift code generation (pinned)
   drift_dev: ^2.20.0
@@ -111,8 +114,10 @@ dev_dependencies:
 
 flutter_launcher_icons:
   android: "launcher_icon"
-  ios: false
+  ios: true
   image_path: "assets/app_icon.png"
+  min_ios_version: "12.0"
+  remove_alpha_ios: true  # Apple App Store rejects icons with alpha channel
   adaptive_icon_background: "#FFFFFF"
   adaptive_icon_foreground: "assets/app_icon.png"
   web:
@@ -120,6 +125,12 @@ flutter_launcher_icons:
     image_path: "assets/app_icon.png"
     background_color: "#FFFFFF"
     theme_color: "#2E7D32"
+
+flutter_native_splash:
+  color: "#FFFFFF"
+  image: "assets/app_icon.png"
+  android: true
+  ios: true
 
 flutter:
   generate: true

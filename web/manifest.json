@@ -1,11 +1,11 @@
 {
-    "name": "roadrobos",
-    "short_name": "roadrobos",
+    "name": "RoadRobos",
+    "short_name": "RoadRobos",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#FFFFFF",
     "theme_color": "#2E7D32",
-    "description": "A new Flutter project.",
+    "description": "Book vehicle services, track technicians, and manage deliveries with ease.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

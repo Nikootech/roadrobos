@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../core/theme/app_colors.dart';
+import '../../providers/connectivity_provider.dart';
 
 /// Bookings Screen - Shows ride/service booking history
 /// Matches Figma Screen [21]: "My Rides History"
-class BookingsScreen extends StatelessWidget {
+class BookingsScreen extends ConsumerWidget {
   const BookingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final bookings = [
       _BookingItem('General Service', 'Hyundai Creta', 'Completed', '28 Feb 2026', '₹2,499', AppColors.successDark, Icons.build_rounded),
       _BookingItem('Monthly Rental', 'Mahindra Thar', 'Active', '01 Mar - 31 Mar', '₹45,000', AppColors.primaryBlue, Icons.car_rental_rounded),
@@ -38,11 +40,30 @@ class BookingsScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: bookings.length,
-        itemBuilder: (context, index) {
-          final booking = bookings[index];
+      body: Column(
+        children: [
+          if (ref.watch(connectivityProvider).value == true)
+            Container(
+              width: double.infinity,
+              color: Colors.orange.shade100,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: const Row(
+                children: [
+                  Icon(Icons.offline_bolt, size: 16, color: Colors.orange),
+                  SizedBox(width: 8),
+                  Text(
+                    'Viewing offline data - Last updated 5 minutes ago',
+                    style: TextStyle(color: Colors.deepOrange, fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: bookings.length,
+              itemBuilder: (context, index) {
+                final booking = bookings[index];
           return Container(
             margin: const EdgeInsets.only(bottom: 12),
             padding: const EdgeInsets.all(16),
@@ -131,10 +152,13 @@ class BookingsScreen extends StatelessWidget {
               .animate(delay: Duration(milliseconds: 100 * index))
               .fadeIn(duration: 400.ms)
               .slideX(begin: 0.05, end: 0);
-        },
-      ),
-    );
-  }
+            },
+          ),
+        ),
+      ],
+    ),
+  );
+}
 
   void _showBookingFilterSheet(BuildContext context) {
     showModalBottomSheet(

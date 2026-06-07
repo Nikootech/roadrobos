@@ -46,4 +46,41 @@ class ServiceBookingRepository {
       throw Exception('Failed to update service status: $e');
     }
   }
+
+  Future<void> cancelBooking(String bookingId) async {
+    try {
+      await _supabase
+          .from('service_bookings')
+          .update({'status': 'cancelled'})
+          .eq('id', bookingId);
+    } catch (e) {
+      throw Exception('Failed to cancel booking: $e');
+    }
+  }
+
+  Stream<ServiceBooking> streamBookingStatus(String bookingId) {
+    return _supabase
+        .from('service_bookings')
+        .stream(primaryKey: ['id'])
+        .eq('id', bookingId)
+        .map((events) {
+          if (events.isEmpty) throw Exception('Booking not found');
+          final event = events.first;
+          return ServiceBooking.fromMap(event, event['id'].toString());
+        });
+  }
+
+  Future<List<ServiceBooking>> getBookingsForDate(String date) async {
+    try {
+      final response = await _supabase
+          .from('service_bookings')
+          .select()
+          .eq('booking_date', date)
+          .not('status', 'eq', 'cancelled');
+      
+      return response.map((map) => ServiceBooking.fromMap(map, map['id'].toString())).toList();
+    } catch (e) {
+      throw Exception('Failed to fetch bookings for date: $e');
+    }
+  }
 }

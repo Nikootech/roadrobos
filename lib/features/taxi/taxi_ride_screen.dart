@@ -12,6 +12,7 @@ import '../../shared/widgets/glass_card.dart';
 import '../../shared/widgets/shimmer_loading.dart';
 import '../../shared/widgets/rental_completion_dialog.dart';
 import '../../providers/taxi_provider.dart';
+import '../../providers/connectivity_provider.dart';
 import '../../core/repositories/transaction_repository.dart';
 import '../../core/models/transaction_model.dart';
 import '../../core/theme/app_colors.dart';
@@ -55,6 +56,7 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
     final taxiNotifier = ref.read(taxiProvider.notifier);
     final pickupController = ref.watch(pickupControllerProvider);
     final dropoffController = ref.watch(dropoffControllerProvider);
+    final isOffline = ref.watch(connectivityProvider).value ?? false;
 
     // Sync controllers with state
     // Sync controllers with state ONLY if they are not currently focused to avoid jitter
@@ -113,10 +115,23 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
                       }
                     }),
                   const SizedBox(width: 12),
-                  if (taxiState.status == RideStatus.tracking || 
+                  if ((taxiState.status == RideStatus.tracking || 
                       taxiState.status == RideStatus.atPickup ||
-                      taxiState.status == RideStatus.headingToDropoff)
+                      taxiState.status == RideStatus.headingToDropoff) && !isOffline)
                     _buildETAIndicator(taxiState.eta ?? 'Calculating...'),
+                  if (isOffline)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(color: Colors.red.shade700, borderRadius: BorderRadius.circular(20)),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.cloud_off, color: Colors.white, size: 14),
+                          SizedBox(width: 8),
+                          Text('Live updates paused', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                        ],
+                      ),
+                    ),
                 ],
               ),
             ),

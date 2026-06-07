@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/custom_button.dart';
+import '../../core/security/jailbreak_guard.dart';
 
 /// Driver Bank Withdrawal Screen — Premium Overhaul
 class DriverBankWithdrawalScreen extends StatefulWidget {
@@ -145,6 +146,12 @@ class _DriverBankWithdrawalScreenState extends State<DriverBankWithdrawalScreen>
                 child: CustomButton(
                   label: 'CONFIRM WITHDRAWAL',
                   onPressed: () async {
+                    if (JailbreakGuard.isCompromised) {
+                      if (context.mounted) {
+                        JailbreakGuard.showDisallowedDialog(context);
+                      }
+                      return;
+                    }
                     // ignore: unawaited_futures
                     HapticFeedback.mediumImpact();
                     setState(() => _isProcessing = true);

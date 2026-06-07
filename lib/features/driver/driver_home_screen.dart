@@ -11,6 +11,8 @@ import '../../shared/widgets/bottom_nav_bar.dart';
 import '../../shared/widgets/responsive_utils.dart';
 import 'providers/driver_state_provider.dart';
 import 'widgets/ride_request_overlay.dart';
+import '../../features/delivery/driver_delivery_panel.dart';
+import '../chat/providers/chat_providers.dart';
 
 class DriverHomeScreen extends ConsumerStatefulWidget {
   const DriverHomeScreen({super.key});
@@ -70,6 +72,40 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                         ),
                       ),
                       const Spacer(),
+                      Consumer(
+                        builder: (context, ref, child) {
+                          final unreadCountAsync = ref.watch(unreadMessagesCountProvider);
+                          final count = unreadCountAsync.value ?? 0;
+                          return Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: const BoxDecoration(color: AppColors.bgLightGrey, shape: BoxShape.circle),
+                            child: InkWell(
+                              onTap: () {
+                                HapticFeedback.lightImpact();
+                              },
+                              child: Stack(
+                                children: [
+                                  const Icon(Icons.chat_bubble_outline_rounded, color: AppColors.deepNavy, size: 24),
+                                  if (count > 0)
+                                    Positioned(
+                                      top: 0,
+                                      right: 0,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(2),
+                                        decoration: const BoxDecoration(color: AppColors.dangerRed, shape: BoxShape.circle, border: Border(bottom: BorderSide(color: Colors.white, width: 2))),
+                                        child: Text(
+                                          count > 9 ? '9+' : count.toString(),
+                                          style: const TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(width: 8),
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: const BoxDecoration(color: AppColors.bgLightGrey, shape: BoxShape.circle),
@@ -343,6 +379,14 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
               loading: () => const SizedBox.shrink(),
               error: (e, _) => const SizedBox.shrink(),
             ),
+            // ── Delivery request / active delivery panel ──
+            if (isOnline)
+              const Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: DriverDeliveryPanel(),
+              ),
           ],
         ),
       ),

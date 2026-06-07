@@ -1,3 +1,5 @@
+// IMPORTANT: All StreamSubscription fields must be cancelled in dispose/onDispose.
+
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -59,6 +61,7 @@ class TaxiState {
   final String? dropoffAddress;
   final String? roadroboName;
   final String? driverId;
+  final String? rideId;
   final String? eta;
   final double distance;
   final String? otp;
@@ -85,6 +88,7 @@ class TaxiState {
     this.rideOptions = const [],
     this.selectedOption,
     this.mockLocations = const [],
+    this.rideId,
   });
 
   TaxiState copyWith({
@@ -104,6 +108,7 @@ class TaxiState {
     List<RideOption>? rideOptions,
     RideOption? selectedOption,
     List<Map<String, dynamic>>? mockLocations,
+    String? rideId,
   }) {
     return TaxiState(
       status: status ?? this.status,
@@ -122,6 +127,7 @@ class TaxiState {
       rideOptions: rideOptions ?? this.rideOptions,
       selectedOption: selectedOption ?? this.selectedOption,
       mockLocations: mockLocations ?? this.mockLocations,
+      rideId: rideId ?? this.rideId,
     );
   }
 }
@@ -275,6 +281,7 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
       );
 
       final bookingId = await ref.read(rideBookingRepositoryProvider).createRideBooking(booking);
+      state = state.copyWith(rideId: bookingId);
       
       // ignore: unawaited_futures
       _rideSubscription?.cancel();
@@ -335,6 +342,13 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
   void reset() {
     state = TaxiState();
     initializeLocation();
+  }
+
+  @override
+  void dispose() {
+    _rideSubscription?.cancel();
+    _driverLocationSubscription?.cancel();
+    super.dispose();
   }
 
   void _generateRideOptions([double? distance]) {

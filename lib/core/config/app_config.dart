@@ -12,6 +12,7 @@ class AppConfig {
   // ── Supabase (client-side safe values) ──────────────────────────────────
   static const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
   static const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+  static const sentryDsn = String.fromEnvironment('SENTRY_DSN');
   // supabaseServiceKey has been REMOVED — the service role key bypasses
   // all Row Level Security. It MUST only exist in Supabase Edge Functions
   // as a server-side env variable, never in the Flutter app APK.

@@ -1,3 +1,5 @@
+// IMPORTANT: All StreamSubscription fields must be cancelled in dispose/onDispose.
+
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/repositories/admin_ops_repository.dart';
@@ -84,6 +86,7 @@ class ServiceOpsNotifier extends Notifier<AsyncValue<List<ServiceOp>>> {
 
   void _init() {
     final repo = ref.read(adminOpsRepositoryProvider);
+    _subscription?.cancel();
     _subscription = repo.watchActiveServices().listen((services) {
       state = AsyncValue.data(services.map((s) => ServiceOp(
         id: s['id'] ?? '',

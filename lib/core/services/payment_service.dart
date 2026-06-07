@@ -3,7 +3,10 @@ import 'package:flutter/foundation.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import '../../core/config/app_config.dart';
+import '../security/jailbreak_guard.dart';
+import '../../navigation/app_router.dart';
 
 part 'payment_service.g.dart';
 
@@ -29,20 +32,42 @@ class PaymentDetails {
   });
 }
 
+final razorpayProvider = Provider<Razorpay>((ref) {
+  return Razorpay();
+});
+
 @riverpod
 class PaymentService extends _$PaymentService {
   late Razorpay _razorpay;
   PaymentDetails? _currentPayment;
   Completer<void>? _paymentCompleter;
 
+  SupabaseClient? _mockSupabase;
+  Razorpay? _mockRazorpay;
+
+  @visibleForTesting
+  set mockSupabaseClient(SupabaseClient client) => _mockSupabase = client;
+
+  @visibleForTesting
+  set mockRazorpayInstance(Razorpay razorpay) {
+    _mockRazorpay = razorpay;
+    _razorpay = razorpay;
+    _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
+    _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
+    _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
+  }
+
+  SupabaseClient get _supabase => _mockSupabase ?? Supabase.instance.client;
+
   @override
   FutureOr<void> build() {
-    _razorpay = Razorpay();
+    _razorpay = _mockRazorpay ?? ref.watch(razorpayProvider);
     _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
     _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
     _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
 
     ref.onDispose(() {
+      // Clear event listeners on dispose to prevent memory leaks
       _razorpay.clear();
     });
   }
@@ -64,7 +89,7 @@ class PaymentService extends _$PaymentService {
         final orderId = response?.orderId ?? 'sim_order_${DateTime.now().millisecondsSinceEpoch}';
 
         // All sensitive fields go directly to the server via TLS — not logged
-        final isValid = await Supabase.instance.client.rpc('verify_payment', params: {
+        final isValid = await _supabase.rpc('verify_payment', params: {
           'p_order_id': orderId,
           'p_payment_id': paymentId,
           'p_signature': signature,
@@ -113,13 +138,33 @@ class PaymentService extends _$PaymentService {
   }
 
   Future<void> startPayment(PaymentDetails details) async {
+    if (ref.read(jailbreakProvider)) {
+      final context = rootNavigatorKey.currentContext;
+      if (context != null && context.mounted) {
+        JailbreakGuard.showDisallowedDialog(context);
+      }
+      throw const SecurityException('Operation blocked: device integrity compromised.');
+    }
+
     _currentPayment = details;
     _paymentCompleter = Completer<void>();
+
+    unawaited(Sentry.addBreadcrumb(
+      Breadcrumb(
+        message: 'Payment attempted',
+        category: 'payment',
+        data: {
+          'booking_id': details.bookingId,
+          'booking_type': details.bookingType.name,
+          'total_cost': details.totalCost,
+        },
+      ),
+    ));
 
     final amountInPaise = (details.totalCost * 100).toInt();
     const apiKey = AppConfig.razorpayKey;
 
-    if (apiKey.isEmpty || apiKey == 'rzp_test_placeholderKey') {
+    if (_mockRazorpay == null && (apiKey.isEmpty || apiKey == 'rzp_test_placeholderKey')) {
       debugPrint('Simulation Mode: Triggering immediate payment success.');
       // ignore: unawaited_futures
       Future.microtask(() => _handlePaymentSuccess(null));

@@ -1,3 +1,5 @@
+// IMPORTANT: All StreamSubscription fields must be cancelled in dispose/onDispose.
+
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roadrobos/core/repositories/technician_job_repository.dart';

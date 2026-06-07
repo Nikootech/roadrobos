@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/repositories/admin_ops_repository.dart';
 import 'package:roadrobos/core/repositories/technician_job_repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/extensions/datetime_extensions.dart';
+
 
 // --- Models (kept for UI compatibility) ---
 class CustomerOp {
@@ -128,7 +130,7 @@ final emergencyAlertsProvider = StreamProvider<List<EmergencyAlert>>((ref) {
               data['id'].toString(),
               data['user_id'] ?? 'Unknown',
               data['message'] ?? 'Emergency Triggered',
-              DateTime.parse(data['created_at'] ?? DateTime.now().toIso8601String()),
+              DateTime.parse(data['created_at'] ?? DateTime.now().utcIso),
               isAcknowledged: data['is_acknowledged'] ?? false,
             );
           }).toList());

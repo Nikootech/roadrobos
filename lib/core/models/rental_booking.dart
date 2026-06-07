@@ -1,3 +1,5 @@
+import '../extensions/datetime_extensions.dart';
+
 class RentalBooking {
   final String id;
   final String customerId;
@@ -40,7 +42,7 @@ class RentalBooking {
       'customer_id': customerId,
       'vehicle_name': vehicleName,
       'rental_type': rentalType,
-      'start_time': startTime.toIso8601String(),
+      'start_time': startTime.utcIso,
       'duration': duration,
       'status': status,
       'total_cost': totalCost,

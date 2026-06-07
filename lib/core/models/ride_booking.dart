@@ -1,3 +1,5 @@
+import '../extensions/datetime_extensions.dart';
+
 class RideBooking {
   final String id;
   final String customerId;
@@ -60,7 +62,7 @@ class RideBooking {
       'status': status,
       'fare': fare,
       'vehicle_type': vehicleType,
-      'created_at': createdAt.toIso8601String(),
+      'created_at': createdAt.utcIso,
     };
   }
 }

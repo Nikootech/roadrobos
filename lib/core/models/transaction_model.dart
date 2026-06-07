@@ -1,4 +1,6 @@
 
+import '../extensions/datetime_extensions.dart';
+
 class AppTransaction {
   final String id;
   final String userId;
@@ -42,7 +44,7 @@ class AppTransaction {
       'handling_charges': handlingCharges,
       'total_amount': totalAmount,
       'description': description,
-      'created_at': timestamp.toIso8601String(),
+      'created_at': timestamp.utcIso,
       'status': status,
     };
   }

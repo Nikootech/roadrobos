@@ -121,9 +121,16 @@ final routerProvider = Provider<GoRouter>((ref) {
             user.role != UserRole.technician) {
           return '/main/home';
         }
-        if (location.startsWith('/driver-') &&
-            user.role != UserRole.driver) {
-          return '/main/home';
+        if (location.startsWith('/driver-') || location.startsWith('/driver/')) {
+          if (user.role != UserRole.driver) {
+            return '/main/home';
+          }
+          // Driver KYC guard
+          if (user.kycStatus != 'approved' &&
+              location != '/driver/kyc-status' &&
+              location != '/driver/kyc-upload') {
+            return '/driver/kyc-status';
+          }
         }
       }
 

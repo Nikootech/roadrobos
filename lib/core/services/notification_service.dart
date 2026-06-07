@@ -62,6 +62,19 @@ class NotificationService {
         handleNotificationNavigation(initialMessage);
       });
     }
+
+    // 6. Handle Token Refresh
+    _fcm.onTokenRefresh.listen((newToken) async {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user != null) {
+        try {
+          await Supabase.instance.client.from('profiles').update({'fcm_token': newToken}).eq('id', user.id);
+        } catch (_) {}
+        try {
+          await Supabase.instance.client.from('drivers').update({'fcm_token': newToken}).eq('id', user.id);
+        } catch (_) {}
+      }
+    });
   }
 
   void handleNotificationNavigation(RemoteMessage message) {
@@ -111,10 +124,18 @@ class NotificationService {
     try {
       final token = await getToken();
       if (token != null) {
-        await Supabase.instance.client
-            .from('profiles')
-            .update({'fcm_token': token})
-            .eq('id', uid);
+        try {
+          await Supabase.instance.client
+              .from('profiles')
+              .update({'fcm_token': token})
+              .eq('id', uid);
+        } catch (_) {}
+        try {
+          await Supabase.instance.client
+              .from('drivers')
+              .update({'fcm_token': token})
+              .eq('id', uid);
+        } catch (_) {}
         // ✅ Never log UID or token — only confirm success
         if (kDebugMode) debugPrint('FCM Token synced successfully.');
       }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../shared/widgets/bottom_nav_bar.dart';
+import '../../shared/widgets/offline_banner.dart';
 
 class MainShell extends StatefulWidget {
   final Widget child;
@@ -49,13 +50,18 @@ class _MainShellState extends State<MainShell> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: widget.child,
-      bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: _currentIndex,
-        onTap: _onTabTapped,
-        items: _customerNavItems,
-      ),
+    return Stack(
+      children: [
+        Scaffold(
+          body: widget.child,
+          bottomNavigationBar: CustomBottomNavBar(
+            currentIndex: _currentIndex,
+            onTap: _onTabTapped,
+            items: _customerNavItems,
+          ),
+        ),
+        const OfflineBanner(),
+      ],
     );
   }
 }

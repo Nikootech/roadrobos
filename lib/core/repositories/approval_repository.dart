@@ -1,6 +1,8 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/approval.dart';
+import '../extensions/datetime_extensions.dart';
+
 
 final approvalRepositoryProvider = Provider<ApprovalRepository>((ref) {
   return ApprovalRepository();
@@ -28,7 +30,7 @@ class ApprovalRepository {
     if (user == null) throw Exception('User not authenticated');
 
     await _supabase.from('approvals').insert({
-      'type': type.name,
+      'type': type.dbValue,
       'entity_type': entityType,
       'entity_id': entityId,
       'payload': payload,
@@ -48,7 +50,7 @@ class ApprovalRepository {
       'status': status.name,
       'checker_id': user.id,
       'rejection_reason': reason,
-      'updated_at': DateTime.now().toIso8601String(),
+      'updated_at': DateTime.now().utcIso,
     }).eq('id', id);
   }
 }

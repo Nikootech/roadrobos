@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/live_map_widget.dart';
 import '../../providers/taxi_provider.dart';
+import '../../providers/connectivity_provider.dart';
 
 class LiveTrackingScreen extends ConsumerStatefulWidget {
   const LiveTrackingScreen({super.key});
@@ -18,6 +19,7 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> with Si
   Widget build(BuildContext context) {
     final taxiState = ref.watch(taxiProvider);
     final isSearching = taxiState.status == RideStatus.booked;
+    final isOffline = ref.watch(connectivityProvider).value ?? false;
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -79,13 +81,33 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> with Si
             ).animate().fadeIn(),
 
           // 3. Header Status (Pill style)
-          if (!isSearching)
+          if (!isSearching && !isOffline)
             Positioned(
               top: MediaQuery.of(context).padding.top + 16,
               left: 20,
               right: 20,
               child: _buildTrackingStatusPill(taxiState),
             ).animate().fadeIn().slideY(begin: -0.5, end: 0),
+
+          if (isOffline)
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 16,
+              left: 20,
+              right: 20,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(color: Colors.red.shade700, borderRadius: BorderRadius.circular(20)),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.cloud_off, color: Colors.white, size: 16),
+                    SizedBox(width: 8),
+                    Text('Live updates paused', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                  ],
+                ),
+              ),
+            ).animate().fadeIn(),
 
           // 4. Driver Details Card (Bottom)
           if (!isSearching)
@@ -213,9 +235,15 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> with Si
               ),
               Row(
                 children: [
-                  _buildCircleAction(Icons.chat_bubble_rounded, AppColors.primaryBlue),
+                  _buildCircleAction(Icons.chat_bubble_rounded, AppColors.primaryBlue, onTap: () {
+                    context.push('/chat', extra: {
+                      'bookingId': state.rideId,
+                      'receiverId': state.driverId ?? '',
+                      'receiverName': state.roadroboName ?? 'Driver',
+                    });
+                  }),
                   const SizedBox(width: 12),
-                  _buildCircleAction(Icons.call_rounded, Colors.green),
+                  _buildCircleAction(Icons.call_rounded, Colors.green, onTap: () {}),
                 ],
               ),
             ],
@@ -300,14 +328,17 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> with Si
     );
   }
 
-  Widget _buildCircleAction(IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        shape: BoxShape.circle,
+  Widget _buildCircleAction(IconData icon, Color color, {VoidCallback? onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon, color: color, size: 24),
       ),
-      child: Icon(icon, color: color, size: 24),
     );
   }
 }

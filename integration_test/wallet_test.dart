@@ -10,6 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:roadrobos/core/services/auth_service.dart';
+import 'package:roadrobos/core/models/wallet_model.dart';
 import 'package:roadrobos/features/wallet/wallet_screen.dart';
 import 'package:roadrobos/features/wallet/wallet_providers.dart';
 import 'package:roadrobos/features/wallet/wallet_topup_screen.dart';
@@ -41,7 +42,7 @@ void main() {
             authServiceProvider.overrideWithValue(mockAuth),
             walletProvider.overrideWith((ref) => Stream.value(testWallet)),
             walletTransactionsProvider.overrideWith(
-              (ref) => Future.value(testTransactions),
+              (ref) => FakeWalletTransactionsNotifier(testTransactions),
             ),
           ],
           child: const MaterialApp(
@@ -66,7 +67,7 @@ void main() {
             authServiceProvider.overrideWithValue(mockAuth),
             walletProvider.overrideWith((ref) => Stream.value(testWallet)),
             walletTransactionsProvider.overrideWith(
-              (ref) => Future.value(testTransactions),
+              (ref) => FakeWalletTransactionsNotifier(testTransactions),
             ),
           ],
           child: const MaterialApp(
@@ -91,7 +92,7 @@ void main() {
             authServiceProvider.overrideWithValue(mockAuth),
             walletProvider.overrideWith((ref) => Stream.value(testWallet)),
             walletTransactionsProvider.overrideWith(
-              (ref) => Future.value(testTransactions),
+              (ref) => FakeWalletTransactionsNotifier(testTransactions),
             ),
           ],
           child: const MaterialApp(
@@ -123,4 +124,20 @@ void main() {
       expect(find.byType(WalletTopupScreen), findsOneWidget);
     });
   });
+}
+
+class FakeWalletTransactionsNotifier extends StateNotifier<WalletTransactionsState> implements WalletTransactionsNotifier {
+  FakeWalletTransactionsNotifier(List<WalletTransaction> transactions)
+      : super(WalletTransactionsState(
+          transactions: transactions,
+          hasMore: false,
+          isLoadingMore: false,
+          isInitialLoading: false,
+        ));
+
+  @override
+  Future<void> loadInitial() async {}
+
+  @override
+  Future<void> loadMore() async {}
 }

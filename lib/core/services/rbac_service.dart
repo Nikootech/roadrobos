@@ -75,8 +75,8 @@ class RbacService {
     return cachedList?.toSet() ?? {};
   }
 
-  Future<void> clearCachedPermissions() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_prefsKey);
+  Future<bool> hasPermission(String permission) async {
+    final cached = await getCachedPermissions();
+    return cached.contains(permission);
   }
 }

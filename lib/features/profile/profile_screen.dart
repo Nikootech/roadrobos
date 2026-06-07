@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/constants/app_strings.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -225,7 +226,7 @@ class ProfileScreen extends ConsumerWidget {
               child: Column(
                 children: [
                   _buildMenuItem(Icons.person_outline_rounded, 'Account Settings', 'Profile, security, and more', () => context.push('/account-settings')),
-                  _buildMenuItem(Icons.directions_car_filled_rounded, 'My Garage', 'Manage your vehicles', () => context.push('/my-vehicles')),
+                  _buildMenuItem(Icons.directions_car_filled_rounded, 'My Vehicles', 'Manage your vehicles', () => context.push('/vehicles')),
                   _buildMenuItem(Icons.location_on_outlined, 'Saved Locations', 'Add/edit addresses', () => context.push('/saved-locations')),
                   _buildMenuItem(Icons.history_rounded, 'Ride History', 'View past trips', () => context.push('/ride-history')),
                   _buildMenuItem(Icons.notifications_active_outlined, 'Service Reminders', 'Upcoming maintenance alerts', () => context.push('/service-reminders')),
@@ -233,6 +234,7 @@ class ProfileScreen extends ConsumerWidget {
                   _buildMenuItem(Icons.notifications_none_rounded, 'Notifications', 'Manage alerts', () => context.push('/notifications')),
                   _buildMenuItem(Icons.card_giftcard_rounded, 'Refer & Earn', 'Invite friends & earn', () => context.push('/referral')),
                   _buildMenuItem(Icons.help_outline_rounded, 'Help Center', 'FAQ & support chat', () => context.push('/help-center')),
+                  _buildMenuItem(Icons.privacy_tip_outlined, 'Privacy Policy', 'Data usage and security', () => launchUrl(Uri.parse('https://roadrobos.com/privacy'), mode: LaunchMode.externalApplication)),
                   const SizedBox(height: 12),
                   // Logout button
                   GestureDetector(

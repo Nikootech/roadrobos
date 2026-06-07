@@ -3,9 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/bottom_nav_bar.dart';
 import '../profile/user_provider.dart';
+import '../../core/repositories/ratings_repository.dart';
 
 /// Driver Profile Screen — Premium Overhaul with Real Data
 class DriverProfileScreen extends ConsumerWidget {
@@ -16,6 +18,12 @@ class DriverProfileScreen extends ConsumerWidget {
     final userState = ref.watch(userProvider);
     final user = userState.user;
     final String name = user?.name ?? 'Driver';
+    final String userId = user?.id ?? '';
+    
+    final ratingAsyncValue = ref.watch(partnerRatingProvider(userId));
+    final ratingData = ratingAsyncValue.value;
+    final String avgRatingStr = ratingData?['avg_score']?.toString() ?? '5.0';
+    final int reviewsCount = ratingData?['total_reviews'] ?? 0;
 
     return Scaffold(
       backgroundColor: AppColors.bgLightGrey,
@@ -111,7 +119,7 @@ class DriverProfileScreen extends ConsumerWidget {
               children: [
                 _buildStat('Rides', (user?.totalRides ?? 0).toString(), Icons.directions_car_rounded, AppColors.primaryBlue),
                 const SizedBox(width: 12),
-                _buildStat('Rating', '4.8', Icons.star_rounded, Colors.orange),
+                _buildStat('Rating', avgRatingStr, Icons.star_rounded, Colors.orange),
                 const SizedBox(width: 12),
                 _buildStat('Exp', '3y', Icons.workspace_premium_rounded, AppColors.successGreen),
               ],
@@ -129,8 +137,9 @@ class DriverProfileScreen extends ConsumerWidget {
             _buildSectionHeader('Performance'),
             const SizedBox(height: 12),
             _buildPremiumMenuItem(Icons.analytics_outlined, 'Analytics', 'Weekly reports & stats', () => _showAnalyticsBottomSheet(context)),
-            _buildPremiumMenuItem(Icons.star_outline_rounded, 'Reviews', 'Passenger feedback', () => _showReviewsBottomSheet(context)),
+            _buildPremiumMenuItem(Icons.star_outline_rounded, 'Reviews', 'Passenger feedback', () => _showReviewsBottomSheet(context, avgRatingStr, reviewsCount)),
             _buildPremiumMenuItem(Icons.help_outline_rounded, 'Help & Support', 'FAQs & Contact Support', () => context.push('/help-center')),
+            _buildPremiumMenuItem(Icons.privacy_tip_outlined, 'Privacy Policy', 'Data usage and security', () => launchUrl(Uri.parse('https://roadrobos.com/privacy'))),
             
             const SizedBox(height: 32),
             
@@ -312,7 +321,7 @@ class DriverProfileScreen extends ConsumerWidget {
     );
   }
 
-  void _showReviewsBottomSheet(BuildContext context) {
+  void _showReviewsBottomSheet(BuildContext context, String avgRating, int count) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -345,15 +354,15 @@ class DriverProfileScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             Row(
               children: [
-                const Text('4.8', style: TextStyle(fontSize: 48, fontWeight: FontWeight.w900, color: AppColors.textPrimary)),
+                Text(avgRating, style: const TextStyle(fontSize: 48, fontWeight: FontWeight.w900, color: AppColors.textPrimary)),
                 const SizedBox(width: 16),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
-                      children: List.generate(5, (index) => Icon(Icons.star_rounded, color: index < 4 ? Colors.orange : Colors.grey[300], size: 20)),
+                      children: List.generate(5, (index) => Icon(Icons.star_rounded, color: index < double.parse(avgRating).floor() ? Colors.orange : Colors.grey[300], size: 20)),
                     ),
-                    const Text('Based on 1,240 reviews', style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
+                    Text('Based on $count reviews', style: const TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
                   ],
                 ),
               ],

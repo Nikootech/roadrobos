@@ -2,6 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../core/extensions/datetime_extensions.dart';
 
 class SosContact {
   final String name;
@@ -39,7 +40,7 @@ class SosNotifier extends StateNotifier<List<SosContact>> {
         },
         'contacts_notified': state.map((c) => '${c.name} (${c.phone})').toList(),
         'status': 'pending',
-        'created_at': DateTime.now().toIso8601String(),
+        'created_at': DateTime.now().utcIso,
       };
 
       await supabase.from('emergency_alerts').insert(alertData);

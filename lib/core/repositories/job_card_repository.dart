@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../extensions/datetime_extensions.dart';
+
 
 final jobCardRepositoryProvider = Provider((ref) => JobCardRepository());
 
@@ -22,7 +24,7 @@ class JobCardRepository {
         'registration_number': regNo,
         'notes': notes,
         'status': 'draft',
-        'created_at': DateTime.now().toIso8601String(),
+        'created_at': DateTime.now().utcIso,
       });
     } catch (e) {
       debugPrint('Create Job Card Error: $e');

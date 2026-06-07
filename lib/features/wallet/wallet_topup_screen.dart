@@ -10,16 +10,25 @@ import '../../core/repositories/wallet_repository.dart';
 import '../profile/user_provider.dart';
 
 class WalletTopupScreen extends ConsumerStatefulWidget {
-  const WalletTopupScreen({super.key});
+  final double? initialAmount;
+  const WalletTopupScreen({super.key, this.initialAmount});
 
   @override
   ConsumerState<WalletTopupScreen> createState() => _WalletTopupScreenState();
 }
 
 class _WalletTopupScreenState extends ConsumerState<WalletTopupScreen> {
-  final TextEditingController _amountController = TextEditingController(text: '100');
+  late final TextEditingController _amountController;
   String _selectedMethod = 'UPI';
-  final List<int> _quickAmounts = [100, 500, 1000, 2000];
+  final List<int> _quickAmounts = [100, 250, 500, 1000, 2000];
+
+  @override
+  void initState() {
+    super.initState();
+    _amountController = TextEditingController(
+      text: widget.initialAmount != null ? widget.initialAmount!.toStringAsFixed(0) : '100',
+    );
+  }
 
   @override
   void dispose() {
@@ -60,8 +69,41 @@ class _WalletTopupScreenState extends ConsumerState<WalletTopupScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Enter Amount', style: TextStyle(fontSize: 14, color: AppColors.textSecondary)),
+                  const Text('Select Amount Denomination', style: TextStyle(fontSize: 14, color: AppColors.textSecondary, fontWeight: FontWeight.w500)),
                   const SizedBox(height: 12),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
+                    child: Row(
+                      children: _quickAmounts.map((amt) {
+                        final isSelected = _amountController.text == amt.toString();
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: GestureDetector(
+                            onTap: () => setState(() => _amountController.text = amt.toString()),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: isSelected ? AppColors.primaryBlue.withValues(alpha: 0.1) : AppColors.bgLightGrey,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: isSelected ? AppColors.primaryBlue : Colors.transparent),
+                              ),
+                              child: Text(
+                                '₹$amt',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  color: isSelected ? AppColors.primaryBlue : AppColors.textPrimary,
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  const Text('Or Enter Custom Amount', style: TextStyle(fontSize: 14, color: AppColors.textSecondary, fontWeight: FontWeight.w500)),
+                  const SizedBox(height: 8),
                   TextField(
                     controller: _amountController,
                     keyboardType: TextInputType.number,
@@ -72,24 +114,6 @@ class _WalletTopupScreenState extends ConsumerState<WalletTopupScreen> {
                       prefixStyle: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                       border: InputBorder.none,
                     ),
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: _quickAmounts.map((amt) {
-                      return GestureDetector(
-                        onTap: () => setState(() => _amountController.text = amt.toString()),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: AppColors.bgLightGrey,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: _amountController.text == amt.toString() ? AppColors.primaryBlue : Colors.transparent),
-                          ),
-                          child: Text('+₹$amt', style: TextStyle(fontWeight: FontWeight.w600, color: _amountController.text == amt.toString() ? AppColors.primaryBlue : AppColors.textPrimary)),
-                        ),
-                      );
-                    }).toList(),
                   ),
                 ],
               ),

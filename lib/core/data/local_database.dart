@@ -29,11 +29,26 @@ class CachedProfiles extends Table {
 class SyncQueue extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get idempotencyKey => text().unique()(); // UUID v4 — prevents duplicate mutations
+  TextColumn get entityType => text()(); // 'technician_job', 'profile', 'ride_booking', 'service_booking'
   TextColumn get action => text()(); // e.g. 'update_job_status', 'send_message'
   TextColumn get payload => text()(); // JSON payload
   DateTimeColumn get createdAt =>
       dateTime().withDefault(currentDateAndTime)();
   IntColumn get attempts => integer().withDefault(const Constant(0))();
+  DateTimeColumn get nextRetryAt => dateTime().nullable()();
+}
+
+// 2b. Dead Letter Queue — for permanently failed actions after 5 retries
+class DeadLetterQueue extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get idempotencyKey => text()();
+  TextColumn get entityType => text()();
+  TextColumn get action => text()();
+  TextColumn get payload => text()();
+  DateTimeColumn get createdAt => dateTime()();
+  IntColumn get attempts => integer()();
+  TextColumn get error => text().nullable()();
+  DateTimeColumn get failedAt => dateTime().withDefault(currentDateAndTime)();
 }
 
 // 3. Cached Rides
@@ -110,6 +125,7 @@ class HttpResponseCache extends Table {
 @DriftDatabase(tables: [
   CachedProfiles,
   SyncQueue,
+  DeadLetterQueue,
   CachedRides,
   CachedCategories,
   CachedBanners,
@@ -117,8 +133,8 @@ class HttpResponseCache extends Table {
   HttpResponseCache,
 ])
 class AppDatabase extends _$AppDatabase {
-  AppDatabase()
-      : super(driftDatabase(
+  AppDatabase([QueryExecutor? executor])
+      : super(executor ?? driftDatabase(
           name: 'roadrobos_local',
           web: DriftWebOptions(
             sqlite3Wasm: Uri.parse('sqlite3.wasm'),
@@ -127,7 +143,7 @@ class AppDatabase extends _$AppDatabase {
         ));
 
   @override
-  int get schemaVersion => 2; // bumped: encrypted columns + idempotency_key + http cache
+  int get schemaVersion => 3; // bumped: dead letter queue + entityType/nextRetryAt
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -138,6 +154,12 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(syncQueue, syncQueue.idempotencyKey);
         await m.createTable(httpResponseCache);
       }
+      if (from < 3) {
+        // V2→V3: dead letter queue table + entity_type and next_retry_at columns in syncQueue
+        await m.addColumn(syncQueue, syncQueue.entityType);
+        await m.addColumn(syncQueue, syncQueue.nextRetryAt);
+        await m.createTable(deadLetterQueue);
+      }
     },
   );
 
@@ -146,6 +168,7 @@ class AppDatabase extends _$AppDatabase {
   /// Enqueue a mutation only if the [idempotencyKey] is not already present.
   Future<void> enqueueIfNew({
     required String idempotencyKey,
+    required String entityType,
     required String action,
     required String payload,
   }) async {
@@ -155,6 +178,7 @@ class AppDatabase extends _$AppDatabase {
     if (exists != null) return;
     await into(syncQueue).insert(SyncQueueCompanion.insert(
       idempotencyKey: idempotencyKey,
+      entityType: entityType,
       action: action,
       payload: payload,
     ));

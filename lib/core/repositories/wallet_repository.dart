@@ -1,10 +1,15 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import '../models/wallet_model.dart';
 
 class WalletRepository {
-  final SupabaseClient _supabase = Supabase.instance.client;
+  final SupabaseClient _supabase;
+
+  WalletRepository({SupabaseClient? supabaseClient})
+      : _supabase = supabaseClient ?? Supabase.instance.client;
 
   /// Get user wallet stream
   Stream<Wallet?> getWallet(String userId) {
@@ -22,13 +27,12 @@ class WalletRepository {
   Future<void> topUpWallet(String userId, double amount, String paymentId) async {
     try {
       await _supabase.rpc('update_wallet_balance', params: {
-        'user_id': userId,
-        'amount_change': amount,
-        'trans_type': 'credit',
-        'trans_category': 'topup',
-        'trans_description': 'Wallet Top-up (Ref: $paymentId)',
+        'wallet_id': userId,
+        'amount': amount,
+        'transaction_type': 'credit',
       });
-    } catch (e) {
+    } catch (e, st) {
+      unawaited(Sentry.captureException(e, stackTrace: st));
       throw Exception('Failed to top up wallet: $e');
     }
   }
@@ -39,16 +43,24 @@ class WalletRepository {
       // We still check local balance for immediate UI feedback, 
       // but the RPC handles the final source of truth and atomic check.
       await _supabase.rpc('update_wallet_balance', params: {
-        'user_id': userId,
-        'amount_change': -amount,
-        'trans_type': 'debit',
-        'trans_category': 'payment',
-        'trans_description': description,
+        'wallet_id': userId,
+        'amount': amount,
+        'transaction_type': 'debit',
       });
       return true;
-    } catch (e) {
+    } on PostgrestException catch (e, st) {
+      if (e.code != 'P0001') {
+        unawaited(Sentry.captureException(e, stackTrace: st));
+      }
+      if (e.code == 'P0001') {
+        throw InsufficientBalanceException();
+      }
+      debugPrint('Postgres Wallet Payment Error: $e');
+      rethrow;
+    } catch (e, st) {
+      unawaited(Sentry.captureException(e, stackTrace: st));
       debugPrint('Wallet Payment Error: $e');
-      return false;
+      rethrow;
     }
   }
 
@@ -62,46 +74,58 @@ class WalletRepository {
           .range(offset, offset + limit - 1);
 
       return response.map((map) => WalletTransaction.fromMap(map, map['id'].toString())).toList();
-    } catch (e) {
+    } catch (e, st) {
+      unawaited(Sentry.captureException(e, stackTrace: st));
       throw Exception('Failed to fetch transactions: $e');
+    }
+  }
+
+  /// SECURE RPC user lookup by phone
+  Future<Map<String, dynamic>?> lookupUserByPhone(String phone) async {
+    try {
+      final List<dynamic> response = await _supabase.rpc('lookup_user_by_phone', params: {
+        'phone_param': phone,
+      });
+      if (response.isEmpty) return null;
+      return Map<String, dynamic>.from(response.first);
+    } catch (e, st) {
+      unawaited(Sentry.captureException(e, stackTrace: st));
+      debugPrint('Lookup User Error: $e');
+      throw Exception('Failed to lookup recipient: $e');
     }
   }
 
   /// Transfer funds to another user
   Future<bool> transferFunds(String senderId, String recipientPhone, double amount) async {
     try {
-      // 1. Find recipient by phone
-      final recipientRes = await _supabase
-          .from('profiles')
-          .select('id')
-          .eq('phone', recipientPhone)
-          .maybeSingle();
+      // 1. Find recipient by phone using secure RPC
+      final recipientRes = await lookupUserByPhone(recipientPhone);
       
       if (recipientRes == null) {
         throw Exception('User with this phone number not found.');
       }
       
       final recipientId = recipientRes['id'] as String;
+      final recipientName = recipientRes['full_name'] as String;
       
       if (recipientId == senderId) {
         throw Exception('Cannot transfer to yourself.');
       }
 
       // 2. Deduct from sender
-      final debitSuccess = await payFromWallet(senderId, amount, 'Transfer to $recipientPhone');
+      final debitSuccess = await payFromWallet(senderId, amount, 'Transfer to $recipientName');
       if (!debitSuccess) return false;
 
       // 3. Add to recipient
       await _supabase.rpc('update_wallet_balance', params: {
-        'user_id': recipientId,
-        'amount_change': amount,
-        'trans_type': 'credit',
-        'trans_category': 'transfer',
-        'trans_description': 'Transfer received',
+        'wallet_id': recipientId,
+        'amount': amount,
+        'transaction_type': 'credit',
       });
       
       return true;
-    } catch (e) {
+    } catch (e, st) {
+      unawaited(Sentry.captureException(e, stackTrace: st));
       debugPrint('Transfer Error: $e');
       throw Exception(e.toString().replaceAll('Exception: ', ''));
     }
@@ -112,7 +136,8 @@ class WalletRepository {
     try {
       final success = await payFromWallet(userId, amount, 'Withdrawal to $bankDetails');
       return success;
-    } catch (e) {
+    } catch (e, st) {
+      unawaited(Sentry.captureException(e, stackTrace: st));
       debugPrint('Withdrawal Error: $e');
       throw Exception(e.toString().replaceAll('Exception: ', ''));
     }
@@ -126,3 +151,11 @@ final walletRepositoryProvider = Provider<WalletRepository>((ref) {
 final walletStreamProvider = StreamProvider.family<Wallet?, String>((ref, userId) {
   return ref.watch(walletRepositoryProvider).getWallet(userId);
 });
+
+class InsufficientBalanceException implements Exception {
+  final String message;
+  InsufficientBalanceException([this.message = 'insufficient_balance']);
+
+  @override
+  String toString() => message;
+}

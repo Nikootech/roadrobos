@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
 import '../profile/user_provider.dart';
+import '../../core/repositories/ratings_repository.dart';
 
 class TechProfileScreen extends ConsumerWidget {
   const TechProfileScreen({super.key});
@@ -23,6 +25,11 @@ class TechProfileScreen extends ConsumerWidget {
     final userState = ref.watch(userProvider);
     final user = userState.user;
     final String name = user?.name ?? 'Guest Technician';
+    final String userId = user?.id ?? '';
+    
+    final ratingAsyncValue = ref.watch(partnerRatingProvider(userId));
+    final ratingData = ratingAsyncValue.value;
+    final String avgRatingStr = ratingData?['avg_score']?.toString() ?? '5.0';
 
     return Scaffold(
       backgroundColor: AppColors.bgLightGrey,
@@ -79,7 +86,7 @@ class TechProfileScreen extends ConsumerWidget {
               children: [
                 _buildStat('Jobs Done', '142', Icons.task_alt_rounded),
                 const SizedBox(width: 12),
-                _buildStat('Rating', '4.9', Icons.star_rounded),
+                _buildStat('Rating', avgRatingStr, Icons.star_rounded),
                 const SizedBox(width: 12),
                 _buildStat('Experience', '5Y', Icons.timer_outlined),
               ],
@@ -129,6 +136,10 @@ class TechProfileScreen extends ConsumerWidget {
             _buildMenuItem(Icons.support_agent_rounded, 'Technical Support', 'Contact admin desk', () {
               HapticFeedback.lightImpact();
               context.push('/chat');
+            }),
+            _buildMenuItem(Icons.privacy_tip_outlined, 'Privacy Policy', 'Data usage and security', () {
+              HapticFeedback.lightImpact();
+              launchUrl(Uri.parse('https://roadrobos.com/privacy'));
             }),
             
             const SizedBox(height: 32),

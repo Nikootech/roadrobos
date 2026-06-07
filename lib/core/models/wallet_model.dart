@@ -1,3 +1,5 @@
+import '../extensions/datetime_extensions.dart';
+
 class Wallet {
   final String userId;
   final double balance;
@@ -13,7 +15,7 @@ class Wallet {
     return {
       'id': userId,
       'balance': balance,
-      'updated_at': lastUpdated.toIso8601String(),
+      'updated_at': lastUpdated.utcIso,
     };
   }
 
@@ -53,7 +55,7 @@ class WalletTransaction {
       'amount': amount,
       'type': type.name,
       'description': description,
-      'created_at': timestamp.toIso8601String(),
+      'created_at': timestamp.utcIso,
     };
   }
 

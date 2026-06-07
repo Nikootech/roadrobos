@@ -17,6 +17,8 @@ import '../../features/admin/export_reports_screen.dart';
 import '../../features/admin/manage_reminders_screen.dart';
 import '../../features/admin/approval_center_screen.dart';
 import '../../features/admin/manpower_supply_screen.dart';
+import '../../features/admin/approvals/approvals_list_screen.dart';
+import '../../features/admin/approvals/approval_detail_screen.dart';
 import '../../core/models/approval.dart';
 import '../app_transitions.dart';
 
@@ -56,9 +58,19 @@ final List<RouteBase> adminRoutes = [
   GoRoute(
     path: '/admin-approvals',
     pageBuilder: (context, state) => AppTransitions.slideRight(
-      child: const ApprovalCenterScreen(),
+      child: const ApprovalsListScreen(),
       state: state,
     ),
+  ),
+  GoRoute(
+    path: '/admin-approval-detail',
+    pageBuilder: (context, state) {
+      final request = state.extra as ApprovalRequest;
+      return AppTransitions.slideRight(
+        child: ApprovalDetailScreen(request: request),
+        state: state,
+      );
+    },
   ),
   GoRoute(
     path: '/admin-revenue-referral',

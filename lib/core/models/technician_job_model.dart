@@ -1,4 +1,6 @@
 
+import '../extensions/datetime_extensions.dart';
+
 class FirestoreChecklistItem {
   final String task;
   final String category;
@@ -106,7 +108,7 @@ class TechnicianJobModel {
     'assigned_tech_id': assignedTechId,
     'customer_id': customerId,
     'service_booking_id': serviceBookingId,
-    'created_at': createdAt.toIso8601String(),
+    'created_at': createdAt.utcIso,
   };
 
   factory TechnicianJobModel.fromMap(Map<String, dynamic> map, String docId) {

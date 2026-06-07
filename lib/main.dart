@@ -21,6 +21,7 @@ import 'core/services/notification_service.dart';
 import 'core/services/payment_service.dart';
 import 'core/security/jailbreak_guard.dart';
 import 'core/security/encrypted_column.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 import 'package:flutter/foundation.dart';
 
@@ -48,27 +49,38 @@ void main() {
       await Firebase.initializeApp(
           options: DefaultFirebaseOptions.currentPlatform);
       await Supabase.initialize(
-        url: AppConfig.supabaseUrl,
-        anonKey: AppConfig.supabaseAnonKey,
-        debug: kDebugMode,
+          url: AppConfig.supabaseUrl,
+          anonKey: AppConfig.supabaseAnonKey,
+          debug: kDebugMode,
       );
 
       // Pre-fetch AES encryption key into memory (warm cache for DB writes)
       await ColumnEncryptionKey.prefetch();
 
       final prefs = await SharedPreferences.getInstance();
+      final isCompromised = await JailbreakGuard.check();
 
       // ── LAUNCH APP (frame 1 is free to render) ──────────────────────────────
-      runApp(ProviderScope(
-        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
-        child: const RoadRobosApp(),
-      ));
+      await SentryFlutter.init(
+        (options) {
+          options.dsn = AppConfig.sentryDsn;
+          options.tracesSampleRate = 1.0;
+        },
+        appRunner: () => runApp(ProviderScope(
+          overrides: [
+            sharedPreferencesProvider.overrideWithValue(prefs),
+            jailbreakProvider.overrideWithValue(isCompromised),
+          ],
+          child: const RoadRobosApp(),
+        )),
+      );
 
       // ── POST-FRAME DEFERRED SETUP ───────────────────────────────────────────
       // Nothing here blocks the first render. All heavy setup is deferred.
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        // ① Crashlytics error handlers
+        // ① Sentry & Crashlytics error handlers
         FlutterError.onError = (FlutterErrorDetails details) {
+          Sentry.captureException(details.exception, stackTrace: details.stack);
           final errorStr = details.exception.toString();
           if (kIsWeb &&
               errorStr.contains('the `web` parameter needs to be set')) {
@@ -82,6 +94,7 @@ void main() {
         };
 
         PlatformDispatcher.instance.onError = (error, stack) {
+          Sentry.captureException(error, stackTrace: stack);
           if (!kDebugMode) {
             FirebaseCrashlytics.instance
                 .recordError(error, stack, fatal: true);
@@ -104,12 +117,11 @@ void main() {
           }),
         );
 
-        // ④ Jailbreak check (non-blocking, result used by PaymentService)
-        unawaited(JailbreakGuard.check());
       });
     },
     (error, stack) {
       // Zone-level uncaught error handler
+      Sentry.captureException(error, stackTrace: stack);
       if (!kDebugMode) {
         FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
       } else {

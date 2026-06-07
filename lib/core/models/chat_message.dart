@@ -1,3 +1,5 @@
+import '../extensions/datetime_extensions.dart';
+
 class ChatMessage {
   final String id;
   final String roomId;
@@ -35,7 +37,7 @@ class ChatMessage {
       'sender_id': senderId,
       'receiver_id': receiverId,
       'message': message,
-      'created_at': timestamp.toIso8601String(),
+      'created_at': timestamp.utcIso,
       'is_read': isRead,
     };
   }

@@ -121,7 +121,7 @@ class $CachedProfilesTable extends CachedProfiles
   }
 
   static TypeConverter<String?, String?> $converteremail =
-      NullAwareTypeConverter.wrap(const EncryptedStringConverter());
+      const NullAwareTypeConverter.wrap(EncryptedStringConverter());
   static JsonTypeConverter2<String, String, String> $converterphone =
       const EncryptedStringConverter();
 }
@@ -413,6 +413,12 @@ class $SyncQueueTable extends SyncQueue
       type: DriftSqlType.string,
       requiredDuringInsert: true,
       defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'));
+  static const VerificationMeta _entityTypeMeta =
+      const VerificationMeta('entityType');
+  @override
+  late final GeneratedColumn<String> entityType = GeneratedColumn<String>(
+      'entity_type', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _actionMeta = const VerificationMeta('action');
   @override
   late final GeneratedColumn<String> action = GeneratedColumn<String>(
@@ -440,9 +446,23 @@ class $SyncQueueTable extends SyncQueue
       type: DriftSqlType.int,
       requiredDuringInsert: false,
       defaultValue: const Constant(0));
+  static const VerificationMeta _nextRetryAtMeta =
+      const VerificationMeta('nextRetryAt');
   @override
-  List<GeneratedColumn> get $columns =>
-      [id, idempotencyKey, action, payload, createdAt, attempts];
+  late final GeneratedColumn<DateTime> nextRetryAt = GeneratedColumn<DateTime>(
+      'next_retry_at', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        idempotencyKey,
+        entityType,
+        action,
+        payload,
+        createdAt,
+        attempts,
+        nextRetryAt
+      ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -464,6 +484,14 @@ class $SyncQueueTable extends SyncQueue
     } else if (isInserting) {
       context.missing(_idempotencyKeyMeta);
     }
+    if (data.containsKey('entity_type')) {
+      context.handle(
+          _entityTypeMeta,
+          entityType.isAcceptableOrUnknown(
+              data['entity_type']!, _entityTypeMeta));
+    } else if (isInserting) {
+      context.missing(_entityTypeMeta);
+    }
     if (data.containsKey('action')) {
       context.handle(_actionMeta,
           action.isAcceptableOrUnknown(data['action']!, _actionMeta));
@@ -484,6 +512,12 @@ class $SyncQueueTable extends SyncQueue
       context.handle(_attemptsMeta,
           attempts.isAcceptableOrUnknown(data['attempts']!, _attemptsMeta));
     }
+    if (data.containsKey('next_retry_at')) {
+      context.handle(
+          _nextRetryAtMeta,
+          nextRetryAt.isAcceptableOrUnknown(
+              data['next_retry_at']!, _nextRetryAtMeta));
+    }
     return context;
   }
 
@@ -497,6 +531,8 @@ class $SyncQueueTable extends SyncQueue
           .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
       idempotencyKey: attachedDatabase.typeMapping.read(
           DriftSqlType.string, data['${effectivePrefix}idempotency_key'])!,
+      entityType: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}entity_type'])!,
       action: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}action'])!,
       payload: attachedDatabase.typeMapping
@@ -505,6 +541,8 @@ class $SyncQueueTable extends SyncQueue
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
       attempts: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}attempts'])!,
+      nextRetryAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}next_retry_at']),
     );
   }
 
@@ -517,26 +555,34 @@ class $SyncQueueTable extends SyncQueue
 class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
   final int id;
   final String idempotencyKey;
+  final String entityType;
   final String action;
   final String payload;
   final DateTime createdAt;
   final int attempts;
+  final DateTime? nextRetryAt;
   const SyncQueueData(
       {required this.id,
       required this.idempotencyKey,
+      required this.entityType,
       required this.action,
       required this.payload,
       required this.createdAt,
-      required this.attempts});
+      required this.attempts,
+      this.nextRetryAt});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
     map['idempotency_key'] = Variable<String>(idempotencyKey);
+    map['entity_type'] = Variable<String>(entityType);
     map['action'] = Variable<String>(action);
     map['payload'] = Variable<String>(payload);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['attempts'] = Variable<int>(attempts);
+    if (!nullToAbsent || nextRetryAt != null) {
+      map['next_retry_at'] = Variable<DateTime>(nextRetryAt);
+    }
     return map;
   }
 
@@ -544,10 +590,14 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
     return SyncQueueCompanion(
       id: Value(id),
       idempotencyKey: Value(idempotencyKey),
+      entityType: Value(entityType),
       action: Value(action),
       payload: Value(payload),
       createdAt: Value(createdAt),
       attempts: Value(attempts),
+      nextRetryAt: nextRetryAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(nextRetryAt),
     );
   }
 
@@ -557,10 +607,12 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
     return SyncQueueData(
       id: serializer.fromJson<int>(json['id']),
       idempotencyKey: serializer.fromJson<String>(json['idempotencyKey']),
+      entityType: serializer.fromJson<String>(json['entityType']),
       action: serializer.fromJson<String>(json['action']),
       payload: serializer.fromJson<String>(json['payload']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       attempts: serializer.fromJson<int>(json['attempts']),
+      nextRetryAt: serializer.fromJson<DateTime?>(json['nextRetryAt']),
     );
   }
   @override
@@ -569,27 +621,33 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
       'idempotencyKey': serializer.toJson<String>(idempotencyKey),
+      'entityType': serializer.toJson<String>(entityType),
       'action': serializer.toJson<String>(action),
       'payload': serializer.toJson<String>(payload),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'attempts': serializer.toJson<int>(attempts),
+      'nextRetryAt': serializer.toJson<DateTime?>(nextRetryAt),
     };
   }
 
   SyncQueueData copyWith(
           {int? id,
           String? idempotencyKey,
+          String? entityType,
           String? action,
           String? payload,
           DateTime? createdAt,
-          int? attempts}) =>
+          int? attempts,
+          Value<DateTime?> nextRetryAt = const Value.absent()}) =>
       SyncQueueData(
         id: id ?? this.id,
         idempotencyKey: idempotencyKey ?? this.idempotencyKey,
+        entityType: entityType ?? this.entityType,
         action: action ?? this.action,
         payload: payload ?? this.payload,
         createdAt: createdAt ?? this.createdAt,
         attempts: attempts ?? this.attempts,
+        nextRetryAt: nextRetryAt.present ? nextRetryAt.value : this.nextRetryAt,
       );
   SyncQueueData copyWithCompanion(SyncQueueCompanion data) {
     return SyncQueueData(
@@ -597,10 +655,14 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
       idempotencyKey: data.idempotencyKey.present
           ? data.idempotencyKey.value
           : this.idempotencyKey,
+      entityType:
+          data.entityType.present ? data.entityType.value : this.entityType,
       action: data.action.present ? data.action.value : this.action,
       payload: data.payload.present ? data.payload.value : this.payload,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       attempts: data.attempts.present ? data.attempts.value : this.attempts,
+      nextRetryAt:
+          data.nextRetryAt.present ? data.nextRetryAt.value : this.nextRetryAt,
     );
   }
 
@@ -609,86 +671,105 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
     return (StringBuffer('SyncQueueData(')
           ..write('id: $id, ')
           ..write('idempotencyKey: $idempotencyKey, ')
+          ..write('entityType: $entityType, ')
           ..write('action: $action, ')
           ..write('payload: $payload, ')
           ..write('createdAt: $createdAt, ')
-          ..write('attempts: $attempts')
+          ..write('attempts: $attempts, ')
+          ..write('nextRetryAt: $nextRetryAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, idempotencyKey, action, payload, createdAt, attempts);
+  int get hashCode => Object.hash(id, idempotencyKey, entityType, action,
+      payload, createdAt, attempts, nextRetryAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is SyncQueueData &&
           other.id == this.id &&
           other.idempotencyKey == this.idempotencyKey &&
+          other.entityType == this.entityType &&
           other.action == this.action &&
           other.payload == this.payload &&
           other.createdAt == this.createdAt &&
-          other.attempts == this.attempts);
+          other.attempts == this.attempts &&
+          other.nextRetryAt == this.nextRetryAt);
 }
 
 class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
   final Value<int> id;
   final Value<String> idempotencyKey;
+  final Value<String> entityType;
   final Value<String> action;
   final Value<String> payload;
   final Value<DateTime> createdAt;
   final Value<int> attempts;
+  final Value<DateTime?> nextRetryAt;
   const SyncQueueCompanion({
     this.id = const Value.absent(),
     this.idempotencyKey = const Value.absent(),
+    this.entityType = const Value.absent(),
     this.action = const Value.absent(),
     this.payload = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.attempts = const Value.absent(),
+    this.nextRetryAt = const Value.absent(),
   });
   SyncQueueCompanion.insert({
     this.id = const Value.absent(),
     required String idempotencyKey,
+    required String entityType,
     required String action,
     required String payload,
     this.createdAt = const Value.absent(),
     this.attempts = const Value.absent(),
+    this.nextRetryAt = const Value.absent(),
   })  : idempotencyKey = Value(idempotencyKey),
+        entityType = Value(entityType),
         action = Value(action),
         payload = Value(payload);
   static Insertable<SyncQueueData> custom({
     Expression<int>? id,
     Expression<String>? idempotencyKey,
+    Expression<String>? entityType,
     Expression<String>? action,
     Expression<String>? payload,
     Expression<DateTime>? createdAt,
     Expression<int>? attempts,
+    Expression<DateTime>? nextRetryAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (idempotencyKey != null) 'idempotency_key': idempotencyKey,
+      if (entityType != null) 'entity_type': entityType,
       if (action != null) 'action': action,
       if (payload != null) 'payload': payload,
       if (createdAt != null) 'created_at': createdAt,
       if (attempts != null) 'attempts': attempts,
+      if (nextRetryAt != null) 'next_retry_at': nextRetryAt,
     });
   }
 
   SyncQueueCompanion copyWith(
       {Value<int>? id,
       Value<String>? idempotencyKey,
+      Value<String>? entityType,
       Value<String>? action,
       Value<String>? payload,
       Value<DateTime>? createdAt,
-      Value<int>? attempts}) {
+      Value<int>? attempts,
+      Value<DateTime?>? nextRetryAt}) {
     return SyncQueueCompanion(
       id: id ?? this.id,
       idempotencyKey: idempotencyKey ?? this.idempotencyKey,
+      entityType: entityType ?? this.entityType,
       action: action ?? this.action,
       payload: payload ?? this.payload,
       createdAt: createdAt ?? this.createdAt,
       attempts: attempts ?? this.attempts,
+      nextRetryAt: nextRetryAt ?? this.nextRetryAt,
     );
   }
 
@@ -700,6 +781,9 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
     }
     if (idempotencyKey.present) {
       map['idempotency_key'] = Variable<String>(idempotencyKey.value);
+    }
+    if (entityType.present) {
+      map['entity_type'] = Variable<String>(entityType.value);
     }
     if (action.present) {
       map['action'] = Variable<String>(action.value);
@@ -713,6 +797,9 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
     if (attempts.present) {
       map['attempts'] = Variable<int>(attempts.value);
     }
+    if (nextRetryAt.present) {
+      map['next_retry_at'] = Variable<DateTime>(nextRetryAt.value);
+    }
     return map;
   }
 
@@ -721,10 +808,475 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
     return (StringBuffer('SyncQueueCompanion(')
           ..write('id: $id, ')
           ..write('idempotencyKey: $idempotencyKey, ')
+          ..write('entityType: $entityType, ')
           ..write('action: $action, ')
           ..write('payload: $payload, ')
           ..write('createdAt: $createdAt, ')
-          ..write('attempts: $attempts')
+          ..write('attempts: $attempts, ')
+          ..write('nextRetryAt: $nextRetryAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $DeadLetterQueueTable extends DeadLetterQueue
+    with TableInfo<$DeadLetterQueueTable, DeadLetterQueueData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $DeadLetterQueueTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _idempotencyKeyMeta =
+      const VerificationMeta('idempotencyKey');
+  @override
+  late final GeneratedColumn<String> idempotencyKey = GeneratedColumn<String>(
+      'idempotency_key', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _entityTypeMeta =
+      const VerificationMeta('entityType');
+  @override
+  late final GeneratedColumn<String> entityType = GeneratedColumn<String>(
+      'entity_type', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _actionMeta = const VerificationMeta('action');
+  @override
+  late final GeneratedColumn<String> action = GeneratedColumn<String>(
+      'action', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _payloadMeta =
+      const VerificationMeta('payload');
+  @override
+  late final GeneratedColumn<String> payload = GeneratedColumn<String>(
+      'payload', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _attemptsMeta =
+      const VerificationMeta('attempts');
+  @override
+  late final GeneratedColumn<int> attempts = GeneratedColumn<int>(
+      'attempts', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _errorMeta = const VerificationMeta('error');
+  @override
+  late final GeneratedColumn<String> error = GeneratedColumn<String>(
+      'error', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _failedAtMeta =
+      const VerificationMeta('failedAt');
+  @override
+  late final GeneratedColumn<DateTime> failedAt = GeneratedColumn<DateTime>(
+      'failed_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        idempotencyKey,
+        entityType,
+        action,
+        payload,
+        createdAt,
+        attempts,
+        error,
+        failedAt
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'dead_letter_queue';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<DeadLetterQueueData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('idempotency_key')) {
+      context.handle(
+          _idempotencyKeyMeta,
+          idempotencyKey.isAcceptableOrUnknown(
+              data['idempotency_key']!, _idempotencyKeyMeta));
+    } else if (isInserting) {
+      context.missing(_idempotencyKeyMeta);
+    }
+    if (data.containsKey('entity_type')) {
+      context.handle(
+          _entityTypeMeta,
+          entityType.isAcceptableOrUnknown(
+              data['entity_type']!, _entityTypeMeta));
+    } else if (isInserting) {
+      context.missing(_entityTypeMeta);
+    }
+    if (data.containsKey('action')) {
+      context.handle(_actionMeta,
+          action.isAcceptableOrUnknown(data['action']!, _actionMeta));
+    } else if (isInserting) {
+      context.missing(_actionMeta);
+    }
+    if (data.containsKey('payload')) {
+      context.handle(_payloadMeta,
+          payload.isAcceptableOrUnknown(data['payload']!, _payloadMeta));
+    } else if (isInserting) {
+      context.missing(_payloadMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('attempts')) {
+      context.handle(_attemptsMeta,
+          attempts.isAcceptableOrUnknown(data['attempts']!, _attemptsMeta));
+    } else if (isInserting) {
+      context.missing(_attemptsMeta);
+    }
+    if (data.containsKey('error')) {
+      context.handle(
+          _errorMeta, error.isAcceptableOrUnknown(data['error']!, _errorMeta));
+    }
+    if (data.containsKey('failed_at')) {
+      context.handle(_failedAtMeta,
+          failedAt.isAcceptableOrUnknown(data['failed_at']!, _failedAtMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  DeadLetterQueueData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DeadLetterQueueData(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      idempotencyKey: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}idempotency_key'])!,
+      entityType: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}entity_type'])!,
+      action: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}action'])!,
+      payload: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}payload'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      attempts: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}attempts'])!,
+      error: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}error']),
+      failedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}failed_at'])!,
+    );
+  }
+
+  @override
+  $DeadLetterQueueTable createAlias(String alias) {
+    return $DeadLetterQueueTable(attachedDatabase, alias);
+  }
+}
+
+class DeadLetterQueueData extends DataClass
+    implements Insertable<DeadLetterQueueData> {
+  final int id;
+  final String idempotencyKey;
+  final String entityType;
+  final String action;
+  final String payload;
+  final DateTime createdAt;
+  final int attempts;
+  final String? error;
+  final DateTime failedAt;
+  const DeadLetterQueueData(
+      {required this.id,
+      required this.idempotencyKey,
+      required this.entityType,
+      required this.action,
+      required this.payload,
+      required this.createdAt,
+      required this.attempts,
+      this.error,
+      required this.failedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['idempotency_key'] = Variable<String>(idempotencyKey);
+    map['entity_type'] = Variable<String>(entityType);
+    map['action'] = Variable<String>(action);
+    map['payload'] = Variable<String>(payload);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['attempts'] = Variable<int>(attempts);
+    if (!nullToAbsent || error != null) {
+      map['error'] = Variable<String>(error);
+    }
+    map['failed_at'] = Variable<DateTime>(failedAt);
+    return map;
+  }
+
+  DeadLetterQueueCompanion toCompanion(bool nullToAbsent) {
+    return DeadLetterQueueCompanion(
+      id: Value(id),
+      idempotencyKey: Value(idempotencyKey),
+      entityType: Value(entityType),
+      action: Value(action),
+      payload: Value(payload),
+      createdAt: Value(createdAt),
+      attempts: Value(attempts),
+      error:
+          error == null && nullToAbsent ? const Value.absent() : Value(error),
+      failedAt: Value(failedAt),
+    );
+  }
+
+  factory DeadLetterQueueData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DeadLetterQueueData(
+      id: serializer.fromJson<int>(json['id']),
+      idempotencyKey: serializer.fromJson<String>(json['idempotencyKey']),
+      entityType: serializer.fromJson<String>(json['entityType']),
+      action: serializer.fromJson<String>(json['action']),
+      payload: serializer.fromJson<String>(json['payload']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      attempts: serializer.fromJson<int>(json['attempts']),
+      error: serializer.fromJson<String?>(json['error']),
+      failedAt: serializer.fromJson<DateTime>(json['failedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'idempotencyKey': serializer.toJson<String>(idempotencyKey),
+      'entityType': serializer.toJson<String>(entityType),
+      'action': serializer.toJson<String>(action),
+      'payload': serializer.toJson<String>(payload),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'attempts': serializer.toJson<int>(attempts),
+      'error': serializer.toJson<String?>(error),
+      'failedAt': serializer.toJson<DateTime>(failedAt),
+    };
+  }
+
+  DeadLetterQueueData copyWith(
+          {int? id,
+          String? idempotencyKey,
+          String? entityType,
+          String? action,
+          String? payload,
+          DateTime? createdAt,
+          int? attempts,
+          Value<String?> error = const Value.absent(),
+          DateTime? failedAt}) =>
+      DeadLetterQueueData(
+        id: id ?? this.id,
+        idempotencyKey: idempotencyKey ?? this.idempotencyKey,
+        entityType: entityType ?? this.entityType,
+        action: action ?? this.action,
+        payload: payload ?? this.payload,
+        createdAt: createdAt ?? this.createdAt,
+        attempts: attempts ?? this.attempts,
+        error: error.present ? error.value : this.error,
+        failedAt: failedAt ?? this.failedAt,
+      );
+  DeadLetterQueueData copyWithCompanion(DeadLetterQueueCompanion data) {
+    return DeadLetterQueueData(
+      id: data.id.present ? data.id.value : this.id,
+      idempotencyKey: data.idempotencyKey.present
+          ? data.idempotencyKey.value
+          : this.idempotencyKey,
+      entityType:
+          data.entityType.present ? data.entityType.value : this.entityType,
+      action: data.action.present ? data.action.value : this.action,
+      payload: data.payload.present ? data.payload.value : this.payload,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      attempts: data.attempts.present ? data.attempts.value : this.attempts,
+      error: data.error.present ? data.error.value : this.error,
+      failedAt: data.failedAt.present ? data.failedAt.value : this.failedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DeadLetterQueueData(')
+          ..write('id: $id, ')
+          ..write('idempotencyKey: $idempotencyKey, ')
+          ..write('entityType: $entityType, ')
+          ..write('action: $action, ')
+          ..write('payload: $payload, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('attempts: $attempts, ')
+          ..write('error: $error, ')
+          ..write('failedAt: $failedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, idempotencyKey, entityType, action,
+      payload, createdAt, attempts, error, failedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DeadLetterQueueData &&
+          other.id == this.id &&
+          other.idempotencyKey == this.idempotencyKey &&
+          other.entityType == this.entityType &&
+          other.action == this.action &&
+          other.payload == this.payload &&
+          other.createdAt == this.createdAt &&
+          other.attempts == this.attempts &&
+          other.error == this.error &&
+          other.failedAt == this.failedAt);
+}
+
+class DeadLetterQueueCompanion extends UpdateCompanion<DeadLetterQueueData> {
+  final Value<int> id;
+  final Value<String> idempotencyKey;
+  final Value<String> entityType;
+  final Value<String> action;
+  final Value<String> payload;
+  final Value<DateTime> createdAt;
+  final Value<int> attempts;
+  final Value<String?> error;
+  final Value<DateTime> failedAt;
+  const DeadLetterQueueCompanion({
+    this.id = const Value.absent(),
+    this.idempotencyKey = const Value.absent(),
+    this.entityType = const Value.absent(),
+    this.action = const Value.absent(),
+    this.payload = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.attempts = const Value.absent(),
+    this.error = const Value.absent(),
+    this.failedAt = const Value.absent(),
+  });
+  DeadLetterQueueCompanion.insert({
+    this.id = const Value.absent(),
+    required String idempotencyKey,
+    required String entityType,
+    required String action,
+    required String payload,
+    required DateTime createdAt,
+    required int attempts,
+    this.error = const Value.absent(),
+    this.failedAt = const Value.absent(),
+  })  : idempotencyKey = Value(idempotencyKey),
+        entityType = Value(entityType),
+        action = Value(action),
+        payload = Value(payload),
+        createdAt = Value(createdAt),
+        attempts = Value(attempts);
+  static Insertable<DeadLetterQueueData> custom({
+    Expression<int>? id,
+    Expression<String>? idempotencyKey,
+    Expression<String>? entityType,
+    Expression<String>? action,
+    Expression<String>? payload,
+    Expression<DateTime>? createdAt,
+    Expression<int>? attempts,
+    Expression<String>? error,
+    Expression<DateTime>? failedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (idempotencyKey != null) 'idempotency_key': idempotencyKey,
+      if (entityType != null) 'entity_type': entityType,
+      if (action != null) 'action': action,
+      if (payload != null) 'payload': payload,
+      if (createdAt != null) 'created_at': createdAt,
+      if (attempts != null) 'attempts': attempts,
+      if (error != null) 'error': error,
+      if (failedAt != null) 'failed_at': failedAt,
+    });
+  }
+
+  DeadLetterQueueCompanion copyWith(
+      {Value<int>? id,
+      Value<String>? idempotencyKey,
+      Value<String>? entityType,
+      Value<String>? action,
+      Value<String>? payload,
+      Value<DateTime>? createdAt,
+      Value<int>? attempts,
+      Value<String?>? error,
+      Value<DateTime>? failedAt}) {
+    return DeadLetterQueueCompanion(
+      id: id ?? this.id,
+      idempotencyKey: idempotencyKey ?? this.idempotencyKey,
+      entityType: entityType ?? this.entityType,
+      action: action ?? this.action,
+      payload: payload ?? this.payload,
+      createdAt: createdAt ?? this.createdAt,
+      attempts: attempts ?? this.attempts,
+      error: error ?? this.error,
+      failedAt: failedAt ?? this.failedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (idempotencyKey.present) {
+      map['idempotency_key'] = Variable<String>(idempotencyKey.value);
+    }
+    if (entityType.present) {
+      map['entity_type'] = Variable<String>(entityType.value);
+    }
+    if (action.present) {
+      map['action'] = Variable<String>(action.value);
+    }
+    if (payload.present) {
+      map['payload'] = Variable<String>(payload.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (attempts.present) {
+      map['attempts'] = Variable<int>(attempts.value);
+    }
+    if (error.present) {
+      map['error'] = Variable<String>(error.value);
+    }
+    if (failedAt.present) {
+      map['failed_at'] = Variable<DateTime>(failedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DeadLetterQueueCompanion(')
+          ..write('id: $id, ')
+          ..write('idempotencyKey: $idempotencyKey, ')
+          ..write('entityType: $entityType, ')
+          ..write('action: $action, ')
+          ..write('payload: $payload, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('attempts: $attempts, ')
+          ..write('error: $error, ')
+          ..write('failedAt: $failedAt')
           ..write(')'))
         .toString();
   }
@@ -2764,6 +3316,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $CachedProfilesTable cachedProfiles = $CachedProfilesTable(this);
   late final $SyncQueueTable syncQueue = $SyncQueueTable(this);
+  late final $DeadLetterQueueTable deadLetterQueue =
+      $DeadLetterQueueTable(this);
   late final $CachedRidesTable cachedRides = $CachedRidesTable(this);
   late final $CachedCategoriesTable cachedCategories =
       $CachedCategoriesTable(this);
@@ -2779,6 +3333,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [
         cachedProfiles,
         syncQueue,
+        deadLetterQueue,
         cachedRides,
         cachedCategories,
         cachedBanners,
@@ -2998,18 +3553,22 @@ typedef $$CachedProfilesTableProcessedTableManager = ProcessedTableManager<
 typedef $$SyncQueueTableCreateCompanionBuilder = SyncQueueCompanion Function({
   Value<int> id,
   required String idempotencyKey,
+  required String entityType,
   required String action,
   required String payload,
   Value<DateTime> createdAt,
   Value<int> attempts,
+  Value<DateTime?> nextRetryAt,
 });
 typedef $$SyncQueueTableUpdateCompanionBuilder = SyncQueueCompanion Function({
   Value<int> id,
   Value<String> idempotencyKey,
+  Value<String> entityType,
   Value<String> action,
   Value<String> payload,
   Value<DateTime> createdAt,
   Value<int> attempts,
+  Value<DateTime?> nextRetryAt,
 });
 
 class $$SyncQueueTableFilterComposer
@@ -3028,6 +3587,9 @@ class $$SyncQueueTableFilterComposer
       column: $table.idempotencyKey,
       builder: (column) => ColumnFilters(column));
 
+  ColumnFilters<String> get entityType => $composableBuilder(
+      column: $table.entityType, builder: (column) => ColumnFilters(column));
+
   ColumnFilters<String> get action => $composableBuilder(
       column: $table.action, builder: (column) => ColumnFilters(column));
 
@@ -3039,6 +3601,9 @@ class $$SyncQueueTableFilterComposer
 
   ColumnFilters<int> get attempts => $composableBuilder(
       column: $table.attempts, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get nextRetryAt => $composableBuilder(
+      column: $table.nextRetryAt, builder: (column) => ColumnFilters(column));
 }
 
 class $$SyncQueueTableOrderingComposer
@@ -3057,6 +3622,9 @@ class $$SyncQueueTableOrderingComposer
       column: $table.idempotencyKey,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get entityType => $composableBuilder(
+      column: $table.entityType, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<String> get action => $composableBuilder(
       column: $table.action, builder: (column) => ColumnOrderings(column));
 
@@ -3068,6 +3636,9 @@ class $$SyncQueueTableOrderingComposer
 
   ColumnOrderings<int> get attempts => $composableBuilder(
       column: $table.attempts, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get nextRetryAt => $composableBuilder(
+      column: $table.nextRetryAt, builder: (column) => ColumnOrderings(column));
 }
 
 class $$SyncQueueTableAnnotationComposer
@@ -3085,6 +3656,9 @@ class $$SyncQueueTableAnnotationComposer
   GeneratedColumn<String> get idempotencyKey => $composableBuilder(
       column: $table.idempotencyKey, builder: (column) => column);
 
+  GeneratedColumn<String> get entityType => $composableBuilder(
+      column: $table.entityType, builder: (column) => column);
+
   GeneratedColumn<String> get action =>
       $composableBuilder(column: $table.action, builder: (column) => column);
 
@@ -3096,6 +3670,9 @@ class $$SyncQueueTableAnnotationComposer
 
   GeneratedColumn<int> get attempts =>
       $composableBuilder(column: $table.attempts, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get nextRetryAt => $composableBuilder(
+      column: $table.nextRetryAt, builder: (column) => column);
 }
 
 class $$SyncQueueTableTableManager extends RootTableManager<
@@ -3126,34 +3703,42 @@ class $$SyncQueueTableTableManager extends RootTableManager<
           updateCompanionCallback: ({
             Value<int> id = const Value.absent(),
             Value<String> idempotencyKey = const Value.absent(),
+            Value<String> entityType = const Value.absent(),
             Value<String> action = const Value.absent(),
             Value<String> payload = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<int> attempts = const Value.absent(),
+            Value<DateTime?> nextRetryAt = const Value.absent(),
           }) =>
               SyncQueueCompanion(
             id: id,
             idempotencyKey: idempotencyKey,
+            entityType: entityType,
             action: action,
             payload: payload,
             createdAt: createdAt,
             attempts: attempts,
+            nextRetryAt: nextRetryAt,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
             required String idempotencyKey,
+            required String entityType,
             required String action,
             required String payload,
             Value<DateTime> createdAt = const Value.absent(),
             Value<int> attempts = const Value.absent(),
+            Value<DateTime?> nextRetryAt = const Value.absent(),
           }) =>
               SyncQueueCompanion.insert(
             id: id,
             idempotencyKey: idempotencyKey,
+            entityType: entityType,
             action: action,
             payload: payload,
             createdAt: createdAt,
             attempts: attempts,
+            nextRetryAt: nextRetryAt,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -3176,6 +3761,236 @@ typedef $$SyncQueueTableProcessedTableManager = ProcessedTableManager<
       BaseReferences<_$AppDatabase, $SyncQueueTable, SyncQueueData>
     ),
     SyncQueueData,
+    PrefetchHooks Function()>;
+typedef $$DeadLetterQueueTableCreateCompanionBuilder = DeadLetterQueueCompanion
+    Function({
+  Value<int> id,
+  required String idempotencyKey,
+  required String entityType,
+  required String action,
+  required String payload,
+  required DateTime createdAt,
+  required int attempts,
+  Value<String?> error,
+  Value<DateTime> failedAt,
+});
+typedef $$DeadLetterQueueTableUpdateCompanionBuilder = DeadLetterQueueCompanion
+    Function({
+  Value<int> id,
+  Value<String> idempotencyKey,
+  Value<String> entityType,
+  Value<String> action,
+  Value<String> payload,
+  Value<DateTime> createdAt,
+  Value<int> attempts,
+  Value<String?> error,
+  Value<DateTime> failedAt,
+});
+
+class $$DeadLetterQueueTableFilterComposer
+    extends Composer<_$AppDatabase, $DeadLetterQueueTable> {
+  $$DeadLetterQueueTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get idempotencyKey => $composableBuilder(
+      column: $table.idempotencyKey,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get entityType => $composableBuilder(
+      column: $table.entityType, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get action => $composableBuilder(
+      column: $table.action, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get payload => $composableBuilder(
+      column: $table.payload, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get attempts => $composableBuilder(
+      column: $table.attempts, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get error => $composableBuilder(
+      column: $table.error, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get failedAt => $composableBuilder(
+      column: $table.failedAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$DeadLetterQueueTableOrderingComposer
+    extends Composer<_$AppDatabase, $DeadLetterQueueTable> {
+  $$DeadLetterQueueTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get idempotencyKey => $composableBuilder(
+      column: $table.idempotencyKey,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get entityType => $composableBuilder(
+      column: $table.entityType, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get action => $composableBuilder(
+      column: $table.action, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get payload => $composableBuilder(
+      column: $table.payload, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get attempts => $composableBuilder(
+      column: $table.attempts, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get error => $composableBuilder(
+      column: $table.error, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get failedAt => $composableBuilder(
+      column: $table.failedAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$DeadLetterQueueTableAnnotationComposer
+    extends Composer<_$AppDatabase, $DeadLetterQueueTable> {
+  $$DeadLetterQueueTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get idempotencyKey => $composableBuilder(
+      column: $table.idempotencyKey, builder: (column) => column);
+
+  GeneratedColumn<String> get entityType => $composableBuilder(
+      column: $table.entityType, builder: (column) => column);
+
+  GeneratedColumn<String> get action =>
+      $composableBuilder(column: $table.action, builder: (column) => column);
+
+  GeneratedColumn<String> get payload =>
+      $composableBuilder(column: $table.payload, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get attempts =>
+      $composableBuilder(column: $table.attempts, builder: (column) => column);
+
+  GeneratedColumn<String> get error =>
+      $composableBuilder(column: $table.error, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get failedAt =>
+      $composableBuilder(column: $table.failedAt, builder: (column) => column);
+}
+
+class $$DeadLetterQueueTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $DeadLetterQueueTable,
+    DeadLetterQueueData,
+    $$DeadLetterQueueTableFilterComposer,
+    $$DeadLetterQueueTableOrderingComposer,
+    $$DeadLetterQueueTableAnnotationComposer,
+    $$DeadLetterQueueTableCreateCompanionBuilder,
+    $$DeadLetterQueueTableUpdateCompanionBuilder,
+    (
+      DeadLetterQueueData,
+      BaseReferences<_$AppDatabase, $DeadLetterQueueTable, DeadLetterQueueData>
+    ),
+    DeadLetterQueueData,
+    PrefetchHooks Function()> {
+  $$DeadLetterQueueTableTableManager(
+      _$AppDatabase db, $DeadLetterQueueTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$DeadLetterQueueTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$DeadLetterQueueTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$DeadLetterQueueTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<String> idempotencyKey = const Value.absent(),
+            Value<String> entityType = const Value.absent(),
+            Value<String> action = const Value.absent(),
+            Value<String> payload = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<int> attempts = const Value.absent(),
+            Value<String?> error = const Value.absent(),
+            Value<DateTime> failedAt = const Value.absent(),
+          }) =>
+              DeadLetterQueueCompanion(
+            id: id,
+            idempotencyKey: idempotencyKey,
+            entityType: entityType,
+            action: action,
+            payload: payload,
+            createdAt: createdAt,
+            attempts: attempts,
+            error: error,
+            failedAt: failedAt,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required String idempotencyKey,
+            required String entityType,
+            required String action,
+            required String payload,
+            required DateTime createdAt,
+            required int attempts,
+            Value<String?> error = const Value.absent(),
+            Value<DateTime> failedAt = const Value.absent(),
+          }) =>
+              DeadLetterQueueCompanion.insert(
+            id: id,
+            idempotencyKey: idempotencyKey,
+            entityType: entityType,
+            action: action,
+            payload: payload,
+            createdAt: createdAt,
+            attempts: attempts,
+            error: error,
+            failedAt: failedAt,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$DeadLetterQueueTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $DeadLetterQueueTable,
+    DeadLetterQueueData,
+    $$DeadLetterQueueTableFilterComposer,
+    $$DeadLetterQueueTableOrderingComposer,
+    $$DeadLetterQueueTableAnnotationComposer,
+    $$DeadLetterQueueTableCreateCompanionBuilder,
+    $$DeadLetterQueueTableUpdateCompanionBuilder,
+    (
+      DeadLetterQueueData,
+      BaseReferences<_$AppDatabase, $DeadLetterQueueTable, DeadLetterQueueData>
+    ),
+    DeadLetterQueueData,
     PrefetchHooks Function()>;
 typedef $$CachedRidesTableCreateCompanionBuilder = CachedRidesCompanion
     Function({
@@ -4232,6 +5047,8 @@ class $AppDatabaseManager {
       $$CachedProfilesTableTableManager(_db, _db.cachedProfiles);
   $$SyncQueueTableTableManager get syncQueue =>
       $$SyncQueueTableTableManager(_db, _db.syncQueue);
+  $$DeadLetterQueueTableTableManager get deadLetterQueue =>
+      $$DeadLetterQueueTableTableManager(_db, _db.deadLetterQueue);
   $$CachedRidesTableTableManager get cachedRides =>
       $$CachedRidesTableTableManager(_db, _db.cachedRides);
   $$CachedCategoriesTableTableManager get cachedCategories =>

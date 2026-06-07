@@ -47,7 +47,7 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyD068jXdRBfUzkELXMHwwaTuYIEgwRhN9g',
+    apiKey: const String.fromEnvironment('FIREBASE_API_KEY_WEB'),
     appId: '1:542549978836:web:045decded3e0ce02571541',
     messagingSenderId: '542549978836',
     projectId: 'roadrobos-prod',
@@ -58,7 +58,7 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyA-4xugCfeTYzUmavXEfhOThQLQaczhQoQ',
+    apiKey: const String.fromEnvironment('FIREBASE_API_KEY_ANDROID'),
     appId: '1:542549978836:android:01511e6fb66b5612571541',
     messagingSenderId: '542549978836',
     projectId: 'roadrobos-prod',
@@ -67,7 +67,7 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyDP5dkXv8a1bHsr0tM0Hcag5c11AW-_kJE',
+    apiKey: const String.fromEnvironment('FIREBASE_API_KEY_IOS'),
     appId: '1:542549978836:ios:ef1b27c690f4f5ca571541',
     messagingSenderId: '542549978836',
     projectId: 'roadrobos-prod',

@@ -1,3 +1,5 @@
+import '../extensions/datetime_extensions.dart';
+
 class ServiceBooking {
   final String id;
   final String customerId;
@@ -9,6 +11,9 @@ class ServiceBooking {
   final String time;
   final String status;
   final double totalCost;
+  final String? address;
+  final double? latitude;
+  final double? longitude;
   final Map<String, dynamic> details;
   final DateTime createdAt;
 
@@ -23,6 +28,9 @@ class ServiceBooking {
     required this.time,
     this.status = 'pending',
     required this.totalCost,
+    this.address,
+    this.latitude,
+    this.longitude,
     required this.details,
     required this.createdAt,
   });
@@ -39,6 +47,9 @@ class ServiceBooking {
       time: map['booking_time'] ?? '',
       status: map['status'] ?? 'pending',
       totalCost: (map['total_cost'] ?? 0.0).toDouble(),
+      address: map['address'],
+      latitude: map['latitude'] != null ? (map['latitude'] as num).toDouble() : null,
+      longitude: map['longitude'] != null ? (map['longitude'] as num).toDouble() : null,
       details: map['details'] is Map ? Map<String, dynamic>.from(map['details']) : {},
       createdAt: map['created_at'] != null ? DateTime.parse(map['created_at']) : DateTime.now(),
     );
@@ -55,8 +66,11 @@ class ServiceBooking {
       'booking_time': time,
       'status': status,
       'total_cost': totalCost,
+      if (address != null) 'address': address,
+      if (latitude != null) 'latitude': latitude,
+      if (longitude != null) 'longitude': longitude,
       'details': details,
-      'created_at': createdAt.toIso8601String(),
+      'created_at': createdAt.utcIso,
     };
   }
 }

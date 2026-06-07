@@ -25,6 +25,7 @@ import 'home_providers.dart';
 import '../../core/repositories/quick_action_repository.dart';
 import '../../core/utils/icon_helper.dart';
 import '../../core/models/service_booking.dart';
+import '../chat/providers/chat_providers.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -79,6 +80,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       children: [
                         _buildMoreTile(context, 'Add Vehicle', Icons.add_circle_outline_rounded, const Color(0xFF3B82F6), '/add-vehicle'),
                         _buildMoreTile(context, 'Loyalty', Icons.card_membership_rounded, const Color(0xFFF97316), '/loyalty'),
+                        _buildMoreTile(context, 'Send Package', Iconsax.box, const Color(0xFF6366F1), '/delivery/create'),
                         _buildMoreTile(context, 'Help', Iconsax.message_question, const Color(0xFF8B5CF6), '/help-center'),
                         _buildMoreTile(context, 'History', Icons.history_rounded, const Color(0xFFF97316), '/ride-history'),
                         _buildMoreTile(context, 'Referral', Icons.card_giftcard_rounded, const Color(0xFFEC4899), '/referral'),
@@ -168,6 +170,49 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primaryBlue, fontSize: 13),
                     ),
                   ),
+                ),
+                const SizedBox(width: 8),
+                Consumer(
+                  builder: (context, ref, child) {
+                    // Make sure to import chat_providers
+                    final unreadCountAsync = ref.watch(unreadMessagesCountProvider);
+                    final count = unreadCountAsync.value ?? 0;
+                    return GestureDetector(
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        // context.push('/chat-list');
+                      },
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: AppColors.border),
+                          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4))],
+                        ),
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            const Icon(Icons.chat_bubble_outline_rounded, size: 20, color: AppColors.textPrimary),
+                            if (count > 0)
+                              Positioned(
+                                top: 6,
+                                right: 6,
+                                child: Container(
+                                  padding: const EdgeInsets.all(2),
+                                  decoration: BoxDecoration(color: AppColors.dangerRed, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 1.5)),
+                                  child: Text(
+                                    count > 9 ? '9+' : count.toString(),
+                                    style: const TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ).animate().fadeIn(duration: 500.ms, delay: 100.ms).scale(begin: const Offset(0.8, 0.8), end: const Offset(1.0, 1.0));
+                  },
                 ),
                 const SizedBox(width: 8),
                 GestureDetector(
@@ -655,6 +700,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       case 'repair': return '/select-service';
       case 'rentals': return '/rentals-selection';
       case 'ev service': return '/select-service';
+      case 'delivery': return '/delivery/create';
       default: return '/main/explore';
     }
   }

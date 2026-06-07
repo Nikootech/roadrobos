@@ -1,12 +1,17 @@
+// IMPORTANT: All StreamSubscription fields must be cancelled in dispose/onDispose.
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:async';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import '../../core/models/user_role.dart';
 import '../../core/repositories/user_repository.dart';
 import '../../core/services/auth_service.dart';
 import '../../core/services/notification_service.dart';
+import '../../core/extensions/datetime_extensions.dart';
+
 
 /// State wrapper for user data to maintain UI compatibility
 class UserState {
@@ -80,6 +85,7 @@ class UserNotifier extends StateNotifier<UserState> {
         // ignore: unawaited_futures
         _profileSubscription?.cancel();
         state = UserState();
+        Sentry.configureScope((scope) => scope.setUser(null));
       } else {
         // Optimization: Skip fetching if the profile for this user is already loaded
         // BUT: Re-fetch if we are missing a profile picture (to allow sync from OAuth)
@@ -231,6 +237,10 @@ class UserNotifier extends StateNotifier<UserState> {
         
         state = state.copyWith(user: newUser, isLoading: false, isDemo: isDemoId);
       }
+      if (state.user != null) {
+        final u = state.user!;
+        Sentry.configureScope((scope) => scope.setUser(SentryUser(id: u.id, email: u.email)));
+      }
     } catch (e, stackTrace) {
       if (kDebugMode) {
         debugPrint('UserNotifier: ERROR in fetchUserProfile: $e');
@@ -271,6 +281,7 @@ class UserNotifier extends StateNotifier<UserState> {
   Future<void> logout() async {
     await _authService.signOut();
     state = UserState();
+    Sentry.configureScope((scope) => scope.setUser(null));
   }
 
   Future<void> deleteAccountRequest() async {
@@ -281,7 +292,7 @@ class UserNotifier extends StateNotifier<UserState> {
     try {
       if (!state.isDemo) {
         await _userRepository.updateField(currentAppUser.id, 'deletion_requested', true);
-        await _userRepository.updateField(currentAppUser.id, 'deletion_requested_at', DateTime.now().toIso8601String());
+        await _userRepository.updateField(currentAppUser.id, 'deletion_requested_at', DateTime.now().utcIso);
       }
       await logout();
     } catch (e) {

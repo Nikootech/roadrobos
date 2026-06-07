@@ -6,6 +6,8 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/extensions/datetime_extensions.dart';
+
 
 /// Audit Log Screen — paginated list from audit_logs table.
 ///
@@ -69,10 +71,10 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
       // Apply date range filter
       if (_selectedDateRange != null) {
         query = query
-            .gte('created_at', _selectedDateRange!.start.toIso8601String())
+            .gte('created_at', _selectedDateRange!.start.utcIso)
             .lte('created_at', _selectedDateRange!.end
                 .add(const Duration(days: 1))
-                .toIso8601String());
+                .utcIso);
       }
 
       // Apply sorting and pagination
@@ -91,10 +93,10 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
 
       if (_selectedDateRange != null) {
         countQuery = countQuery
-            .gte('created_at', _selectedDateRange!.start.toIso8601String())
+            .gte('created_at', _selectedDateRange!.start.utcIso)
             .lte('created_at', _selectedDateRange!.end
                 .add(const Duration(days: 1))
-                .toIso8601String());
+                .utcIso);
       }
 
       final countResult = await countQuery.count(CountOption.exact);

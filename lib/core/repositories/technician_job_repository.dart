@@ -1,18 +1,21 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:uuid/uuid.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:latlong2/latlong.dart';
 import '../models/technician_job_model.dart';
 import '../data/local_database.dart';
+import '../extensions/datetime_extensions.dart';
+import '../services/unified_sync_service.dart';
+
 
 class TechnicianJobRepository {
   final SupabaseClient _supabase = Supabase.instance.client;
   final AppDatabase _db;
+  final UnifiedSyncService _syncService;
 
-  TechnicianJobRepository(this._db);
+  TechnicianJobRepository(this._db, this._syncService);
 
   // Helper: Cache a list of jobs to Drift
   Future<void> _cacheJobs(List<TechnicianJobModel> jobs) async {
@@ -126,12 +129,10 @@ class TechnicianJobRepository {
           .eq('id', jobId);
     } catch (e) {
       // 3. Queue for sync if offline
-      await _db.into(_db.syncQueue).insert(
-        SyncQueueCompanion.insert(
-          idempotencyKey: const Uuid().v4(),
-          action: 'update_job_status',
-          payload: jsonEncode({'jobId': jobId, 'status': status}),
-        ),
+      await _syncService.enqueue(
+        entityType: 'technician_job',
+        action: 'update_job_status',
+        payload: {'jobId': jobId, 'status': status},
       );
       debugPrint('updateJobStatus queued for sync offline: $e');
     }
@@ -153,11 +154,11 @@ class TechnicianJobRepository {
         'vehiclePlate': plate,
       }).eq('id', jobId);
     } catch (e) {
-      await _db.into(_db.syncQueue).insert(SyncQueueCompanion.insert(
-        idempotencyKey: const Uuid().v4(),
+      await _syncService.enqueue(
+        entityType: 'technician_job',
         action: 'update_vehicle_details',
-        payload: jsonEncode({'jobId': jobId, 'model': model, 'plate': plate}),
-      ));
+        payload: {'jobId': jobId, 'model': model, 'plate': plate},
+      );
     }
   }
 
@@ -173,11 +174,11 @@ class TechnicianJobRepository {
           .update({'progress': progress})
           .eq('id', jobId);
     } catch (e) {
-      await _db.into(_db.syncQueue).insert(SyncQueueCompanion.insert(
-        idempotencyKey: const Uuid().v4(),
+      await _syncService.enqueue(
+        entityType: 'technician_job',
         action: 'update_job_progress',
-        payload: jsonEncode({'jobId': jobId, 'progress': progress}),
-      ));
+        payload: {'jobId': jobId, 'progress': progress},
+      );
     }
   }
 
@@ -205,11 +206,11 @@ class TechnicianJobRepository {
             'progress': progress,
           }).eq('id', jobId);
         } catch (e) {
-          await _db.into(_db.syncQueue).insert(SyncQueueCompanion.insert(
-            idempotencyKey: const Uuid().v4(),
+          await _syncService.enqueue(
+            entityType: 'technician_job',
             action: 'toggle_checklist',
-            payload: jsonEncode({'jobId': jobId, 'index': index, 'checklist': checklist, 'progress': progress}),
-          ));
+            payload: {'jobId': jobId, 'index': index, 'checklist': checklist, 'progress': progress},
+          );
         }
       }
     }
@@ -233,11 +234,11 @@ class TechnicianJobRepository {
           'parts': parts,
         }).eq('id', jobId);
       } catch (e) {
-        await _db.into(_db.syncQueue).insert(SyncQueueCompanion.insert(
-          idempotencyKey: const Uuid().v4(),
+        await _syncService.enqueue(
+          entityType: 'technician_job',
           action: 'add_spare_part',
-          payload: jsonEncode({'jobId': jobId, 'parts': parts}),
-        ));
+          payload: {'jobId': jobId, 'parts': parts},
+        );
       }
     }
   }
@@ -269,7 +270,7 @@ class TechnicianJobRepository {
       await _supabase.from('technicians').update({
         'lat': position.latitude,
         'lng': position.longitude,
-        'last_active': DateTime.now().toIso8601String(),
+        'last_active': DateTime.now().utcIso,
       }).eq('id', uid);
     } catch (e) {
       // Silent fail for background updates
@@ -278,5 +279,8 @@ class TechnicianJobRepository {
 }
 
 final technicianJobRepositoryProvider = Provider<TechnicianJobRepository>((ref) {
-  return TechnicianJobRepository(ref.watch(localDatabaseProvider));
+  return TechnicianJobRepository(
+    ref.watch(localDatabaseProvider),
+    ref.watch(unifiedSyncServiceProvider),
+  );
 });

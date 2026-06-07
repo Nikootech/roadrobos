@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 import '../models/driver_model.dart';
 import '../models/ride_booking.dart';
+import '../extensions/datetime_extensions.dart';
+
 
 final driverRepositoryProvider = Provider((ref) => DriverRepository());
 
@@ -23,7 +25,7 @@ class DriverRepository {
     try {
       await _supabase.from('drivers').update({
         'is_online': isOnline,
-        'last_active': DateTime.now().toIso8601String(),
+        'last_active': DateTime.now().utcIso,
       }).eq('id', uid);
     } catch (e) {
       throw Exception('Failed to update online status: $e');
@@ -36,7 +38,7 @@ class DriverRepository {
       await _supabase.from('drivers').update({
         'lat': position.latitude,
         'lng': position.longitude,
-        'last_active': DateTime.now().toIso8601String(),
+        'last_active': DateTime.now().utcIso,
       }).eq('id', uid);
     } catch (e) {
       // Background update - silent fail
@@ -64,7 +66,7 @@ class DriverRepository {
           .update({
             'driver_id': driverId,
             'status': 'booked',
-            'accepted_at': DateTime.now().toIso8601String(),
+            'accepted_at': DateTime.now().utcIso,
           })
           .eq('id', rideId)
           .eq('status', 'pending')
@@ -83,7 +85,7 @@ class DriverRepository {
     try {
       await _supabase.from('ride_bookings').update({
         'status': status,
-        '${status}_at': DateTime.now().toIso8601String(),
+        '${status}_at': DateTime.now().utcIso,
       }).eq('id', rideId);
     } catch (e) {
       throw Exception('Failed to update trip status: $e');
@@ -122,7 +124,7 @@ class DriverRepository {
         'approval_status': approvalStatus,
         'is_online': false,
         'today_earnings': 0.0,
-        'created_at': DateTime.now().toIso8601String(),
+        'created_at': DateTime.now().utcIso,
       });
       return true;
     } catch (e) {
