@@ -193,7 +193,7 @@ class _CreateJobCardScreenState extends ConsumerState<CreateJobCardScreen> {
                       const SizedBox(height: 16),
                       TextField(
                         controller: _vehicleModelController,
-                        style: const TextStyle(fontWeight: FontWeight.w500),
+                        style: const TextStyle(fontWeight: FontWeight.w500, color: AppColors.textPrimary),
                         decoration: InputDecoration(
                           hintText: 'e.g. 2021 Hyundai Creta SX',
                           hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 14),
@@ -216,7 +216,7 @@ class _CreateJobCardScreenState extends ConsumerState<CreateJobCardScreen> {
                       const SizedBox(height: 12),
                       TextField(
                         controller: _regNoController,
-                        style: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1),
+                        style: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1, color: AppColors.textPrimary),
                         textCapitalization: TextCapitalization.characters,
                         decoration: InputDecoration(
                           hintText: 'e.g. MH 12 AB 1234',
@@ -295,7 +295,7 @@ class _CreateJobCardScreenState extends ConsumerState<CreateJobCardScreen> {
                                 child: TextField(
                                   controller: _mileageController,
                                   keyboardType: TextInputType.number,
-                                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                                   decoration: const InputDecoration(
                                     isDense: true,
                                     contentPadding: EdgeInsets.zero,

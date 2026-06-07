@@ -60,12 +60,7 @@ ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Roles are viewable by authenticated users" ON public.roles FOR SELECT USING (auth.role() = 'authenticated');
 CREATE POLICY "Permissions are viewable by authenticated users" ON public.permissions FOR SELECT USING (auth.role() = 'authenticated');
 CREATE POLICY "User roles are viewable by the user or admins" ON public.user_roles FOR SELECT USING (
-  auth.uid() = user_id OR 
-  EXISTS (
-    SELECT 1 FROM public.user_roles ur 
-    JOIN public.roles r ON ur.role_id = r.id 
-    WHERE ur.user_id = auth.uid() AND r.name IN ('super_admin', 'admin')
-  )
+  auth.uid() = user_id OR public.is_admin(auth.uid())
 );
 
 -- 7. Helper Function to check permissions (for RLS and Edge Functions)

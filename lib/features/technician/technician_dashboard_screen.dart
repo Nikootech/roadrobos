@@ -182,7 +182,7 @@ class _TechnicianDashboardScreenState extends ConsumerState<TechnicianDashboardS
       controller: ctrl,
       keyboardType: isNumber ? TextInputType.number : TextInputType.text,
       validator: required ? (v) => (v == null || v.trim().isEmpty) ? '$label is required' : null : null,
-      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF1A237E)),
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,

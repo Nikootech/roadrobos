@@ -76,7 +76,7 @@ class _SparePartsScreenState extends ConsumerState<SparePartsScreen> {
                   ),
                   child: TextField(
                     onChanged: (v) => setState(() => _searchQuery = v),
-                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF1A237E)),
                     decoration: const InputDecoration(
                       icon: Icon(Iconsax.search_normal, size: 18, color: Color(0xFF1A237E)),
                       hintText: 'Search Spare Parts...',

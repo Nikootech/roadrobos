@@ -420,7 +420,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
         const SizedBox(height: 10),
         TextFormField(
           controller: controller,
-          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
           decoration: InputDecoration(
             prefixIcon: Icon(icon, color: AppColors.primaryBlue, size: 20),
             filled: true,

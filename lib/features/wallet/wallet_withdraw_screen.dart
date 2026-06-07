@@ -109,6 +109,7 @@ class _WalletWithdrawScreenState extends ConsumerState<WalletWithdrawScreen> {
             const SizedBox(height: 8),
             TextField(
               controller: _bankDetailsController,
+              style: const TextStyle(color: AppColors.textPrimary),
               decoration: InputDecoration(
                 hintText: 'e.g. name@upi or Account Number',
                 filled: true,
@@ -121,6 +122,7 @@ class _WalletWithdrawScreenState extends ConsumerState<WalletWithdrawScreen> {
             const SizedBox(height: 8),
             TextField(
               controller: _amountController,
+              style: const TextStyle(color: AppColors.textPrimary),
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))],
               decoration: InputDecoration(

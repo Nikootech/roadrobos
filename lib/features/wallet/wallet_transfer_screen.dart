@@ -274,6 +274,7 @@ class _WalletTransferScreenState extends ConsumerState<WalletTransferScreen> {
                 Expanded(
                   child: TextField(
                     controller: _phoneController,
+                    style: const TextStyle(color: AppColors.textPrimary),
                     keyboardType: TextInputType.phone,
                     decoration: InputDecoration(
                       hintText: '9876543210 (10 digits)',
@@ -378,6 +379,7 @@ class _WalletTransferScreenState extends ConsumerState<WalletTransferScreen> {
             const SizedBox(height: 8),
             TextField(
               controller: _amountController,
+              style: const TextStyle(color: AppColors.textPrimary),
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))],
               decoration: InputDecoration(
