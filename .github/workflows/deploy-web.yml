@@ -32,7 +32,19 @@ jobs:
       - name: Build Web Release
         run: flutter build web --release --dart-define-from-file=.dart_defines --no-tree-shake-icons
 
+      - name: Check for Vercel Secrets
+        id: check_secrets
+        run: |
+          if [ -z "${{ secrets.VERCEL_TOKEN }}" ] || [ -z "${{ secrets.VERCEL_ORG_ID }}" ] || [ -z "${{ secrets.VERCEL_PROJECT_ID }}" ]; then
+            echo "has_secrets=false" >> $GITHUB_OUTPUT
+            echo "⚠️ WARNING: Vercel credentials are not set in GitHub secrets. Skiping Vercel CLI deployment."
+            echo "Note: If you linked this repo directly in the Vercel Dashboard, Vercel will still deploy automatically."
+          else
+            echo "has_secrets=true" >> $GITHUB_OUTPUT
+          fi
+
       - name: Deploy to Vercel
+        if: steps.check_secrets.outputs.has_secrets == 'true'
         uses: amondnet/vercel-action@v25
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}

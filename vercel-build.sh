@@ -33,21 +33,33 @@ flutter --version
 # Enable Web support
 flutter config --enable-web
 
-# 2. Validate that required Vercel environment variables are set
-echo "Validating required environment variables..."
-MISSING_VARS=0
-for VAR in SUPABASE_URL SUPABASE_ANON_KEY RAZORPAY_KEY_ID GOOGLE_CLIENT_ID MAPS_API_KEY FIREBASE_API_KEY_WEB SENTRY_DSN; do
+# 2. Validate Vercel environment variables
+echo "Validating environment variables..."
+CRITICAL_MISSING=0
+
+# Critical variables (must be present for the app to function)
+for VAR in SUPABASE_URL SUPABASE_ANON_KEY; do
   if [ -z "${!VAR}" ]; then
-    echo "  ❌ ERROR: Required environment variable '$VAR' is not set in Vercel."
-    MISSING_VARS=1
+    echo "  ❌ ERROR: Critical environment variable '$VAR' is not set in Vercel."
+    CRITICAL_MISSING=1
   else
     echo "  ✅ $VAR is set."
   fi
 done
-if [ "$MISSING_VARS" -eq 1 ]; then
+
+# Optional/Service integration variables (warnings only)
+for VAR in RAZORPAY_KEY_ID GOOGLE_CLIENT_ID MAPS_API_KEY FIREBASE_API_KEY_WEB SENTRY_DSN; do
+  if [ -z "${!VAR}" ]; then
+    echo "  ⚠️ WARNING: Optional environment variable '$VAR' is not set. Integrations using this key may fail at runtime."
+  else
+    echo "  ✅ $VAR is set."
+  fi
+done
+
+if [ "$CRITICAL_MISSING" -eq 1 ]; then
   echo ""
-  echo "Build aborted: One or more required environment variables are missing."
-  echo "Please add them in Vercel Dashboard → Project → Settings → Environment Variables."
+  echo "Build aborted: Critical environment variables are missing."
+  echo "Please add SUPABASE_URL and SUPABASE_ANON_KEY in Vercel Dashboard → Project → Settings → Environment Variables."
   exit 1
 fi
 
