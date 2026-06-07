@@ -6,7 +6,7 @@ class DeeplinkValidator {
   static const _allowedSchemes = {'roadrobos', 'https'};
 
   /// Extract the host portion from the SUPABASE_URL env var.
-  /// e.g. "https://qfwhgrhcffozujejlwre.supabase.co" → "qfwhgrhcffozujejlwre.supabase.co"
+  /// e.g. "https://YOUR_PROJECT_ID.supabase.co" → "YOUR_PROJECT_ID.supabase.co"
   static String get _supabaseHost {
     const url = String.fromEnvironment('SUPABASE_URL');
     if (url.isEmpty) return '';
