@@ -5,13 +5,19 @@ class DeeplinkValidator {
 
   static const _allowedSchemes = {'roadrobos', 'https'};
 
-  static const _allowedHosts = {
+  /// Extract the host portion from the SUPABASE_URL env var.
+  /// e.g. "https://qfwhgrhcffozujejlwre.supabase.co" → "qfwhgrhcffozujejlwre.supabase.co"
+  static String get _supabaseHost {
+    const url = String.fromEnvironment('SUPABASE_URL');
+    if (url.isEmpty) return '';
+    return Uri.tryParse(url)?.host ?? '';
+  }
+
+  static Set<String> get _allowedHosts => {
     'roadrobos.app',
     // Supabase project URL — used for OAuth redirects
-    // Replace YOUR_PROJECT with actual Supabase project ref
-    'qfwhgrhcffozujejlwre.supabase.co',
+    if (_supabaseHost.isNotEmpty) _supabaseHost,
   };
-
 
 
   /// Returns true if the URI is a valid, trusted deeplink.
