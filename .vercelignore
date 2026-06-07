@@ -1,0 +1,14 @@
+# Don't upload local build outputs or cache
+build/
+.dart_tool/
+.git/
+
+# Don't upload native mobile/desktop folders (not needed for Web builds)
+android/
+ios/
+windows/
+macos/
+linux/
+
+# Don't upload local flutter SDK if cloned locally
+flutter/

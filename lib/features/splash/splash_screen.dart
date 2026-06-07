@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/services/local_storage_service.dart';
+import '../../core/services/auth_service.dart';
 
 /// Splash Screen - Animated logo reveal with auto-navigation
 /// Matches precisely with user-provided image (Light theme, small blue circles)
@@ -23,6 +24,15 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   }
 
   Future<void> _handleNavigation() async {
+    // If user is already logged in, do not manually redirect to /auth/login.
+    // GoRouter's refresh notifier listens to auth changes and will route the user
+    // to their home screen once their profile loads.
+    final authState = ref.read(authNotifierProvider);
+    if (authState.value != null) {
+      debugPrint('SplashScreen: User is logged in, skipping manual login redirection');
+      return;
+    }
+
     final localStorage = ref.read(localStorageServiceProvider);
     final isFirstLaunch = await localStorage.isFirstLaunch();
     

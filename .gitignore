@@ -92,3 +92,4 @@ test_patch*.dart
 # Local security tooling — not for version control
 verify_security.ps1
 paths_to_purge.txt
+.vercel
