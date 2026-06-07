@@ -196,7 +196,7 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
               const Spacer(),
               // Pickup Pill
               Flexible(
-                child: _buildAddressPill(context, state.pickupAddress ?? 'Pick-up', isPickup: true),
+                child: _buildAddressPill(context, state.pickupAddress ?? 'Pick-up'),
               ),
             ],
           ),

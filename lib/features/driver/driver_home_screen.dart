@@ -35,7 +35,7 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
               children: [
                 // Header (Profile & Notification)
                 Padding(
-                  padding: ResponsiveLayout.responsivePadding(context, horizontal: 24, vertical: 20),
+                  padding: ResponsiveLayout.responsivePadding(context, vertical: 20),
                   child: Row(
                     children: [
                       InkWell(
@@ -102,7 +102,7 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
 
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: ResponsiveLayout.responsivePadding(context, horizontal: 24, vertical: 0),
+                    padding: ResponsiveLayout.responsivePadding(context),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [

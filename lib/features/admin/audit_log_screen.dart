@@ -151,7 +151,6 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
               primary: AppColors.primaryBlue,
-              onPrimary: Colors.white,
               onSurface: AppColors.textPrimary,
             ),
           ),
@@ -165,6 +164,7 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
         _selectedDateRange = picked;
         _currentPage = 0;
       });
+      // ignore: unawaited_futures
       _fetchLogs();
     }
   }
@@ -390,7 +390,7 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
             children: [
               Row(
                 children: [
-                  Icon(Icons.access_time_rounded,
+                  const Icon(Icons.access_time_rounded,
                       size: 14, color: AppColors.textMuted),
                   const SizedBox(width: 4),
                   Text(

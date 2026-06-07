@@ -163,7 +163,6 @@ class _ActiveRidesScreenState extends State<ActiveRidesScreen> {
       children: [
         const LiveMapWidget(
           height: double.infinity,
-          showLiveIndicator: true,
         ),
         Positioned(
           top: 20,

@@ -1,0 +1,55 @@
+#!/bin/bash
+# RoadRobos Pre-Commit Hook
+# Runs on every git commit. Blocks commits that violate security or quality rules.
+# Install: chmod +x .git/hooks/pre-commit
+
+set -e
+
+echo "🔍 RoadRobos pre-commit checks..."
+
+# ── 1. Dart analyze ───────────────────────────────────────────────────────────
+echo "  → dart analyze..."
+dart analyze --fatal-infos --fatal-warnings lib/ || {
+  echo "❌ dart analyze found issues. Fix them before committing."
+  exit 1
+}
+
+# ── 2. Unguarded prints ───────────────────────────────────────────────────────
+# All print/debugPrint must be inside 'if (kDebugMode)' guards
+echo "  → checking for unguarded prints..."
+UNGUARDED=$(grep -rn "^\s*\(debugPrint\|print\)(" lib/ \
+  | grep -v "if (kDebugMode)" \
+  | grep -v "// ignore" \
+  | grep -v "\.dart:.*//") || true
+if [ -n "$UNGUARDED" ]; then
+  echo "❌ Unguarded print/debugPrint found:"
+  echo "$UNGUARDED"
+  echo "Wrap with: if (kDebugMode) { debugPrint(...); }"
+  exit 1
+fi
+
+# ── 3. Bare FlutterSecureStorage without AndroidOptions ───────────────────────
+echo "  → checking FlutterSecureStorage usage..."
+if grep -rn "FlutterSecureStorage()" lib/ 2>/dev/null | grep -v "//"; then
+  echo "❌ FlutterSecureStorage() must include AndroidOptions(encryptedSharedPreferences: true)."
+  exit 1
+fi
+
+# ── 4. Service role key must never be in client code ─────────────────────────
+echo "  → checking for service role keys..."
+if grep -rn "SUPABASE_SERVICE_KEY\|service_role\|sbp_" lib/ 2>/dev/null | grep -v "//"; then
+  echo "❌ Supabase service role key detected in client code. Move to Edge Functions."
+  exit 1
+fi
+
+# ── 5. Raw payment IDs in logs ────────────────────────────────────────────────
+echo "  → checking payment ID logging..."
+if grep -rn "paymentId\|payment_id" lib/ 2>/dev/null \
+  | grep "debugPrint\|print" \
+  | grep -v "\[REDACTED\]\|prefix\|length\|//"; then
+  echo "❌ Raw paymentId detected in a log statement. Redact it."
+  exit 1
+fi
+
+echo "✅ All pre-commit checks passed."
+exit 0

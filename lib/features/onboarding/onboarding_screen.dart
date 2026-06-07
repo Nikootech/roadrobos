@@ -56,6 +56,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   void _onNext() async {
     if (_currentPage < 2) {
+      // ignore: unawaited_futures
       _pageController.nextPage(
         duration: const Duration(milliseconds: 400),
         curve: Curves.easeInOutCubic,
@@ -135,7 +136,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                       dotWidth: 8,
                       activeDotColor: AppColors.primaryBlue,
                       dotColor: AppColors.border,
-                      expansionFactor: 3,
                       spacing: 6,
                     ),
                   ),
@@ -148,7 +148,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         : AppStrings.next,
                     onPressed: _onNext,
                     backgroundColor: AppColors.primaryBlue,
-                    height: 56,
                     borderRadius: 24,
                   ),
                 ],

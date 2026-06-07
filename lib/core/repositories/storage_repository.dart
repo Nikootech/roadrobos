@@ -22,7 +22,6 @@ class StorageRepository {
     await _supabase.storage.from(bucket).upload(
       fullPath,
       file,
-      fileOptions: const FileOptions(cacheControl: '3600', upsert: false),
     );
 
     return _supabase.storage.from(bucket).getPublicUrl(fullPath);

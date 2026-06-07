@@ -9,92 +9,103 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appName => 'RoAdRoBos';
+  String get appName => 'RoadRobos';
 
   @override
-  String get btnBook => 'Book Now';
+  String get recentServices => 'Recent Services';
 
   @override
-  String get btnCancel => 'Cancel';
+  String get exploreServices => 'Explore Services';
 
   @override
-  String get btnProceed => 'Proceed';
+  String get moreServices => 'More Services';
 
   @override
-  String get btnSave => 'Save';
+  String get switchView => 'Switch View';
 
   @override
-  String get btnSignIn => 'Sign In';
+  String get selectVehicle => 'Select Vehicle';
 
   @override
-  String get btnSignUp => 'Sign Up';
+  String get addNewVehicle => 'Add New Vehicle';
 
   @override
-  String get btnLogout => 'Logout';
+  String get errorLoadingCategories =>
+      'Unable to load categories. Please try again.';
 
   @override
-  String get lblPickup => 'Pickup Location';
+  String get errorLoadingOffers => 'Unable to load offers. Please try again.';
 
   @override
-  String get lblDropoff => 'Drop-off Location';
+  String get bookNow => 'Book Now';
 
   @override
-  String get lblEmail => 'Email';
+  String get retry => 'Retry';
 
   @override
-  String get lblPassword => 'Password';
+  String get somethingWentWrong => 'Something went wrong. Please try again.';
 
   @override
-  String get titleWallet => 'Wallet';
+  String get nothingHereYet => 'Nothing here yet.';
 
   @override
-  String get titleHome => 'Home';
+  String get loading => 'Loading...';
 
   @override
-  String get titleBookings => 'Bookings';
+  String get viewAll => 'View All';
 
   @override
-  String get titleProfile => 'My Profile';
+  String get cancel => 'Cancel';
 
   @override
-  String get titleExplore => 'Explore';
+  String get confirm => 'Confirm';
 
   @override
-  String get titleWelcomeBack => 'Welcome Back!';
+  String get save => 'Save';
 
   @override
-  String get lblLoginSubtitle => 'Sign in to continue your journey';
+  String get delete => 'Delete';
 
   @override
-  String get lblOrContinueWith => 'Or continue with';
+  String get search => 'Search';
 
   @override
-  String get lblDontHaveAccount => 'Don\'t have an account? ';
+  String get filter => 'Filter';
 
   @override
-  String get lblAvailableBalance => 'Available Balance';
+  String get home => 'Home';
 
   @override
-  String get titleRecentTransactions => 'Recent Transactions';
+  String get bookings => 'Bookings';
 
   @override
-  String get lblTopUp => 'Top Up';
+  String get wallet => 'Wallet';
 
   @override
-  String get lblTransfer => 'Transfer';
+  String get profile => 'Profile';
 
   @override
-  String get lblWithdraw => 'Withdraw';
+  String get notifications => 'Notifications';
 
   @override
-  String get titleQuickActions => 'Quick Actions';
+  String get signOut => 'Sign Out';
 
   @override
-  String get titleActiveOffers => 'Active Offers';
+  String get paymentSuccess => 'Payment Successful!';
 
   @override
-  String get lblViewAll => 'View All';
+  String get paymentFailed => 'Payment Failed';
 
   @override
-  String get lblSearchServices => 'Search services, repairs...';
+  String get sessionExpired => 'Your session has expired. Please log in again.';
+
+  @override
+  String get securityWarning => 'Security Alert';
+
+  @override
+  String get securityWarningMessage =>
+      'Your device appears to be rooted or jailbroken. Payment features are disabled to protect your account.';
+
+  @override
+  String get closeApp => 'Close App';
 }

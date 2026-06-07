@@ -6,7 +6,6 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:roadrobos/core/services/auth_service.dart';
@@ -18,7 +17,6 @@ import 'test_helpers.dart';
 
 void main() {
   late MockAuthService mockAuth;
-  late MockUserRepository mockUserRepo;
 
   setUpAll(() {
     registerTestFallbackValues();
@@ -26,7 +24,6 @@ void main() {
 
   setUp(() {
     mockAuth = MockAuthService();
-    mockUserRepo = MockUserRepository();
 
     // Default stubs
     when(() => mockAuth.authStateChanges).thenAnswer((_) => const Stream.empty());
@@ -90,7 +87,7 @@ void main() {
         (WidgetTester tester) async {
       // Verify that an admin user state with superAdmin role
       // would be directed to /admin-home by the router
-      final adminState = UserState(user: testAdmin, isLoading: false);
+      final adminState = UserState(user: testAdmin);
 
       expect(adminState.user!.role, UserRole.superAdmin);
       expect(adminState.user!.role.isAdmin, true);
@@ -99,7 +96,7 @@ void main() {
     testWidgets('role-based redirect: customer user goes to main home',
         (WidgetTester tester) async {
       // Verify that a customer user state would be directed to /main/home
-      final customerState = UserState(user: testCustomer, isLoading: false);
+      final customerState = UserState(user: testCustomer);
 
       expect(customerState.user!.role, UserRole.customer);
       expect(customerState.user!.role.isAdmin, false);
@@ -114,7 +111,7 @@ void main() {
       verify(() => mockAuth.signOut()).called(1);
 
       // After logout, user state should be null
-      final loggedOutState = UserState(user: null, isLoading: false);
+      final loggedOutState = UserState();
       expect(loggedOutState.user, isNull);
     });
   });

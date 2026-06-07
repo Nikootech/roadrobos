@@ -38,13 +38,19 @@ final List<RouteBase> authRoutes = [
     pageBuilder: (context, state) => AppTransitions.slideRight(
       child: const RegisterScreen(),
       state: state,
-      duration: const Duration(milliseconds: 400),
     ),
   ),
   GoRoute(
     path: '/auth/partner-kyc',
     pageBuilder: (context, state) => AppTransitions.fade(
       child: const PartnerKycScreen(),
+      state: state,
+    ),
+  ),
+  GoRoute(
+    path: '/login-callback',
+    pageBuilder: (context, state) => AppTransitions.fade(
+      child: const SplashScreen(),
       state: state,
     ),
   ),

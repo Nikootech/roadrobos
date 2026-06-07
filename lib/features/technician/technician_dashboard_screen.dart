@@ -4,7 +4,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../core/theme/app_colors.dart';
 import '../../core/repositories/job_card_repository.dart';
 import 'technician_provider.dart';
 import '../profile/user_provider.dart';
@@ -44,6 +43,7 @@ class _TechnicianDashboardScreenState extends ConsumerState<TechnicianDashboardS
 
   // — Pull-to-refresh —
   Future<void> _refreshDashboard() async {
+    // ignore: unawaited_futures
     HapticFeedback.mediumImpact();
     await Future.delayed(const Duration(milliseconds: 800));
     if (mounted) {
@@ -109,6 +109,7 @@ class _TechnicianDashboardScreenState extends ConsumerState<TechnicianDashboardS
                   child: ElevatedButton(
                     onPressed: () async {
                       if (formKey.currentState!.validate()) {
+                        // ignore: unawaited_futures
                         HapticFeedback.heavyImpact();
                         try {
                           await ref.read(jobCardRepositoryProvider).createJobCard(
@@ -138,18 +139,17 @@ class _TechnicianDashboardScreenState extends ConsumerState<TechnicianDashboardS
                           ref.read(technicianProvider.notifier).createJob(newJob);
                           ref.read(selectedJobIdProvider.notifier).state = newJob.id;
                           if (ctx.mounted) Navigator.pop(ctx);
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Vehicle "${modelCtrl.text}" added & job created!'), backgroundColor: const Color(0xFF28C76F)),
-                            );
-                            context.push('/tech-job-card');
-                          }
+                          if (!mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Vehicle "${modelCtrl.text}" added & job created!'), backgroundColor: const Color(0xFF28C76F)),
+                          );
+                          // ignore: unawaited_futures
+                          context.push('/tech-job-card');
                         } catch (e) {
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Failed to create job: $e'), backgroundColor: Colors.red),
-                            );
-                          }
+                          if (!mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Failed to create job: $e'), backgroundColor: Colors.red),
+                          );
                         }
                       }
                     },

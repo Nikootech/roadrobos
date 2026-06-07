@@ -13,7 +13,7 @@ class ServiceHistoryScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final userId = ref.watch(authStateProvider).value?.id;
+    final userId = ref.watch(authNotifierProvider).value?.id;
     final servicesAsync = userId != null 
         ? ref.watch(serviceBookingRepositoryProvider).getPagedCustomerServiceBookings(userId, limit: 50) 
         : Future<List>.value([]);
@@ -36,7 +36,7 @@ class ServiceHistoryScreen extends ConsumerWidget {
             return const Center(child: CircularProgressIndicator());
           }
           
-          final services = snapshot.data as List? ?? [];
+          final services = snapshot.data ?? [];
           
           if (services.isEmpty) {
             return Center(

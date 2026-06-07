@@ -27,7 +27,6 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> with Si
           Positioned.fill(
             child: LiveMapWidget(
               height: MediaQuery.of(context).size.height,
-              showLiveIndicator: true,
               roadroboLocation: taxiState.roadroboLocation,
               isTracking: !isSearching,
               pickupLocation: taxiState.pickupLocation,
@@ -117,11 +116,11 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> with Si
   }
 
   Widget _buildTrackingStatusPill(TaxiState state) {
-    String statusStr = "Roadrobo is 2 mins away";
+    String statusStr = 'Roadrobo is 2 mins away';
     if (state.status == RideStatus.atPickup) {
-      statusStr = "Roadrobo has arrived!";
+      statusStr = 'Roadrobo has arrived!';
     } else if (state.status == RideStatus.headingToDropoff) {
-      statusStr = "Heading to destination";
+      statusStr = 'Heading to destination';
     }
 
     return Container(

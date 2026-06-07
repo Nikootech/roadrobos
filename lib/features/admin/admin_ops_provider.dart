@@ -1,8 +1,6 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/repositories/admin_ops_repository.dart';
-import '../profile/user_provider.dart';
-import '../../core/models/user_role.dart';
 import '../../core/providers/rbac_provider.dart';
 
 class AdminOpsMetrics {

@@ -11,7 +11,6 @@ import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 import '../../core/services/biometric_service.dart';
 import '../../core/services/notification_service.dart';
-import '../../l10n/app_localizations.dart';
 
 /// Wallet & Transactions Screen matching Figma Screen [7]
 class WalletScreen extends ConsumerWidget {
@@ -25,8 +24,8 @@ class WalletScreen extends ConsumerWidget {
       backgroundColor: Colors.white,
       body: RefreshIndicator(
         onRefresh: () async {
-          ref.refresh(walletProvider);
-          ref.refresh(walletTransactionsProvider);
+          ref.invalidate(walletProvider);
+          ref.invalidate(walletTransactionsProvider);
         },
         color: AppColors.primaryBlue,
         child: CustomScrollView(
@@ -74,7 +73,7 @@ class WalletScreen extends ConsumerWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          AppLocalizations.of(context)?.lblAvailableBalance ?? 'Available Balance',
+                          'Available Balance',
                           style: GoogleFonts.inter(
                             fontSize: 14,
                           color: Colors.white.withValues(alpha: 0.8),
@@ -146,7 +145,7 @@ class WalletScreen extends ConsumerWidget {
                       Expanded(
                         child: _buildActionTile(
                           context,
-                          AppLocalizations.of(context)?.lblTopUp ?? 'Top Up',
+                          'Top Up',
                           Iconsax.add,
                           AppColors.primaryBlue,
                           '/wallet/topup',
@@ -157,7 +156,7 @@ class WalletScreen extends ConsumerWidget {
                       Expanded(
                         child: _buildActionTile(
                           context,
-                          AppLocalizations.of(context)?.lblTransfer ?? 'Transfer',
+                          'Transfer',
                           Iconsax.send_2,
                           AppColors.successGreen,
                           '/wallet/transfer',
@@ -240,6 +239,7 @@ class WalletScreen extends ConsumerWidget {
   Widget _buildActionTile(BuildContext context, String label, IconData icon, Color color, String? route, WidgetRef ref, {bool requiresBiometric = false}) {
     return GestureDetector(
       onTap: () async {
+        // ignore: unawaited_futures
         HapticFeedback.lightImpact();
         
         if (requiresBiometric) {
@@ -264,6 +264,7 @@ class WalletScreen extends ConsumerWidget {
         if (!context.mounted) return;
 
         if (route != null) {
+          // ignore: unawaited_futures
           context.push(route);
         } else {
           // Placeholder for non-routed actions

@@ -202,7 +202,6 @@ class _DriverAssignedScreenState extends ConsumerState<DriverAssignedScreen> {
     return Column(
       children: [
         GlassCard(
-          padding: const EdgeInsets.all(20),
           opacity: 0.05,
           child: Column(
             children: [
@@ -244,7 +243,7 @@ class _DriverAssignedScreenState extends ConsumerState<DriverAssignedScreen> {
       decoration: BoxDecoration(
         color: AppColors.bgLightGrey.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.5), width: 1),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
       ),
       child: Row(
         children: [

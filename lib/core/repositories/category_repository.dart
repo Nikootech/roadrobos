@@ -19,6 +19,7 @@ class CategoryRepository {
       final localCategories = await _db.select(_db.cachedCategories).get();
       if (localCategories.isNotEmpty) {
         // Sync in background and return local data immediately
+        // ignore: unawaited_futures
         _syncCategoriesFromRemote().catchError((e) {
           debugPrint('Background category sync failed: $e');
           return <ServiceCategory>[];

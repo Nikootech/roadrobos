@@ -97,182 +97,200 @@ abstract class AppLocalizations {
   /// Application name
   ///
   /// In en, this message translates to:
-  /// **'RoAdRoBos'**
+  /// **'RoadRobos'**
   String get appName;
 
-  /// Book now button label
+  /// HomeScreen recent services section heading
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Services'**
+  String get recentServices;
+
+  /// HomeScreen explore section heading
+  ///
+  /// In en, this message translates to:
+  /// **'Explore Services'**
+  String get exploreServices;
+
+  /// No description provided for @moreServices.
+  ///
+  /// In en, this message translates to:
+  /// **'More Services'**
+  String get moreServices;
+
+  /// No description provided for @switchView.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch View'**
+  String get switchView;
+
+  /// No description provided for @selectVehicle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Vehicle'**
+  String get selectVehicle;
+
+  /// No description provided for @addNewVehicle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add New Vehicle'**
+  String get addNewVehicle;
+
+  /// No description provided for @errorLoadingCategories.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load categories. Please try again.'**
+  String get errorLoadingCategories;
+
+  /// No description provided for @errorLoadingOffers.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load offers. Please try again.'**
+  String get errorLoadingOffers;
+
+  /// No description provided for @bookNow.
   ///
   /// In en, this message translates to:
   /// **'Book Now'**
-  String get btnBook;
+  String get bookNow;
 
-  /// Cancel button label
+  /// No description provided for @retry.
   ///
   /// In en, this message translates to:
-  /// **'Cancel'**
-  String get btnCancel;
+  /// **'Retry'**
+  String get retry;
 
-  /// Proceed button label
+  /// No description provided for @somethingWentWrong.
   ///
   /// In en, this message translates to:
-  /// **'Proceed'**
-  String get btnProceed;
+  /// **'Something went wrong. Please try again.'**
+  String get somethingWentWrong;
 
-  /// Save button label
+  /// No description provided for @nothingHereYet.
   ///
   /// In en, this message translates to:
-  /// **'Save'**
-  String get btnSave;
+  /// **'Nothing here yet.'**
+  String get nothingHereYet;
 
-  /// Sign in button label
+  /// No description provided for @loading.
   ///
   /// In en, this message translates to:
-  /// **'Sign In'**
-  String get btnSignIn;
+  /// **'Loading...'**
+  String get loading;
 
-  /// Sign up button label
-  ///
-  /// In en, this message translates to:
-  /// **'Sign Up'**
-  String get btnSignUp;
-
-  /// Logout button label
-  ///
-  /// In en, this message translates to:
-  /// **'Logout'**
-  String get btnLogout;
-
-  /// Pickup location label
-  ///
-  /// In en, this message translates to:
-  /// **'Pickup Location'**
-  String get lblPickup;
-
-  /// Drop-off location label
-  ///
-  /// In en, this message translates to:
-  /// **'Drop-off Location'**
-  String get lblDropoff;
-
-  /// Email field label
-  ///
-  /// In en, this message translates to:
-  /// **'Email'**
-  String get lblEmail;
-
-  /// Password field label
-  ///
-  /// In en, this message translates to:
-  /// **'Password'**
-  String get lblPassword;
-
-  /// Wallet screen title
-  ///
-  /// In en, this message translates to:
-  /// **'Wallet'**
-  String get titleWallet;
-
-  /// Home tab title
-  ///
-  /// In en, this message translates to:
-  /// **'Home'**
-  String get titleHome;
-
-  /// Bookings tab title
-  ///
-  /// In en, this message translates to:
-  /// **'Bookings'**
-  String get titleBookings;
-
-  /// Profile screen title
-  ///
-  /// In en, this message translates to:
-  /// **'My Profile'**
-  String get titleProfile;
-
-  /// Explore tab title
-  ///
-  /// In en, this message translates to:
-  /// **'Explore'**
-  String get titleExplore;
-
-  /// Login screen welcome title
-  ///
-  /// In en, this message translates to:
-  /// **'Welcome Back!'**
-  String get titleWelcomeBack;
-
-  /// Login screen subtitle
-  ///
-  /// In en, this message translates to:
-  /// **'Sign in to continue your journey'**
-  String get lblLoginSubtitle;
-
-  /// Social login divider text
-  ///
-  /// In en, this message translates to:
-  /// **'Or continue with'**
-  String get lblOrContinueWith;
-
-  /// Prompt to sign up
-  ///
-  /// In en, this message translates to:
-  /// **'Don\'t have an account? '**
-  String get lblDontHaveAccount;
-
-  /// Wallet balance label
-  ///
-  /// In en, this message translates to:
-  /// **'Available Balance'**
-  String get lblAvailableBalance;
-
-  /// Wallet transactions header
-  ///
-  /// In en, this message translates to:
-  /// **'Recent Transactions'**
-  String get titleRecentTransactions;
-
-  /// Wallet top up action
-  ///
-  /// In en, this message translates to:
-  /// **'Top Up'**
-  String get lblTopUp;
-
-  /// Wallet transfer action
-  ///
-  /// In en, this message translates to:
-  /// **'Transfer'**
-  String get lblTransfer;
-
-  /// Wallet withdraw action
-  ///
-  /// In en, this message translates to:
-  /// **'Withdraw'**
-  String get lblWithdraw;
-
-  /// Home screen quick actions section
-  ///
-  /// In en, this message translates to:
-  /// **'Quick Actions'**
-  String get titleQuickActions;
-
-  /// Home screen offers section
-  ///
-  /// In en, this message translates to:
-  /// **'Active Offers'**
-  String get titleActiveOffers;
-
-  /// View all link text
+  /// No description provided for @viewAll.
   ///
   /// In en, this message translates to:
   /// **'View All'**
-  String get lblViewAll;
+  String get viewAll;
 
-  /// Home search bar hint text
+  /// No description provided for @cancel.
   ///
   /// In en, this message translates to:
-  /// **'Search services, repairs...'**
-  String get lblSearchServices;
+  /// **'Cancel'**
+  String get cancel;
+
+  /// No description provided for @confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get confirm;
+
+  /// No description provided for @save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get save;
+
+  /// No description provided for @delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
+
+  /// No description provided for @search.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get search;
+
+  /// No description provided for @filter.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter'**
+  String get filter;
+
+  /// No description provided for @home.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get home;
+
+  /// No description provided for @bookings.
+  ///
+  /// In en, this message translates to:
+  /// **'Bookings'**
+  String get bookings;
+
+  /// No description provided for @wallet.
+  ///
+  /// In en, this message translates to:
+  /// **'Wallet'**
+  String get wallet;
+
+  /// No description provided for @profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get profile;
+
+  /// No description provided for @notifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get notifications;
+
+  /// No description provided for @signOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign Out'**
+  String get signOut;
+
+  /// No description provided for @paymentSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment Successful!'**
+  String get paymentSuccess;
+
+  /// No description provided for @paymentFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment Failed'**
+  String get paymentFailed;
+
+  /// No description provided for @sessionExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Your session has expired. Please log in again.'**
+  String get sessionExpired;
+
+  /// No description provided for @securityWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Security Alert'**
+  String get securityWarning;
+
+  /// No description provided for @securityWarningMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your device appears to be rooted or jailbroken. Payment features are disabled to protect your account.'**
+  String get securityWarningMessage;
+
+  /// No description provided for @closeApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Close App'**
+  String get closeApp;
 }
 
 class _AppLocalizationsDelegate

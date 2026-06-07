@@ -10,18 +10,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:roadrobos/core/services/auth_service.dart';
-import 'package:roadrobos/core/repositories/wallet_repository.dart';
-import 'package:roadrobos/core/models/wallet_model.dart';
 import 'package:roadrobos/features/wallet/wallet_screen.dart';
 import 'package:roadrobos/features/wallet/wallet_providers.dart';
 import 'package:roadrobos/features/wallet/wallet_topup_screen.dart';
-import 'package:roadrobos/features/profile/user_provider.dart';
 
 import 'test_helpers.dart';
 
 void main() {
   late MockAuthService mockAuth;
-  late MockWalletRepository mockWalletRepo;
 
   setUpAll(() {
     registerTestFallbackValues();
@@ -29,7 +25,6 @@ void main() {
 
   setUp(() {
     mockAuth = MockAuthService();
-    mockWalletRepo = MockWalletRepository();
 
     when(() => mockAuth.authStateChanges).thenAnswer((_) => const Stream.empty());
     when(() => mockAuth.restoredUser).thenReturn(null);

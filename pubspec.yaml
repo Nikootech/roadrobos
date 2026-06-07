@@ -12,24 +12,31 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   cupertino_icons: ^1.0.6
-  # Navigation
+
+  # ── Navigation ──────────────────────────────────────────────────────────────
   go_router: ^13.0.0
-  # State Management
+
+  # ── State Management ────────────────────────────────────────────────────────
   flutter_riverpod: ^2.5.0
   riverpod_annotation: ^2.3.5
-  # Animations
+
+  # ── Animations ──────────────────────────────────────────────────────────────
   flutter_animate: ^4.5.0
-  # UI Components
+
+  # ── UI Components ───────────────────────────────────────────────────────────
   google_fonts: ^6.3.0
   cached_network_image: ^3.3.1
+  flutter_cache_manager: ^3.3.1   # Disk image cache for AppNetworkImage
   shimmer: ^3.0.0
   smooth_page_indicator: ^1.1.0
   carousel_slider: ^5.0.0
-  # Icons
+
+  # ── Icons ────────────────────────────────────────────────────────────────────
   flutter_svg: ^2.0.10
   iconsax: ^0.0.8
   flutter_local_notifications: ^17.0.0
-  # Utils
+
+  # ── Utils ────────────────────────────────────────────────────────────────────
   gap: ^3.0.1
   fl_chart: ^0.68.0
   intl: ^0.20.2
@@ -42,34 +49,53 @@ dependencies:
   http: ^1.2.1
   geolocator: ^11.0.0
   confetti: ^0.7.0
-  # Firebase
+  crypto: ^3.0.3                  # SHA-256 for cache key hashing (N3)
+  uuid: ^4.3.3                    # UUID v4 for idempotency keys (N5)
+
+  # ── Network ──────────────────────────────────────────────────────────────────
+  dio: ^5.4.0                     # Retry/Auth/Logging interceptors (N1)
+
+  # ── Firebase ─────────────────────────────────────────────────────────────────
   firebase_core: ^3.9.0
   supabase_flutter: ^2.8.0
   firebase_messaging: ^15.2.0
   firebase_analytics: ^11.4.0
   firebase_crashlytics: ^4.3.0
-  # Auth providers
+
+  # ── Auth ─────────────────────────────────────────────────────────────────────
   google_sign_in: ^6.2.0
-  # Payments
+
+  # ── Payments ─────────────────────────────────────────────────────────────────
   razorpay_flutter: ^1.3.7
-  # Local storage & config
+
+  # ── Local storage & config ────────────────────────────────────────────────────
   shared_preferences: ^2.3.0
   flutter_secure_storage: ^9.0.0
   local_auth: ^2.2.0
-  # Invoicing & Sharing
+
+  # ── Invoicing & Sharing ──────────────────────────────────────────────────────
   pdf: ^3.10.8
   printing: ^5.11.1
   share_plus: ^10.1.0
   path_provider: ^2.1.2
   rxdart: ^0.28.0
-  # Offline Persistence
-  drift: any
-  sqlite3_flutter_libs: any
+
+  # ── Offline Persistence (pinned — no 'any') ───────────────────────────────────
+  drift: ^2.20.0
+  drift_flutter: ^0.2.0
+  sqlite3_flutter_libs: ^0.5.25
   path: ^1.9.0
   connectivity_plus: ^6.0.3
 
-  drift_flutter: any
+  # ── Security & Encryption ────────────────────────────────────────────────────
+  pointycastle: ^3.9.1            # AES-256-GCM for SQLite column encryption (E1)
+  cryptography: ^2.7.0            # X25519 + AES-256-GCM for chat E2E (E5)
+  # flutter_jailbreak_detection: ^1.9.0  # Uncomment to enable root detection (S3)
+
+  # ── Misc ─────────────────────────────────────────────────────────────────────
   flutter_image_compress: ^2.4.0
+  screen_protector: ^1.5.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -78,8 +104,8 @@ dev_dependencies:
   flutter_lints: ^3.0.0
   flutter_launcher_icons: ^0.14.3
   mocktail: ^1.0.4
-  # Drift code generation
-  drift_dev: any
+  # Drift code generation (pinned)
+  drift_dev: ^2.20.0
   build_runner: ^2.4.8
   riverpod_generator: ^2.3.9
 
@@ -95,8 +121,6 @@ flutter_launcher_icons:
     background_color: "#FFFFFF"
     theme_color: "#2E7D32"
 
-# No overlaps needed
-
 flutter:
   generate: true
   uses-material-design: true
@@ -105,4 +129,3 @@ flutter:
     - assets/app_icon.png
     - assets/signin_icon.png
     - assets/rentals/
-

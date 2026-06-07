@@ -47,6 +47,7 @@ class _DocumentsUploadScreenState extends ConsumerState<DocumentsUploadScreen> {
   Future<void> _pickDocument(String key) async {
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
     if (image != null) {
+      // ignore: unawaited_futures
       HapticFeedback.mediumImpact();
       setState(() => _uploadingDocs[key] = true);
       // Simulate network upload with shimmer
@@ -56,6 +57,7 @@ class _DocumentsUploadScreenState extends ConsumerState<DocumentsUploadScreen> {
           _docs[key] = image;
           _uploadingDocs[key] = false;
         });
+        // ignore: unawaited_futures
         HapticFeedback.lightImpact();
       }
     }
@@ -72,7 +74,7 @@ class _DocumentsUploadScreenState extends ConsumerState<DocumentsUploadScreen> {
 
   @override
   Widget build(BuildContext context) {
-    int uploadedCount = _docs.values.where((v) => v != null).length;
+    final int uploadedCount = _docs.values.where((v) => v != null).length;
     
     return Scaffold(
       backgroundColor: AppColors.bgLightAlt,
@@ -106,7 +108,7 @@ class _DocumentsUploadScreenState extends ConsumerState<DocumentsUploadScreen> {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(28),
                 boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 20, offset: const Offset(0, 8))],
-                border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.1), width: 1),
+                border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.1)),
               ),
               child: Row(
                 children: [
@@ -179,7 +181,7 @@ class _DocumentsUploadScreenState extends ConsumerState<DocumentsUploadScreen> {
               ),
               itemCount: _docs.keys.length,
               itemBuilder: (context, index) {
-                String key = _docs.keys.elementAt(index);
+                final String key = _docs.keys.elementAt(index);
                 return _buildUploadZone(key).animate(delay: (400 + index * 50).ms).fadeIn().scale(begin: const Offset(0.9, 0.9));
               },
             ),
@@ -192,6 +194,7 @@ class _DocumentsUploadScreenState extends ConsumerState<DocumentsUploadScreen> {
               child: CustomButton(
                 label: 'SUBMIT APPLICATION',
                 onPressed: _isAllValid ? () async {
+                  // ignore: unawaited_futures
                   HapticFeedback.heavyImpact();
                   
                   // Show loading indicator or handle result
@@ -239,12 +242,12 @@ class _DocumentsUploadScreenState extends ConsumerState<DocumentsUploadScreen> {
   }
 
   Widget _buildUploadZone(String title) {
-    bool isUploading = _uploadingDocs[title] ?? false;
-    XFile? file = _docs[title];
+    final bool isUploading = _uploadingDocs[title] ?? false;
+    final XFile? file = _docs[title];
 
     Widget content;
     if (isUploading) {
-      content = const ShimmerLoading(width: double.infinity, height: double.infinity, borderRadius: 20);
+      content = const ShimmerLoading(height: double.infinity, borderRadius: 20);
     } else if (file != null) {
       content = ClipRRect(
         borderRadius: BorderRadius.circular(20),

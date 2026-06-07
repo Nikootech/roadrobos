@@ -72,7 +72,6 @@ class NotificationNotifier extends StateNotifier<List<AppNotification>> {
         description: 'Thank you for joining us. Book your first ride or service and get 20% off!',
         timestamp: DateTime.now(),
         icon: Icons.celebration_rounded,
-        isRead: false,
       ),
     ];
   }

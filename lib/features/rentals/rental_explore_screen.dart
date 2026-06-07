@@ -281,7 +281,7 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
                   ),
                 ],
                 border: isZeelio 
-                    ? Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.15), width: 1)
+                    ? Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.15))
                     : null,
               ),
               child: Column(
@@ -498,7 +498,6 @@ class _RentalExploreScreenState extends ConsumerState<RentalExploreScreen> {
                                 style: const TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w800,
-                                  color: null, // use foregroundColor
                                 ),
                               ),
                             ],

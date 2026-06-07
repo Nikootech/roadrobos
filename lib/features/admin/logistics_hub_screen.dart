@@ -72,9 +72,6 @@ class LogisticsHubScreen extends StatelessWidget {
   Widget _buildFleetCard(String label, String count, IconData icon) {
     return Expanded(
       child: GlassCard(
-        padding: const EdgeInsets.all(20),
-        borderRadius: 24,
-        opacity: 0.1,
         blur: 10,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

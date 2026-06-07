@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
-import 'dart:math' as math;
 import 'package:share_plus/share_plus.dart';
 import '../features/profile/user_provider.dart';
 import '../core/models/ride_booking.dart';
@@ -137,7 +136,7 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
 
   Future<void> initializeLocation() async {
     try {
-      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      final bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
         _setFallbackLocation();
         return;
@@ -277,6 +276,7 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
 
       final bookingId = await ref.read(rideBookingRepositoryProvider).createRideBooking(booking);
       
+      // ignore: unawaited_futures
       _rideSubscription?.cancel();
       _rideSubscription = ref.read(rideBookingRepositoryProvider)
           .watchBooking(bookingId)
@@ -342,9 +342,9 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
     final bool hasDistance = d > 0.1;
     
     // Pricing formulas: Base + (Rate * Distance)
-    double bikePrice = hasDistance ? (25 + (12 * d)) : 105;
-    double autoPrice = hasDistance ? (45 + (15 * d)) : 178;
-    double cabPrice = hasDistance ? (70 + (22 * d)) : 267;
+    final double bikePrice = hasDistance ? (25 + (12 * d)) : 105;
+    final double autoPrice = hasDistance ? (45 + (15 * d)) : 178;
+    final double cabPrice = hasDistance ? (70 + (22 * d)) : 267;
 
     state = state.copyWith(
       rideOptions: [

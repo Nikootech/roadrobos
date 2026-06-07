@@ -11,6 +11,7 @@ import '../../shared/widgets/custom_text_field.dart';
 import '../../core/services/auth_service.dart';
 import '../../core/models/user_role.dart';
 import '../../core/repositories/user_repository.dart';
+import '../../core/repositories/driver_repository.dart';
 import '../../navigation/nav_helpers.dart';
 import '../../core/config/app_config.dart';
 
@@ -29,6 +30,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   bool _isLoading = false;
+  UserRole _selectedRole = UserRole.customer;
 
   @override
   void dispose() {
@@ -57,10 +59,22 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             name: _nameController.text.trim(),
             phone: _phoneController.text.trim(),
             email: _emailController.text.trim(),
-            role: UserRole.customer,
+            role: _selectedRole,
             createdAt: DateTime.now(),
           );
           await ref.read(userRepositoryProvider).saveUser(appUser);
+
+          // 3. If Driver, create driver record for auto-approval
+          if (_selectedRole == UserRole.driver) {
+             await ref.read(driverRepositoryProvider).registerDriver(
+               uid: user.id,
+               name: _nameController.text.trim(),
+               phone: _phoneController.text.trim(),
+               vehicleModel: 'Pending Update',
+               chassisNumber: 'Pending Update',
+               licenseNumber: 'Pending Update',
+             );
+          }
           
           if (!mounted) return;
           NavHelpers.showSuccess(context, 'Account created successfully!');
@@ -141,6 +155,32 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   key: _formKey,
                   child: Column(
                     children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        decoration: BoxDecoration(
+                          color: AppColors.bgWhite,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.border),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<UserRole>(
+                            value: _selectedRole,
+                            isExpanded: true,
+                            icon: const Icon(Iconsax.arrow_down_1, color: AppColors.textSecondary),
+                            items: const [
+                              DropdownMenuItem(value: UserRole.customer, child: Text('I am a Customer')),
+                              DropdownMenuItem(value: UserRole.driver, child: Text('I am a Rider/Driver')),
+                              DropdownMenuItem(value: UserRole.technician, child: Text('I am a Technician')),
+                            ],
+                            onChanged: (UserRole? value) {
+                              if (value != null) {
+                                setState(() => _selectedRole = value);
+                              }
+                            },
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
                       CustomTextField(
                         label: AppStrings.fullName,
                         hint: 'Enter your full name',

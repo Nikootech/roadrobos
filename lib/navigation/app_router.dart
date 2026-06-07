@@ -7,6 +7,7 @@ import '../core/services/auth_service.dart';
 import '../features/profile/user_provider.dart';
 import '../core/models/user_role.dart';
 import '../shared/widgets/not_found_screen.dart';
+import '../core/security/deeplink_validator.dart';
 
 // Modular route groups
 import 'routes/auth_routes.dart';
@@ -22,7 +23,7 @@ final rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
 class RouterNotifier extends ChangeNotifier {
   final Ref _ref;
   RouterNotifier(this._ref) {
-    _ref.listen(authStateProvider, (_, __) => notifyListeners());
+    _ref.listen(authNotifierProvider, (_, __) => notifyListeners());
     _ref.listen(userProvider, (_, __) => notifyListeners());
   }
 }
@@ -44,13 +45,20 @@ final routerProvider = Provider<GoRouter>((ref) {
 
     // Auth guard and navigation redirect logic
     redirect: (context, state) {
-      final authState = ref.read(authStateProvider);
+      // ── S6: Deeplink validation ──────────────────────────────────────────
+      // Reject forged OAuth callbacks and path-traversal deeplinks.
+      if (state.uri.path == '/login-callback') {
+        if (!DeeplinkValidator.isValid(state.uri)) {
+          if (kDebugMode) {
+            debugPrint('Router: rejected invalid deeplink: ${state.uri}');
+          }
+          return '/auth/login'; // safe fallback
+        }
+      }
+
+      final authState = ref.read(authNotifierProvider);
       final userState = ref.read(userProvider);
 
-      // A user is "logged in" if:
-      // 1. Firebase Auth has a real user, OR
-      // 2. Demo mode is active with a loaded profile, OR
-      // 3. UserProvider has a user with a demo_ ID (handles race conditions)
       final hasFirebaseUser = authState.value != null;
       final hasDemoUser = userState.isDemo && userState.user != null;
       final hasDemoIdUser =
@@ -61,28 +69,32 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       if (kDebugMode) {
         debugPrint(
-          'Router: location=$location, hasFirebaseUser=$hasFirebaseUser, '
-          'hasDemoUser=$hasDemoUser, hasDemoIdUser=$hasDemoIdUser, '
-          'isLoggedIn=$isLoggedIn, user=${user?.name}, isDemo=${userState.isDemo}',
+          'Router: location=$location isLoggedIn=$isLoggedIn '
+          'role=${user?.role}',
         );
       }
 
       final publicPaths = [
+        '/',
         '/splash',
         '/onboarding',
         '/auth/login',
         '/auth/register',
+        '/login-callback',
       ];
       final isPublicPath = publicPaths.contains(location);
 
       if (!isLoggedIn && !isPublicPath) {
-        debugPrint('Router: Not logged in, redirecting to /auth/login');
+        if (kDebugMode) debugPrint('Router: unauthenticated → /auth/login');
         return '/auth/login';
       }
 
       if (isLoggedIn && isPublicPath) {
-        // If profile isn't loaded yet, wait on login screen
-        if (user == null) return null;
+        // If profile isn't loaded yet, go to splash screen to show a loading state
+        if (user == null) {
+          if (location == '/splash') return null;
+          return '/splash';
+        }
 
         // Redirect based on role
         if (user.role.isAdmin) {

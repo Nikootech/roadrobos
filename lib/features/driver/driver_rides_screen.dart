@@ -272,7 +272,7 @@ class DriverRidesScreen extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: statusColor.withValues(alpha: 0.08),
                             borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: statusColor.withValues(alpha: 0.1), width: 1),
+                            border: Border.all(color: statusColor.withValues(alpha: 0.1)),
                           ),
                           child: Text(
                             status,

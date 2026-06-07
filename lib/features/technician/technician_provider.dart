@@ -269,7 +269,6 @@ class TechnicianNotifier extends StateNotifier<List<TechnicianJob>> {
       progress: 0.0,
       checklist: checklist,
       parts: [],
-      status: 'SCHEDULED',
       assignedTechId: userId,
     );
     

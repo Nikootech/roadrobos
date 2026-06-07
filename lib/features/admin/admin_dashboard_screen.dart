@@ -32,7 +32,6 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
             data: Theme.of(context).copyWith(
               colorScheme: const ColorScheme.light(
                 primary: AppColors.primaryBlue,
-                onPrimary: Colors.white,
                 onSurface: AppColors.textPrimary,
               ),
             ),
@@ -540,8 +539,8 @@ class _AdminOpsThreeCardSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        bool isWide = constraints.maxWidth > 900;
-        double cardWidth = isWide ? (constraints.maxWidth / 3) - 16 : constraints.maxWidth;
+        final bool isWide = constraints.maxWidth > 900;
+        final double cardWidth = isWide ? (constraints.maxWidth / 3) - 16 : constraints.maxWidth;
         
         return Wrap(
           spacing: 16,

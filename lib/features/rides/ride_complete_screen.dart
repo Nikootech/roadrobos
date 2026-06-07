@@ -59,7 +59,6 @@ class _RideCompleteScreenState extends ConsumerState<RideCompleteScreen> {
             child: ConfettiWidget(
               confettiController: _confettiController,
               blastDirectionality: BlastDirectionality.explosive,
-              shouldLoop: false,
               colors: const [AppColors.primaryBlue, AppColors.primaryNavy, Colors.orange, Colors.green],
               numberOfParticles: 20,
             ),

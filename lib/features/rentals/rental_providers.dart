@@ -5,6 +5,7 @@ import '../../core/repositories/rental_catalog_repository.dart';
 import '../../core/models/rental_booking.dart';
 import '../../core/models/rental_vehicle.dart';
 import '../profile/user_provider.dart';
+import '../../core/services/payment_service.dart';
 
 enum RentalType { hourly, daily }
 enum RentalStatus { active, completed, paid }
@@ -59,30 +60,47 @@ class ActiveRentalNotifier extends StateNotifier<ActiveRental?> {
 
   Future<void> completePayment({
     required double totalCost,
-    String? paymentId,
+    required PaymentService paymentService,
   }) async {
     if (state != null) {
-      final custId = ref.read(userProvider).user?.id ?? 'demo';
+      final user = ref.read(userProvider).user;
+      final custId = user?.id ?? 'demo';
       
-      // Safeguard: Only save to Supabase if we have a real UUID
-      if (custId != 'demo' && !custId.startsWith('demo')) {
-        await ref.read(rentalBookingRepositoryProvider).createRentalBooking(RentalBooking(
-          id: '',
-          customerId: custId,
-          vehicleName: state!.vehicle['name'] ?? 'Unknown',
-          rentalType: 'hourly',
-          startTime: state!.startTime,
-          duration: state!.duration.inHours,
-          totalCost: totalCost,
-          details: {'payment_id': paymentId ?? 'Direct', 'method': 'Razorpay'},
-          status: 'paid'
-        ));
+      try {
+        await paymentService.startPayment(
+          PaymentDetails(
+            bookingId: '00000000-0000-0000-0000-000000000000', // Typically generated before payment
+            bookingType: BookingType.rental,
+            totalCost: totalCost,
+            userId: custId,
+            contact: user?.phone ?? '9876543210',
+            email: user?.email ?? 'customer@example.com',
+            description: 'Vehicle Rental Payment',
+          )
+        );
+
+        // Safeguard: Only save to Supabase if we have a real UUID
+        if (custId != 'demo' && !custId.startsWith('demo')) {
+          await ref.read(rentalBookingRepositoryProvider).createRentalBooking(RentalBooking(
+            id: '',
+            customerId: custId,
+            vehicleName: state!.vehicle['name'] ?? 'Unknown',
+            rentalType: 'hourly',
+            startTime: state!.startTime,
+            duration: state!.duration.inHours,
+            totalCost: totalCost,
+            details: {'method': 'Razorpay'},
+            status: 'paid'
+          ));
+        }
+        
+        _timer?.cancel();
+        _timer = null;
+        
+        state = state!.copyWith(status: RentalStatus.paid);
+      } catch (e) {
+        throw Exception('Payment flow failed: $e');
       }
-      
-      _timer?.cancel();
-      _timer = null;
-      
-      state = state!.copyWith(status: RentalStatus.paid);
     }
   }
 

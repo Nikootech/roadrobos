@@ -19,16 +19,16 @@ class $CachedProfilesTable extends CachedProfiles
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
       'name', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _emailMeta = const VerificationMeta('email');
   @override
-  late final GeneratedColumn<String> email = GeneratedColumn<String>(
-      'email', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _phoneMeta = const VerificationMeta('phone');
+  late final GeneratedColumnWithTypeConverter<String?, String> email =
+      GeneratedColumn<String>('email', aliasedName, true,
+              type: DriftSqlType.string, requiredDuringInsert: false)
+          .withConverter<String?>($CachedProfilesTable.$converteremail);
   @override
-  late final GeneratedColumn<String> phone = GeneratedColumn<String>(
-      'phone', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+  late final GeneratedColumnWithTypeConverter<String, String> phone =
+      GeneratedColumn<String>('phone', aliasedName, false,
+              type: DriftSqlType.string, requiredDuringInsert: true)
+          .withConverter<String>($CachedProfilesTable.$converterphone);
   static const VerificationMeta _roleMeta = const VerificationMeta('role');
   @override
   late final GeneratedColumn<String> role = GeneratedColumn<String>(
@@ -71,16 +71,6 @@ class $CachedProfilesTable extends CachedProfiles
     } else if (isInserting) {
       context.missing(_nameMeta);
     }
-    if (data.containsKey('email')) {
-      context.handle(
-          _emailMeta, email.isAcceptableOrUnknown(data['email']!, _emailMeta));
-    }
-    if (data.containsKey('phone')) {
-      context.handle(
-          _phoneMeta, phone.isAcceptableOrUnknown(data['phone']!, _phoneMeta));
-    } else if (isInserting) {
-      context.missing(_phoneMeta);
-    }
     if (data.containsKey('role')) {
       context.handle(
           _roleMeta, role.isAcceptableOrUnknown(data['role']!, _roleMeta));
@@ -110,10 +100,12 @@ class $CachedProfilesTable extends CachedProfiles
           .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
       name: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
-      email: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}email']),
-      phone: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}phone'])!,
+      email: $CachedProfilesTable.$converteremail.fromSql(attachedDatabase
+          .typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}email'])),
+      phone: $CachedProfilesTable.$converterphone.fromSql(attachedDatabase
+          .typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}phone'])!),
       role: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}role'])!,
       profilePic: attachedDatabase.typeMapping
@@ -127,6 +119,11 @@ class $CachedProfilesTable extends CachedProfiles
   $CachedProfilesTable createAlias(String alias) {
     return $CachedProfilesTable(attachedDatabase, alias);
   }
+
+  static TypeConverter<String?, String?> $converteremail =
+      NullAwareTypeConverter.wrap(const EncryptedStringConverter());
+  static JsonTypeConverter2<String, String, String> $converterphone =
+      const EncryptedStringConverter();
 }
 
 class CachedProfile extends DataClass implements Insertable<CachedProfile> {
@@ -151,9 +148,13 @@ class CachedProfile extends DataClass implements Insertable<CachedProfile> {
     map['id'] = Variable<String>(id);
     map['name'] = Variable<String>(name);
     if (!nullToAbsent || email != null) {
-      map['email'] = Variable<String>(email);
+      map['email'] =
+          Variable<String>($CachedProfilesTable.$converteremail.toSql(email));
     }
-    map['phone'] = Variable<String>(phone);
+    {
+      map['phone'] =
+          Variable<String>($CachedProfilesTable.$converterphone.toSql(phone));
+    }
     map['role'] = Variable<String>(role);
     if (!nullToAbsent || profilePic != null) {
       map['profile_pic'] = Variable<String>(profilePic);
@@ -184,7 +185,8 @@ class CachedProfile extends DataClass implements Insertable<CachedProfile> {
       id: serializer.fromJson<String>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       email: serializer.fromJson<String?>(json['email']),
-      phone: serializer.fromJson<String>(json['phone']),
+      phone: $CachedProfilesTable.$converterphone
+          .fromJson(serializer.fromJson<String>(json['phone'])),
       role: serializer.fromJson<String>(json['role']),
       profilePic: serializer.fromJson<String?>(json['profilePic']),
       points: serializer.fromJson<int>(json['points']),
@@ -197,7 +199,8 @@ class CachedProfile extends DataClass implements Insertable<CachedProfile> {
       'id': serializer.toJson<String>(id),
       'name': serializer.toJson<String>(name),
       'email': serializer.toJson<String?>(email),
-      'phone': serializer.toJson<String>(phone),
+      'phone': serializer
+          .toJson<String>($CachedProfilesTable.$converterphone.toJson(phone)),
       'role': serializer.toJson<String>(role),
       'profilePic': serializer.toJson<String?>(profilePic),
       'points': serializer.toJson<int>(points),
@@ -349,10 +352,12 @@ class CachedProfilesCompanion extends UpdateCompanion<CachedProfile> {
       map['name'] = Variable<String>(name.value);
     }
     if (email.present) {
-      map['email'] = Variable<String>(email.value);
+      map['email'] = Variable<String>(
+          $CachedProfilesTable.$converteremail.toSql(email.value));
     }
     if (phone.present) {
-      map['phone'] = Variable<String>(phone.value);
+      map['phone'] = Variable<String>(
+          $CachedProfilesTable.$converterphone.toSql(phone.value));
     }
     if (role.present) {
       map['role'] = Variable<String>(role.value);
@@ -400,6 +405,14 @@ class $SyncQueueTable extends SyncQueue
       requiredDuringInsert: false,
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _idempotencyKeyMeta =
+      const VerificationMeta('idempotencyKey');
+  @override
+  late final GeneratedColumn<String> idempotencyKey = GeneratedColumn<String>(
+      'idempotency_key', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'));
   static const VerificationMeta _actionMeta = const VerificationMeta('action');
   @override
   late final GeneratedColumn<String> action = GeneratedColumn<String>(
@@ -429,7 +442,7 @@ class $SyncQueueTable extends SyncQueue
       defaultValue: const Constant(0));
   @override
   List<GeneratedColumn> get $columns =>
-      [id, action, payload, createdAt, attempts];
+      [id, idempotencyKey, action, payload, createdAt, attempts];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -442,6 +455,14 @@ class $SyncQueueTable extends SyncQueue
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('idempotency_key')) {
+      context.handle(
+          _idempotencyKeyMeta,
+          idempotencyKey.isAcceptableOrUnknown(
+              data['idempotency_key']!, _idempotencyKeyMeta));
+    } else if (isInserting) {
+      context.missing(_idempotencyKeyMeta);
     }
     if (data.containsKey('action')) {
       context.handle(_actionMeta,
@@ -474,6 +495,8 @@ class $SyncQueueTable extends SyncQueue
     return SyncQueueData(
       id: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      idempotencyKey: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}idempotency_key'])!,
       action: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}action'])!,
       payload: attachedDatabase.typeMapping
@@ -493,12 +516,14 @@ class $SyncQueueTable extends SyncQueue
 
 class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
   final int id;
+  final String idempotencyKey;
   final String action;
   final String payload;
   final DateTime createdAt;
   final int attempts;
   const SyncQueueData(
       {required this.id,
+      required this.idempotencyKey,
       required this.action,
       required this.payload,
       required this.createdAt,
@@ -507,6 +532,7 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
+    map['idempotency_key'] = Variable<String>(idempotencyKey);
     map['action'] = Variable<String>(action);
     map['payload'] = Variable<String>(payload);
     map['created_at'] = Variable<DateTime>(createdAt);
@@ -517,6 +543,7 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
   SyncQueueCompanion toCompanion(bool nullToAbsent) {
     return SyncQueueCompanion(
       id: Value(id),
+      idempotencyKey: Value(idempotencyKey),
       action: Value(action),
       payload: Value(payload),
       createdAt: Value(createdAt),
@@ -529,6 +556,7 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SyncQueueData(
       id: serializer.fromJson<int>(json['id']),
+      idempotencyKey: serializer.fromJson<String>(json['idempotencyKey']),
       action: serializer.fromJson<String>(json['action']),
       payload: serializer.fromJson<String>(json['payload']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -540,6 +568,7 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
+      'idempotencyKey': serializer.toJson<String>(idempotencyKey),
       'action': serializer.toJson<String>(action),
       'payload': serializer.toJson<String>(payload),
       'createdAt': serializer.toJson<DateTime>(createdAt),
@@ -549,12 +578,14 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
 
   SyncQueueData copyWith(
           {int? id,
+          String? idempotencyKey,
           String? action,
           String? payload,
           DateTime? createdAt,
           int? attempts}) =>
       SyncQueueData(
         id: id ?? this.id,
+        idempotencyKey: idempotencyKey ?? this.idempotencyKey,
         action: action ?? this.action,
         payload: payload ?? this.payload,
         createdAt: createdAt ?? this.createdAt,
@@ -563,6 +594,9 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
   SyncQueueData copyWithCompanion(SyncQueueCompanion data) {
     return SyncQueueData(
       id: data.id.present ? data.id.value : this.id,
+      idempotencyKey: data.idempotencyKey.present
+          ? data.idempotencyKey.value
+          : this.idempotencyKey,
       action: data.action.present ? data.action.value : this.action,
       payload: data.payload.present ? data.payload.value : this.payload,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
@@ -574,6 +608,7 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
   String toString() {
     return (StringBuffer('SyncQueueData(')
           ..write('id: $id, ')
+          ..write('idempotencyKey: $idempotencyKey, ')
           ..write('action: $action, ')
           ..write('payload: $payload, ')
           ..write('createdAt: $createdAt, ')
@@ -583,12 +618,14 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
   }
 
   @override
-  int get hashCode => Object.hash(id, action, payload, createdAt, attempts);
+  int get hashCode =>
+      Object.hash(id, idempotencyKey, action, payload, createdAt, attempts);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is SyncQueueData &&
           other.id == this.id &&
+          other.idempotencyKey == this.idempotencyKey &&
           other.action == this.action &&
           other.payload == this.payload &&
           other.createdAt == this.createdAt &&
@@ -597,12 +634,14 @@ class SyncQueueData extends DataClass implements Insertable<SyncQueueData> {
 
 class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
   final Value<int> id;
+  final Value<String> idempotencyKey;
   final Value<String> action;
   final Value<String> payload;
   final Value<DateTime> createdAt;
   final Value<int> attempts;
   const SyncQueueCompanion({
     this.id = const Value.absent(),
+    this.idempotencyKey = const Value.absent(),
     this.action = const Value.absent(),
     this.payload = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -610,14 +649,17 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
   });
   SyncQueueCompanion.insert({
     this.id = const Value.absent(),
+    required String idempotencyKey,
     required String action,
     required String payload,
     this.createdAt = const Value.absent(),
     this.attempts = const Value.absent(),
-  })  : action = Value(action),
+  })  : idempotencyKey = Value(idempotencyKey),
+        action = Value(action),
         payload = Value(payload);
   static Insertable<SyncQueueData> custom({
     Expression<int>? id,
+    Expression<String>? idempotencyKey,
     Expression<String>? action,
     Expression<String>? payload,
     Expression<DateTime>? createdAt,
@@ -625,6 +667,7 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
+      if (idempotencyKey != null) 'idempotency_key': idempotencyKey,
       if (action != null) 'action': action,
       if (payload != null) 'payload': payload,
       if (createdAt != null) 'created_at': createdAt,
@@ -634,12 +677,14 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
 
   SyncQueueCompanion copyWith(
       {Value<int>? id,
+      Value<String>? idempotencyKey,
       Value<String>? action,
       Value<String>? payload,
       Value<DateTime>? createdAt,
       Value<int>? attempts}) {
     return SyncQueueCompanion(
       id: id ?? this.id,
+      idempotencyKey: idempotencyKey ?? this.idempotencyKey,
       action: action ?? this.action,
       payload: payload ?? this.payload,
       createdAt: createdAt ?? this.createdAt,
@@ -652,6 +697,9 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
     final map = <String, Expression>{};
     if (id.present) {
       map['id'] = Variable<int>(id.value);
+    }
+    if (idempotencyKey.present) {
+      map['idempotency_key'] = Variable<String>(idempotencyKey.value);
     }
     if (action.present) {
       map['action'] = Variable<String>(action.value);
@@ -672,6 +720,7 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueData> {
   String toString() {
     return (StringBuffer('SyncQueueCompanion(')
           ..write('id: $id, ')
+          ..write('idempotencyKey: $idempotencyKey, ')
           ..write('action: $action, ')
           ..write('payload: $payload, ')
           ..write('createdAt: $createdAt, ')
@@ -1605,6 +1654,1111 @@ class CachedBannersCompanion extends UpdateCompanion<CachedBanner> {
   }
 }
 
+class $CachedTechnicianJobsTable extends CachedTechnicianJobs
+    with TableInfo<$CachedTechnicianJobsTable, CachedTechnicianJob> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CachedTechnicianJobsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _vehicleModelMeta =
+      const VerificationMeta('vehicleModel');
+  @override
+  late final GeneratedColumn<String> vehicleModel = GeneratedColumn<String>(
+      'vehicle_model', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _vehiclePlateMeta =
+      const VerificationMeta('vehiclePlate');
+  @override
+  late final GeneratedColumn<String> vehiclePlate = GeneratedColumn<String>(
+      'vehicle_plate', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _serviceTypeMeta =
+      const VerificationMeta('serviceType');
+  @override
+  late final GeneratedColumn<String> serviceType = GeneratedColumn<String>(
+      'service_type', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _packageNameMeta =
+      const VerificationMeta('packageName');
+  @override
+  late final GeneratedColumn<String> packageName = GeneratedColumn<String>(
+      'package_name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _dateMeta = const VerificationMeta('date');
+  @override
+  late final GeneratedColumn<String> date = GeneratedColumn<String>(
+      'date', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _timeMeta = const VerificationMeta('time');
+  @override
+  late final GeneratedColumn<String> time = GeneratedColumn<String>(
+      'time', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _progressMeta =
+      const VerificationMeta('progress');
+  @override
+  late final GeneratedColumn<double> progress = GeneratedColumn<double>(
+      'progress', aliasedName, false,
+      type: DriftSqlType.double, requiredDuringInsert: true);
+  static const VerificationMeta _checklistMeta =
+      const VerificationMeta('checklist');
+  @override
+  late final GeneratedColumn<String> checklist = GeneratedColumn<String>(
+      'checklist', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _partsMeta = const VerificationMeta('parts');
+  @override
+  late final GeneratedColumn<String> parts = GeneratedColumn<String>(
+      'parts', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+      'status', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _priceMeta = const VerificationMeta('price');
+  @override
+  late final GeneratedColumn<String> price = GeneratedColumn<String>(
+      'price', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _assignedTechIdMeta =
+      const VerificationMeta('assignedTechId');
+  @override
+  late final GeneratedColumn<String> assignedTechId = GeneratedColumn<String>(
+      'assigned_tech_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _customerIdMeta =
+      const VerificationMeta('customerId');
+  @override
+  late final GeneratedColumn<String> customerId = GeneratedColumn<String>(
+      'customer_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _serviceBookingIdMeta =
+      const VerificationMeta('serviceBookingId');
+  @override
+  late final GeneratedColumn<String> serviceBookingId = GeneratedColumn<String>(
+      'service_booking_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _estimatedCompletionMeta =
+      const VerificationMeta('estimatedCompletion');
+  @override
+  late final GeneratedColumn<String> estimatedCompletion =
+      GeneratedColumn<String>('estimated_completion', aliasedName, false,
+          type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        vehicleModel,
+        vehiclePlate,
+        serviceType,
+        packageName,
+        date,
+        time,
+        progress,
+        checklist,
+        parts,
+        status,
+        price,
+        assignedTechId,
+        customerId,
+        serviceBookingId,
+        estimatedCompletion,
+        createdAt
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'cached_technician_jobs';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<CachedTechnicianJob> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('vehicle_model')) {
+      context.handle(
+          _vehicleModelMeta,
+          vehicleModel.isAcceptableOrUnknown(
+              data['vehicle_model']!, _vehicleModelMeta));
+    } else if (isInserting) {
+      context.missing(_vehicleModelMeta);
+    }
+    if (data.containsKey('vehicle_plate')) {
+      context.handle(
+          _vehiclePlateMeta,
+          vehiclePlate.isAcceptableOrUnknown(
+              data['vehicle_plate']!, _vehiclePlateMeta));
+    } else if (isInserting) {
+      context.missing(_vehiclePlateMeta);
+    }
+    if (data.containsKey('service_type')) {
+      context.handle(
+          _serviceTypeMeta,
+          serviceType.isAcceptableOrUnknown(
+              data['service_type']!, _serviceTypeMeta));
+    } else if (isInserting) {
+      context.missing(_serviceTypeMeta);
+    }
+    if (data.containsKey('package_name')) {
+      context.handle(
+          _packageNameMeta,
+          packageName.isAcceptableOrUnknown(
+              data['package_name']!, _packageNameMeta));
+    } else if (isInserting) {
+      context.missing(_packageNameMeta);
+    }
+    if (data.containsKey('date')) {
+      context.handle(
+          _dateMeta, date.isAcceptableOrUnknown(data['date']!, _dateMeta));
+    } else if (isInserting) {
+      context.missing(_dateMeta);
+    }
+    if (data.containsKey('time')) {
+      context.handle(
+          _timeMeta, time.isAcceptableOrUnknown(data['time']!, _timeMeta));
+    } else if (isInserting) {
+      context.missing(_timeMeta);
+    }
+    if (data.containsKey('progress')) {
+      context.handle(_progressMeta,
+          progress.isAcceptableOrUnknown(data['progress']!, _progressMeta));
+    } else if (isInserting) {
+      context.missing(_progressMeta);
+    }
+    if (data.containsKey('checklist')) {
+      context.handle(_checklistMeta,
+          checklist.isAcceptableOrUnknown(data['checklist']!, _checklistMeta));
+    } else if (isInserting) {
+      context.missing(_checklistMeta);
+    }
+    if (data.containsKey('parts')) {
+      context.handle(
+          _partsMeta, parts.isAcceptableOrUnknown(data['parts']!, _partsMeta));
+    } else if (isInserting) {
+      context.missing(_partsMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(_statusMeta,
+          status.isAcceptableOrUnknown(data['status']!, _statusMeta));
+    } else if (isInserting) {
+      context.missing(_statusMeta);
+    }
+    if (data.containsKey('price')) {
+      context.handle(
+          _priceMeta, price.isAcceptableOrUnknown(data['price']!, _priceMeta));
+    } else if (isInserting) {
+      context.missing(_priceMeta);
+    }
+    if (data.containsKey('assigned_tech_id')) {
+      context.handle(
+          _assignedTechIdMeta,
+          assignedTechId.isAcceptableOrUnknown(
+              data['assigned_tech_id']!, _assignedTechIdMeta));
+    }
+    if (data.containsKey('customer_id')) {
+      context.handle(
+          _customerIdMeta,
+          customerId.isAcceptableOrUnknown(
+              data['customer_id']!, _customerIdMeta));
+    }
+    if (data.containsKey('service_booking_id')) {
+      context.handle(
+          _serviceBookingIdMeta,
+          serviceBookingId.isAcceptableOrUnknown(
+              data['service_booking_id']!, _serviceBookingIdMeta));
+    }
+    if (data.containsKey('estimated_completion')) {
+      context.handle(
+          _estimatedCompletionMeta,
+          estimatedCompletion.isAcceptableOrUnknown(
+              data['estimated_completion']!, _estimatedCompletionMeta));
+    } else if (isInserting) {
+      context.missing(_estimatedCompletionMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CachedTechnicianJob map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CachedTechnicianJob(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      vehicleModel: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}vehicle_model'])!,
+      vehiclePlate: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}vehicle_plate'])!,
+      serviceType: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}service_type'])!,
+      packageName: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}package_name'])!,
+      date: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}date'])!,
+      time: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}time'])!,
+      progress: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}progress'])!,
+      checklist: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}checklist'])!,
+      parts: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}parts'])!,
+      status: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}status'])!,
+      price: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}price'])!,
+      assignedTechId: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}assigned_tech_id']),
+      customerId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}customer_id']),
+      serviceBookingId: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}service_booking_id']),
+      estimatedCompletion: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}estimated_completion'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+    );
+  }
+
+  @override
+  $CachedTechnicianJobsTable createAlias(String alias) {
+    return $CachedTechnicianJobsTable(attachedDatabase, alias);
+  }
+}
+
+class CachedTechnicianJob extends DataClass
+    implements Insertable<CachedTechnicianJob> {
+  final String id;
+  final String vehicleModel;
+  final String vehiclePlate;
+  final String serviceType;
+  final String packageName;
+  final String date;
+  final String time;
+  final double progress;
+  final String checklist;
+  final String parts;
+  final String status;
+  final String price;
+  final String? assignedTechId;
+  final String? customerId;
+  final String? serviceBookingId;
+  final String estimatedCompletion;
+  final DateTime createdAt;
+  const CachedTechnicianJob(
+      {required this.id,
+      required this.vehicleModel,
+      required this.vehiclePlate,
+      required this.serviceType,
+      required this.packageName,
+      required this.date,
+      required this.time,
+      required this.progress,
+      required this.checklist,
+      required this.parts,
+      required this.status,
+      required this.price,
+      this.assignedTechId,
+      this.customerId,
+      this.serviceBookingId,
+      required this.estimatedCompletion,
+      required this.createdAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['vehicle_model'] = Variable<String>(vehicleModel);
+    map['vehicle_plate'] = Variable<String>(vehiclePlate);
+    map['service_type'] = Variable<String>(serviceType);
+    map['package_name'] = Variable<String>(packageName);
+    map['date'] = Variable<String>(date);
+    map['time'] = Variable<String>(time);
+    map['progress'] = Variable<double>(progress);
+    map['checklist'] = Variable<String>(checklist);
+    map['parts'] = Variable<String>(parts);
+    map['status'] = Variable<String>(status);
+    map['price'] = Variable<String>(price);
+    if (!nullToAbsent || assignedTechId != null) {
+      map['assigned_tech_id'] = Variable<String>(assignedTechId);
+    }
+    if (!nullToAbsent || customerId != null) {
+      map['customer_id'] = Variable<String>(customerId);
+    }
+    if (!nullToAbsent || serviceBookingId != null) {
+      map['service_booking_id'] = Variable<String>(serviceBookingId);
+    }
+    map['estimated_completion'] = Variable<String>(estimatedCompletion);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  CachedTechnicianJobsCompanion toCompanion(bool nullToAbsent) {
+    return CachedTechnicianJobsCompanion(
+      id: Value(id),
+      vehicleModel: Value(vehicleModel),
+      vehiclePlate: Value(vehiclePlate),
+      serviceType: Value(serviceType),
+      packageName: Value(packageName),
+      date: Value(date),
+      time: Value(time),
+      progress: Value(progress),
+      checklist: Value(checklist),
+      parts: Value(parts),
+      status: Value(status),
+      price: Value(price),
+      assignedTechId: assignedTechId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(assignedTechId),
+      customerId: customerId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(customerId),
+      serviceBookingId: serviceBookingId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(serviceBookingId),
+      estimatedCompletion: Value(estimatedCompletion),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory CachedTechnicianJob.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CachedTechnicianJob(
+      id: serializer.fromJson<String>(json['id']),
+      vehicleModel: serializer.fromJson<String>(json['vehicleModel']),
+      vehiclePlate: serializer.fromJson<String>(json['vehiclePlate']),
+      serviceType: serializer.fromJson<String>(json['serviceType']),
+      packageName: serializer.fromJson<String>(json['packageName']),
+      date: serializer.fromJson<String>(json['date']),
+      time: serializer.fromJson<String>(json['time']),
+      progress: serializer.fromJson<double>(json['progress']),
+      checklist: serializer.fromJson<String>(json['checklist']),
+      parts: serializer.fromJson<String>(json['parts']),
+      status: serializer.fromJson<String>(json['status']),
+      price: serializer.fromJson<String>(json['price']),
+      assignedTechId: serializer.fromJson<String?>(json['assignedTechId']),
+      customerId: serializer.fromJson<String?>(json['customerId']),
+      serviceBookingId: serializer.fromJson<String?>(json['serviceBookingId']),
+      estimatedCompletion:
+          serializer.fromJson<String>(json['estimatedCompletion']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'vehicleModel': serializer.toJson<String>(vehicleModel),
+      'vehiclePlate': serializer.toJson<String>(vehiclePlate),
+      'serviceType': serializer.toJson<String>(serviceType),
+      'packageName': serializer.toJson<String>(packageName),
+      'date': serializer.toJson<String>(date),
+      'time': serializer.toJson<String>(time),
+      'progress': serializer.toJson<double>(progress),
+      'checklist': serializer.toJson<String>(checklist),
+      'parts': serializer.toJson<String>(parts),
+      'status': serializer.toJson<String>(status),
+      'price': serializer.toJson<String>(price),
+      'assignedTechId': serializer.toJson<String?>(assignedTechId),
+      'customerId': serializer.toJson<String?>(customerId),
+      'serviceBookingId': serializer.toJson<String?>(serviceBookingId),
+      'estimatedCompletion': serializer.toJson<String>(estimatedCompletion),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  CachedTechnicianJob copyWith(
+          {String? id,
+          String? vehicleModel,
+          String? vehiclePlate,
+          String? serviceType,
+          String? packageName,
+          String? date,
+          String? time,
+          double? progress,
+          String? checklist,
+          String? parts,
+          String? status,
+          String? price,
+          Value<String?> assignedTechId = const Value.absent(),
+          Value<String?> customerId = const Value.absent(),
+          Value<String?> serviceBookingId = const Value.absent(),
+          String? estimatedCompletion,
+          DateTime? createdAt}) =>
+      CachedTechnicianJob(
+        id: id ?? this.id,
+        vehicleModel: vehicleModel ?? this.vehicleModel,
+        vehiclePlate: vehiclePlate ?? this.vehiclePlate,
+        serviceType: serviceType ?? this.serviceType,
+        packageName: packageName ?? this.packageName,
+        date: date ?? this.date,
+        time: time ?? this.time,
+        progress: progress ?? this.progress,
+        checklist: checklist ?? this.checklist,
+        parts: parts ?? this.parts,
+        status: status ?? this.status,
+        price: price ?? this.price,
+        assignedTechId:
+            assignedTechId.present ? assignedTechId.value : this.assignedTechId,
+        customerId: customerId.present ? customerId.value : this.customerId,
+        serviceBookingId: serviceBookingId.present
+            ? serviceBookingId.value
+            : this.serviceBookingId,
+        estimatedCompletion: estimatedCompletion ?? this.estimatedCompletion,
+        createdAt: createdAt ?? this.createdAt,
+      );
+  CachedTechnicianJob copyWithCompanion(CachedTechnicianJobsCompanion data) {
+    return CachedTechnicianJob(
+      id: data.id.present ? data.id.value : this.id,
+      vehicleModel: data.vehicleModel.present
+          ? data.vehicleModel.value
+          : this.vehicleModel,
+      vehiclePlate: data.vehiclePlate.present
+          ? data.vehiclePlate.value
+          : this.vehiclePlate,
+      serviceType:
+          data.serviceType.present ? data.serviceType.value : this.serviceType,
+      packageName:
+          data.packageName.present ? data.packageName.value : this.packageName,
+      date: data.date.present ? data.date.value : this.date,
+      time: data.time.present ? data.time.value : this.time,
+      progress: data.progress.present ? data.progress.value : this.progress,
+      checklist: data.checklist.present ? data.checklist.value : this.checklist,
+      parts: data.parts.present ? data.parts.value : this.parts,
+      status: data.status.present ? data.status.value : this.status,
+      price: data.price.present ? data.price.value : this.price,
+      assignedTechId: data.assignedTechId.present
+          ? data.assignedTechId.value
+          : this.assignedTechId,
+      customerId:
+          data.customerId.present ? data.customerId.value : this.customerId,
+      serviceBookingId: data.serviceBookingId.present
+          ? data.serviceBookingId.value
+          : this.serviceBookingId,
+      estimatedCompletion: data.estimatedCompletion.present
+          ? data.estimatedCompletion.value
+          : this.estimatedCompletion,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CachedTechnicianJob(')
+          ..write('id: $id, ')
+          ..write('vehicleModel: $vehicleModel, ')
+          ..write('vehiclePlate: $vehiclePlate, ')
+          ..write('serviceType: $serviceType, ')
+          ..write('packageName: $packageName, ')
+          ..write('date: $date, ')
+          ..write('time: $time, ')
+          ..write('progress: $progress, ')
+          ..write('checklist: $checklist, ')
+          ..write('parts: $parts, ')
+          ..write('status: $status, ')
+          ..write('price: $price, ')
+          ..write('assignedTechId: $assignedTechId, ')
+          ..write('customerId: $customerId, ')
+          ..write('serviceBookingId: $serviceBookingId, ')
+          ..write('estimatedCompletion: $estimatedCompletion, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      id,
+      vehicleModel,
+      vehiclePlate,
+      serviceType,
+      packageName,
+      date,
+      time,
+      progress,
+      checklist,
+      parts,
+      status,
+      price,
+      assignedTechId,
+      customerId,
+      serviceBookingId,
+      estimatedCompletion,
+      createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CachedTechnicianJob &&
+          other.id == this.id &&
+          other.vehicleModel == this.vehicleModel &&
+          other.vehiclePlate == this.vehiclePlate &&
+          other.serviceType == this.serviceType &&
+          other.packageName == this.packageName &&
+          other.date == this.date &&
+          other.time == this.time &&
+          other.progress == this.progress &&
+          other.checklist == this.checklist &&
+          other.parts == this.parts &&
+          other.status == this.status &&
+          other.price == this.price &&
+          other.assignedTechId == this.assignedTechId &&
+          other.customerId == this.customerId &&
+          other.serviceBookingId == this.serviceBookingId &&
+          other.estimatedCompletion == this.estimatedCompletion &&
+          other.createdAt == this.createdAt);
+}
+
+class CachedTechnicianJobsCompanion
+    extends UpdateCompanion<CachedTechnicianJob> {
+  final Value<String> id;
+  final Value<String> vehicleModel;
+  final Value<String> vehiclePlate;
+  final Value<String> serviceType;
+  final Value<String> packageName;
+  final Value<String> date;
+  final Value<String> time;
+  final Value<double> progress;
+  final Value<String> checklist;
+  final Value<String> parts;
+  final Value<String> status;
+  final Value<String> price;
+  final Value<String?> assignedTechId;
+  final Value<String?> customerId;
+  final Value<String?> serviceBookingId;
+  final Value<String> estimatedCompletion;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const CachedTechnicianJobsCompanion({
+    this.id = const Value.absent(),
+    this.vehicleModel = const Value.absent(),
+    this.vehiclePlate = const Value.absent(),
+    this.serviceType = const Value.absent(),
+    this.packageName = const Value.absent(),
+    this.date = const Value.absent(),
+    this.time = const Value.absent(),
+    this.progress = const Value.absent(),
+    this.checklist = const Value.absent(),
+    this.parts = const Value.absent(),
+    this.status = const Value.absent(),
+    this.price = const Value.absent(),
+    this.assignedTechId = const Value.absent(),
+    this.customerId = const Value.absent(),
+    this.serviceBookingId = const Value.absent(),
+    this.estimatedCompletion = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CachedTechnicianJobsCompanion.insert({
+    required String id,
+    required String vehicleModel,
+    required String vehiclePlate,
+    required String serviceType,
+    required String packageName,
+    required String date,
+    required String time,
+    required double progress,
+    required String checklist,
+    required String parts,
+    required String status,
+    required String price,
+    this.assignedTechId = const Value.absent(),
+    this.customerId = const Value.absent(),
+    this.serviceBookingId = const Value.absent(),
+    required String estimatedCompletion,
+    required DateTime createdAt,
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        vehicleModel = Value(vehicleModel),
+        vehiclePlate = Value(vehiclePlate),
+        serviceType = Value(serviceType),
+        packageName = Value(packageName),
+        date = Value(date),
+        time = Value(time),
+        progress = Value(progress),
+        checklist = Value(checklist),
+        parts = Value(parts),
+        status = Value(status),
+        price = Value(price),
+        estimatedCompletion = Value(estimatedCompletion),
+        createdAt = Value(createdAt);
+  static Insertable<CachedTechnicianJob> custom({
+    Expression<String>? id,
+    Expression<String>? vehicleModel,
+    Expression<String>? vehiclePlate,
+    Expression<String>? serviceType,
+    Expression<String>? packageName,
+    Expression<String>? date,
+    Expression<String>? time,
+    Expression<double>? progress,
+    Expression<String>? checklist,
+    Expression<String>? parts,
+    Expression<String>? status,
+    Expression<String>? price,
+    Expression<String>? assignedTechId,
+    Expression<String>? customerId,
+    Expression<String>? serviceBookingId,
+    Expression<String>? estimatedCompletion,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (vehicleModel != null) 'vehicle_model': vehicleModel,
+      if (vehiclePlate != null) 'vehicle_plate': vehiclePlate,
+      if (serviceType != null) 'service_type': serviceType,
+      if (packageName != null) 'package_name': packageName,
+      if (date != null) 'date': date,
+      if (time != null) 'time': time,
+      if (progress != null) 'progress': progress,
+      if (checklist != null) 'checklist': checklist,
+      if (parts != null) 'parts': parts,
+      if (status != null) 'status': status,
+      if (price != null) 'price': price,
+      if (assignedTechId != null) 'assigned_tech_id': assignedTechId,
+      if (customerId != null) 'customer_id': customerId,
+      if (serviceBookingId != null) 'service_booking_id': serviceBookingId,
+      if (estimatedCompletion != null)
+        'estimated_completion': estimatedCompletion,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CachedTechnicianJobsCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? vehicleModel,
+      Value<String>? vehiclePlate,
+      Value<String>? serviceType,
+      Value<String>? packageName,
+      Value<String>? date,
+      Value<String>? time,
+      Value<double>? progress,
+      Value<String>? checklist,
+      Value<String>? parts,
+      Value<String>? status,
+      Value<String>? price,
+      Value<String?>? assignedTechId,
+      Value<String?>? customerId,
+      Value<String?>? serviceBookingId,
+      Value<String>? estimatedCompletion,
+      Value<DateTime>? createdAt,
+      Value<int>? rowid}) {
+    return CachedTechnicianJobsCompanion(
+      id: id ?? this.id,
+      vehicleModel: vehicleModel ?? this.vehicleModel,
+      vehiclePlate: vehiclePlate ?? this.vehiclePlate,
+      serviceType: serviceType ?? this.serviceType,
+      packageName: packageName ?? this.packageName,
+      date: date ?? this.date,
+      time: time ?? this.time,
+      progress: progress ?? this.progress,
+      checklist: checklist ?? this.checklist,
+      parts: parts ?? this.parts,
+      status: status ?? this.status,
+      price: price ?? this.price,
+      assignedTechId: assignedTechId ?? this.assignedTechId,
+      customerId: customerId ?? this.customerId,
+      serviceBookingId: serviceBookingId ?? this.serviceBookingId,
+      estimatedCompletion: estimatedCompletion ?? this.estimatedCompletion,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (vehicleModel.present) {
+      map['vehicle_model'] = Variable<String>(vehicleModel.value);
+    }
+    if (vehiclePlate.present) {
+      map['vehicle_plate'] = Variable<String>(vehiclePlate.value);
+    }
+    if (serviceType.present) {
+      map['service_type'] = Variable<String>(serviceType.value);
+    }
+    if (packageName.present) {
+      map['package_name'] = Variable<String>(packageName.value);
+    }
+    if (date.present) {
+      map['date'] = Variable<String>(date.value);
+    }
+    if (time.present) {
+      map['time'] = Variable<String>(time.value);
+    }
+    if (progress.present) {
+      map['progress'] = Variable<double>(progress.value);
+    }
+    if (checklist.present) {
+      map['checklist'] = Variable<String>(checklist.value);
+    }
+    if (parts.present) {
+      map['parts'] = Variable<String>(parts.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (price.present) {
+      map['price'] = Variable<String>(price.value);
+    }
+    if (assignedTechId.present) {
+      map['assigned_tech_id'] = Variable<String>(assignedTechId.value);
+    }
+    if (customerId.present) {
+      map['customer_id'] = Variable<String>(customerId.value);
+    }
+    if (serviceBookingId.present) {
+      map['service_booking_id'] = Variable<String>(serviceBookingId.value);
+    }
+    if (estimatedCompletion.present) {
+      map['estimated_completion'] = Variable<String>(estimatedCompletion.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CachedTechnicianJobsCompanion(')
+          ..write('id: $id, ')
+          ..write('vehicleModel: $vehicleModel, ')
+          ..write('vehiclePlate: $vehiclePlate, ')
+          ..write('serviceType: $serviceType, ')
+          ..write('packageName: $packageName, ')
+          ..write('date: $date, ')
+          ..write('time: $time, ')
+          ..write('progress: $progress, ')
+          ..write('checklist: $checklist, ')
+          ..write('parts: $parts, ')
+          ..write('status: $status, ')
+          ..write('price: $price, ')
+          ..write('assignedTechId: $assignedTechId, ')
+          ..write('customerId: $customerId, ')
+          ..write('serviceBookingId: $serviceBookingId, ')
+          ..write('estimatedCompletion: $estimatedCompletion, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $HttpResponseCacheTable extends HttpResponseCache
+    with TableInfo<$HttpResponseCacheTable, HttpResponseCacheData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $HttpResponseCacheTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _cacheKeyMeta =
+      const VerificationMeta('cacheKey');
+  @override
+  late final GeneratedColumn<String> cacheKey = GeneratedColumn<String>(
+      'cache_key', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _responseBodyMeta =
+      const VerificationMeta('responseBody');
+  @override
+  late final GeneratedColumn<String> responseBody = GeneratedColumn<String>(
+      'response_body', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _cachedAtMeta =
+      const VerificationMeta('cachedAt');
+  @override
+  late final GeneratedColumn<DateTime> cachedAt = GeneratedColumn<DateTime>(
+      'cached_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _ttlSecondsMeta =
+      const VerificationMeta('ttlSeconds');
+  @override
+  late final GeneratedColumn<int> ttlSeconds = GeneratedColumn<int>(
+      'ttl_seconds', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(300));
+  @override
+  List<GeneratedColumn> get $columns =>
+      [cacheKey, responseBody, cachedAt, ttlSeconds];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'http_response_cache';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<HttpResponseCacheData> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('cache_key')) {
+      context.handle(_cacheKeyMeta,
+          cacheKey.isAcceptableOrUnknown(data['cache_key']!, _cacheKeyMeta));
+    } else if (isInserting) {
+      context.missing(_cacheKeyMeta);
+    }
+    if (data.containsKey('response_body')) {
+      context.handle(
+          _responseBodyMeta,
+          responseBody.isAcceptableOrUnknown(
+              data['response_body']!, _responseBodyMeta));
+    } else if (isInserting) {
+      context.missing(_responseBodyMeta);
+    }
+    if (data.containsKey('cached_at')) {
+      context.handle(_cachedAtMeta,
+          cachedAt.isAcceptableOrUnknown(data['cached_at']!, _cachedAtMeta));
+    } else if (isInserting) {
+      context.missing(_cachedAtMeta);
+    }
+    if (data.containsKey('ttl_seconds')) {
+      context.handle(
+          _ttlSecondsMeta,
+          ttlSeconds.isAcceptableOrUnknown(
+              data['ttl_seconds']!, _ttlSecondsMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {cacheKey};
+  @override
+  HttpResponseCacheData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return HttpResponseCacheData(
+      cacheKey: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}cache_key'])!,
+      responseBody: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}response_body'])!,
+      cachedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}cached_at'])!,
+      ttlSeconds: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}ttl_seconds'])!,
+    );
+  }
+
+  @override
+  $HttpResponseCacheTable createAlias(String alias) {
+    return $HttpResponseCacheTable(attachedDatabase, alias);
+  }
+}
+
+class HttpResponseCacheData extends DataClass
+    implements Insertable<HttpResponseCacheData> {
+  final String cacheKey;
+  final String responseBody;
+  final DateTime cachedAt;
+  final int ttlSeconds;
+  const HttpResponseCacheData(
+      {required this.cacheKey,
+      required this.responseBody,
+      required this.cachedAt,
+      required this.ttlSeconds});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['cache_key'] = Variable<String>(cacheKey);
+    map['response_body'] = Variable<String>(responseBody);
+    map['cached_at'] = Variable<DateTime>(cachedAt);
+    map['ttl_seconds'] = Variable<int>(ttlSeconds);
+    return map;
+  }
+
+  HttpResponseCacheCompanion toCompanion(bool nullToAbsent) {
+    return HttpResponseCacheCompanion(
+      cacheKey: Value(cacheKey),
+      responseBody: Value(responseBody),
+      cachedAt: Value(cachedAt),
+      ttlSeconds: Value(ttlSeconds),
+    );
+  }
+
+  factory HttpResponseCacheData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return HttpResponseCacheData(
+      cacheKey: serializer.fromJson<String>(json['cacheKey']),
+      responseBody: serializer.fromJson<String>(json['responseBody']),
+      cachedAt: serializer.fromJson<DateTime>(json['cachedAt']),
+      ttlSeconds: serializer.fromJson<int>(json['ttlSeconds']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'cacheKey': serializer.toJson<String>(cacheKey),
+      'responseBody': serializer.toJson<String>(responseBody),
+      'cachedAt': serializer.toJson<DateTime>(cachedAt),
+      'ttlSeconds': serializer.toJson<int>(ttlSeconds),
+    };
+  }
+
+  HttpResponseCacheData copyWith(
+          {String? cacheKey,
+          String? responseBody,
+          DateTime? cachedAt,
+          int? ttlSeconds}) =>
+      HttpResponseCacheData(
+        cacheKey: cacheKey ?? this.cacheKey,
+        responseBody: responseBody ?? this.responseBody,
+        cachedAt: cachedAt ?? this.cachedAt,
+        ttlSeconds: ttlSeconds ?? this.ttlSeconds,
+      );
+  HttpResponseCacheData copyWithCompanion(HttpResponseCacheCompanion data) {
+    return HttpResponseCacheData(
+      cacheKey: data.cacheKey.present ? data.cacheKey.value : this.cacheKey,
+      responseBody: data.responseBody.present
+          ? data.responseBody.value
+          : this.responseBody,
+      cachedAt: data.cachedAt.present ? data.cachedAt.value : this.cachedAt,
+      ttlSeconds:
+          data.ttlSeconds.present ? data.ttlSeconds.value : this.ttlSeconds,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HttpResponseCacheData(')
+          ..write('cacheKey: $cacheKey, ')
+          ..write('responseBody: $responseBody, ')
+          ..write('cachedAt: $cachedAt, ')
+          ..write('ttlSeconds: $ttlSeconds')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(cacheKey, responseBody, cachedAt, ttlSeconds);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is HttpResponseCacheData &&
+          other.cacheKey == this.cacheKey &&
+          other.responseBody == this.responseBody &&
+          other.cachedAt == this.cachedAt &&
+          other.ttlSeconds == this.ttlSeconds);
+}
+
+class HttpResponseCacheCompanion
+    extends UpdateCompanion<HttpResponseCacheData> {
+  final Value<String> cacheKey;
+  final Value<String> responseBody;
+  final Value<DateTime> cachedAt;
+  final Value<int> ttlSeconds;
+  final Value<int> rowid;
+  const HttpResponseCacheCompanion({
+    this.cacheKey = const Value.absent(),
+    this.responseBody = const Value.absent(),
+    this.cachedAt = const Value.absent(),
+    this.ttlSeconds = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  HttpResponseCacheCompanion.insert({
+    required String cacheKey,
+    required String responseBody,
+    required DateTime cachedAt,
+    this.ttlSeconds = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : cacheKey = Value(cacheKey),
+        responseBody = Value(responseBody),
+        cachedAt = Value(cachedAt);
+  static Insertable<HttpResponseCacheData> custom({
+    Expression<String>? cacheKey,
+    Expression<String>? responseBody,
+    Expression<DateTime>? cachedAt,
+    Expression<int>? ttlSeconds,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (cacheKey != null) 'cache_key': cacheKey,
+      if (responseBody != null) 'response_body': responseBody,
+      if (cachedAt != null) 'cached_at': cachedAt,
+      if (ttlSeconds != null) 'ttl_seconds': ttlSeconds,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  HttpResponseCacheCompanion copyWith(
+      {Value<String>? cacheKey,
+      Value<String>? responseBody,
+      Value<DateTime>? cachedAt,
+      Value<int>? ttlSeconds,
+      Value<int>? rowid}) {
+    return HttpResponseCacheCompanion(
+      cacheKey: cacheKey ?? this.cacheKey,
+      responseBody: responseBody ?? this.responseBody,
+      cachedAt: cachedAt ?? this.cachedAt,
+      ttlSeconds: ttlSeconds ?? this.ttlSeconds,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (cacheKey.present) {
+      map['cache_key'] = Variable<String>(cacheKey.value);
+    }
+    if (responseBody.present) {
+      map['response_body'] = Variable<String>(responseBody.value);
+    }
+    if (cachedAt.present) {
+      map['cached_at'] = Variable<DateTime>(cachedAt.value);
+    }
+    if (ttlSeconds.present) {
+      map['ttl_seconds'] = Variable<int>(ttlSeconds.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HttpResponseCacheCompanion(')
+          ..write('cacheKey: $cacheKey, ')
+          ..write('responseBody: $responseBody, ')
+          ..write('cachedAt: $cachedAt, ')
+          ..write('ttlSeconds: $ttlSeconds, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -1614,12 +2768,23 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $CachedCategoriesTable cachedCategories =
       $CachedCategoriesTable(this);
   late final $CachedBannersTable cachedBanners = $CachedBannersTable(this);
+  late final $CachedTechnicianJobsTable cachedTechnicianJobs =
+      $CachedTechnicianJobsTable(this);
+  late final $HttpResponseCacheTable httpResponseCache =
+      $HttpResponseCacheTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities =>
-      [cachedProfiles, syncQueue, cachedRides, cachedCategories, cachedBanners];
+  List<DatabaseSchemaEntity> get allSchemaEntities => [
+        cachedProfiles,
+        syncQueue,
+        cachedRides,
+        cachedCategories,
+        cachedBanners,
+        cachedTechnicianJobs,
+        httpResponseCache
+      ];
 }
 
 typedef $$CachedProfilesTableCreateCompanionBuilder = CachedProfilesCompanion
@@ -1660,11 +2825,15 @@ class $$CachedProfilesTableFilterComposer
   ColumnFilters<String> get name => $composableBuilder(
       column: $table.name, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get email => $composableBuilder(
-      column: $table.email, builder: (column) => ColumnFilters(column));
+  ColumnWithTypeConverterFilters<String?, String, String> get email =>
+      $composableBuilder(
+          column: $table.email,
+          builder: (column) => ColumnWithTypeConverterFilters(column));
 
-  ColumnFilters<String> get phone => $composableBuilder(
-      column: $table.phone, builder: (column) => ColumnFilters(column));
+  ColumnWithTypeConverterFilters<String, String, String> get phone =>
+      $composableBuilder(
+          column: $table.phone,
+          builder: (column) => ColumnWithTypeConverterFilters(column));
 
   ColumnFilters<String> get role => $composableBuilder(
       column: $table.role, builder: (column) => ColumnFilters(column));
@@ -1722,10 +2891,10 @@ class $$CachedProfilesTableAnnotationComposer
   GeneratedColumn<String> get name =>
       $composableBuilder(column: $table.name, builder: (column) => column);
 
-  GeneratedColumn<String> get email =>
+  GeneratedColumnWithTypeConverter<String?, String> get email =>
       $composableBuilder(column: $table.email, builder: (column) => column);
 
-  GeneratedColumn<String> get phone =>
+  GeneratedColumnWithTypeConverter<String, String> get phone =>
       $composableBuilder(column: $table.phone, builder: (column) => column);
 
   GeneratedColumn<String> get role =>
@@ -1828,6 +2997,7 @@ typedef $$CachedProfilesTableProcessedTableManager = ProcessedTableManager<
     PrefetchHooks Function()>;
 typedef $$SyncQueueTableCreateCompanionBuilder = SyncQueueCompanion Function({
   Value<int> id,
+  required String idempotencyKey,
   required String action,
   required String payload,
   Value<DateTime> createdAt,
@@ -1835,6 +3005,7 @@ typedef $$SyncQueueTableCreateCompanionBuilder = SyncQueueCompanion Function({
 });
 typedef $$SyncQueueTableUpdateCompanionBuilder = SyncQueueCompanion Function({
   Value<int> id,
+  Value<String> idempotencyKey,
   Value<String> action,
   Value<String> payload,
   Value<DateTime> createdAt,
@@ -1852,6 +3023,10 @@ class $$SyncQueueTableFilterComposer
   });
   ColumnFilters<int> get id => $composableBuilder(
       column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get idempotencyKey => $composableBuilder(
+      column: $table.idempotencyKey,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get action => $composableBuilder(
       column: $table.action, builder: (column) => ColumnFilters(column));
@@ -1878,6 +3053,10 @@ class $$SyncQueueTableOrderingComposer
   ColumnOrderings<int> get id => $composableBuilder(
       column: $table.id, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get idempotencyKey => $composableBuilder(
+      column: $table.idempotencyKey,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<String> get action => $composableBuilder(
       column: $table.action, builder: (column) => ColumnOrderings(column));
 
@@ -1902,6 +3081,9 @@ class $$SyncQueueTableAnnotationComposer
   });
   GeneratedColumn<int> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get idempotencyKey => $composableBuilder(
+      column: $table.idempotencyKey, builder: (column) => column);
 
   GeneratedColumn<String> get action =>
       $composableBuilder(column: $table.action, builder: (column) => column);
@@ -1943,6 +3125,7 @@ class $$SyncQueueTableTableManager extends RootTableManager<
               $$SyncQueueTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback: ({
             Value<int> id = const Value.absent(),
+            Value<String> idempotencyKey = const Value.absent(),
             Value<String> action = const Value.absent(),
             Value<String> payload = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
@@ -1950,6 +3133,7 @@ class $$SyncQueueTableTableManager extends RootTableManager<
           }) =>
               SyncQueueCompanion(
             id: id,
+            idempotencyKey: idempotencyKey,
             action: action,
             payload: payload,
             createdAt: createdAt,
@@ -1957,6 +3141,7 @@ class $$SyncQueueTableTableManager extends RootTableManager<
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
+            required String idempotencyKey,
             required String action,
             required String payload,
             Value<DateTime> createdAt = const Value.absent(),
@@ -1964,6 +3149,7 @@ class $$SyncQueueTableTableManager extends RootTableManager<
           }) =>
               SyncQueueCompanion.insert(
             id: id,
+            idempotencyKey: idempotencyKey,
             action: action,
             payload: payload,
             createdAt: createdAt,
@@ -2508,6 +3694,536 @@ typedef $$CachedBannersTableProcessedTableManager = ProcessedTableManager<
     ),
     CachedBanner,
     PrefetchHooks Function()>;
+typedef $$CachedTechnicianJobsTableCreateCompanionBuilder
+    = CachedTechnicianJobsCompanion Function({
+  required String id,
+  required String vehicleModel,
+  required String vehiclePlate,
+  required String serviceType,
+  required String packageName,
+  required String date,
+  required String time,
+  required double progress,
+  required String checklist,
+  required String parts,
+  required String status,
+  required String price,
+  Value<String?> assignedTechId,
+  Value<String?> customerId,
+  Value<String?> serviceBookingId,
+  required String estimatedCompletion,
+  required DateTime createdAt,
+  Value<int> rowid,
+});
+typedef $$CachedTechnicianJobsTableUpdateCompanionBuilder
+    = CachedTechnicianJobsCompanion Function({
+  Value<String> id,
+  Value<String> vehicleModel,
+  Value<String> vehiclePlate,
+  Value<String> serviceType,
+  Value<String> packageName,
+  Value<String> date,
+  Value<String> time,
+  Value<double> progress,
+  Value<String> checklist,
+  Value<String> parts,
+  Value<String> status,
+  Value<String> price,
+  Value<String?> assignedTechId,
+  Value<String?> customerId,
+  Value<String?> serviceBookingId,
+  Value<String> estimatedCompletion,
+  Value<DateTime> createdAt,
+  Value<int> rowid,
+});
+
+class $$CachedTechnicianJobsTableFilterComposer
+    extends Composer<_$AppDatabase, $CachedTechnicianJobsTable> {
+  $$CachedTechnicianJobsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get vehicleModel => $composableBuilder(
+      column: $table.vehicleModel, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get vehiclePlate => $composableBuilder(
+      column: $table.vehiclePlate, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get serviceType => $composableBuilder(
+      column: $table.serviceType, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get packageName => $composableBuilder(
+      column: $table.packageName, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get date => $composableBuilder(
+      column: $table.date, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get time => $composableBuilder(
+      column: $table.time, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get progress => $composableBuilder(
+      column: $table.progress, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get checklist => $composableBuilder(
+      column: $table.checklist, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get parts => $composableBuilder(
+      column: $table.parts, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get status => $composableBuilder(
+      column: $table.status, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get price => $composableBuilder(
+      column: $table.price, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get assignedTechId => $composableBuilder(
+      column: $table.assignedTechId,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get customerId => $composableBuilder(
+      column: $table.customerId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get serviceBookingId => $composableBuilder(
+      column: $table.serviceBookingId,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get estimatedCompletion => $composableBuilder(
+      column: $table.estimatedCompletion,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$CachedTechnicianJobsTableOrderingComposer
+    extends Composer<_$AppDatabase, $CachedTechnicianJobsTable> {
+  $$CachedTechnicianJobsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get vehicleModel => $composableBuilder(
+      column: $table.vehicleModel,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get vehiclePlate => $composableBuilder(
+      column: $table.vehiclePlate,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get serviceType => $composableBuilder(
+      column: $table.serviceType, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get packageName => $composableBuilder(
+      column: $table.packageName, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get date => $composableBuilder(
+      column: $table.date, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get time => $composableBuilder(
+      column: $table.time, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get progress => $composableBuilder(
+      column: $table.progress, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get checklist => $composableBuilder(
+      column: $table.checklist, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get parts => $composableBuilder(
+      column: $table.parts, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get status => $composableBuilder(
+      column: $table.status, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get price => $composableBuilder(
+      column: $table.price, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get assignedTechId => $composableBuilder(
+      column: $table.assignedTechId,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get customerId => $composableBuilder(
+      column: $table.customerId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get serviceBookingId => $composableBuilder(
+      column: $table.serviceBookingId,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get estimatedCompletion => $composableBuilder(
+      column: $table.estimatedCompletion,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$CachedTechnicianJobsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CachedTechnicianJobsTable> {
+  $$CachedTechnicianJobsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get vehicleModel => $composableBuilder(
+      column: $table.vehicleModel, builder: (column) => column);
+
+  GeneratedColumn<String> get vehiclePlate => $composableBuilder(
+      column: $table.vehiclePlate, builder: (column) => column);
+
+  GeneratedColumn<String> get serviceType => $composableBuilder(
+      column: $table.serviceType, builder: (column) => column);
+
+  GeneratedColumn<String> get packageName => $composableBuilder(
+      column: $table.packageName, builder: (column) => column);
+
+  GeneratedColumn<String> get date =>
+      $composableBuilder(column: $table.date, builder: (column) => column);
+
+  GeneratedColumn<String> get time =>
+      $composableBuilder(column: $table.time, builder: (column) => column);
+
+  GeneratedColumn<double> get progress =>
+      $composableBuilder(column: $table.progress, builder: (column) => column);
+
+  GeneratedColumn<String> get checklist =>
+      $composableBuilder(column: $table.checklist, builder: (column) => column);
+
+  GeneratedColumn<String> get parts =>
+      $composableBuilder(column: $table.parts, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get price =>
+      $composableBuilder(column: $table.price, builder: (column) => column);
+
+  GeneratedColumn<String> get assignedTechId => $composableBuilder(
+      column: $table.assignedTechId, builder: (column) => column);
+
+  GeneratedColumn<String> get customerId => $composableBuilder(
+      column: $table.customerId, builder: (column) => column);
+
+  GeneratedColumn<String> get serviceBookingId => $composableBuilder(
+      column: $table.serviceBookingId, builder: (column) => column);
+
+  GeneratedColumn<String> get estimatedCompletion => $composableBuilder(
+      column: $table.estimatedCompletion, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$CachedTechnicianJobsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $CachedTechnicianJobsTable,
+    CachedTechnicianJob,
+    $$CachedTechnicianJobsTableFilterComposer,
+    $$CachedTechnicianJobsTableOrderingComposer,
+    $$CachedTechnicianJobsTableAnnotationComposer,
+    $$CachedTechnicianJobsTableCreateCompanionBuilder,
+    $$CachedTechnicianJobsTableUpdateCompanionBuilder,
+    (
+      CachedTechnicianJob,
+      BaseReferences<_$AppDatabase, $CachedTechnicianJobsTable,
+          CachedTechnicianJob>
+    ),
+    CachedTechnicianJob,
+    PrefetchHooks Function()> {
+  $$CachedTechnicianJobsTableTableManager(
+      _$AppDatabase db, $CachedTechnicianJobsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CachedTechnicianJobsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CachedTechnicianJobsTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CachedTechnicianJobsTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> vehicleModel = const Value.absent(),
+            Value<String> vehiclePlate = const Value.absent(),
+            Value<String> serviceType = const Value.absent(),
+            Value<String> packageName = const Value.absent(),
+            Value<String> date = const Value.absent(),
+            Value<String> time = const Value.absent(),
+            Value<double> progress = const Value.absent(),
+            Value<String> checklist = const Value.absent(),
+            Value<String> parts = const Value.absent(),
+            Value<String> status = const Value.absent(),
+            Value<String> price = const Value.absent(),
+            Value<String?> assignedTechId = const Value.absent(),
+            Value<String?> customerId = const Value.absent(),
+            Value<String?> serviceBookingId = const Value.absent(),
+            Value<String> estimatedCompletion = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              CachedTechnicianJobsCompanion(
+            id: id,
+            vehicleModel: vehicleModel,
+            vehiclePlate: vehiclePlate,
+            serviceType: serviceType,
+            packageName: packageName,
+            date: date,
+            time: time,
+            progress: progress,
+            checklist: checklist,
+            parts: parts,
+            status: status,
+            price: price,
+            assignedTechId: assignedTechId,
+            customerId: customerId,
+            serviceBookingId: serviceBookingId,
+            estimatedCompletion: estimatedCompletion,
+            createdAt: createdAt,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String vehicleModel,
+            required String vehiclePlate,
+            required String serviceType,
+            required String packageName,
+            required String date,
+            required String time,
+            required double progress,
+            required String checklist,
+            required String parts,
+            required String status,
+            required String price,
+            Value<String?> assignedTechId = const Value.absent(),
+            Value<String?> customerId = const Value.absent(),
+            Value<String?> serviceBookingId = const Value.absent(),
+            required String estimatedCompletion,
+            required DateTime createdAt,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              CachedTechnicianJobsCompanion.insert(
+            id: id,
+            vehicleModel: vehicleModel,
+            vehiclePlate: vehiclePlate,
+            serviceType: serviceType,
+            packageName: packageName,
+            date: date,
+            time: time,
+            progress: progress,
+            checklist: checklist,
+            parts: parts,
+            status: status,
+            price: price,
+            assignedTechId: assignedTechId,
+            customerId: customerId,
+            serviceBookingId: serviceBookingId,
+            estimatedCompletion: estimatedCompletion,
+            createdAt: createdAt,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$CachedTechnicianJobsTableProcessedTableManager
+    = ProcessedTableManager<
+        _$AppDatabase,
+        $CachedTechnicianJobsTable,
+        CachedTechnicianJob,
+        $$CachedTechnicianJobsTableFilterComposer,
+        $$CachedTechnicianJobsTableOrderingComposer,
+        $$CachedTechnicianJobsTableAnnotationComposer,
+        $$CachedTechnicianJobsTableCreateCompanionBuilder,
+        $$CachedTechnicianJobsTableUpdateCompanionBuilder,
+        (
+          CachedTechnicianJob,
+          BaseReferences<_$AppDatabase, $CachedTechnicianJobsTable,
+              CachedTechnicianJob>
+        ),
+        CachedTechnicianJob,
+        PrefetchHooks Function()>;
+typedef $$HttpResponseCacheTableCreateCompanionBuilder
+    = HttpResponseCacheCompanion Function({
+  required String cacheKey,
+  required String responseBody,
+  required DateTime cachedAt,
+  Value<int> ttlSeconds,
+  Value<int> rowid,
+});
+typedef $$HttpResponseCacheTableUpdateCompanionBuilder
+    = HttpResponseCacheCompanion Function({
+  Value<String> cacheKey,
+  Value<String> responseBody,
+  Value<DateTime> cachedAt,
+  Value<int> ttlSeconds,
+  Value<int> rowid,
+});
+
+class $$HttpResponseCacheTableFilterComposer
+    extends Composer<_$AppDatabase, $HttpResponseCacheTable> {
+  $$HttpResponseCacheTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get cacheKey => $composableBuilder(
+      column: $table.cacheKey, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get responseBody => $composableBuilder(
+      column: $table.responseBody, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get cachedAt => $composableBuilder(
+      column: $table.cachedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get ttlSeconds => $composableBuilder(
+      column: $table.ttlSeconds, builder: (column) => ColumnFilters(column));
+}
+
+class $$HttpResponseCacheTableOrderingComposer
+    extends Composer<_$AppDatabase, $HttpResponseCacheTable> {
+  $$HttpResponseCacheTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get cacheKey => $composableBuilder(
+      column: $table.cacheKey, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get responseBody => $composableBuilder(
+      column: $table.responseBody,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get cachedAt => $composableBuilder(
+      column: $table.cachedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get ttlSeconds => $composableBuilder(
+      column: $table.ttlSeconds, builder: (column) => ColumnOrderings(column));
+}
+
+class $$HttpResponseCacheTableAnnotationComposer
+    extends Composer<_$AppDatabase, $HttpResponseCacheTable> {
+  $$HttpResponseCacheTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get cacheKey =>
+      $composableBuilder(column: $table.cacheKey, builder: (column) => column);
+
+  GeneratedColumn<String> get responseBody => $composableBuilder(
+      column: $table.responseBody, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get cachedAt =>
+      $composableBuilder(column: $table.cachedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get ttlSeconds => $composableBuilder(
+      column: $table.ttlSeconds, builder: (column) => column);
+}
+
+class $$HttpResponseCacheTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $HttpResponseCacheTable,
+    HttpResponseCacheData,
+    $$HttpResponseCacheTableFilterComposer,
+    $$HttpResponseCacheTableOrderingComposer,
+    $$HttpResponseCacheTableAnnotationComposer,
+    $$HttpResponseCacheTableCreateCompanionBuilder,
+    $$HttpResponseCacheTableUpdateCompanionBuilder,
+    (
+      HttpResponseCacheData,
+      BaseReferences<_$AppDatabase, $HttpResponseCacheTable,
+          HttpResponseCacheData>
+    ),
+    HttpResponseCacheData,
+    PrefetchHooks Function()> {
+  $$HttpResponseCacheTableTableManager(
+      _$AppDatabase db, $HttpResponseCacheTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$HttpResponseCacheTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$HttpResponseCacheTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$HttpResponseCacheTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> cacheKey = const Value.absent(),
+            Value<String> responseBody = const Value.absent(),
+            Value<DateTime> cachedAt = const Value.absent(),
+            Value<int> ttlSeconds = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              HttpResponseCacheCompanion(
+            cacheKey: cacheKey,
+            responseBody: responseBody,
+            cachedAt: cachedAt,
+            ttlSeconds: ttlSeconds,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String cacheKey,
+            required String responseBody,
+            required DateTime cachedAt,
+            Value<int> ttlSeconds = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              HttpResponseCacheCompanion.insert(
+            cacheKey: cacheKey,
+            responseBody: responseBody,
+            cachedAt: cachedAt,
+            ttlSeconds: ttlSeconds,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$HttpResponseCacheTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $HttpResponseCacheTable,
+    HttpResponseCacheData,
+    $$HttpResponseCacheTableFilterComposer,
+    $$HttpResponseCacheTableOrderingComposer,
+    $$HttpResponseCacheTableAnnotationComposer,
+    $$HttpResponseCacheTableCreateCompanionBuilder,
+    $$HttpResponseCacheTableUpdateCompanionBuilder,
+    (
+      HttpResponseCacheData,
+      BaseReferences<_$AppDatabase, $HttpResponseCacheTable,
+          HttpResponseCacheData>
+    ),
+    HttpResponseCacheData,
+    PrefetchHooks Function()>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -2522,4 +4238,8 @@ class $AppDatabaseManager {
       $$CachedCategoriesTableTableManager(_db, _db.cachedCategories);
   $$CachedBannersTableTableManager get cachedBanners =>
       $$CachedBannersTableTableManager(_db, _db.cachedBanners);
+  $$CachedTechnicianJobsTableTableManager get cachedTechnicianJobs =>
+      $$CachedTechnicianJobsTableTableManager(_db, _db.cachedTechnicianJobs);
+  $$HttpResponseCacheTableTableManager get httpResponseCache =>
+      $$HttpResponseCacheTableTableManager(_db, _db.httpResponseCache);
 }

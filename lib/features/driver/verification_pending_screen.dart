@@ -46,9 +46,9 @@ class _VerificationPendingScreenState extends ConsumerState<VerificationPendingS
   }
 
   String _formatTime(int totalSeconds) {
-    int hours = totalSeconds ~/ 3600;
-    int minutes = (totalSeconds % 3600) ~/ 60;
-    int seconds = totalSeconds % 60;
+    final int hours = totalSeconds ~/ 3600;
+    final int minutes = (totalSeconds % 3600) ~/ 60;
+    final int seconds = totalSeconds % 60;
     return '${hours.toString().padLeft(2, '0')}h ${minutes.toString().padLeft(2, '0')}m ${seconds.toString().padLeft(2, '0')}s';
   }
 
@@ -72,6 +72,7 @@ class _VerificationPendingScreenState extends ConsumerState<VerificationPendingS
         data: (status) => RefreshIndicator(
           color: AppColors.primaryBlue,
           onRefresh: () async {
+            // ignore: unawaited_futures
             HapticFeedback.lightImpact();
             // Pull to refresh is now handled by Firestore stream automatically,
             // but we can add a manual sync if needed.

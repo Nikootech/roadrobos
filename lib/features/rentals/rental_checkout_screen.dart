@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:razorpay_flutter/razorpay_flutter.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/custom_button.dart';
 import '../../navigation/nav_helpers.dart';
@@ -23,64 +22,14 @@ class RentalCheckoutScreen extends ConsumerStatefulWidget {
 
 class _RentalCheckoutScreenState extends ConsumerState<RentalCheckoutScreen> {
   bool _includeInsurance = true;
-  late final PaymentService _paymentService;
 
   @override
   void initState() {
     super.initState();
-    _paymentService = PaymentService(
-      onSuccess: (PaymentSuccessResponse? response) async {
-        final selectedVehicle = ref.read(selectedVehicleProvider);
-        final basePriceStr = ref.read(rentalPriceProvider);
-        final basePrice = double.tryParse(basePriceStr.replaceAll(RegExp(r'[^0-9.]'), '')) ?? 0.0;
-        final breakdown = PricingService.calculateBill(basePrice + (_includeInsurance ? 400 : 0));
-
-        // 1. Log detailed transaction to Firestore
-        final userId = ref.read(userProvider).user?.id ?? 'demo';
-        await ref.read(transactionRepositoryProvider).logTransaction(AppTransaction(
-          id: '',
-          userId: userId,
-          razoprayPaymentId: response?.paymentId ?? 'SIM_SUCCESS',
-          razorpayOrderId: response?.orderId,
-          razorpaySignature: response?.signature,
-          baseAmount: breakdown.baseAmount,
-          gstAmount: breakdown.gstAmount,
-          platformFee: breakdown.platformFee,
-          handlingCharges: breakdown.handlingCharges,
-          totalAmount: breakdown.totalPayable,
-          description: 'Vehicle Rental: ${selectedVehicle?['name']}',
-          timestamp: DateTime.now(),
-        ));
-
-        // 2. Start the rental state
-        if (selectedVehicle != null) {
-          ref.read(activeRentalProvider.notifier).startRental(
-            selectedVehicle,
-            const Duration(hours: 2), // Demo limit
-          );
-          
-          await ref.read(activeRentalProvider.notifier).completePayment(
-            totalCost: breakdown.totalPayable,
-            paymentId: response?.paymentId,
-          );
-
-          if (mounted) context.push('/rental-confirmed');
-        }
-      },
-      onFailure: (error) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(error),
-            backgroundColor: AppColors.errorRed,
-          ));
-        }
-      },
-    );
   }
 
   @override
   void dispose() {
-    _paymentService.dispose();
     super.dispose();
   }
 
@@ -224,19 +173,62 @@ class _RentalCheckoutScreenState extends ConsumerState<RentalCheckoutScreen> {
         decoration: const BoxDecoration(color: Colors.white),
         child: CustomButton(
           label: 'PAY ₹${breakdown.totalPayable.round()}',
-          onPressed: () {
+          onPressed: () async {
+            // ignore: unawaited_futures
             HapticFeedback.heavyImpact();
             
             final userData = ref.read(userProvider).user;
+            final userId = userData?.id ?? 'demo';
             
-            _paymentService.startPayment(
-              amount: breakdown.totalPayable,
-              contact: userData?.phone ?? '9876543210',
-              email: userData?.email ?? 'customer@example.com',
-              description: 'Vehicle Rental: ${selectedVehicle?['name']}',
-              bookingId: '00000000-0000-0000-0000-000000000000',
-              userId: userData?.id ?? 'demo',
-            );
+            try {
+              await ref.read(paymentServiceProvider.notifier).startPayment(
+                PaymentDetails(
+                  contact: userData?.phone ?? '9876543210',
+                  email: userData?.email ?? 'customer@example.com',
+                  description: 'Vehicle Rental: ${selectedVehicle?['name']}',
+                  bookingId: '00000000-0000-0000-0000-000000000000',
+                  userId: userId,
+                  bookingType: BookingType.rental,
+                  totalCost: breakdown.totalPayable,
+                )
+              );
+
+              // 1. Log detailed transaction
+              await ref.read(transactionRepositoryProvider).logTransaction(AppTransaction(
+                id: '',
+                userId: userId,
+                razoprayPaymentId: 'VERIFIED_ON_SERVER',
+                baseAmount: breakdown.baseAmount,
+                gstAmount: breakdown.gstAmount,
+                platformFee: breakdown.platformFee,
+                handlingCharges: breakdown.handlingCharges,
+                totalAmount: breakdown.totalPayable,
+                description: 'Vehicle Rental: ${selectedVehicle?['name']}',
+                timestamp: DateTime.now(),
+              ));
+
+              // 2. Start the rental state
+              if (selectedVehicle != null) {
+                ref.read(activeRentalProvider.notifier).startRental(
+                  selectedVehicle,
+                  const Duration(hours: 2), // Demo limit
+                );
+                
+                await ref.read(activeRentalProvider.notifier).completePayment(
+                  totalCost: breakdown.totalPayable,
+                  paymentService: ref.read(paymentServiceProvider.notifier),
+                );
+
+                if (!context.mounted) return;
+                // ignore: unawaited_futures
+                context.push('/rental-confirmed');              }
+            } catch (e) {
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text(e.toString()),
+                backgroundColor: AppColors.errorRed,
+              ));
+            }
           },
         ),
       ),

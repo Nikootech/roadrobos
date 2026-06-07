@@ -8,7 +8,6 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-
 import '../../core/theme/app_colors.dart';
 import '../../core/constants/app_strings.dart';
 import '../../shared/widgets/responsive_utils.dart';
@@ -123,7 +122,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildHeader(WidgetRef ref) {
-    final user = ref.watch(userProvider);
+    // P1: .select() — only rebuilds when profileImageUrl changes, not on any UserState field change
+    final imageUrl = ref.watch(userProvider.select((s) => s.profileImageUrl));
     return SafeArea(
       bottom: false,
       child: Padding(
@@ -133,7 +133,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             GestureDetector(
               onTap: () => context.push('/main/profile'),
               child: AppAvatar(
-                imageUrl: user.profileImageUrl,
+                imageUrl: imageUrl,
                 radius: 22,
                 backgroundColor: Colors.white,
               ),
@@ -212,7 +212,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
 
   Widget _buildGreetingSection(WidgetRef ref) {
-    final user = ref.watch(userProvider);
+    // P1: .select() — only rebuilds when user name changes
+    final userName = ref.watch(userProvider.select((s) => s.name));
     final selectedVehicle = ref.watch(vehicleProvider);
     final allVehicles = ref.watch(allVehiclesProvider);
     final l10n = ref.watch(l10nProvider);
@@ -224,7 +225,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         children: [
           Text(l10n.get('good_morning'), style: TextStyle(fontSize: ResponsiveLayout.responsiveFontSize(context, 14), color: AppColors.textSecondary)).animate().fadeIn(duration: 400.ms),
           const SizedBox(height: 4),
-          Text(user.name.split(' ')[0], style: TextStyle(fontSize: ResponsiveLayout.responsiveFontSize(context, 28), fontWeight: FontWeight.w800, color: AppColors.textPrimary)).animate(delay: 100.ms).fadeIn(duration: 500.ms).slideX(begin: -0.05, end: 0),
+          Text(userName.split(' ')[0], style: TextStyle(fontSize: ResponsiveLayout.responsiveFontSize(context, 28), fontWeight: FontWeight.w800, color: AppColors.textPrimary)).animate(delay: 100.ms).fadeIn(duration: 500.ms).slideX(begin: -0.05, end: 0),
           const SizedBox(height: 16),
           GestureDetector(
             onTap: () {
@@ -293,7 +294,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             },
             child: Container(
               padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(color: AppColors.bgSkyLight, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.1), width: 1)),
+              decoration: BoxDecoration(color: AppColors.bgSkyLight, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.1))),
               child: Row(
                 children: [
                   Container(
@@ -328,7 +329,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildWalletBalanceCard(WidgetRef ref) {
-    final user = ref.watch(userProvider).user;
+    final user = ref.watch(userProvider.select((s) => s.user));
     final userId = user?.id;
     final walletAsync = userId != null && !userId.startsWith('demo') 
         ? ref.watch(walletStreamProvider(userId))
@@ -365,9 +366,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      _buildStatItem('Points', ref.watch(userProvider).points.toString(), Icons.stars_rounded),
+                      _buildStatItem('Points', ref.watch(userProvider.select((s) => s.points)).toString(), Icons.stars_rounded),
                       const SizedBox(width: 16),
-                      _buildStatItem('Rides', ref.watch(userProvider).totalRides.toString(), Icons.directions_car_rounded),
+                      _buildStatItem('Rides', ref.watch(userProvider.select((s) => s.totalRides)).toString(), Icons.directions_car_rounded),
                     ],
                   ),
                 ],
@@ -431,7 +432,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       padding: ResponsiveLayout.responsivePadding(context, horizontal: 20, vertical: 16).copyWith(bottom: 0),
       child: GlassCard(
         onTap: () => context.push(isRental ? '/delivery-logistics' : '/live-service-status'),
-        padding: const EdgeInsets.all(20),
         borderRadius: 32,
         opacity: 0.08,
         blur: 10,
@@ -749,7 +749,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   autoPlayInterval: const Duration(seconds: 5),
                   autoPlayAnimationDuration: const Duration(milliseconds: 1000),
                   enlargeCenterPage: true,
-                  enlargeStrategy: CenterPageEnlargeStrategy.scale,
                 ),
               );
             },

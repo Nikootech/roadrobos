@@ -252,7 +252,7 @@ class RentalVehicleDetailScreen extends ConsumerWidget {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.primaryBlue,
                               foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                               elevation: 0,
                               minimumSize: const Size(0, 40),
@@ -294,6 +294,7 @@ class RentalVehicleDetailScreen extends ConsumerWidget {
                 flex: 2,
                 child: ElevatedButton(
                   onPressed: () async {
+                    // ignore: unawaited_futures
                     HapticFeedback.mediumImpact();
                     if (isBike || isEV) {
                       final slug = displayVehicle['name']
@@ -311,6 +312,7 @@ class RentalVehicleDetailScreen extends ConsumerWidget {
                       }
                     } else {
                       // Internal booking flow for cars
+                      // ignore: unawaited_futures
                       context.push('/rental-checkout');
                     }
                   },

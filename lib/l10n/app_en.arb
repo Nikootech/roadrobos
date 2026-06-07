@@ -1,92 +1,102 @@
 {
   "@@locale": "en",
-  "appName": "RoAdRoBos",
+
+  "appName": "RoadRobos",
   "@appName": { "description": "Application name" },
 
-  "btnBook": "Book Now",
-  "@btnBook": { "description": "Book now button label" },
+  "recentServices": "Recent Services",
+  "@recentServices": { "description": "HomeScreen recent services section heading" },
 
-  "btnCancel": "Cancel",
-  "@btnCancel": { "description": "Cancel button label" },
+  "exploreServices": "Explore Services",
+  "@exploreServices": { "description": "HomeScreen explore section heading" },
 
-  "btnProceed": "Proceed",
-  "@btnProceed": { "description": "Proceed button label" },
+  "moreServices": "More Services",
+  "@moreServices": {},
 
-  "btnSave": "Save",
-  "@btnSave": { "description": "Save button label" },
+  "switchView": "Switch View",
+  "@switchView": {},
 
-  "btnSignIn": "Sign In",
-  "@btnSignIn": { "description": "Sign in button label" },
+  "selectVehicle": "Select Vehicle",
+  "@selectVehicle": {},
 
-  "btnSignUp": "Sign Up",
-  "@btnSignUp": { "description": "Sign up button label" },
+  "addNewVehicle": "Add New Vehicle",
+  "@addNewVehicle": {},
 
-  "btnLogout": "Logout",
-  "@btnLogout": { "description": "Logout button label" },
+  "errorLoadingCategories": "Unable to load categories. Please try again.",
+  "@errorLoadingCategories": {},
 
-  "lblPickup": "Pickup Location",
-  "@lblPickup": { "description": "Pickup location label" },
+  "errorLoadingOffers": "Unable to load offers. Please try again.",
+  "@errorLoadingOffers": {},
 
-  "lblDropoff": "Drop-off Location",
-  "@lblDropoff": { "description": "Drop-off location label" },
+  "bookNow": "Book Now",
+  "@bookNow": {},
 
-  "lblEmail": "Email",
-  "@lblEmail": { "description": "Email field label" },
+  "retry": "Retry",
+  "@retry": {},
 
-  "lblPassword": "Password",
-  "@lblPassword": { "description": "Password field label" },
+  "somethingWentWrong": "Something went wrong. Please try again.",
+  "@somethingWentWrong": {},
 
-  "titleWallet": "Wallet",
-  "@titleWallet": { "description": "Wallet screen title" },
+  "nothingHereYet": "Nothing here yet.",
+  "@nothingHereYet": {},
 
-  "titleHome": "Home",
-  "@titleHome": { "description": "Home tab title" },
+  "loading": "Loading...",
+  "@loading": {},
 
-  "titleBookings": "Bookings",
-  "@titleBookings": { "description": "Bookings tab title" },
+  "viewAll": "View All",
+  "@viewAll": {},
 
-  "titleProfile": "My Profile",
-  "@titleProfile": { "description": "Profile screen title" },
+  "cancel": "Cancel",
+  "@cancel": {},
 
-  "titleExplore": "Explore",
-  "@titleExplore": { "description": "Explore tab title" },
+  "confirm": "Confirm",
+  "@confirm": {},
 
-  "titleWelcomeBack": "Welcome Back!",
-  "@titleWelcomeBack": { "description": "Login screen welcome title" },
+  "save": "Save",
+  "@save": {},
 
-  "lblLoginSubtitle": "Sign in to continue your journey",
-  "@lblLoginSubtitle": { "description": "Login screen subtitle" },
+  "delete": "Delete",
+  "@delete": {},
 
-  "lblOrContinueWith": "Or continue with",
-  "@lblOrContinueWith": { "description": "Social login divider text" },
+  "search": "Search",
+  "@search": {},
 
-  "lblDontHaveAccount": "Don't have an account? ",
-  "@lblDontHaveAccount": { "description": "Prompt to sign up" },
+  "filter": "Filter",
+  "@filter": {},
 
-  "lblAvailableBalance": "Available Balance",
-  "@lblAvailableBalance": { "description": "Wallet balance label" },
+  "home": "Home",
+  "@home": {},
 
-  "titleRecentTransactions": "Recent Transactions",
-  "@titleRecentTransactions": { "description": "Wallet transactions header" },
+  "bookings": "Bookings",
+  "@bookings": {},
 
-  "lblTopUp": "Top Up",
-  "@lblTopUp": { "description": "Wallet top up action" },
+  "wallet": "Wallet",
+  "@wallet": {},
 
-  "lblTransfer": "Transfer",
-  "@lblTransfer": { "description": "Wallet transfer action" },
+  "profile": "Profile",
+  "@profile": {},
 
-  "lblWithdraw": "Withdraw",
-  "@lblWithdraw": { "description": "Wallet withdraw action" },
+  "notifications": "Notifications",
+  "@notifications": {},
 
-  "titleQuickActions": "Quick Actions",
-  "@titleQuickActions": { "description": "Home screen quick actions section" },
+  "signOut": "Sign Out",
+  "@signOut": {},
 
-  "titleActiveOffers": "Active Offers",
-  "@titleActiveOffers": { "description": "Home screen offers section" },
+  "paymentSuccess": "Payment Successful!",
+  "@paymentSuccess": {},
 
-  "lblViewAll": "View All",
-  "@lblViewAll": { "description": "View all link text" },
+  "paymentFailed": "Payment Failed",
+  "@paymentFailed": {},
 
-  "lblSearchServices": "Search services, repairs...",
-  "@lblSearchServices": { "description": "Home search bar hint text" }
+  "sessionExpired": "Your session has expired. Please log in again.",
+  "@sessionExpired": {},
+
+  "securityWarning": "Security Alert",
+  "@securityWarning": {},
+
+  "securityWarningMessage": "Your device appears to be rooted or jailbroken. Payment features are disabled to protect your account.",
+  "@securityWarningMessage": {},
+
+  "closeApp": "Close App",
+  "@closeApp": {}
 }

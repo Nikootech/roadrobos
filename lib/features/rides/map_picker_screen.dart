@@ -13,7 +13,7 @@ class MapPickerScreen extends ConsumerStatefulWidget {
 }
 
 class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
-  String _currentAddress = "Searching for address...";
+  String _currentAddress = 'Searching for address...';
   LatLng _lastSelectedLocation = const LatLng(12.9716, 77.5946); // Default
 
   @override
@@ -23,7 +23,7 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
     Future.delayed(const Duration(seconds: 1), () {
       if (mounted) {
         setState(() {
-          _currentAddress = "MG Road, Bengaluru, Karnataka 560001";
+          _currentAddress = 'MG Road, Bengaluru, Karnataka 560001';
           _lastSelectedLocation = const LatLng(12.9716, 77.5946);
         });
       }
@@ -47,7 +47,7 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
                     _lastSelectedLocation = camera.center;
                     // Simple mock geocoding: use coordinates as address if needed,
                     // or just keep a generic "Selected Location" text that updates.
-                    _currentAddress = "Location: ${camera.center.latitude.toStringAsFixed(4)}, ${camera.center.longitude.toStringAsFixed(4)}";
+                    _currentAddress = 'Location: ${camera.center.latitude.toStringAsFixed(4)}, ${camera.center.longitude.toStringAsFixed(4)}';
                   });
                 }
               },

@@ -1,29 +1,25 @@
 import 'dart:async';
 import 'package:geolocator/geolocator.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../features/profile/user_provider.dart';
-import '../models/user_role.dart';
 
 final trackingServiceProvider = Provider<TrackingService>((ref) {
-  return TrackingService(ref);
+  return TrackingService();
 });
 
 class TrackingService {
-  final Ref _ref;
   StreamSubscription<Position>? _positionStream;
   Timer? _upsertTimer;
   Position? _latestPosition;
   String? _trackingDriverId;
   final SupabaseClient _supabase = Supabase.instance.client;
 
-  TrackingService(this._ref);
+  TrackingService();
 
   Future<void> startTracking(String driverId) async {
     _trackingDriverId = driverId;
 
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    final bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) return;
 
     LocationPermission permission = await Geolocator.checkPermission();
@@ -55,6 +51,7 @@ class TrackingService {
   }
 
   Future<void> stopTracking() async {
+    // ignore: unawaited_futures
     _positionStream?.cancel();
     _positionStream = null;
     

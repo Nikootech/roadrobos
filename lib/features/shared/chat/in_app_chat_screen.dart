@@ -45,7 +45,7 @@ class _InAppChatScreenState extends ConsumerState<InAppChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final userId = ref.watch(userProvider).user?.id ?? 'demo';
+    final userId = ref.watch(userProvider.select((s) => s.user?.id)) ?? 'demo';
     final messagesAsync = ref.watch(chatMessagesProvider((widget.chatRoomId, userId)));
 
     return Scaffold(

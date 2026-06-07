@@ -1,19 +1,57 @@
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'dart:async';
 
-import '../../core/config/app_config.dart';
+import '../../main.dart' show navigatorKey;
+import '../security/secure_token_storage.dart';
+import 'package:go_router/go_router.dart';
+
+part 'auth_service.g.dart';
 
 final authServiceProvider = Provider<AuthService>((ref) {
   return AuthService();
 });
 
-/// Listen to auth state changes across the app
-final authStateProvider = StreamProvider<sb.User?>((ref) {
-  return ref.watch(authServiceProvider).authStateChanges;
-});
+@riverpod
+class AuthNotifier extends _$AuthNotifier {
+  @override
+  FutureOr<sb.User?> build() async {
+    final client = sb.Supabase.instance.client;
+
+    // 1. Cold start — restore session from Supabase's secure storage
+    final initialUser = client.auth.currentSession?.user;
+
+    // 2. Listen to all Supabase auth state changes
+    final subscription = client.auth.onAuthStateChange.listen((data) {
+      if (kDebugMode) {
+        debugPrint('AuthNotifier: ${data.event}');
+      }
+
+      // ── S7: Forced logout on JWT expiry / 401 ──────────────────────────────
+      // Supabase fires signedOut when refresh fails. We must clear all state
+      // to prevent the user staying logged in with stale data.
+      if (data.event == sb.AuthChangeEvent.signedOut &&
+          state.value != null) {
+        unawaited(
+          SecureTokenStorage.instance.clearAll().catchError((_) {}),
+        );
+        state = const AsyncData(null);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          navigatorKey.currentContext?.go('/auth/login');
+        });
+        return;
+      }
+
+      state = AsyncData(data.session?.user);
+    });
+
+    ref.onDispose(() => subscription.cancel());
+    return initialUser;
+  }
+}
 
 /// Google Client ID injected at compile time via --dart-define-from-file
 const _googleClientId = String.fromEnvironment('GOOGLE_CLIENT_ID');

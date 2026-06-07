@@ -48,7 +48,6 @@ class _DriverRideRequestScreenState extends State<DriverRideRequestScreen> with 
             child: Container(
               decoration: BoxDecoration(
                 gradient: RadialGradient(
-                  center: Alignment.center,
                   radius: 1.5,
                   colors: [AppColors.primaryBlue.withValues(alpha: 0.2), Colors.black],
                 ),

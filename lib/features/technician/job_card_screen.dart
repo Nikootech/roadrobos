@@ -5,7 +5,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:io';
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/custom_button.dart';
 import '../../core/repositories/job_card_repository.dart';
 import 'technician_provider.dart';
@@ -235,7 +234,7 @@ class _TechnicianJobCardScreenState extends ConsumerState<TechnicianJobCardScree
                            decoration: BoxDecoration(
                              color: AppColors.bgLightGrey,
                              borderRadius: BorderRadius.circular(16),
-                             border: Border.all(color: AppColors.border, style: BorderStyle.solid),
+                             border: Border.all(color: AppColors.border),
                            ),
                            child: const Icon(Icons.add_a_photo_rounded, color: AppColors.textSecondary),
                          ),

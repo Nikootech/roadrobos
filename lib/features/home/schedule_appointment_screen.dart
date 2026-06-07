@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:razorpay_flutter/razorpay_flutter.dart';
 import '../../core/repositories/service_booking_repository.dart';
 import '../../core/repositories/transaction_repository.dart';
 import '../../core/models/service_booking.dart';
@@ -25,70 +24,13 @@ class ScheduleAppointmentScreen extends ConsumerStatefulWidget {
 class _ScheduleAppointmentScreenState extends ConsumerState<ScheduleAppointmentScreen> {
   DateTime _selectedDate = DateTime.now().add(const Duration(days: 1));
   String _selectedTime = '';
-  late final PaymentService _paymentService;
-
   @override
   void initState() {
     super.initState();
-    _paymentService = PaymentService(
-      onSuccess: (PaymentSuccessResponse? response) async {
-        final dateStr = DateFormat('d MMMM yyyy').format(_selectedDate);
-        ref.read(bookingProvider.notifier).setSchedule(dateStr, _selectedTime);
-        
-        final booking = ref.read(bookingProvider);
-        final basePrice = double.tryParse(booking.price.replaceAll(RegExp(r'[^0-9.]'), '')) ?? 0.0;
-        final breakdown = PricingService.calculateBill(basePrice);
-        final userId = ref.read(userProvider).user?.id ?? 'demo';
-
-        // 1. Log Transaction
-        await ref.read(transactionRepositoryProvider).logTransaction(AppTransaction(
-          id: '',
-          userId: userId,
-          razoprayPaymentId: response?.paymentId ?? 'SIM_SUCCESS',
-          razorpayOrderId: response?.orderId,
-          razorpaySignature: response?.signature,
-          baseAmount: breakdown.baseAmount,
-          gstAmount: breakdown.gstAmount,
-          platformFee: breakdown.platformFee,
-          handlingCharges: breakdown.handlingCharges,
-          totalAmount: breakdown.totalPayable,
-          description: 'Service Booking: ${booking.packageName}',
-          timestamp: DateTime.now(),
-        ));
-
-        // 2. Create Job and Booking
-        ref.read(technicianProvider.notifier).createJobFromBooking(booking);
-        
-        await ref.read(serviceBookingRepositoryProvider).createServiceBooking(ServiceBooking(
-          id: '',
-          customerId: userId,
-          vehicleName: booking.vehicleModel,
-          vehiclePlate: booking.vehiclePlate,
-          packageName: booking.packageName,
-          date: booking.date.isEmpty ? dateStr : booking.date,
-          time: booking.time.isEmpty ? _selectedTime : booking.time,
-          totalCost: breakdown.totalPayable,
-          details: {'payment_id': response?.paymentId ?? 'Direct', 'method': 'Razorpay'},
-          status: 'paid',
-          createdAt: DateTime.now(),
-        ));
-
-        if (mounted) context.push('/live-service-status');
-      },
-      onFailure: (error) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(error),
-            backgroundColor: AppColors.errorRed,
-          ));
-        }
-      },
-    );
   }
 
   @override
   void dispose() {
-    _paymentService.dispose();
     super.dispose();
   }
 
@@ -171,20 +113,72 @@ class _ScheduleAppointmentScreenState extends ConsumerState<ScheduleAppointmentS
             ),
             child: CustomButton(
               label: 'Book Appointment',
-              onPressed: _selectedTime.isEmpty ? null : () {
+              onPressed: _selectedTime.isEmpty ? null : () async {
                 final booking = ref.read(bookingProvider);
                 final basePrice = double.tryParse(booking.price.replaceAll(RegExp(r'[^0-9.]'), '')) ?? 0.0;
                 final breakdown = PricingService.calculateBill(basePrice);
                 final userData = ref.read(userProvider).user;
+                final userId = userData?.id ?? 'demo';
                 
-                _paymentService.startPayment(
-                  amount: breakdown.totalPayable,
-                  contact: userData?.phone ?? '9876543210',
-                  email: userData?.email ?? 'customer@example.com',
-                  description: 'Service Booking: ${booking.packageName}',
-                  bookingId: '00000000-0000-0000-0000-000000000000',
-                  userId: userData?.id ?? 'demo',
-                );
+                try {
+                  await ref.read(paymentServiceProvider.notifier).startPayment(
+                    PaymentDetails(
+                      contact: userData?.phone ?? '9876543210',
+                      email: userData?.email ?? 'customer@example.com',
+                      description: 'Service Booking: ${booking.packageName}',
+                      bookingId: '00000000-0000-0000-0000-000000000000',
+                      userId: userId,
+                      bookingType: BookingType.service,
+                      totalCost: breakdown.totalPayable,
+                    )
+                  );
+
+                  // On success
+                  final dateStr = DateFormat('d MMMM yyyy').format(_selectedDate);
+                  ref.read(bookingProvider.notifier).setSchedule(dateStr, _selectedTime);
+                  
+                  await ref.read(transactionRepositoryProvider).logTransaction(AppTransaction(
+                    id: '',
+                    userId: userId,
+                    razoprayPaymentId: 'VERIFIED_ON_SERVER',
+                    baseAmount: breakdown.baseAmount,
+                    gstAmount: breakdown.gstAmount,
+                    platformFee: breakdown.platformFee,
+                    handlingCharges: breakdown.handlingCharges,
+                    totalAmount: breakdown.totalPayable,
+                    description: 'Service Booking: ${booking.packageName}',
+                    timestamp: DateTime.now(),
+                  ));
+
+                  ref.read(technicianProvider.notifier).createJobFromBooking(booking);
+                  
+                  await ref.read(serviceBookingRepositoryProvider).createServiceBooking(ServiceBooking(
+                    id: '',
+                    customerId: userId,
+                    vehicleName: booking.vehicleModel,
+                    vehiclePlate: booking.vehiclePlate,
+                    packageName: booking.packageName,
+                    date: booking.date.isEmpty ? dateStr : booking.date,
+                    time: booking.time.isEmpty ? _selectedTime : booking.time,
+                    totalCost: breakdown.totalPayable,
+                    details: {'method': 'Razorpay'},
+                    status: 'paid',
+                    createdAt: DateTime.now(),
+                  ));
+
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text('Booking Confirmed!'),
+                    backgroundColor: Colors.green,
+                  ));
+                  context.pop();
+                } catch (e) {
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(e.toString()),
+                    backgroundColor: AppColors.errorRed,
+                  ));
+                }
               },
               backgroundColor: AppColors.primaryBlue,
             ),

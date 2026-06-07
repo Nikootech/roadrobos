@@ -221,7 +221,7 @@ class _EmergencyHelpScreenState extends State<EmergencyHelpScreen> {
   }
 
   Widget _buildCategoryCard(String title, IconData icon, Color color) {
-    bool isSelected = _currentEmergency == title;
+    final bool isSelected = _currentEmergency == title;
     return GestureDetector(
       onTap: () {
         HapticFeedback.mediumImpact();

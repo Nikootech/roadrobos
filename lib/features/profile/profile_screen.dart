@@ -237,6 +237,7 @@ class ProfileScreen extends ConsumerWidget {
                   // Logout button
                   GestureDetector(
                     onTap: () async {
+                      // ignore: unawaited_futures
                       HapticFeedback.mediumImpact();
                       await ref.read(userProvider.notifier).logout();
                       if (context.mounted) context.go('/auth/login');

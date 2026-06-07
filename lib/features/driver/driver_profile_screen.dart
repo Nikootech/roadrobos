@@ -139,6 +139,7 @@ class DriverProfileScreen extends ConsumerWidget {
               width: double.infinity,
               child: TextButton(
                 onPressed: () async {
+                  // ignore: unawaited_futures
                   HapticFeedback.heavyImpact();
                   await ref.read(userProvider.notifier).logout();
                   if (context.mounted) context.go('/auth/login');

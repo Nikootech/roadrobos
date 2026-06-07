@@ -14,7 +14,7 @@ class ApprovalRepository {
         .from('approvals')
         .stream(primaryKey: ['id'])
         .eq('status', 'pending')
-        .order('created_at', ascending: false)
+        .order('created_at')
         .map((data) => data.map((map) => ApprovalRequest.fromMap(map)).toList());
   }
 

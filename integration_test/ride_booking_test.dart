@@ -4,9 +4,7 @@
 /// using mocked Supabase responses.
 library;
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:roadrobos/core/services/auth_service.dart';

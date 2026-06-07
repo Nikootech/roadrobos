@@ -193,7 +193,7 @@ class _VehicleCard extends ConsumerWidget {
           ],
           border: isZeelio 
               ? Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.2), width: 1.5)
-              : (isEV ? Border.all(color: Colors.green.withValues(alpha: 0.1), width: 1) : null),
+              : (isEV ? Border.all(color: Colors.green.withValues(alpha: 0.1)) : null),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

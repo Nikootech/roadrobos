@@ -77,8 +77,9 @@ class UserNotifier extends StateNotifier<UserState> {
       if (state.isDemo && sbUser == null) return;
       
       if (sbUser == null) {
+        // ignore: unawaited_futures
         _profileSubscription?.cancel();
-        state = UserState(user: null, isLoading: false);
+        state = UserState();
       } else {
         // Optimization: Skip fetching if the profile for this user is already loaded
         // BUT: Re-fetch if we are missing a profile picture (to allow sync from OAuth)
@@ -193,6 +194,7 @@ class UserNotifier extends StateNotifier<UserState> {
         
         // Sync FCM token to backend (P0 Integration)
         if (!isDemoId) {
+          // ignore: unawaited_futures
           NotificationService().syncTokenToBackend(uid);
         }
       } else {
@@ -243,7 +245,7 @@ class UserNotifier extends StateNotifier<UserState> {
     if (currentAppUser == null) return;
 
     // Reset error state before attempt
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true);
     try {
       final updatedUser = currentAppUser.copyWith(
         name: name,
@@ -259,7 +261,7 @@ class UserNotifier extends StateNotifier<UserState> {
         debugPrint('Profile saved to database successfully.');
       }
       
-      state = state.copyWith(user: updatedUser, isLoading: false, error: null);
+      state = state.copyWith(user: updatedUser, isLoading: false);
     } catch (e) {
       debugPrint('Profile Update Error: $e');
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -268,7 +270,7 @@ class UserNotifier extends StateNotifier<UserState> {
 
   Future<void> logout() async {
     await _authService.signOut();
-    state = UserState(user: null, isLoading: false);
+    state = UserState();
   }
 
   Future<void> deleteAccountRequest() async {
@@ -303,7 +305,7 @@ class UserNotifier extends StateNotifier<UserState> {
 
       if (image == null) return;
 
-      state = state.copyWith(isLoading: true, error: null);
+      state = state.copyWith(isLoading: true);
 
       final bytes = await image.readAsBytes();
       final extension = image.path.split('.').last.toLowerCase();

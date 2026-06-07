@@ -12,7 +12,7 @@ class ServiceRemindersScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final userId = ref.watch(authStateProvider).value?.id;
+    final userId = ref.watch(authNotifierProvider).value?.id;
     final servicesAsync = userId != null 
         ? ref.watch(serviceBookingRepositoryProvider).getPagedCustomerServiceBookings(userId, limit: 50) 
         : Future<List>.value([]);
@@ -34,7 +34,7 @@ class ServiceRemindersScreen extends ConsumerWidget {
       body: FutureBuilder(
         future: servicesAsync,
         builder: (context, snapshot) {
-          final services = snapshot.data as List? ?? [];
+          final services = snapshot.data ?? [];
           
           // Simple Health Calculation (Just for demo logic)
           double healthScore = 0.50; // Default: Needs attention

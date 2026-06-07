@@ -61,7 +61,7 @@ class AppMapController extends StateNotifier<AppMapState> {
     state = state.copyWith(isLoading: true);
     
     try {
-      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      final bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
         state = state.copyWith(isLoading: false, errorMessage: 'Location services disabled');
         return;

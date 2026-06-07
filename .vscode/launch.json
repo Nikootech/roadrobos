@@ -1,0 +1,48 @@
+{
+  // VS Code launch configurations for RoadRobos
+  // All secret keys are passed via --dart-define-from-file, never hardcoded here.
+  //
+  // SETUP:
+  //   1. Copy dart_defines/dev.env.template → dart_defines/dev.env
+  //   2. Fill in your real keys in dart_defines/dev.env
+  //   3. dart_defines/dev.env is gitignored — never commit it.
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "RoadRobos (Dev)",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "debug",
+      "args": [
+        "--dart-define-from-file=dart_defines/dev.env"
+      ]
+    },
+    {
+      "name": "RoadRobos (Dev — Profile)",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "profile",
+      "args": [
+        "--dart-define-from-file=dart_defines/dev.env"
+      ]
+    },
+    {
+      "name": "RoadRobos (Staging)",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "debug",
+      "args": [
+        "--dart-define-from-file=dart_defines/staging.env"
+      ]
+    },
+    {
+      "name": "RoadRobos (Release — local signing)",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "release",
+      "args": [
+        "--dart-define-from-file=dart_defines/dev.env"
+      ]
+    }
+  ]
+}

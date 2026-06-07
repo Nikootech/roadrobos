@@ -189,7 +189,7 @@ class AdminOpsRepository {
   Future<void> updateDriverKycStatus(String driverId, String docTitle, String status) async {
     // 1. Fetch current docs
     final res = await _supabase.from('drivers').select('kyc_documents').eq('id', driverId).single();
-    List docs = res['kyc_documents'] as List? ?? [];
+    final List docs = res['kyc_documents'] as List? ?? [];
     
     // 2. Update the specific doc
     final updatedDocs = docs.map((d) {

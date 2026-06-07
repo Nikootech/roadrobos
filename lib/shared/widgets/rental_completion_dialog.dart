@@ -23,7 +23,6 @@ class RentalCompletionDialog extends StatelessWidget {
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.symmetric(horizontal: 20),
       child: GlassCard(
-        borderRadius: 24,
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(

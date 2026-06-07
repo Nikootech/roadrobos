@@ -23,6 +23,7 @@ class UserRepository {
     if (local != null) {
       debugPrint('UserRepository: Returning Cached Profile for $uid');
       // Background refresh
+      // ignore: unawaited_futures
       _fetchAndCache(uid).catchError((e) => debugPrint('Background Fetch Error: $e'));
       return _fromCached(local);
     }

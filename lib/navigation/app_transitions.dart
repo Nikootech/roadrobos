@@ -89,7 +89,6 @@ class AppTransitions {
       key: state.pageKey,
       child: child,
       transitionDuration: duration,
-      reverseTransitionDuration: const Duration(milliseconds: 300),
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
         final scaleAnimation = Tween<double>(begin: 0.92, end: 1.0)
             .chain(CurveTween(curve: Curves.easeOutBack))

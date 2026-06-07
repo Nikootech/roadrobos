@@ -28,7 +28,6 @@ class BiometricService {
         localizedReason: localizedReason,
         options: const AuthenticationOptions(
           stickyAuth: true,
-          biometricOnly: false, // Allows PIN/Pattern fallback if biometrics fail
         ),
       );
     } on PlatformException catch (_) {

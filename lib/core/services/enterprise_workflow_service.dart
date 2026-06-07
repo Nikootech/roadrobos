@@ -49,7 +49,7 @@ class EnterpriseWorkflowService {
     if (user == null) return;
 
     try {
-      String? token = await _fcm.getToken();
+      final String? token = await _fcm.getToken();
       if (token != null) {
         await _supabase.from('profiles').update({
           'fcm_token': token,

@@ -1,5 +1,5 @@
 // Barrel export file for providers
-export 'auth_providers.dart';
+export '../services/auth_service.dart';
 export 'user_providers.dart';
 export 'booking_providers.dart';
 export 'driver_location_provider.dart';

@@ -319,6 +319,7 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () async {
+                      // ignore: unawaited_futures
                       HapticFeedback.mediumImpact();
                       ref.read(selectedJobIdProvider.notifier).state = job.id;
                       if (statusLabel == 'To-Do') {
@@ -338,6 +339,7 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
                           }
                         }
                       } else {
+                        // ignore: unawaited_futures
                         context.push('/tech-job-card-details');
                       }
                     },

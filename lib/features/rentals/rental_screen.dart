@@ -198,7 +198,6 @@ class _RentalScreenState extends ConsumerState<RentalScreen> {
             child: ConfettiWidget(
               confettiController: _confettiController,
               blastDirectionality: BlastDirectionality.explosive,
-              shouldLoop: false,
               colors: const [Colors.blue, Colors.lightBlue, Colors.white, Colors.orange],
             ),
           ),
@@ -368,7 +367,6 @@ class _RentalScreenState extends ConsumerState<RentalScreen> {
   Widget _buildVehicleCard(Map<String, dynamic> vehicle, bool isSelected) {
     return GlassCard(
       padding: const EdgeInsets.all(12),
-      borderRadius: 24,
       opacity: isSelected ? 0.95 : 0.7,
       border: isSelected ? Border.all(color: AppColors.primaryBlue, width: 2) : null,
       child: Column(

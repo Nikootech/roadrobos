@@ -85,6 +85,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
   }
 
   Future<void> _updateProfilePhoto() async {
+    // ignore: unawaited_futures
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -112,7 +113,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                   'Gallery', 
                   () async {
                     Navigator.pop(context);
-                    await ref.read(userProvider.notifier).pickAndUploadProfilePicture(ImageSource.gallery);
+                    await ref.read(userProvider.notifier).pickAndUploadProfilePicture();
                   }
                 ),
               ],

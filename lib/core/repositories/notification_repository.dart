@@ -43,7 +43,7 @@ class NotificationRepository {
           .from('user_notifications')
           .stream(primaryKey: ['id'])
           .eq('user_id', userId)
-          .order('created_at', ascending: false)
+          .order('created_at')
           .map((data) => data.map((map) => NotificationModel.fromMap(map)).toList());
     } catch (e) {
       return Stream.value([]);

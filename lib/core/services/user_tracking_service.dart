@@ -11,7 +11,7 @@ class UserTrackingService {
 
   /// Starts listening to real-time location updates
   Future<void> startTracking() async {
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    final bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) return;
 
     LocationPermission permission = await Geolocator.checkPermission();
@@ -20,6 +20,7 @@ class UserTrackingService {
       if (permission == LocationPermission.denied) return;
     }
 
+    // ignore: unawaited_futures
     _positionSubscription?.cancel();
     _positionSubscription = Geolocator.getPositionStream(
       locationSettings: const LocationSettings(
@@ -40,7 +41,7 @@ class UserTrackingService {
   /// Get current one-time position
   Future<LatLng?> getCurrentLocation() async {
     try {
-      Position position = await Geolocator.getCurrentPosition(
+      final Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
       return LatLng(position.latitude, position.longitude);

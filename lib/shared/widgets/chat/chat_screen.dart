@@ -69,7 +69,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final currentUserId = ref.watch(userProvider).user?.id ?? 'demo';
+    final currentUserId = ref.watch(userProvider.select((s) => s.user?.id)) ?? 'demo';
     final messagesStream = ref.watch(chatRepositoryProvider).watchMessages(widget.roomId);
 
     return Scaffold(
@@ -187,7 +187,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     decoration: BoxDecoration(
                       color: AppColors.bgLightGrey,
                       borderRadius: BorderRadius.circular(24),

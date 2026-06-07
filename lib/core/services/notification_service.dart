@@ -24,10 +24,8 @@ class NotificationService {
 
   Future<void> initialize() async {
     // 1. Request Permission
-    NotificationSettings settings = await _fcm.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
+    final NotificationSettings settings = await _fcm.requestPermission(
+      
     );
 
     if (settings.authorizationStatus == AuthorizationStatus.authorized) {
@@ -96,40 +94,40 @@ class NotificationService {
   Future<String?> getToken() async {
     String? token;
     try {
-      if (kIsWeb) {
-        // Safe-guard: VAPID key is required on Web for getToken()
-        token = await _fcm.getToken();
-      } else {
-        token = await _fcm.getToken();
+      token = await _fcm.getToken();
+      // ✅ Never log the actual token — only its length for debug confirmation
+      if (kDebugMode) {
+        debugPrint('FCM Token obtained. Length: ${token?.length ?? 0} chars.');
       }
-      debugPrint('FCM Token: $token');
       return token;
     } catch (e) {
-      debugPrint('FCM Token Error: $e');
+      if (kDebugMode) debugPrint('FCM Token Error: $e');
       return null;
     }
   }
 
-  /// Sync the FCM token to the user's profile in Supabase
   Future<void> syncTokenToBackend(String uid) async {
     if (uid.isEmpty) return;
-    
     try {
       final token = await getToken();
       if (token != null) {
-        // We use a low-level Supabase call or a repository here
-        // For clean architecture, we'll assume the caller passes the repository or we use a static update
         await Supabase.instance.client
             .from('profiles')
             .update({'fcm_token': token})
             .eq('id', uid);
-        debugPrint('FCM Token synced for user: $uid');
+        // ✅ Never log UID or token — only confirm success
+        if (kDebugMode) debugPrint('FCM Token synced successfully.');
       }
     } catch (e, stack) {
       if (kDebugMode) {
         debugPrint('FCM Token Sync Failure: $e');
       } else if (!kIsWeb) {
-        FirebaseCrashlytics.instance.recordError(e, stack, reason: 'FCM token sync failed for user: $uid');
+        // ignore: unawaited_futures
+        FirebaseCrashlytics.instance.recordError(
+          e, stack,
+          reason: 'FCM token sync failed',
+          // ✅ Never include uid in Crashlytics metadata
+        );
       }
     }
   }
@@ -207,7 +205,6 @@ class NotificationService {
       'High Importance Notifications',
       importance: Importance.max,
       priority: Priority.high,
-      showWhen: true,
     );
     const NotificationDetails platformDetails = NotificationDetails(android: androidDetails);
     
@@ -224,7 +221,7 @@ class NotificationService {
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   if (kDebugMode) {
-    print("Handling a background message: ${message.messageId}");
+    print('Handling a background message: ${message.messageId}');
   }
 }
 

@@ -5,6 +5,9 @@ import 'l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'firebase_options.dart';
 import 'core/theme/app_theme.dart';
@@ -13,93 +16,110 @@ import 'navigation/app_router.dart';
 import 'features/rentals/rental_providers.dart';
 import 'shared/widgets/rental_completion_dialog.dart';
 import 'shared/widgets/error_screen.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'core/providers/favorites_provider.dart';
-
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'core/services/notification_service.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'core/services/payment_service.dart';
+import 'core/security/jailbreak_guard.dart';
+import 'core/security/encrypted_column.dart';
 
 import 'package:flutter/foundation.dart';
-final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
+
+final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey =
+    GlobalKey<ScaffoldMessengerState>();
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
+// ── Top-level FCM background handler (must be top-level function) ────────────
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  // Intentionally minimal — no complex logic in background isolate
+  if (kDebugMode) {
+    debugPrint('FCM Background message received.');
+  }
+}
+
 void main() {
-  // Catch errors and ensure consistent zone usage
   runZonedGuarded(
     () async {
       WidgetsFlutterBinding.ensureInitialized();
-      
-      // 0. Initialize App Configuration
       AppConfig.init();
-      
-      // 1. Initialize Firebase and Supabase sequentially
-      try {
-        await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-        if (kDebugMode) debugPrint('Firebase Initialized Successfully');
-      } catch (e) {
-        if (kDebugMode) debugPrint('Firebase Init Error: $e');
-      }
 
-      try {
-        await Supabase.initialize(
-          url: AppConfig.supabaseUrl,
-          anonKey: AppConfig.supabaseAnonKey,
-          authOptions: const FlutterAuthClientOptions(
-            authFlowType: AuthFlowType.pkce,
-          ),
-          debug: kDebugMode,
-        );
-        if (kDebugMode) debugPrint('Supabase Initialized Successfully');
-      } catch (e) {
-        if (kDebugMode) debugPrint('Supabase Init Error: $e');
-      }
+      // ── FRAME-0 CRITICAL PATH ───────────────────────────────────────────────
+      // Only these two inits are required before first frame.
+      await Firebase.initializeApp(
+          options: DefaultFirebaseOptions.currentPlatform);
+      await Supabase.initialize(
+        url: AppConfig.supabaseUrl,
+        anonKey: AppConfig.supabaseAnonKey,
+        debug: kDebugMode,
+      );
 
-      // 3. Setup Error Handlers
-      FlutterError.onError = (FlutterErrorDetails details) {
-        // Filter out known non-fatal Web warnings
-        final errorStr = details.exception.toString();
-        if (kIsWeb && errorStr.contains('the `web` parameter needs to be set')) {
-          if (kDebugMode) debugPrint('Ignored Non-Fatal Web Warning: $errorStr');
-          return;
-        }
-        
-        if (!kDebugMode) {
-          FirebaseCrashlytics.instance.recordFlutterFatalError(details);
-        } else {
-          FlutterError.presentError(details);
-        }
-      };
+      // Pre-fetch AES encryption key into memory (warm cache for DB writes)
+      await ColumnEncryptionKey.prefetch();
 
-      // Initialize Notifications (Non-blocking)
-      NotificationService().initialize().catchError((e) {
-        if (kDebugMode) debugPrint('Notification Initialization Error: $e');
-      });
-
-      if (!kIsWeb) {
-        FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
-      }
-      
       final prefs = await SharedPreferences.getInstance();
 
-      runApp(
-        ProviderScope(
-          overrides: [
-            sharedPreferencesProvider.overrideWithValue(prefs),
-          ],
-          child: const RoadRobosApp(),
-        ),
-      );
+      // ── LAUNCH APP (frame 1 is free to render) ──────────────────────────────
+      runApp(ProviderScope(
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+        child: const RoadRobosApp(),
+      ));
+
+      // ── POST-FRAME DEFERRED SETUP ───────────────────────────────────────────
+      // Nothing here blocks the first render. All heavy setup is deferred.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        // ① Crashlytics error handlers
+        FlutterError.onError = (FlutterErrorDetails details) {
+          final errorStr = details.exception.toString();
+          if (kIsWeb &&
+              errorStr.contains('the `web` parameter needs to be set')) {
+            return; // known non-fatal web warning
+          }
+          if (!kDebugMode) {
+            FirebaseCrashlytics.instance.recordFlutterFatalError(details);
+          } else {
+            FlutterError.presentError(details);
+          }
+        };
+
+        PlatformDispatcher.instance.onError = (error, stack) {
+          if (!kDebugMode) {
+            FirebaseCrashlytics.instance
+                .recordError(error, stack, fatal: true);
+          }
+          return false;
+        };
+
+        // ② FCM background handler (must register before any token fetch)
+        if (!kIsWeb) {
+          FirebaseMessaging.onBackgroundMessage(
+              _firebaseMessagingBackgroundHandler);
+        }
+
+        // ③ Notification service (non-blocking)
+        unawaited(
+          NotificationService().initialize().catchError((e) {
+            if (kDebugMode) {
+              debugPrint('NotificationService init error: $e');
+            }
+          }),
+        );
+
+        // ④ Jailbreak check (non-blocking, result used by PaymentService)
+        unawaited(JailbreakGuard.check());
+      });
     },
     (error, stack) {
-      if (kIsWeb) {
-        if (kDebugMode) debugPrint('Web Zoned Error: $error\n$stack');
-      } else {
+      // Zone-level uncaught error handler
+      if (!kDebugMode) {
         FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      } else {
+        debugPrint('Uncaught error: $error\n$stack');
       }
     },
   );
 }
+
+// ── App widget ────────────────────────────────────────────────────────────────
 
 class RoadRobosApp extends ConsumerWidget {
   const RoadRobosApp({super.key});
@@ -108,14 +128,14 @@ class RoadRobosApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
 
-    // Global listener for rental completion
+    // Global listener for rental completion dialog
     ref.listen(activeRentalProvider, (previous, next) {
-      if (next?.status == RentalStatus.completed && previous?.status != RentalStatus.completed) {
-        // Ensure the navigator is ready and mounted before showing a dialog
+      if (next?.status == RentalStatus.completed &&
+          previous?.status != RentalStatus.completed) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          final context = rootNavigatorKey.currentContext;
-          if (context != null && context.mounted) {
-            _showCompletionDialog(context, ref, next!.vehicle['name'] ?? 'Vehicle');
+          final ctx = rootNavigatorKey.currentContext;
+          if (ctx != null && ctx.mounted) {
+            _showCompletionDialog(ctx, ref, next!.vehicle['name'] ?? 'Vehicle');
           }
         });
       }
@@ -123,7 +143,7 @@ class RoadRobosApp extends ConsumerWidget {
 
     return MaterialApp.router(
       scaffoldMessengerKey: scaffoldMessengerKey,
-      title: 'RoAdRoBos',
+      title: 'RoadRobos',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
@@ -135,33 +155,52 @@ class RoadRobosApp extends ConsumerWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: const [
-        Locale('en'),
-      ],
+      supportedLocales: const [Locale('en')],
       builder: (context, child) {
-        // Global Error Boundary for the Widget Tree
-        ErrorWidget.builder = (FlutterErrorDetails errorDetails) {
-          return GlobalErrorScreen(errorDetails: errorDetails);
-        };
+        ErrorWidget.builder = (FlutterErrorDetails details) =>
+            GlobalErrorScreen(errorDetails: details);
         return child!;
       },
     );
   }
 
-  void _showCompletionDialog(BuildContext context, WidgetRef ref, String vehicleName) {
+  void _showCompletionDialog(
+      BuildContext context, WidgetRef ref, String vehicleName) {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => RentalCompletionDialog(
+      builder: (_) => RentalCompletionDialog(
         vehicleName: vehicleName,
-        onCompletePayment: () {
-          // Fix: Pass required totalCost. For demo completion, we use a default.
-          ref.read(activeRentalProvider.notifier).completePayment(totalCost: 1500.0);
-          Navigator.pop(context);
+        onCompletePayment: () async {
+          final activeRental = ref.read(activeRentalProvider);
+          if (activeRental == null) return;
+          final priceStr =
+              activeRental.vehicle['price']?.toString() ?? '150';
+          final hourly = double.tryParse(
+                  priceStr.replaceAll(RegExp(r'[^0-9.]'), '')) ??
+              150.0;
+          final totalCost = hourly *
+              (activeRental.duration.inHours > 0
+                  ? activeRental.duration.inHours
+                  : 1);
+          final paymentService =
+              ref.read(paymentServiceProvider.notifier);
+          try {
+            await ref.read(activeRentalProvider.notifier).completePayment(
+                  totalCost: totalCost,
+                  paymentService: paymentService,
+                );
+            if (context.mounted) Navigator.pop(context);
+          } catch (e) {
+            if (kDebugMode) debugPrint('Payment failed: $e');
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(e.toString())),
+              );
+            }
+          }
         },
-        onReschedule: () {
-          Navigator.pop(context);
-        },
+        onReschedule: () => Navigator.pop(context),
       ),
     );
   }

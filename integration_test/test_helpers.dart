@@ -16,7 +16,6 @@ import 'package:roadrobos/core/repositories/approval_repository.dart';
 import 'package:roadrobos/core/models/user_role.dart';
 import 'package:roadrobos/core/models/wallet_model.dart';
 import 'package:roadrobos/core/models/approval.dart';
-import 'package:roadrobos/features/profile/user_provider.dart';
 
 // ---------------------------------------------------------------------------
 // Mock classes
@@ -41,7 +40,7 @@ class FakeAppUser extends Fake implements AppUser {}
 // ---------------------------------------------------------------------------
 
 /// A test customer user.
-final AppUser testCustomer = AppUser(
+const AppUser testCustomer = AppUser(
   id: 'test-customer-001',
   name: 'Test Customer',
   phone: '9876543210',
@@ -53,7 +52,7 @@ final AppUser testCustomer = AppUser(
 );
 
 /// A test admin user.
-final AppUser testAdmin = AppUser(
+const AppUser testAdmin = AppUser(
   id: 'test-admin-001',
   name: 'Test Admin',
   phone: '9876543211',

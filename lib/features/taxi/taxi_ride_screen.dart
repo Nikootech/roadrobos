@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:razorpay_flutter/razorpay_flutter.dart';
 
 import '../../shared/widgets/live_map_widget.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -32,47 +31,9 @@ class TaxiRideScreen extends ConsumerStatefulWidget {
 
 class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
   final DraggableScrollableController _sheetController = DraggableScrollableController();
-  late final PaymentService _paymentService;
-
   @override
   void initState() {
     super.initState();
-    _paymentService = PaymentService(
-      onSuccess: (PaymentSuccessResponse? response) async {
-        final state = ref.read(taxiProvider);
-        final basePrice = state.selectedOption?.price ?? 145.0;
-        final breakdown = PricingService.calculateBill(basePrice);
-        final userId = ref.read(userProvider).user?.id ?? 'demo';
-
-        // 1. Log Transaction
-        await ref.read(transactionRepositoryProvider).logTransaction(AppTransaction(
-          id: '',
-          userId: userId,
-          razoprayPaymentId: response?.paymentId ?? 'SIM_SUCCESS',
-          razorpayOrderId: response?.orderId,
-          razorpaySignature: response?.signature,
-          baseAmount: breakdown.baseAmount,
-          gstAmount: breakdown.gstAmount,
-          platformFee: breakdown.platformFee,
-          handlingCharges: breakdown.handlingCharges,
-          totalAmount: breakdown.totalPayable,
-          description: 'Taxi Ride: ${state.pickupAddress} to ${state.dropoffAddress}',
-          timestamp: DateTime.now(),
-        ));
-
-        // 2. Reset Taxi State
-        ref.read(taxiProvider.notifier).reset();
-        if (mounted) Navigator.pop(context); // Close the dialog
-      },
-      onFailure: (error) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(error),
-            backgroundColor: AppColors.errorRed,
-          ));
-        }
-      },
-    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(taxiProvider.notifier).initializeLocation();
     });
@@ -80,7 +41,6 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
 
   @override
   void dispose() {
-    _paymentService.dispose();
     _sheetController.dispose();
     super.dispose();
   }
@@ -476,20 +436,50 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
       barrierDismissible: false,
       builder: (context) => RentalCompletionDialog(
         vehicleName: 'Motorcycle',
-        onCompletePayment: () {
+        onCompletePayment: () async {
           final userData = ref.read(userProvider).user;
           final state = ref.read(taxiProvider);
           final basePrice = state.selectedOption?.price ?? 145.0;
           final breakdown = PricingService.calculateBill(basePrice);
+          final userId = userData?.id ?? 'demo';
 
-          _paymentService.startPayment(
-            amount: breakdown.totalPayable,
-            contact: userData?.phone ?? '9876543210',
-            email: userData?.email ?? 'customer@example.com',
-            description: 'Taxi Ride Payment',
-            bookingId: '00000000-0000-0000-0000-000000000000',
-            userId: userData?.id ?? 'demo',
-          );
+          try {
+            await ref.read(paymentServiceProvider.notifier).startPayment(
+              PaymentDetails(
+                bookingId: '00000000-0000-0000-0000-000000000000', // Taxi booking UUID
+                bookingType: BookingType.ride,
+                totalCost: breakdown.totalPayable,
+                userId: userId,
+                contact: userData?.phone ?? '9876543210',
+                email: userData?.email ?? 'customer@example.com',
+                description: 'Taxi Ride Payment',
+              )
+            );
+
+            // On success
+            await ref.read(transactionRepositoryProvider).logTransaction(AppTransaction(
+              id: '',
+              userId: userId,
+              razoprayPaymentId: 'VERIFIED_ON_SERVER',
+              baseAmount: breakdown.baseAmount,
+              gstAmount: breakdown.gstAmount,
+              platformFee: breakdown.platformFee,
+              handlingCharges: breakdown.handlingCharges,
+              totalAmount: breakdown.totalPayable,
+              description: 'Taxi Ride: ${state.pickupAddress} to ${state.dropoffAddress}',
+              timestamp: DateTime.now(),
+            ));
+
+            ref.read(taxiProvider.notifier).reset();
+            if (context.mounted) Navigator.pop(context);
+          } catch (e) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text(e.toString()),
+                backgroundColor: AppColors.errorRed,
+              ));
+            }
+          }
         },
         onReschedule: () {
           Navigator.pop(context);

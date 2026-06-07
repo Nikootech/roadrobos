@@ -133,7 +133,6 @@ class DriverNotifier extends StateNotifier<DriverState> {
         weeklyEarnings: state.weeklyEarnings + fare,
         totalRides: state.totalRides + 1,
         weeklyRides: state.weeklyRides + 1,
-        currentTrip: null,
       );
     }
   }

@@ -49,7 +49,7 @@ class DriverRepository {
         .from('ride_bookings')
         .stream(primaryKey: ['id'])
         .eq('status', 'pending')
-        .order('created_at', ascending: false)
+        .order('created_at')
         .map((list) {
       return list.map((map) => RideBooking.fromMap(map, map['id'].toString())).toList();
     });
@@ -109,6 +109,7 @@ class DriverRepository {
     required String vehicleModel,
     required String chassisNumber,
     required String licenseNumber,
+    String approvalStatus = 'approved', // Auto-approve by default per new requirement
   }) async {
     try {
       await _supabase.from('drivers').upsert({
@@ -118,7 +119,7 @@ class DriverRepository {
         'vehicle_model': vehicleModel,
         'chassis_number': chassisNumber,
         'license_number': licenseNumber,
-        'approval_status': 'pending',
+        'approval_status': approvalStatus,
         'is_online': false,
         'today_earnings': 0.0,
         'created_at': DateTime.now().toIso8601String(),

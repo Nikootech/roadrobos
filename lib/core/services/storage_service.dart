@@ -17,7 +17,6 @@ class StorageService {
       await _client.storage.from(_bucketName).upload(
             fullPath,
             file,
-            fileOptions: const FileOptions(cacheControl: '3600', upsert: false),
           );
 
       return _client.storage.from(_bucketName).getPublicUrl(fullPath);
@@ -48,7 +47,7 @@ class StorageService {
       await _client.storage.from('avatars').upload(
             fullPath,
             File(result.path),
-            fileOptions: const FileOptions(cacheControl: '3600', upsert: true),
+            fileOptions: const FileOptions(upsert: true),
           );
 
       return _client.storage.from('avatars').getPublicUrl(fullPath);

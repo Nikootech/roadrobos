@@ -93,7 +93,6 @@ class _DriverBankWithdrawalScreenState extends State<DriverBankWithdrawalScreen>
                       keyboardType: TextInputType.number,
                       style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w900, color: AppColors.deepNavy, letterSpacing: -1),
                       decoration: const InputDecoration(border: InputBorder.none, contentPadding: EdgeInsets.zero, isDense: true, hintText: '0.00'),
-                      textAlign: TextAlign.start,
                     ),
                   ),
                 ],
@@ -146,11 +145,13 @@ class _DriverBankWithdrawalScreenState extends State<DriverBankWithdrawalScreen>
                 child: CustomButton(
                   label: 'CONFIRM WITHDRAWAL',
                   onPressed: () async {
+                    // ignore: unawaited_futures
                     HapticFeedback.mediumImpact();
                     setState(() => _isProcessing = true);
                     await Future.delayed(const Duration(seconds: 2));
                     if (!context.mounted) return;
                     setState(() => _isProcessing = false);
+                    // ignore: unawaited_futures
                     HapticFeedback.heavyImpact();
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(

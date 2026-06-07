@@ -30,7 +30,7 @@ class RideHistoryScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final userId = ref.watch(authStateProvider).value?.id;
+    final userId = ref.watch(authNotifierProvider).value?.id;
 
     return DefaultTabController(
       length: 3,

@@ -20,7 +20,6 @@ class LiveVehicleTrackingScreen extends StatelessWidget {
           Positioned.fill(
             child: LiveMapWidget(
               height: MediaQuery.of(context).size.height,
-              showLiveIndicator: true,
             ),
           ),
 

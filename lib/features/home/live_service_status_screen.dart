@@ -155,7 +155,6 @@ class _LiveServiceStatusScreenState extends ConsumerState<LiveServiceStatusScree
                     color: (job.vehicleModel.toLowerCase().contains('car') || job.vehicleModel.toLowerCase().contains('creta'))
                       ? AppColors.primaryBlue.withValues(alpha: 0.2)
                       : AppColors.accentOrange.withValues(alpha: 0.2),
-                    width: 1,
                   ),
                 ),
                 child: Icon(
@@ -284,7 +283,6 @@ class _LiveServiceStatusScreenState extends ConsumerState<LiveServiceStatusScree
       child: Row(
         children: [
           const AppAvatar(
-            radius: 24,
             imageUrl: 'https://i.pravatar.cc/150?u=tech',
             backgroundColor: Color(0xFF1F2937),
           ),

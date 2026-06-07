@@ -288,7 +288,6 @@ class DriverDatabaseScreen extends ConsumerWidget {
                       border: Border.all(color: Colors.transparent),
                     ),
                     child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Container(padding: const EdgeInsets.all(8), decoration: const BoxDecoration(color: AppColors.bgLightGrey, shape: BoxShape.circle), child: const Icon(Iconsax.document, color: AppColors.textSecondary, size: 16)),
                         const SizedBox(width: 12),

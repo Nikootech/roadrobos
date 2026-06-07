@@ -14,7 +14,7 @@ class TransactionRepository {
         .from('transactions')
         .stream(primaryKey: ['id'])
         .eq('user_id', userId)
-        .order('created_at', ascending: false)
+        .order('created_at')
         .map((list) => list
             .map((map) => AppTransaction.fromMap(map, map['id'].toString()))
             .toList());

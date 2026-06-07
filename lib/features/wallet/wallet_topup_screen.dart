@@ -3,7 +3,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:razorpay_flutter/razorpay_flutter.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/custom_button.dart';
 import '../../core/services/payment_service.dart';
@@ -18,48 +17,12 @@ class WalletTopupScreen extends ConsumerStatefulWidget {
 }
 
 class _WalletTopupScreenState extends ConsumerState<WalletTopupScreen> {
-  final TextEditingController _amountController = TextEditingController(text: '500');
+  final TextEditingController _amountController = TextEditingController(text: '100');
   String _selectedMethod = 'UPI';
-  late final PaymentService _paymentService;
-
   final List<int> _quickAmounts = [100, 500, 1000, 2000];
 
   @override
-  void initState() {
-    super.initState();
-    _paymentService = PaymentService(
-      onSuccess: (PaymentSuccessResponse? response) async {
-        final amount = double.tryParse(_amountController.text) ?? 0.0;
-        final userId = ref.read(userProvider).user?.id ?? 'demo';
-        
-        await ref.read(walletRepositoryProvider).topUpWallet(
-          userId, 
-          amount, 
-          response?.paymentId ?? 'Direct'
-        );
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('Wallet Top-up Successful!'),
-            backgroundColor: Colors.green,
-          ));
-          context.pop();
-        }
-      },
-      onFailure: (error) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(error),
-            backgroundColor: AppColors.errorRed,
-          ));
-        }
-      },
-    );
-  }
-
-  @override
   void dispose() {
-    _paymentService.dispose();
     _amountController.dispose();
     super.dispose();
   }
@@ -140,19 +103,45 @@ class _WalletTopupScreenState extends ConsumerState<WalletTopupScreen> {
             const SizedBox(height: 80),
             CustomButton(
               label: 'Proceed to Pay ₹${_amountController.text}',
-              onPressed: () {
+              onPressed: () async {
                 final amount = double.tryParse(_amountController.text) ?? 0.0;
                 if (amount <= 0) return;
 
                 final userData = ref.read(userProvider).user;
-                _paymentService.startPayment(
-                  amount: amount,
-                  contact: userData?.phone ?? '9876543210',
-                  email: userData?.email ?? 'customer@example.com',
-                  description: 'Wallet Top-up',
-                  userId: userData?.id ?? 'demo',
-                  bookingId: '00000000-0000-0000-0000-000000000000',
-                );
+                final userId = userData?.id ?? 'demo';
+
+                try {
+                  await ref.read(paymentServiceProvider.notifier).startPayment(
+                    PaymentDetails(
+                      bookingId: '00000000-0000-0000-0000-000000000000',
+                      bookingType: BookingType.wallet,
+                      totalCost: amount,
+                      userId: userId,
+                      contact: userData?.phone ?? '9876543210',
+                      email: userData?.email ?? 'customer@example.com',
+                      description: 'Wallet Top-up',
+                    )
+                  );
+                  
+                  // Verification is done on server, so we just do UI logic
+                  await ref.read(walletRepositoryProvider).topUpWallet(
+                    userId, 
+                    amount, 
+                    'Direct'
+                  );
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text('Wallet Top-up Successful!'),
+                    backgroundColor: Colors.green,
+                  ));
+                  context.pop();
+                } catch (e) {
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(e.toString()),
+                    backgroundColor: AppColors.errorRed,
+                  ));
+                }
               },
               backgroundColor: AppColors.primaryBlue,
             ),

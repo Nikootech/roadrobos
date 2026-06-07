@@ -46,7 +46,6 @@ class _RideRequestOverlayState extends State<RideRequestOverlay> with SingleTick
       right: 16,
       child: Dismissible(
         key: Key(widget.request.id),
-        direction: DismissDirection.horizontal,
         onDismissed: (direction) {
           if (direction == DismissDirection.startToEnd) {
             widget.onAccept();

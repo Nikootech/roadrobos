@@ -262,7 +262,6 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget> with SingleTicker
                 _selectedLabel = null;
               }),
               onPositionChanged: widget.onPositionChanged,
-              interactionOptions: const InteractionOptions(flags: InteractiveFlag.all),
             ),
             children: [
               TileLayer(

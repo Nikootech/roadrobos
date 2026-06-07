@@ -3,10 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:local_auth/local_auth.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../l10n/app_localizations.dart';
 import '../../navigation/nav_helpers.dart';
 import '../../core/constants/app_strings.dart';
 import '../profile/user_provider.dart';
@@ -278,12 +276,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      AppLocalizations.of(context)?.titleWelcomeBack ?? AppStrings.welcomeBack,
+                      AppStrings.welcomeBack,
                       style: GoogleFonts.outfit(fontSize: 30, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      AppLocalizations.of(context)?.lblLoginSubtitle ?? AppStrings.loginSubtitle,
+                      AppStrings.loginSubtitle,
                       style: TextStyle(fontSize: 14, color: AppColors.textSecondary.withValues(alpha: 0.8)),
                     ),
                   ],
@@ -365,9 +363,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       Row(
                         children: [
                           Expanded(child: Divider(color: AppColors.border.withValues(alpha: 0.6))),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: Text(AppLocalizations.of(context)?.lblOrContinueWith ?? AppStrings.orContinueWith, style: const TextStyle(fontSize: 13, color: AppColors.textMuted)),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 16),
+                            child: Text(AppStrings.orContinueWith, style: TextStyle(fontSize: 13, color: AppColors.textMuted)),
                           ),
                           Expanded(child: Divider(color: AppColors.border.withValues(alpha: 0.6))),
                         ],
@@ -417,7 +415,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               ),
                             ),
                             const SizedBox(width: 12),
-                            const Text('Continue with Google', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                            const Text(
+                              'Continue with Google', 
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600, 
+                                fontSize: 16,
+                                color: Colors.black87,
+                              ),
+                            ),
                           ],
                         ),
                         ),
@@ -461,7 +466,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            _isSigningUp ? 'Already have an account?' : (AppLocalizations.of(context)?.lblDontHaveAccount ?? AppStrings.dontHaveAccount), 
+                            _isSigningUp ? 'Already have an account?' : AppStrings.dontHaveAccount, 
                             style: const TextStyle(fontSize: 14, color: AppColors.textSecondary)
                           ),
                           GestureDetector(

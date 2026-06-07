@@ -85,7 +85,6 @@ class NavHelpers {
     showSnackAction(
       context,
       message,
-      icon: Icons.check_circle_rounded,
       color: AppColors.successGreen,
     );
   }
@@ -109,6 +108,7 @@ class NavHelpers {
     String confirmText = 'Confirm',
     String cancelText = 'Cancel',
   }) async {
+    // ignore: unawaited_futures
     HapticFeedback.lightImpact();
     final result = await showDialog<bool>(
       context: context,

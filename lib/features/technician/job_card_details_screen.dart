@@ -257,7 +257,7 @@ class _JobCardDetailsScreenState extends ConsumerState<JobCardDetailsScreen> {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(24),
                 child: const AbsorbPointer(
-                  child: LiveMapWidget(height: 180, showLiveIndicator: true),
+                  child: LiveMapWidget(height: 180),
                 ),
               ),
             ).animate(delay: 200.ms).fadeIn().scale(),

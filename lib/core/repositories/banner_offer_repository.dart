@@ -19,6 +19,7 @@ class BannerOfferRepository {
       final localBanners = await _db.select(_db.cachedBanners).get();
       if (localBanners.isNotEmpty) {
         // Sync in background and return local data immediately
+        // ignore: unawaited_futures
         _syncBannersFromRemote().catchError((e) {
           debugPrint('Background banner sync failed: $e');
           return <BannerOffer>[];

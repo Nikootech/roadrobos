@@ -24,9 +24,11 @@ class SyncQueueService {
       SyncQueueCompanion.insert(
         action: action,
         payload: jsonEncode(payload),
+        idempotencyKey: DateTime.now().toIso8601String(),
       ),
     );
     // Attempt to process immediately if online
+    // ignore: unawaited_futures
     processQueue();
   }
 

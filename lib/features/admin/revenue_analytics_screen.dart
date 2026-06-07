@@ -63,7 +63,6 @@ class _RevenueAnalyticsScreenState extends State<RevenueAnalyticsScreen> {
             GlassCard(
               padding: const EdgeInsets.all(24),
               borderRadius: 32,
-              opacity: 0.1,
               blur: 20,
               child: Container(
                 width: double.infinity,
@@ -113,11 +112,11 @@ class _RevenueAnalyticsScreenState extends State<RevenueAnalyticsScreen> {
                     height: 200,
                     child: LineChart(
                       LineChartData(
-                        gridData: FlGridData(show: true, drawVerticalLine: false, getDrawingHorizontalLine: (value) => const FlLine(color: AppColors.border, strokeWidth: 1)),
+                        gridData: FlGridData(drawVerticalLine: false, getDrawingHorizontalLine: (value) => const FlLine(color: AppColors.border, strokeWidth: 1)),
                         titlesData: FlTitlesData(
-                          leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                          leftTitles: const AxisTitles(),
+                          rightTitles: const AxisTitles(),
+                          topTitles: const AxisTitles(),
                           bottomTitles: AxisTitles(
                             sideTitles: SideTitles(
                               showTitles: true,
