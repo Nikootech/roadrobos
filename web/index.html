@@ -1,127 +1,162 @@
-<!DOCTYPE html><html><head>
-  <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
-
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
-
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
-
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
-  -->
+<!DOCTYPE html>
+<html>
+<head>
   <base href="$FLUTTER_BASE_HREF">
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="RoadRobos – Book vehicle services, track technicians, and manage deliveries with ease.">
   <meta name="keywords" content="vehicle service, road assistance, technician booking, delivery tracking">
-  <meta name="theme-color" content="#2E7D32">
-
-  <!-- iOS meta tags & icons -->
+  <meta name="theme-color" content="#1B8A5A">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="RoadRobos">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
-
-  <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png">
-
-  <title>RoadRobos</title>
-  <style>
-    body {
-      background-color: #F8F9FA;
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-      position: fixed;
-      width: 100%;
-      height: 100%;
-    }
-  </style>
   <link rel="manifest" href="manifest.json">
 
-  <!-- This script adds the flutter initialization JS code -->
-  <script src="flutter_bootstrap.js" async=""></script>
-  
-  
-  <style id="splash-screen-style">
-    html {
-      height: 100%
-    }
+  <title>RoadRobos</title>
 
-    body {
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html, body {
       margin: 0;
-      min-height: 100%;
+      padding: 0;
+      width: 100%;
+      height: 100%;
       background-color: #FFFFFF;
-          background-size: 100% 100%;
+      overflow: hidden;
     }
 
-    .center {
-      margin: 0;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      -ms-transform: translate(-50%, -50%);
-      transform: translate(-50%, -50%);
+    /* Force-hide Flutter's native blue <progress> element at all times */
+    progress {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      height: 0 !important;
+      width: 0 !important;
+      position: absolute !important;
+      top: -9999px !important;
+      pointer-events: none !important;
     }
 
-    .contain {
-      display:block;
-      width:100%; height:100%;
+    /* ── RoadRobos Green Loading Bar ── */
+    #rr-loader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background-color: #E8F5EE;
+      z-index: 2147483647;
+      overflow: hidden;
+    }
+
+    #rr-loader-fill {
+      height: 100%;
+      width: 35%;
+      background: linear-gradient(90deg, #006241, #1B8A5A, #34D399, #1B8A5A, #006241);
+      border-radius: 0 2px 2px 0;
+      animation: rrSlide 1.6s ease-in-out infinite;
+    }
+
+    @keyframes rrSlide {
+      0%   { transform: translateX(-150%); }
+      100% { transform: translateX(400%); }
+    }
+
+    /* Splash screen */
+    #splash {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #FFFFFF;
+      z-index: 9999;
+    }
+
+    #splash img {
+      max-width: 220px;
+      max-height: 220px;
       object-fit: contain;
     }
 
-    .stretch {
-      display:block;
-      width:100%; height:100%;
-    }
-
-    .cover {
-      display:block;
-      width:100%; height:100%;
-      object-fit: cover;
-    }
-
-    .bottom {
-      position: absolute;
-      bottom: 0;
-      left: 50%;
-      -ms-transform: translate(-50%, 0);
-      transform: translate(-50%, 0);
-    }
-
-    .bottomLeft {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-    }
-
-    .bottomRight {
-      position: absolute;
-      bottom: 0;
-      right: 0;
+    ::selection {
+      background-color: rgba(27, 138, 90, 0.2);
     }
   </style>
-  <script id="splash-screen-script">
+
+  <!-- Flutter bootstrap -->
+  <script src="flutter_bootstrap.js" async=""></script>
+
+  <script>
+    // MutationObserver: intercept and destroy any <progress> element Flutter injects
+    (function () {
+      function killProgress(node) {
+        if (!node) return;
+        if (node.nodeName === 'PROGRESS') {
+          node.style.cssText = [
+            'display:none!important',
+            'visibility:hidden!important',
+            'opacity:0!important',
+            'height:0!important',
+            'width:0!important',
+            'position:absolute!important',
+            'top:-9999px!important',
+            'pointer-events:none!important'
+          ].join(';');
+        }
+        if (node.querySelectorAll) {
+          node.querySelectorAll('progress').forEach(killProgress);
+        }
+      }
+
+      var observer = new MutationObserver(function (mutations) {
+        mutations.forEach(function (m) {
+          m.addedNodes.forEach(killProgress);
+        });
+      });
+
+      observer.observe(document.documentElement, { childList: true, subtree: true });
+
+      // Clean up after Flutter finishes loading
+      window.addEventListener('flutter-initialized', function () {
+        observer.disconnect();
+        var loader = document.getElementById('rr-loader');
+        if (loader) loader.remove();
+      });
+    })();
+
+    // Called by Flutter's splash removal mechanism
     function removeSplashFromWeb() {
-      document.getElementById("splash")?.remove();
-      document.getElementById("splash-branding")?.remove();
-      document.body.style.background = "transparent";
+      var el;
+      el = document.getElementById('splash');         if (el) el.remove();
+      el = document.getElementById('splash-branding'); if (el) el.remove();
+      el = document.getElementById('rr-loader');       if (el) el.remove();
+      document.body.style.background = 'transparent';
     }
   </script>
 </head>
 <body>
-  <picture id="splash">
+
+  <!-- RoadRobos branded green loading bar -->
+  <div id="rr-loader">
+    <div id="rr-loader-fill"></div>
+  </div>
+
+  <!-- Splash logo -->
+  <div id="splash">
+    <picture>
       <source srcset="splash/img/light-1x.png 1x, splash/img/light-2x.png 2x, splash/img/light-3x.png 3x, splash/img/light-4x.png 4x" media="(prefers-color-scheme: light)">
       <source srcset="splash/img/dark-1x.png 1x, splash/img/dark-2x.png 2x, splash/img/dark-3x.png 3x, splash/img/dark-4x.png 4x" media="(prefers-color-scheme: dark)">
-      <img class="center" aria-hidden="true" src="splash/img/light-1x.png" alt="">
-  </picture>
-  
+      <img aria-hidden="true" src="splash/img/light-1x.png" alt="">
+    </picture>
+  </div>
 
-
-</body></html>
+</body>
+</html>

@@ -15,14 +15,14 @@ class AppColors {
     end: Alignment.bottomRight,
   );
 
-  // ── Primary Blues (Vibrant Sky/Premium palette) ──
-  static const Color primaryBlue = Color(0xFF38BDF8); // Vibrant Sky Blue
-  static const Color primaryBlueDark = Color(0xFF0EA5E9);
-  static const Color primaryBlueLight = Color(0xFF7DD3FC);
-  static const Color bgSkyLight = Color(0xFFF0F9FF);
-  static const Color primaryNavy = Color(0xFF0C4A6E); // Deep Sky Navy
-  static const Color deepNavy = Color(0xFF082F49);
-  static const Color accentIndigo = Color(0xFF0284C7);
+  // ── Primary Greens (Brand palette — replaces blues) ──
+  static const Color primaryBlue = Color(0xFF1B8A5A);      // Brand green (replaces sky blue)
+  static const Color primaryBlueDark = Color(0xFF006241);  // Deep forest green
+  static const Color primaryBlueLight = Color(0xFF34D399); // Light mint green
+  static const Color bgSkyLight = Color(0xFFF0FBF5);       // Soft green tint (was sky blue)
+  static const Color primaryNavy = Color(0xFF004D32);      // Deep green navy
+  static const Color deepNavy = Color(0xFF003322);
+  static const Color accentIndigo = Color(0xFF059669);     // Emerald accent
 
   // ── Accent / CTA (Vibrant Amber/Orange) ──
   static const Color accentOrange = Color(0xFFF97316);
@@ -50,30 +50,29 @@ class AppColors {
   static const Color bgLightWarm = Color(0xFFFFF7ED);
   static const Color bgLightCard = Color(0xFFFFFFFF);
   static const Color bgWhite = Color(0xFFFFFFFF);
-  static const Color bgLightGrey = Color(0xFFF8F9FA); // Updated to match cleaner UI
+  static const Color bgLightGrey = Color(0xFFF8F9FA);
   static const Color bgLightSurface = Color(0xFFF8FAFC);
 
-  // ── Dark Theme Backgrounds (Modern Deep Navy/Black) ──
-  // These are now legacy but redirected to maintain compatibility
-  static const Color bgDark = Color(0xFFF8FAFC); 
+  // ── Dark Theme Backgrounds ──
+  static const Color bgDark = Color(0xFFF8FAFC);
   static const Color bgDarkAlt = Color(0xFFF8F9FA);
   static const Color bgDarkDeep = Color(0xFF0F1117);
   static const Color bgDarkSurface = Color(0xFF1A1D27);
   static const Color bgDarkCard = Color(0xFF222533);
-  static const Color bgDarkNavy = Color(0xFF0EA5E9);
+  static const Color bgDarkNavy = Color(0xFF1B8A5A);
   static const Color bgDarkNav = Color(0xFFF8FAFC);
   static const Color bgDarkDeepest = Color(0xFFFFFFFF);
   static const Color bgDarkBottom = Color(0xFFFFFFFF);
   static const Color bgDarkProfile = Color(0xFFF1F5F9);
-  static const Color bgDarkFeedback = Color(0xFFF0F9FF);
-  static const Color bgDarkRevenue = Color(0xFFF0F9FF);
+  static const Color bgDarkFeedback = Color(0xFFF0FBF5);
+  static const Color bgDarkRevenue = Color(0xFFF0FBF5);
 
   // ── Text Colors ──
   static const Color textPrimary = Color(0xFF111827);
   static const Color textSecondary = Color(0xFF475569);
   static const Color textTertiary = Color(0xFF64748B);
   static const Color textMuted = Color(0xFF94A3B8);
-  static const Color textOnDark = Color(0xFFF9FAFB); 
+  static const Color textOnDark = Color(0xFFF9FAFB);
   static const Color textOnDarkMuted = Color(0xFF9CA3AF);
 
   // ── Border / Divider ──
@@ -86,7 +85,7 @@ class AppColors {
   static const Color shadowMedium = Color(0x1A000000);
 
   // ── Chip / Tag Colors ──
-  static const Color chipBlue = Color(0xFFEFF6FF);
+  static const Color chipBlue = Color(0xFFECFDF5);  // Now green-tinted
   static const Color chipGreen = Color(0xFFECFDF5);
   static const Color chipRed = Color(0xFFFEF2F2);
   static const Color chipYellow = Color(0xFFFEFCE8);

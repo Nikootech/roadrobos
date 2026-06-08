@@ -23,16 +23,9 @@ class NotificationService {
   NotificationService._internal();
 
   Future<void> initialize() async {
-    // 1. Request Permission
-    final NotificationSettings settings = await _fcm.requestPermission(
-      
-    );
-
-    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-      if (kDebugMode) {
-        print('User granted permission');
-      }
-    }
+    // Permissions are no longer requested automatically on app launch.
+    // They must be explicitly requested via requestNotificationPermission()
+    // during onboarding or after login to comply with Android/Web best practices.
 
     // 2. Local Notifications Setup (for foreground alerts)
     if (!kIsWeb) {
@@ -75,6 +68,22 @@ class NotificationService {
         } catch (_) {}
       }
     });
+  }
+
+  Future<bool> requestNotificationPermission() async {
+    final NotificationSettings settings = await _fcm.requestPermission();
+
+    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+      if (kDebugMode) {
+        debugPrint('User granted notification permission');
+      }
+      return true;
+    } else {
+      if (kDebugMode) {
+        debugPrint('User declined or has not accepted notification permissions');
+      }
+      return false;
+    }
   }
 
   void handleNotificationNavigation(RemoteMessage message) {

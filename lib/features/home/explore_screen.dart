@@ -91,6 +91,8 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                             hintText: 'Search all services...',
                             hintStyle: TextStyle(fontSize: 14, color: AppColors.textMuted),
                             border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
                             contentPadding: EdgeInsets.zero,
                             isDense: true,
                           ),
