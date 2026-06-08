@@ -93,3 +93,9 @@ test_patch*.dart
 verify_security.ps1
 paths_to_purge.txt
 .vercel
+
+# Large build artifacts — exceed GitHub's 100 MB limit
+*.aab
+*.apk
+app-release.aab
+RoadRobos_Production.apk
