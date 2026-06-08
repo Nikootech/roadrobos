@@ -64,7 +64,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     } else {
       final router = GoRouter.of(context);
       await ref.read(localStorageServiceProvider).setOnboardingComplete();
-      router.go('/auth/login');
+      router.go('/auth/role-selection');
     }
   }
 
@@ -84,7 +84,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     onTap: () async {
                     final router = GoRouter.of(context);
                     await ref.read(localStorageServiceProvider).setOnboardingComplete();
-                    router.go('/auth/login');
+                    router.go('/auth/role-selection');
                   },
                   child: Container(
                     padding: const EdgeInsets.symmetric(

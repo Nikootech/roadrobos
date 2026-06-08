@@ -281,7 +281,6 @@ class _RentalScreenState extends ConsumerState<RentalScreen> {
       right: 0,
       child: GlassCard(
         padding: const EdgeInsets.symmetric(vertical: 8),
-        borderRadius: 16,
         opacity: 0.95,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

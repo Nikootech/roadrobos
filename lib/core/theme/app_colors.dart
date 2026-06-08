@@ -50,13 +50,13 @@ class AppColors {
   static const Color bgLightWarm = Color(0xFFFFF7ED);
   static const Color bgLightCard = Color(0xFFFFFFFF);
   static const Color bgWhite = Color(0xFFFFFFFF);
-  static const Color bgLightGrey = Color(0xFFF1F5F9);
+  static const Color bgLightGrey = Color(0xFFF8F9FA); // Updated to match cleaner UI
   static const Color bgLightSurface = Color(0xFFF8FAFC);
 
   // ── Dark Theme Backgrounds (Modern Deep Navy/Black) ──
   // These are now legacy but redirected to maintain compatibility
   static const Color bgDark = Color(0xFFF8FAFC); 
-  static const Color bgDarkAlt = Color(0xFFF1F5F9);
+  static const Color bgDarkAlt = Color(0xFFF8F9FA);
   static const Color bgDarkDeep = Color(0xFF0F1117);
   static const Color bgDarkSurface = Color(0xFF1A1D27);
   static const Color bgDarkCard = Color(0xFF222533);

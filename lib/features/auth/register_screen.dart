@@ -14,6 +14,7 @@ import '../../core/repositories/user_repository.dart';
 import '../../core/repositories/driver_repository.dart';
 import '../../navigation/nav_helpers.dart';
 import '../../core/config/app_config.dart';
+import '../../core/services/local_storage_service.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -31,6 +32,25 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _confirmPasswordController = TextEditingController();
   bool _isLoading = false;
   UserRole _selectedRole = UserRole.customer;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSelectedRole();
+  }
+
+  Future<void> _loadSelectedRole() async {
+    final savedRoleName = await ref.read(localStorageServiceProvider).getSelectedRole();
+    if (savedRoleName != null) {
+      final role = UserRole.values.firstWhere(
+        (e) => e.name == savedRoleName,
+        orElse: () => UserRole.customer,
+      );
+      setState(() {
+        _selectedRole = role;
+      });
+    }
+  }
 
   @override
   void dispose() {

@@ -10,5 +10,6 @@ UserNotifier userProfile(UserProfileRef ref) {
   return UserNotifier(
     ref.watch(authServiceProvider),
     ref.watch(userRepositoryProvider),
+    ref,
   );
 }

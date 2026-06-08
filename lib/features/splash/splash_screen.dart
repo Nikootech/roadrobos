@@ -43,7 +43,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       if (isFirstLaunch) {
         context.go('/onboarding');
       } else {
-        context.go('/auth/login');
+        context.go('/auth/role-selection');
       }
     }
   }

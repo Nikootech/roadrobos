@@ -10,6 +10,7 @@ import '../../core/models/user_role.dart';
 import '../../core/repositories/user_repository.dart';
 import '../../core/services/auth_service.dart';
 import '../../core/services/notification_service.dart';
+import '../../core/services/local_storage_service.dart';
 import '../../core/extensions/datetime_extensions.dart';
 
 
@@ -54,10 +55,11 @@ class UserState {
 class UserNotifier extends StateNotifier<UserState> {
   final AuthService _authService;
   final UserRepository _userRepository;
+  final Ref _ref;
   StreamSubscription<AppUser?>? _profileSubscription;
   StreamSubscription? _authSubscription;
 
-  UserNotifier(this._authService, this._userRepository) : super(UserState(isLoading: true)) {
+  UserNotifier(this._authService, this._userRepository, this._ref) : super(UserState(isLoading: true)) {
     _init();
   }
 
@@ -102,17 +104,39 @@ class UserNotifier extends StateNotifier<UserState> {
     if (uid.startsWith('demo_')) return;
     
     _profileSubscription?.cancel();
-    _profileSubscription = _userRepository.getUserStream(uid).listen((updatedUser) {
+    _profileSubscription = _userRepository.getUserStream(uid).listen((updatedUser) async {
       if (updatedUser != null && !state.isLoading) {
+        final isValid = await _checkDeviceSession(updatedUser);
+        if (!isValid) return;
+
         // Only update if data actually changed to avoid UI flickers
         if (updatedUser.profilePic != state.user?.profilePic || 
             updatedUser.points != state.user?.points ||
-            updatedUser.name != state.user?.name) {
+            updatedUser.name != state.user?.name ||
+            updatedUser.currentDeviceId != state.user?.currentDeviceId) {
           state = state.copyWith(user: updatedUser);
           debugPrint('Real-time Profile Update Received: ${updatedUser.name}');
         }
       }
     });
+  }
+
+  Future<bool> _checkDeviceSession(AppUser user) async {
+    if (user.id.startsWith('demo_')) return true;
+    if (user.currentDeviceId == null || user.currentDeviceId!.isEmpty) return true;
+
+    final localDeviceId = await _ref.read(localStorageServiceProvider).getLocalDeviceId();
+    if (user.currentDeviceId != localDeviceId) {
+      debugPrint('UserNotifier: Device mismatch! DB DeviceID: ${user.currentDeviceId}, Local DeviceID: $localDeviceId');
+      
+      // Set the multi-device logout flag so LoginScreen can show a custom dialog
+      await _ref.read(localStorageServiceProvider).setMultiDeviceLogout(true);
+      
+      // Force logout
+      await logout();
+      return false;
+    }
+    return true;
   }
 
 
@@ -135,6 +159,9 @@ class UserNotifier extends StateNotifier<UserState> {
       }
 
       if (user != null) {
+        final isValid = await _checkDeviceSession(user);
+        if (!isValid) return;
+
         // Auto-sync: If the existing profile has generic data, update from OAuth metadata
         bool needsUpdate = false;
         String updatedName = user.name;
@@ -346,5 +373,6 @@ final userProvider = StateNotifierProvider<UserNotifier, UserState>((ref) {
   return UserNotifier(
     ref.watch(authServiceProvider),
     ref.watch(userRepositoryProvider),
+    ref,
   );
 });

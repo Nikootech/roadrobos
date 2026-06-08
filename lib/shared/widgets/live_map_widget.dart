@@ -369,8 +369,6 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget> with SingleTicker
 
   Widget _buildMarkerCallout() {
     return GlassCard(
-      padding: const EdgeInsets.all(16),
-      opacity: 0.8,
       child: Row(
         children: [
           Container(

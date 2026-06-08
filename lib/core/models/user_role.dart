@@ -62,6 +62,8 @@ class AppUser {
   final String? profilePic;
   final DateTime? createdAt;
   final String kycStatus;
+  final String? currentDeviceId;
+  final bool isApproved;
   
   // Stats & Loyalty
   final int points;
@@ -84,6 +86,8 @@ class AppUser {
     this.referralCode = '',
     this.savedLocations = const [],
     this.kycStatus = 'not_started',
+    this.currentDeviceId,
+    this.isApproved = true,
   });
 
   factory AppUser.fromMap(Map<String, dynamic> map, String id) {
@@ -104,6 +108,8 @@ class AppUser {
               .toList() ??
           [],
       kycStatus: map['kyc_status'] ?? 'not_started',
+      currentDeviceId: map['current_device_id'],
+      isApproved: map['is_approved'] ?? true,
     );
   }
 
@@ -123,6 +129,8 @@ class AppUser {
       'email': email,
       'role': _roleToDb(role),
       'profile_pic': profilePic,
+      'current_device_id': currentDeviceId,
+      'is_approved': isApproved,
     };
   }
 
@@ -158,6 +166,8 @@ class AppUser {
     String? referralCode,
     List<SavedLocation>? savedLocations,
     String? kycStatus,
+    String? currentDeviceId,
+    bool? isApproved,
   }) {
     return AppUser(
       id: id ?? this.id,
@@ -173,6 +183,8 @@ class AppUser {
       referralCode: referralCode ?? this.referralCode,
       savedLocations: savedLocations ?? this.savedLocations,
       kycStatus: kycStatus ?? this.kycStatus,
+      currentDeviceId: currentDeviceId ?? this.currentDeviceId,
+      isApproved: isApproved ?? this.isApproved,
     );
   }
 }
@@ -194,6 +206,8 @@ extension UserRoleExtension on UserRole {
     UserRole.driver,
     UserRole.technician,
   ].contains(this);
+
+  bool get isEmployee => this != UserRole.customer && this != UserRole.driver;
 
   Future<bool> hasPermission(String permission) async {
     final prefs = await SharedPreferences.getInstance();

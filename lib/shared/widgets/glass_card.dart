@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 
@@ -16,9 +15,9 @@ class GlassCard extends StatelessWidget {
     super.key,
     required this.child,
     this.blur = 15,
-    this.opacity = 0.1,
-    this.borderRadius = 24.0,
-    this.padding = const EdgeInsets.all(20),
+    this.opacity = 1.0, // Solid background
+    this.borderRadius = 16.0, // Match new rounded corner aesthetic
+    this.padding = const EdgeInsets.all(16),
     this.border,
     this.shadow,
     this.onTap,
@@ -28,29 +27,22 @@ class GlassCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
+        color: Colors.white,
         borderRadius: BorderRadius.circular(borderRadius),
+        border: border ?? Border.all(
+          color: AppColors.border,
+        ),
         boxShadow: shadow,
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(borderRadius),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
-            child: InkWell(
-              onTap: onTap,
-              borderRadius: BorderRadius.circular(borderRadius),
-              child: Container(
-                padding: padding,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: opacity),
-                  borderRadius: BorderRadius.circular(borderRadius),
-                  border: border ?? Border.all(
-                    color: AppColors.primaryBlue.withValues(alpha: 0.1),
-                    width: 1.5,
-                  ),
-                ),
-                child: child,
-              ),
-            ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(borderRadius),
+          child: Padding(
+            padding: padding,
+            child: child,
+          ),
         ),
       ),
     );

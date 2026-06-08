@@ -11,6 +11,9 @@ import '../../core/constants/app_strings.dart';
 import '../profile/user_provider.dart';
 import '../../shared/widgets/custom_button.dart';
 import '../../shared/widgets/custom_text_field.dart';
+import '../../core/models/user_role.dart';
+import '../../core/services/local_storage_service.dart';
+import '../../core/repositories/user_repository.dart';
 import '../../core/services/auth_service.dart';
 import '../../core/services/biometric_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -31,6 +34,38 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   
   bool _isLoading = false;
   bool _isSigningUp = false; // Toggle for register vs login
+
+  @override
+  void initState() {
+    super.initState();
+    // Check for multi-device logout
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final wasMultiDeviceLogout = await ref.read(localStorageServiceProvider).checkAndClearMultiDeviceLogout();
+      if (wasMultiDeviceLogout && mounted) {
+        unawaited(showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: const Row(
+              children: [
+                Icon(Icons.warning_rounded, color: AppColors.accentOrange),
+                SizedBox(width: 8),
+                Text('Session Ended', style: TextStyle(fontWeight: FontWeight.bold)),
+              ],
+            ),
+            content: const Text('Your account was logged in on another device. For security, you have been signed out of this device.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('OK', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primaryBlue)),
+              ),
+            ],
+          ),
+        ));
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -74,10 +109,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   void _handleEmailLogin() async {
     setState(() => _isLoading = true);
     try {
-      await ref.read(authServiceProvider).signInWithEmail(
+      final response = await ref.read(authServiceProvider).signInWithEmail(
         _emailController.text.trim(),
         _passwordController.text.trim(),
       );
+      
+      if (response.user != null) {
+        final deviceId = await ref.read(localStorageServiceProvider).getLocalDeviceId();
+        await ref.read(userRepositoryProvider).updateField(response.user!.id, 'current_device_id', deviceId);
+      }
       
       unawaited(Sentry.addBreadcrumb(
         Breadcrumb(
@@ -146,7 +186,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       );
       
       if (response.user != null) {
-        // Create initial profile for the email user
+        // Save initial profile with selected role and current device ID
+        final savedRoleName = await ref.read(localStorageServiceProvider).getSelectedRole();
+        final selectedRole = UserRole.values.firstWhere(
+          (e) => e.name == savedRoleName,
+          orElse: () => UserRole.customer,
+        );
+        final deviceId = await ref.read(localStorageServiceProvider).getLocalDeviceId();
+        
+        final newUser = AppUser(
+          id: response.user!.id,
+          name: 'New User',
+          phone: '',
+          email: _emailController.text.trim(),
+          role: selectedRole,
+          currentDeviceId: deviceId,
+          createdAt: DateTime.now(),
+        );
+        await ref.read(userRepositoryProvider).saveUser(newUser);
+
         await ref.read(userProvider.notifier).fetchUserProfile(response.user!.id);
         
         final error = ref.read(userProvider).error;
@@ -245,6 +303,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     try {
       final success = await ref.read(authServiceProvider).signInWithGoogle();
       if (success) {
+        final currentUser = ref.read(authServiceProvider).currentUser;
+        if (currentUser != null) {
+          final deviceId = await ref.read(localStorageServiceProvider).getLocalDeviceId();
+          await ref.read(userRepositoryProvider).updateField(currentUser.id, 'current_device_id', deviceId);
+        }
+        
         unawaited(Sentry.addBreadcrumb(
           Breadcrumb(
             message: 'Login succeeded',

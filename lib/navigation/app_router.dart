@@ -78,6 +78,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         '/',
         '/splash',
         '/onboarding',
+        '/auth/role-selection',
+        '/auth/pending-approval',
         '/auth/login',
         '/auth/register',
         '/login-callback',
@@ -85,8 +87,19 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isPublicPath = publicPaths.contains(location);
 
       if (!isLoggedIn && !isPublicPath) {
-        if (kDebugMode) debugPrint('Router: unauthenticated → /auth/login');
-        return '/auth/login';
+        if (kDebugMode) debugPrint('Router: unauthenticated → /auth/role-selection');
+        return '/auth/role-selection';
+      }
+
+      // Enforce Employee approval checks
+      if (isLoggedIn && user != null) {
+        if (!user.isApproved && user.role.isEmployee) {
+          if (location != '/auth/pending-approval') {
+            if (kDebugMode) debugPrint('Router: Employee pending approval → /auth/pending-approval');
+            return '/auth/pending-approval';
+          }
+          return null;
+        }
       }
 
       if (isLoggedIn && isPublicPath) {

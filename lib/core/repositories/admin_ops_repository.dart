@@ -305,7 +305,39 @@ class AdminOpsRepository {
           .eq('driver_id', driverId)
           .eq('status', 'pending');
     } catch (e) {
-      throw AdminOpsRepositoryException('Failed to approve wallet withdrawal requests for driver $driverId', e);
+      throw AdminOpsRepositoryException('Failed to approve wallet withdrawal', e);
+    }
+  }
+
+  /// Get all employees (users whose roles are NOT customer and NOT driver)
+  Future<List<Map<String, dynamic>>> getAllEmployees() async {
+    try {
+      final response = await _supabase
+          .from('profiles')
+          .select()
+          .not('role', 'in', '("customer", "driver")')
+          .order('created_at', ascending: false);
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      throw AdminOpsRepositoryException('Failed to fetch employees', e);
+    }
+  }
+
+  /// Update employee approval status and optionally role
+  Future<void> updateEmployeeApproval(String id, bool isApproved, {String? role}) async {
+    try {
+      final updates = <String, dynamic>{
+        'is_approved': isApproved,
+      };
+      if (role != null) {
+        updates['role'] = role;
+      }
+      await _supabase
+          .from('profiles')
+          .update(updates)
+          .eq('id', id);
+    } catch (e) {
+      throw AdminOpsRepositoryException('Failed to update employee status', e);
     }
   }
 }

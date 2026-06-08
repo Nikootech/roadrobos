@@ -19,37 +19,7 @@ class AdminDashboardScreen extends ConsumerStatefulWidget {
 }
 
 class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
-  String _selectedFilter = 'Today';
 
-  Future<void> _handleFilterSelection(String value) async {
-    if (value == 'Custom Range') {
-      final DateTimeRange? picked = await showDateRangePicker(
-        context: context,
-        firstDate: DateTime(2023),
-        lastDate: DateTime.now(),
-        builder: (context, child) {
-          return Theme(
-            data: Theme.of(context).copyWith(
-              colorScheme: const ColorScheme.light(
-                primary: AppColors.primaryBlue,
-                onSurface: AppColors.textPrimary,
-              ),
-            ),
-            child: child!,
-          );
-        },
-      );
-      if (picked != null) {
-        final start = picked.start;
-        final end = picked.end;
-        setState(() {
-          _selectedFilter = '${start.day}/${start.month} - ${end.day}/${end.month}';
-        });
-      }
-    } else {
-      setState(() => _selectedFilter = value);
-    }
-  }
 
   void _showSystemAlertDetails() {
     showModalBottomSheet(
@@ -143,37 +113,43 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
     return Scaffold(
       backgroundColor: AppColors.bgLightGrey,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 1,
-        shadowColor: Colors.black.withValues(alpha: 0.05),
+        backgroundColor: AppColors.bgLightGrey,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         title: Row(
           children: [
             Container(
               width: 40,
               height: 40,
-              decoration: const BoxDecoration(color: AppColors.deepNavy, shape: BoxShape.circle),
-              child: const Icon(Icons.shield_rounded, color: Colors.white),
+              decoration: const BoxDecoration(
+                color: Color(0xFFFDE6D5), // Soft peach for avatar
+                shape: BoxShape.circle,
+              ),
+              child: ClipOval(
+                child: Center(
+                  child: Image.network(
+                    'https://i.pravatar.cc/150?img=12', // Placeholder avatar
+                    width: 40,
+                    height: 40,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => const Icon(Icons.person, color: Colors.orange),
+                  ),
+                ),
+              ),
             ),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Admin Console', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
-                const Text('Super Admin Level', style: TextStyle(fontSize: 12, color: AppColors.primaryBlue)),
-              ],
-            )
+            const SizedBox(width: 16),
+            Text(
+              'Good Morning, Alex', // Static for now as per design
+              style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+            ),
           ],
         ),
         actions: [
           IconButton(
-            icon: Stack(
-              children: [
-                const Icon(Icons.notifications_none_rounded, color: AppColors.textPrimary),
-                Positioned(right: 2, top: 2, child: Container(width: 8, height: 8, decoration: const BoxDecoration(color: AppColors.dangerRed, shape: BoxShape.circle)))
-              ],
-            ),
+            icon: const Icon(Icons.notifications_none_rounded, color: AppColors.textPrimary, size: 28),
             onPressed: () => context.push('/notifications'),
-          )
+          ),
+          const SizedBox(width: 8),
         ],
       ),
       body: SingleChildScrollView(
@@ -236,58 +212,74 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
               error: (e, s) => const SizedBox.shrink(),
             ),
 
-            // Date Filter
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Overview', style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
-                PopupMenuButton<String>(
-                  onSelected: _handleFilterSelection,
-                  offset: const Offset(0, 40),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  itemBuilder: (context) => [
-                    _buildPopupItem('Today', Icons.calendar_today_rounded),
-                    _buildPopupItem('Yesterday', Icons.calendar_month_rounded),
-                    _buildPopupItem('Last 7 Days', Icons.event_available_rounded),
-                    _buildPopupItem('Custom Range', Icons.date_range_rounded),
-                  ],
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppColors.border),
-                    ),
-                    child: Row(
-                      children: [
-                        Text(_selectedFilter, style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-                        const SizedBox(width: 4),
-                        const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: AppColors.primaryBlue)
-                      ],
+            // System Health Card
+            GlassCard(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.battery_charging_full_rounded, color: AppColors.successDark, size: 24),
+                          const SizedBox(width: 12),
+                          Text('System Health', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(color: AppColors.successDark, shape: BoxShape.circle),
+                          ),
+                          const SizedBox(width: 6),
+                          const Text('Live', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: const LinearProgressIndicator(
+                      value: 0.92,
+                      minHeight: 8,
+                      backgroundColor: AppColors.border,
+                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.successDark),
                     ),
                   ),
-                ),
-              ],
-            ),
+                  const SizedBox(height: 12),
+                  const Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('92% Active', style: TextStyle(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w500)),
+                      Text('All systems operational.', style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                    ],
+                  ),
+                ],
+              ),
+            ).animate().slideY(begin: 0.1, end: 0).fadeIn(),
             const SizedBox(height: 16),
 
             // Stat Cards Grid
-            Row(
+            GridView.count(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: 2,
+              mainAxisSpacing: 16,
+              crossAxisSpacing: 16,
+              childAspectRatio: 1.4,
               children: [
-                Expanded(child: _buildStatCard('Total Revenue', '₹84,500', Icons.account_balance_wallet_rounded, AppColors.successGreen, '+12%')),
-                const SizedBox(width: 16),
-                Expanded(child: _buildStatCard('Active Rides', '124', Icons.local_taxi_rounded, AppColors.primaryBlue, '+5%')),
-              ],
-            ).animate().slideY(begin: 0.1, end: 0).fadeIn(),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(child: _buildStatCard('Services Pending', '32', Icons.build_rounded, AppColors.warningAmber, '-2%')),
-                const SizedBox(width: 16),
-                Expanded(child: InkWell(
+                _buildStatCard('Total Revenue', '₹84.5k'),
+                _buildStatCard('Active Rides', '124'),
+                _buildStatCard('Pending Services', '32'),
+                InkWell(
                   onTap: () => context.push('/admin-approvals'),
-                  child: _buildStatCard('KYC Approvals', '18', Icons.document_scanner_rounded, AppColors.dangerRed, '+8%'),
-                )),
+                  child: _buildStatCard('KYC Approvals', '18'),
+                ),
               ],
             ).animate(delay: 100.ms).slideY(begin: 0.1, end: 0).fadeIn(),
 
@@ -295,89 +287,79 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
             const _AdminOpsThreeCardSection(),
             const SizedBox(height: 24),
 
-            Text('Quick Access', style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+            Text('Quick Access', style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
             const SizedBox(height: 16),
 
             // Redesigned Quick Actions Grid
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final isWide = constraints.maxWidth > 600;
-                final crossAxisCount = isWide ? 3 : 2;
-                
-                return GridView.count(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisCount: crossAxisCount,
-                  mainAxisSpacing: 16,
-                  crossAxisSpacing: 16,
-                  childAspectRatio: isWide ? 1.5 : 1.1,
-                  children: [
-                    _QuickActionCard(
-                      title: 'Revenue',
-                      subtitle: 'Analytics',
-                      icon: Icons.bar_chart_rounded,
-                      color: AppColors.successGreen,
-                      onTap: () => context.push('/admin-revenue-referral'),
-                      badge: 'Live',
-                    ),
-                    _QuickActionCard(
-                      title: 'Rides Map',
-                      subtitle: 'Real-time',
-                      icon: Icons.map_rounded,
-                      color: AppColors.primaryBlue,
-                      onTap: () => context.push('/admin-active-rides'),
-                      badge: 'Track',
-                    ),
-                    _QuickActionCard(
-                      title: 'Logistics',
-                      subtitle: 'Hub Mgmt',
-                      icon: Icons.warehouse_rounded,
-                      color: AppColors.deepNavy,
-                      onTap: () => context.push('/admin-logistics-hub'),
-                    ),
-                     _QuickActionCard(
-                      title: 'Permissions',
-                      subtitle: 'Manage Roles',
-                      icon: Icons.admin_panel_settings_rounded,
-                      color: AppColors.primaryBlue,
-                      onTap: () => context.push('/admin-management'),
-                    ),
-                    _QuickActionCard(
-                      title: 'Approvals',
-                      subtitle: 'Maker Checker',
-                      icon: Icons.check_circle_outline_rounded,
-                      color: AppColors.successGreen,
-                      onTap: () => context.push('/admin-approvals'),
-                      badge: 'New',
-                    ),
-                    _QuickActionCard(
-                      title: 'Feedback',
-                      subtitle: 'Sentiments',
-                      icon: Icons.rate_review_rounded,
-                      color: AppColors.successGreen,
-                      onTap: () => context.push('/admin-feedback-analytics'),
-                      badge: '4.8 ⭐',
-                    ),
-                    _QuickActionCard(
-                      title: 'Offers',
-                      subtitle: 'Coupons',
-                      icon: Icons.local_offer_rounded,
-                      color: AppColors.warningAmber,
-                      onTap: () => context.push('/admin-manage-offers'),
-                      badge: 'Active',
-                    ),
-                    _QuickActionCard(
-                      title: 'Audit Logs',
-                      subtitle: 'Activity Trail',
-                      icon: Icons.history_rounded,
-                      color: AppColors.deepNavy,
-                      onTap: () => context.push('/admin/audit-logs'),
-                      badge: 'New',
-                    ),
-                  ],
-                );
-              },
+            GridView.count(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: 2,
+              mainAxisSpacing: 16,
+              crossAxisSpacing: 16,
+              childAspectRatio: 1.1,
+              children: [
+                _QuickActionCard(
+                  title: 'Revenue',
+                  subtitle: 'Analytics',
+                  icon: Icons.bar_chart_rounded,
+                  onTap: () => context.push('/admin-revenue-referral'),
+                ),
+                _QuickActionCard(
+                  title: 'Rides Map',
+                  subtitle: 'Real-time',
+                  icon: Icons.map_rounded,
+                  onTap: () => context.push('/admin-active-rides'),
+                ),
+                _QuickActionCard(
+                  title: 'Logistics',
+                  subtitle: 'Hub Mgmt',
+                  icon: Icons.warehouse_rounded,
+                  onTap: () => context.push('/admin-logistics-hub'),
+                ),
+                 _QuickActionCard(
+                  title: 'Permissions',
+                  subtitle: 'Manage Roles',
+                  icon: Icons.admin_panel_settings_rounded,
+                  onTap: () => context.push('/admin-management'),
+                ),
+              ],
             ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1, end: 0),
+            const SizedBox(height: 16),
+            GridView.count(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: 2,
+              mainAxisSpacing: 16,
+              crossAxisSpacing: 16,
+              childAspectRatio: 1.1,
+              children: [
+                _QuickActionCard(
+                  title: 'Approvals',
+                  subtitle: 'Maker Checker',
+                  icon: Icons.check_circle_outline_rounded,
+                  onTap: () => context.push('/admin-approvals'),
+                ),
+                _QuickActionCard(
+                  title: 'Feedback',
+                  subtitle: 'Sentiments',
+                  icon: Icons.rate_review_rounded,
+                  onTap: () => context.push('/admin-feedback-analytics'),
+                ),
+                _QuickActionCard(
+                  title: 'Offers',
+                  subtitle: 'Coupons',
+                  icon: Icons.local_offer_rounded,
+                  onTap: () => context.push('/admin-manage-offers'),
+                ),
+                _QuickActionCard(
+                  title: 'Audit Logs',
+                  subtitle: 'Activity Trail',
+                  icon: Icons.history_rounded,
+                  onTap: () => context.push('/admin/audit-logs'),
+                ),
+              ],
+            ).animate().fadeIn(delay: 250.ms).slideY(begin: 0.1, end: 0),
 
             const SizedBox(height: 32),
             // Minimal Alert Component
@@ -423,53 +405,18 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
     );
   }
 
-  PopupMenuItem<String> _buildPopupItem(String value, IconData icon) {
-    final isSelected = _selectedFilter == value;
-    return PopupMenuItem(
-      value: value,
-      child: Row(
-        children: [
-          Icon(icon, size: 18, color: isSelected ? AppColors.primaryBlue : AppColors.textSecondary),
-          const SizedBox(width: 12),
-          Text(
-            value,
-            style: GoogleFonts.outfit(
-              fontSize: 14,
-              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-              color: isSelected ? AppColors.primaryBlue : AppColors.textPrimary,
-            ),
-          ),
-          if (isSelected) ...[
-            const Spacer(),
-            const Icon(Icons.check_circle_rounded, size: 16, color: AppColors.primaryBlue),
-          ],
-        ],
-      ),
-    );
-  }
 
-  Widget _buildStatCard(String title, String value, IconData icon, Color color, String trend) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 4))],
-      ),
+
+  Widget _buildStatCard(String title, String value) {
+    return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle), child: Icon(icon, color: color, size: 20)),
-              Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), decoration: BoxDecoration(color: trend.startsWith('+') ? AppColors.successGreen.withValues(alpha: 0.1) : AppColors.dangerRed.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(4)), child: Text(trend, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: trend.startsWith('+') ? AppColors.successGreen : AppColors.dangerRed))),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text(value, style: GoogleFonts.outfit(fontSize: 26, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
-          const SizedBox(height: 4),
-          Text(title, style: GoogleFonts.inter(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w500)),
+          Text(title, style: const TextStyle(fontSize: 14, color: AppColors.textPrimary, fontWeight: FontWeight.w500)),
+          const SizedBox(height: 8),
+          Text(value, style: GoogleFonts.inter(fontSize: 28, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+          const Spacer(),
+          const Text('Updated just now', style: TextStyle(fontSize: 11, color: AppColors.successDark)),
         ],
       ),
     );
@@ -480,52 +427,34 @@ class _QuickActionCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final IconData icon;
-  final Color color;
   final VoidCallback onTap;
-  final String? badge;
 
   const _QuickActionCard({
     required this.title,
     required this.subtitle,
     required this.icon,
-    required this.color,
     required this.onTap,
-    this.badge,
   });
 
   @override
   Widget build(BuildContext context) {
     return GlassCard(
       onTap: onTap,
-      padding: const EdgeInsets.all(12),
-      blur: 10,
-      opacity: 0.2,
-      child: Stack(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
-                child: Icon(icon, color: color, size: 20),
-              ),
-              const SizedBox(height: 12),
-              Text(title, style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
-              Text(subtitle, style: const TextStyle(fontSize: 10, color: AppColors.textSecondary, fontWeight: FontWeight.w500)),
-            ],
-          ),
-          if (badge != null)
-            Positioned(
-              top: 0,
-              right: 0,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(color: color.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(6)),
-                child: Text(badge!, style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: color)),
-              ),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.successDark.withValues(alpha: 0.15),
+              shape: BoxShape.circle,
             ),
+            child: Icon(icon, color: AppColors.successDark, size: 24),
+          ),
+          const SizedBox(height: 16),
+          Text(title, style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+          const SizedBox(height: 4),
+          Text(subtitle, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
         ],
       ),
     );
@@ -567,7 +496,6 @@ class _CustomerOperationsCard extends ConsumerWidget {
     final asyncData = ref.watch(customersOpProvider);
 
     return GlassCard(
-      padding: const EdgeInsets.all(16),
       blur: 20,
       opacity: 0.3,
       child: Column(
@@ -657,7 +585,6 @@ class _DriverManagementCard extends ConsumerWidget {
     final asyncData = ref.watch(driversOpProvider);
 
     return GlassCard(
-      padding: const EdgeInsets.all(16),
       blur: 20,
       opacity: 0.3,
       child: Column(
@@ -750,7 +677,6 @@ class _TechnicianServicesCard extends ConsumerWidget {
     final asyncData = ref.watch(techOpProvider);
 
     return GlassCard(
-      padding: const EdgeInsets.all(16),
       blur: 20,
       opacity: 0.3,
       child: Column(
