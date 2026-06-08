@@ -110,10 +110,14 @@ void main() {
 
         // ③ Notification service (non-blocking)
         unawaited(
-          NotificationService().initialize().catchError((e) {
+          NotificationService().initialize().then((_) {
+            // Request permission on app start (critical for Android 13+)
+            return NotificationService().requestNotificationPermission();
+          }).catchError((e) {
             if (kDebugMode) {
               debugPrint('NotificationService init error: $e');
             }
+            return false;
           }),
         );
 
