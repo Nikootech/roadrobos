@@ -86,6 +86,8 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                           onChanged: (value) => setState(() => _searchQuery = value.toLowerCase()),
                           style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
                           decoration: const InputDecoration(
+                            filled: true,
+                            fillColor: Colors.transparent,
                             hintText: 'Search all services...',
                             hintStyle: TextStyle(fontSize: 14, color: AppColors.textMuted),
                             border: InputBorder.none,
