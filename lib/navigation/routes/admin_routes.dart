@@ -20,6 +20,7 @@ import '../../features/admin/manpower_supply_screen.dart';
 import '../../features/admin/approvals/approvals_list_screen.dart';
 import '../../features/admin/approvals/approval_detail_screen.dart';
 import '../../core/models/approval.dart';
+import '../../features/admin/assets_screen.dart';
 import '../app_transitions.dart';
 
 /// Admin console routes.
@@ -153,6 +154,13 @@ final List<RouteBase> adminRoutes = [
     path: '/admin/audit-logs',
     pageBuilder: (context, state) => AppTransitions.slideRight(
       child: const AuditLogScreen(),
+      state: state,
+    ),
+  ),
+  GoRoute(
+    path: '/admin-assets',
+    pageBuilder: (context, state) => AppTransitions.slideRight(
+      child: const AssetsScreen(),
       state: state,
     ),
   ),

@@ -25,7 +25,7 @@ import 'home_providers.dart';
 import '../../core/repositories/quick_action_repository.dart';
 import '../../core/utils/icon_helper.dart';
 import '../../core/models/service_booking.dart';
-import '../chat/providers/chat_providers.dart';
+
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -124,28 +124,38 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildHeader(WidgetRef ref) {
-    // P1: .select() — only rebuilds when profileImageUrl changes, not on any UserState field change
     final imageUrl = ref.watch(userProvider.select((s) => s.profileImageUrl));
+    final userName = ref.watch(userProvider.select((s) => s.name));
+    final l10n = ref.watch(l10nProvider);
+
     return SafeArea(
       bottom: false,
       child: Padding(
         padding: ResponsiveLayout.responsivePadding(context, horizontal: 20, vertical: 16).copyWith(bottom: 0),
         child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             GestureDetector(
               onTap: () => context.push('/main/profile'),
               child: AppAvatar(
                 imageUrl: imageUrl,
-                radius: 22,
+                radius: 20,
                 backgroundColor: Colors.white,
               ),
-            ).animate().fadeIn(duration: 500.ms).scale(begin: const Offset(0.8, 0.8), end: const Offset(1.0, 1.0)),
-            const Spacer(),
-            // Trailing Icons Row - Constrained to prevent overflow
+            ).animate().fadeIn(duration: 500.ms),
+            
+            Text(
+              '${l10n.get('good_morning')}, ${userName.split(' ')[0]}',
+              style: GoogleFonts.outfit(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
+            ).animate().fadeIn(duration: 500.ms),
+
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Language Selection Menu
                 PopupMenuButton<AppLanguage>(
                   onSelected: (AppLanguage lang) {
                     ref.read(languageProvider.notifier).setLanguage(lang);
@@ -160,92 +170,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     const PopupMenuItem(value: AppLanguage.te, child: Text('తెలుగు (TE)')),
                   ],
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppColors.primaryBlue.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
+                      color: AppColors.bgSkyLight,
+                      borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       ref.watch(languageProvider).name.toUpperCase(),
-                      style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primaryBlue, fontSize: 13),
+                      style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primaryBlue, fontSize: 12),
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
-                Consumer(
-                  builder: (context, ref, child) {
-                    // Make sure to import chat_providers
-                    final unreadCountAsync = ref.watch(unreadMessagesCountProvider);
-                    final count = unreadCountAsync.value ?? 0;
-                    return GestureDetector(
-                      onTap: () {
-                        HapticFeedback.lightImpact();
-                        // context.push('/chat-list');
-                      },
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: AppColors.border),
-                          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4))],
-                        ),
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            const Icon(Icons.chat_bubble_outline_rounded, size: 20, color: AppColors.textPrimary),
-                            if (count > 0)
-                              Positioned(
-                                top: 6,
-                                right: 6,
-                                child: Container(
-                                  padding: const EdgeInsets.all(2),
-                                  decoration: BoxDecoration(color: AppColors.dangerRed, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 1.5)),
-                                  child: Text(
-                                    count > 9 ? '9+' : count.toString(),
-                                    style: const TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold),
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                    ).animate().fadeIn(duration: 500.ms, delay: 100.ms).scale(begin: const Offset(0.8, 0.8), end: const Offset(1.0, 1.0));
-                  },
-                ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 12),
                 GestureDetector(
                   onTap: () {
                     HapticFeedback.lightImpact();
                     context.push('/notifications');
                   },
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.border),
-                      boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4))],
-                    ),
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        const Icon(Iconsax.notification, size: 20, color: AppColors.textPrimary),
-                        Positioned(
-                          top: 10,
-                          right: 10,
-                          child: Container(
-                            width: 7,
-                            height: 7,
-                            decoration: BoxDecoration(color: AppColors.dangerRed, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 1.5)),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ).animate().fadeIn(duration: 500.ms, delay: 100.ms).scale(begin: const Offset(0.8, 0.8), end: const Offset(1.0, 1.0)),
+                  child: const Icon(Iconsax.notification, size: 22, color: AppColors.textPrimary),
+                ).animate().fadeIn(duration: 500.ms),
               ],
             ),
           ],
@@ -257,119 +200,126 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
 
   Widget _buildGreetingSection(WidgetRef ref) {
-    // P1: .select() — only rebuilds when user name changes
-    final userName = ref.watch(userProvider.select((s) => s.name));
     final selectedVehicle = ref.watch(vehicleProvider);
     final allVehicles = ref.watch(allVehiclesProvider);
-    final l10n = ref.watch(l10nProvider);
 
     return Padding(
-      padding: ResponsiveLayout.responsivePadding(context, horizontal: 20, vertical: 20).copyWith(bottom: 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(l10n.get('good_morning'), style: TextStyle(fontSize: ResponsiveLayout.responsiveFontSize(context, 14), color: AppColors.textSecondary)).animate().fadeIn(duration: 400.ms),
-          const SizedBox(height: 4),
-          Text(userName.split(' ')[0], style: TextStyle(fontSize: ResponsiveLayout.responsiveFontSize(context, 28), fontWeight: FontWeight.w800, color: AppColors.textPrimary)).animate(delay: 100.ms).fadeIn(duration: 500.ms).slideX(begin: -0.05, end: 0),
-          const SizedBox(height: 16),
-          GestureDetector(
-            onTap: () {
-              showModalBottomSheet(
-                context: context,
-                backgroundColor: Colors.transparent,
-                isScrollControlled: true,
-                builder: (context) => Container(
-                  constraints: BoxConstraints(
-                    maxHeight: MediaQuery.of(context).size.height * 0.7,
-                  ),
-                  padding: EdgeInsets.only(
-                    left: 24, right: 24, top: 12,
-                    bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-                  ),
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.bgLightGrey, borderRadius: BorderRadius.circular(2))),
-                      const SizedBox(height: 24),
-                      Text('Select Vehicle', style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w800)),
-                      const SizedBox(height: 16),
-                      Flexible(
-                        child: ListView.builder(
-                          shrinkWrap: true,
-                          itemCount: allVehicles.length,
-                          itemBuilder: (context, index) {
-                            final vehicle = allVehicles[index];
-                            return ListTile(
-                              onTap: () {
-                                ref.read(vehicleProvider.notifier).setVehicle(vehicle);
-                                Navigator.pop(context);
-                              },
-                              leading: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(color: AppColors.bgSkyLight, borderRadius: BorderRadius.circular(10)),
-                                child: Icon(
-                                  vehicle.type == 'Car' ? Icons.directions_car_rounded : (vehicle.type == 'EV Bike' ? Icons.electric_bike_rounded : Icons.pedal_bike_rounded), 
-                                  color: AppColors.primaryBlue,
-                                ),
-                              ),
-                              title: Text(vehicle.name, style: const TextStyle(fontWeight: FontWeight.w600)),
-                              subtitle: Text(vehicle.plate),
-                              trailing: selectedVehicle.plate == vehicle.plate ? const Icon(Icons.check_circle_rounded, color: AppColors.successGreen) : null,
-                            );
-                          },
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      TextButton.icon(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          context.push('/add-vehicle');
-                        },
-                        icon: const Icon(Icons.add_circle_outline_rounded),
-                        label: const Text('Add New Vehicle'),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-            child: Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(color: AppColors.bgSkyLight, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.1))),
-              child: Row(
+      padding: ResponsiveLayout.responsivePadding(context, horizontal: 20, vertical: 16).copyWith(bottom: 0),
+      child: GestureDetector(
+        onTap: () {
+          showModalBottomSheet(
+            context: context,
+            backgroundColor: Colors.transparent,
+            isScrollControlled: true,
+            builder: (context) => Container(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.7,
+              ),
+              padding: EdgeInsets.only(
+                left: 24, right: 24, top: 12,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+              ),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Container(
-                    width: 50,
-                    height: 44,
-                    decoration: BoxDecoration(color: AppColors.primaryBlue.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
-                    child: Icon(selectedVehicle.name.toLowerCase().contains('car') ? Icons.directions_car_rounded : Icons.pedal_bike_rounded, color: AppColors.primaryBlue),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(AppStrings.selectedVehicle, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.textSecondary, letterSpacing: 1)),
-                        const SizedBox(height: 2),
-                        Text('${selectedVehicle.name}  •  ${selectedVehicle.plate}', style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textPrimary), maxLines: 1, overflow: TextOverflow.ellipsis),
-                      ],
+                  Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.bgLightGrey, borderRadius: BorderRadius.circular(2))),
+                  const SizedBox(height: 24),
+                  Text('Select Vehicle', style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w800)),
+                  const SizedBox(height: 16),
+                  Flexible(
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: allVehicles.length,
+                      itemBuilder: (context, index) {
+                        final vehicle = allVehicles[index];
+                        return ListTile(
+                          onTap: () {
+                            ref.read(vehicleProvider.notifier).setVehicle(vehicle);
+                            Navigator.pop(context);
+                          },
+                          leading: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(color: AppColors.bgSkyLight, borderRadius: BorderRadius.circular(10)),
+                            child: Icon(
+                              vehicle.type == 'Car' ? Icons.directions_car_rounded : (vehicle.type == 'EV Bike' ? Icons.electric_bike_rounded : Icons.pedal_bike_rounded), 
+                              color: AppColors.primaryBlue,
+                            ),
+                          ),
+                          title: Text(vehicle.name, style: const TextStyle(fontWeight: FontWeight.w600)),
+                          subtitle: Text(vehicle.plate),
+                          trailing: selectedVehicle.plate == vehicle.plate ? const Icon(Icons.check_circle_rounded, color: AppColors.successGreen) : null,
+                        );
+                      },
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(color: AppColors.primaryBlue.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(8)),
-                    child: const Text(AppStrings.change, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.primaryBlue)),
+                  const SizedBox(height: 12),
+                  TextButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      context.push('/add-vehicle');
+                    },
+                    icon: const Icon(Icons.add_circle_outline_rounded),
+                    label: const Text('Add New Vehicle'),
                   ),
                 ],
               ),
             ),
-          ).animate(delay: 200.ms).fadeIn(duration: 500.ms).slideY(begin: 0.1, end: 0),
-        ],
-      ),
+          );
+        },
+        child: GlassCard(
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: AppColors.bgSkyLight,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  selectedVehicle.name.toLowerCase().contains('car') ? Icons.directions_car_rounded : Icons.pedal_bike_rounded,
+                  color: AppColors.primaryBlue,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      AppStrings.selectedVehicle,
+                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.textSecondary, letterSpacing: 1),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${selectedVehicle.name} • ${selectedVehicle.plate}',
+                      style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryBlue.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Text(
+                  AppStrings.change,
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.primaryBlue),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ).animate().fadeIn(duration: 500.ms).slideY(begin: 0.1, end: 0),
     );
   }
 
@@ -383,13 +333,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return Padding(
       padding: ResponsiveLayout.responsivePadding(context, horizontal: 20, vertical: 16).copyWith(bottom: 0),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(colors: [AppColors.primaryBlue, AppColors.primaryBlueDark], begin: Alignment.topLeft, end: Alignment.bottomRight),
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [BoxShadow(color: AppColors.primaryBlue.withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, 8))],
-        ),
+      child: GlassCard(
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -397,15 +341,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(l10n.get('wallet_balance'), style: TextStyle(fontSize: ResponsiveLayout.responsiveFontSize(context, 12), color: Colors.white.withValues(alpha: 0.8), fontWeight: FontWeight.w500)),
+                  Text(l10n.get('wallet_balance'), style: TextStyle(fontSize: ResponsiveLayout.responsiveFontSize(context, 12), color: AppColors.textSecondary, fontWeight: FontWeight.w500)),
                   const SizedBox(height: 4),
                   FittedBox(
                     fit: BoxFit.scaleDown,
                     alignment: Alignment.centerLeft,
                     child: walletAsync.when(
-                      data: (wallet) => Text('₹ ${(wallet?.balance ?? 0.0).toStringAsFixed(2)}', style: TextStyle(fontSize: ResponsiveLayout.responsiveFontSize(context, 24), fontWeight: FontWeight.w700, color: Colors.white)),
-                      loading: () => const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)),
-                      error: (_, __) => const Text('₹ --', style: TextStyle(color: Colors.white)),
+                      data: (wallet) => Row(
+                        children: [
+                          const Text('₹ ', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w400, color: AppColors.textPrimary)),
+                          Text((wallet?.balance ?? 0.0).toStringAsFixed(2), style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w800, color: AppColors.primaryBlue)),
+                        ],
+                      ),
+                      loading: () => const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: AppColors.primaryBlue, strokeWidth: 2)),
+                      error: (_, __) => const Text('₹ --', style: TextStyle(color: AppColors.primaryBlue)),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -419,25 +368,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ],
               ),
             ),
-            const SizedBox(width: 12), // Minimum spacing
-            // Top-Up Button - Constrained
+            const SizedBox(width: 12),
             Flexible(
               flex: 0,
               child: GestureDetector(
                 onTap: () => context.push('/wallet'),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                  decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(12)),
+                  decoration: BoxDecoration(color: AppColors.primaryBlue.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.add_circle_outline_rounded, size: 18, color: Colors.white), 
+                      const Icon(Icons.add_circle_outline_rounded, size: 18, color: AppColors.primaryBlue), 
                       const SizedBox(width: 8), 
                       Flexible(
                         child: Text(
                           l10n.get('top_up'), 
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white)
+                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.primaryBlue)
                         ),
                       )
                     ],
@@ -458,7 +406,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         onTap: () => context.push('/main/explore'),
         child: Container(
           height: 48,
-          decoration: BoxDecoration(color: AppColors.bgSkyLight, borderRadius: BorderRadius.circular(14)),
+          decoration: BoxDecoration(
+            color: AppColors.bgLightGrey,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppColors.border),
+          ),
           child: const Row(children: [SizedBox(width: 16), Icon(Iconsax.search_normal, size: 18, color: AppColors.textMuted), SizedBox(width: 12), Text(AppStrings.searchServices, style: TextStyle(fontSize: 14, color: AppColors.textMuted))]),
         ),
       ),
@@ -499,11 +451,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget _buildStatItem(String label, String value, IconData icon) {
     return Row(
       children: [
-        Icon(icon, size: 14, color: Colors.white70),
+        Icon(icon, size: 14, color: AppColors.primaryBlue),
         const SizedBox(width: 4),
-        Text(value, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+        Text(value, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 13)),
         const SizedBox(width: 4),
-        Text(label, style: const TextStyle(color: Colors.white70, fontSize: 11)),
+        Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
       ],
     );
   }
@@ -541,13 +493,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       child: Column(
         children: [
           Container(
-            width: 56,
-            height: 56,
+            width: 60,
+            height: 60,
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(18),
+              color: color.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(20),
             ),
-            child: Icon(IconHelper.getIcon(action.icon), color: color, size: 24),
+            child: Icon(IconHelper.getIcon(action.icon), color: color, size: 28),
           ),
           const SizedBox(height: 8),
           Text(action.label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
@@ -584,30 +536,34 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       onTap: () => context.push('/live-service-status'),
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.bgSkyLight,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.border),
         ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
-              child: const Icon(Icons.build_rounded, color: AppColors.primaryBlue, size: 20),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(booking.packageName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                  Text('${booking.vehicleName} • ${booking.status.toUpperCase()}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-                ],
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(color: AppColors.primaryBlue.withValues(alpha: 0.1), shape: BoxShape.circle),
+                child: const Icon(Icons.build_rounded, color: AppColors.primaryBlue, size: 20),
               ),
-            ),
-            const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.textSecondary),
-          ],
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(booking.packageName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                    Text('${booking.vehicleName} • ${booking.status.toUpperCase()}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                  ],
+                ),
+              ),
+              const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.textSecondary),
+            ],
+          ),
         ),
       ),
     );

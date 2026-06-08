@@ -40,90 +40,61 @@ class CustomBottomNavBar extends StatelessWidget {
         ],
       ),
       child: SafeArea(
-        child: Stack(
-          children: [
-            // ─── Sliding Indicator Pill ───
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final itemWidth = constraints.maxWidth / items.length;
-                return AnimatedAlign(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeOutBack,
-                  alignment: Alignment(-1 + (currentIndex * (2 / (items.length - 1))), -0.3),
-                  child: Container(
-                    width: 65,
-                    height: 38,
-                    margin: EdgeInsets.only(
-                      left: (itemWidth - 65) / 2,
-                      right: (itemWidth - 65) / 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.primaryBlue.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                  ),
-                );
-              },
-            ),
-            
-            // ─── Nav Items ───
-            Row(
-              children: List.generate(items.length, (index) {
-                final item = items[index];
-                final isActive = currentIndex == index;
+        child: Row(
+          children: List.generate(items.length, (index) {
+            final item = items[index];
+            final isActive = currentIndex == index;
 
-                return Expanded(
-                  child: GestureDetector(
-                    onTap: () {
-                      if (!isActive) {
-                        HapticFeedback.lightImpact();
-                        onTap(index);
-                      }
-                    },
-                    behavior: HitTestBehavior.opaque,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // Icon Section
-                        SizedBox(
-                          height: 40,
-                          child: Center(
-                            child: Transform.translate(
-                              // PRECISION VISUAL COMPENSATION:
-                              // The Filled Wallet (wallet5) is more lopsided than the Unfilled Wallet (wallet).
-                              // We apply a 7px shift only when active to maintain perfect centering across states.
-                              offset: Offset(
-                                item.label == 'Earnings' 
-                                    ? (isActive ? 7.0 : 0.0) 
-                                    : 0.0, 
-                                0.0
-                              ),
-                              child: Icon(
-                                isActive ? item.activeIcon : item.icon,
-                                color: isActive ? AppColors.primaryBlue : Colors.grey.withValues(alpha: 0.8),
-                                size: 24,
-                              ),
-                            ),
+            return Expanded(
+              child: GestureDetector(
+                onTap: () {
+                  if (!isActive) {
+                    HapticFeedback.lightImpact();
+                    onTap(index);
+                  }
+                },
+                behavior: HitTestBehavior.opaque,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Icon Section
+                    SizedBox(
+                      height: 40,
+                      child: Center(
+                        child: Transform.translate(
+                          // PRECISION VISUAL COMPENSATION:
+                          // The Filled Wallet (wallet5) is more lopsided than the Unfilled Wallet (wallet).
+                          // We apply a 7px shift only when active to maintain perfect centering across states.
+                          offset: Offset(
+                            item.label == 'Earnings' 
+                                ? (isActive ? 7.0 : 0.0) 
+                                : 0.0, 
+                            0.0
+                          ),
+                          child: Icon(
+                            isActive ? item.activeIcon : item.icon,
+                            color: isActive ? AppColors.primaryBlue : Colors.grey.withValues(alpha: 0.8),
+                            size: 24,
                           ),
                         ),
-                        const SizedBox(height: 2),
-                        // Label
-                        Text(
-                          item.label,
-                          style: TextStyle(
-                            fontSize: 10.5,
-                            fontWeight: isActive ? FontWeight.w900 : FontWeight.w600,
-                            color: isActive ? AppColors.primaryBlue : Colors.grey,
-                            letterSpacing: 0.1,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
-                );
-              }),
-            ),
-          ],
+                    const SizedBox(height: 2),
+                    // Label
+                    Text(
+                      item.label,
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: isActive ? FontWeight.w900 : FontWeight.w600,
+                        color: isActive ? AppColors.primaryBlue : Colors.grey,
+                        letterSpacing: 0.1,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
         ),
       ),
     );
