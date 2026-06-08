@@ -228,3 +228,89 @@ dart run flutter_native_splash:create
 3. Run a clean build: `flutter clean && flutter pub get`
 4. Build the release artifact (APK/AAB/IPA).
 5. Tag the Git commit: `git tag v1.0.1`
+
+---
+
+## Supabase Production Backup & Restore Procedure
+
+RoadRobos uses Supabase as its primary backend datastore (PostgreSQL, Auth, and Storage). Securing and restoring these resources is critical for business continuity.
+
+### 1. Automated Database Backups (Supabase Hosted)
+
+Supabase manages automated daily physical backups of your database.
+- **Availability**: Standard on Pro and Enterprise tiers (Staging and Production).
+- **Retention**: 
+  - **Pro Plan**: 7 days of daily history.
+  - **Enterprise Plan**: 30 days of daily history.
+- **Verification**: Go to **Supabase Dashboard → Database → Backups** to view the history of successfully completed daily backups.
+- **Restore via Dashboard**:
+  1. Navigate to **Database → Backups**.
+  2. Choose the daily backup corresponding to the desired restore date.
+  3. Click **Restore**. Note that this replaces the current database in-place. Ensure the app is placed in temporary maintenance mode before initiating.
+
+### 2. Point-in-Time Recovery (PITR)
+
+For production, standard physical backups are supplemented by **Point-in-Time Recovery (PITR)**.
+- **What it does**: Logs every database transaction to write-ahead logs (WAL). This allows you to restore the database to any exact second in the retention window.
+- **Setup**: Must be enabled in the project settings (**Dashboard → Project Settings → Add-ons → Point-in-Time Recovery**).
+- **How to Restore**: 
+  1. Open the restore drawer under the Backups section.
+  2. Select **Point-in-Time Recovery**.
+  3. Input the exact UTC timestamp to revert to.
+
+### 3. Manual Database Backups (Supabase CLI)
+
+In addition to automated cloud backups, manual logical backups must be taken before major database migrations or schema upgrades.
+
+To perform a manual dump, install the Supabase CLI and run:
+
+```bash
+# 1. Log in to your Supabase account
+supabase login
+
+# 2. Dump Schema (contains table structures, policies, functions, triggers, etc.)
+supabase db dump --project-ref hxoncblbripckfuxijav -f schema_backup.sql
+
+# 3. Dump Data Only (logical insert statements for all table rows)
+supabase db dump --project-ref hxoncblbripckfuxijav --data-only -f data_backup.sql
+
+# 4. Full Dump (Both Schema and Data using pg_dump utility)
+supabase db dump --project-ref hxoncblbripckfuxijav --use-go-pgdump -f full_production_backup.sql
+```
+*Note: Keep these backup files encrypted and stored securely in a private, access-controlled vault (e.g., S3 Glacier, Google Cloud Storage, or enterprise vault). Never commit them to Git.*
+
+### 4. Manual Database Restore Procedure
+
+To restore a manual logical backup (`full_production_backup.sql`) to your Supabase instance:
+
+#### Option A: Via SQL Editor (For small data fixes)
+1. Open the backup `.sql` file in a text editor.
+2. Copy the relevant lines/inserts.
+3. Paste them into the **Supabase Dashboard → SQL Editor** and click **Run**.
+
+#### Option B: Via Command Line (Recommended for full restores)
+Run the sql dump against the Supabase PostgreSQL connection pool directly using `psql` (the database password is required):
+
+```bash
+psql -h db.hxoncblbripckfuxijav.supabase.co -U postgres -d postgres -f full_production_backup.sql
+```
+
+#### Option C: Reset and Apply Migrations (For Staging/Dev sync)
+If syncing a local/dev environment to match production schema:
+```bash
+# Apply all local migrations to the target database
+supabase db push --project-ref hxoncblbripckfuxijav
+```
+
+### 5. Storage Buckets Backup & Restore
+
+Supabase Storage files (e.g., `kyc-documents`, `delivery-proofs`) are **NOT** backed up by automated database backups. They must be backed up separately.
+
+- **Backup via RClone**:
+  Supabase storage endpoints are S3-compatible. You can use tools like `rclone` to sync buckets to an external secure backup location:
+  ```bash
+  rclone sync supabase-prod:kyc-documents s3-backup-vault:roadrobos-kyc-backups
+  ```
+- **Restore**:
+  Re-sync the files back to the storage bucket folder using the same S3 interface.
+
