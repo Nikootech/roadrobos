@@ -12,3 +12,21 @@ linux/
 
 # Don't upload local flutter SDK if cloned locally
 flutter/
+
+# ── Large binary artifacts that must never be uploaded ──────────────────────
+# These Android/iOS release binaries are too large for Vercel's 100MB limit
+# and are irrelevant to the Flutter Web build.
+*.aab
+*.apk
+*.ipa
+
+# Large asset files not used in web build
+David Heckhoff*
+
+# Test and integration directories (not needed at deploy time)
+test/
+integration_test/
+
+# Python helper scripts (not used by Vercel build)
+fix_unawaited.py
+fix_unawaited2.py

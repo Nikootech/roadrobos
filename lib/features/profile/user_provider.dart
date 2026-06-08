@@ -13,6 +13,12 @@ import '../../core/services/notification_service.dart';
 import '../../core/services/local_storage_service.dart';
 import '../../core/extensions/datetime_extensions.dart';
 
+// ── Web Platform Note ─────────────────────────────────────────────────────────
+// On web (Vercel), Google OAuth redirects the entire browser tab, so the
+// device-ID update that normally runs after signInWithOAuth never executes.
+// The device-ID session check is therefore SKIPPED on web to prevent the
+// forced logout that was trapping authenticated users on the login screen.
+
 
 /// State wrapper for user data to maintain UI compatibility
 class UserState {
@@ -123,6 +129,13 @@ class UserNotifier extends StateNotifier<UserState> {
 
   Future<bool> _checkDeviceSession(AppUser user) async {
     if (user.id.startsWith('demo_')) return true;
+
+    // ── Web: skip device-ID check ─────────────────────────────────────────────
+    // On web, Google OAuth redirects the browser away from the app, so the
+    // device-ID is never written to the DB on the callback. Enforcing this
+    // check on web always results in a false mismatch → forced logout loop.
+    if (kIsWeb) return true;
+
     if (user.currentDeviceId == null || user.currentDeviceId!.isEmpty) return true;
 
     final localDeviceId = await _ref.read(localStorageServiceProvider).getLocalDeviceId();

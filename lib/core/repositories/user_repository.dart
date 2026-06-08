@@ -18,14 +18,19 @@ class UserRepository {
 
   /// Fetch user profile from Supabase profiles table
   Future<AppUser?> getUser(String uid) async {
-    // 1. Check local cache first
-    final local = await (_db.select(_db.cachedProfiles)..where((t) => t.id.equals(uid))).getSingleOrNull();
-    if (local != null) {
-      debugPrint('UserRepository: Returning Cached Profile for $uid');
-      // Background refresh
-      // ignore: unawaited_futures
-      _fetchAndCache(uid).catchError((e) => debugPrint('Background Fetch Error: $e'));
-      return _fromCached(local);
+    // On web, always fetch fresh from Supabase.
+    // The local cache doesn't persist currentDeviceId and can return stale
+    // data that causes false device-mismatch logouts during the auth flow.
+    if (!kIsWeb) {
+      // 1. Check local cache first (mobile/desktop only)
+      final local = await (_db.select(_db.cachedProfiles)..where((t) => t.id.equals(uid))).getSingleOrNull();
+      if (local != null) {
+        debugPrint('UserRepository: Returning Cached Profile for $uid');
+        // Background refresh
+        // ignore: unawaited_futures
+        _fetchAndCache(uid).catchError((e) => debugPrint('Background Fetch Error: $e'));
+        return _fromCached(local);
+      }
     }
 
     try {
@@ -37,7 +42,7 @@ class UserRepository {
       
       if (response != null) {
         final user = AppUser.fromMap(response, uid);
-        await _cacheUser(user);
+        if (!kIsWeb) await _cacheUser(user);
         return user;
       }
       return null;

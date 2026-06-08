@@ -25,6 +25,20 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   }
 
   Future<void> _handleNavigation() async {
+    // Wait for AuthNotifier.build() to settle.
+    // On web, session restoration is async — reading .value before it's ready
+    // always returns null, causing a false "not logged in" redirect.
+    const maxAuthWaitMs = 5000;
+    const pollMs = 100;
+    var authWaitElapsed = 0;
+    while (mounted && authWaitElapsed < maxAuthWaitMs) {
+      final authState = ref.read(authNotifierProvider);
+      if (!authState.isLoading) break;
+      await Future.delayed(const Duration(milliseconds: pollMs));
+      authWaitElapsed += pollMs;
+    }
+
+    if (!mounted) return;
     final authState = ref.read(authNotifierProvider);
 
     if (authState.value != null) {
@@ -33,7 +47,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       debugPrint('SplashScreen: User is logged in, waiting for profile...');
 
       const maxWaitMs = 8000;
-      const pollMs = 300;
       var elapsed = 0;
 
       while (mounted && elapsed < maxWaitMs) {

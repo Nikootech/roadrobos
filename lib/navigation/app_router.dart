@@ -59,6 +59,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       final authState = ref.read(authNotifierProvider);
       final userState = ref.read(userProvider);
 
+      // ── Auth loading guard ─────────────────────────────────────────────────
+      // If AuthNotifier.build() hasn't resolved yet (AsyncLoading), we must
+      // NOT redirect — authState.value is null even for logged-in users.
+      // Stay on the current route (return null) until the state settles.
+      if (authState.isLoading) {
+        if (kDebugMode) debugPrint('Router: authState still loading — holding route.');
+        return null;
+      }
+
       final hasFirebaseUser = authState.value != null;
       final hasDemoUser = userState.isDemo && userState.user != null;
       final hasDemoIdUser =
@@ -70,7 +79,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (kDebugMode) {
         debugPrint(
           'Router: location=$location isLoggedIn=$isLoggedIn '
-          'role=${user?.role} profileError=${userState.error}',
+          'authLoading=${authState.isLoading} role=${user?.role} profileError=${userState.error}',
         );
       }
 
@@ -109,7 +118,15 @@ final routerProvider = Provider<GoRouter>((ref) {
           return '/auth/login';
         }
 
-        // If profile isn't loaded yet, go to splash screen to show a loading state
+        // If profile is still being fetched, hold current route (splash or callback).
+        // Do not bounce to /splash from /login-callback — the SplashScreen
+        // rendered there handles the wait loop itself.
+        if (user == null && userState.isLoading) {
+          if (kDebugMode) debugPrint('Router: profile still loading — holding route at $location.');
+          return null;
+        }
+
+        // If profile isn't loaded yet (and not loading), go to splash to show loading UI
         if (user == null) {
           if (location == '/splash') return null;
           return '/splash';
