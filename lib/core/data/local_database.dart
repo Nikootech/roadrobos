@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../security/encrypted_column.dart';
@@ -134,13 +135,24 @@ class HttpResponseCache extends Table {
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor])
-      : super(executor ?? driftDatabase(
-          name: 'roadrobos_local',
-          web: DriftWebOptions(
-            sqlite3Wasm: Uri.parse('sqlite3.wasm'),
-            driftWorker: Uri.parse('drift_worker.js'),
-          ),
-        ));
+      : super(executor ?? _openConnection());
+
+  /// Returns a platform-appropriate executor.
+  /// On web: uses WASM-backed SQLite via sqlite3.wasm + drift_worker.js.
+  /// On mobile/desktop: uses native sqlite3 via drift_flutter (no extra args needed).
+  static QueryExecutor _openConnection() {
+    if (kIsWeb) {
+      return driftDatabase(
+        name: 'roadrobos_local',
+        web: DriftWebOptions(
+          sqlite3Wasm: Uri.parse('sqlite3.wasm'),
+          driftWorker: Uri.parse('drift_worker.js'),
+        ),
+      );
+    }
+    // Native (Android, iOS, Windows, macOS, Linux)
+    return driftDatabase(name: 'roadrobos_local');
+  }
 
   @override
   int get schemaVersion => 3; // bumped: dead letter queue + entityType/nextRetryAt
@@ -218,6 +230,11 @@ class AppDatabase extends _$AppDatabase {
   }
 }
 
+// ── ISSUE-04 FIX: Web-safe provider ──────────────────────────────────────────
+// On web the DB uses WASM workers (sqlite3.wasm + drift_worker.js).
+// All repositories guard cache reads/writes with `if (!kIsWeb)` and fall back
+// to direct Supabase queries on web, so the DB is never actually called.
+// The provider still creates the AppDatabase object so code compiles cleanly.
 final localDatabaseProvider = Provider<AppDatabase>((ref) {
   return AppDatabase();
 });

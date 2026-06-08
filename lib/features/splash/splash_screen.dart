@@ -18,75 +18,76 @@ class SplashScreen extends ConsumerStatefulWidget {
 }
 
 class _SplashScreenState extends ConsumerState<SplashScreen> {
+  bool _navigationHandled = false;
+
   @override
   void initState() {
     super.initState();
-    _handleNavigation();
+    // Use postFrameCallback so the widget tree is fully built first
+    WidgetsBinding.instance.addPostFrameCallback((_) => _handleNavigation());
   }
 
   Future<void> _handleNavigation() async {
-    // Wait for AuthNotifier.build() to settle.
-    // On web, session restoration is async — reading .value before it's ready
-    // always returns null, causing a false "not logged in" redirect.
-    const maxAuthWaitMs = 5000;
-    const pollMs = 100;
-    var authWaitElapsed = 0;
-    while (mounted && authWaitElapsed < maxAuthWaitMs) {
-      final authState = ref.read(authNotifierProvider);
-      if (!authState.isLoading) break;
+    // Single unified loop: checks auth + profile state every 150ms.
+    // Maximum wait: 10 seconds total, then forced redirect to login.
+    const safetyTimeoutMs = 10000;
+    const pollMs = 150;
+    var elapsed = 0;
+    var brandingShown = false;
+
+    while (mounted && elapsed < safetyTimeoutMs) {
       await Future.delayed(const Duration(milliseconds: pollMs));
-      authWaitElapsed += pollMs;
-    }
+      elapsed += pollMs;
 
-    if (!mounted) return;
-    final authState = ref.read(authNotifierProvider);
+      if (_navigationHandled || !mounted) return;
 
-    if (authState.value != null) {
-      // User is authenticated — wait for profile to load, with a timeout fallback.
-      // GoRouter's refresh notifier will redirect once userProvider updates.
-      debugPrint('SplashScreen: User is logged in, waiting for profile...');
+      final authState = ref.read(authNotifierProvider);
 
-      const maxWaitMs = 8000;
-      var elapsed = 0;
+      // Auth still resolving — keep waiting
+      if (authState.isLoading) continue;
 
-      while (mounted && elapsed < maxWaitMs) {
-        await Future.delayed(const Duration(milliseconds: pollMs));
-        elapsed += pollMs;
+      // ── Not logged in ──────────────────────────────────────────────────────
+      if (authState.value == null) {
+        _navigationHandled = true;
+        final localStorage = ref.read(localStorageServiceProvider);
+        final isFirstLaunch = await localStorage.isFirstLaunch();
 
-        final userState = ref.read(userProvider);
-
-        // Profile loaded successfully — GoRouter handles the redirect.
-        if (userState.user != null) return;
-
-        // Profile fetch hit an error — break deadlock by sending to login.
-        if (userState.error != null && !userState.isLoading) {
-          debugPrint('SplashScreen: Profile load error (${userState.error}), redirecting to login.');
-          if (mounted) context.go('/auth/login');
-          return;
+        // Minimum 1500ms branding time
+        final remaining = 1500 - elapsed;
+        if (remaining > 0 && !brandingShown) {
+          await Future.delayed(Duration(milliseconds: remaining));
+          brandingShown = true;
         }
+
+        if (!mounted) return;
+        debugPrint('SplashScreen: Not logged in → ${isFirstLaunch ? "/onboarding" : "/auth/role-selection"}');
+        context.go(isFirstLaunch ? '/onboarding' : '/auth/role-selection');
+        return;
       }
 
-      // Timeout reached without a profile — clear auth and go to login.
-      if (mounted) {
-        debugPrint('SplashScreen: Profile load timed out, redirecting to login.');
-        context.go('/auth/login');
+      // ── Logged in — wait for profile ───────────────────────────────────────
+      final userState = ref.read(userProvider);
+
+      if (userState.user != null) {
+        // Profile ready — GoRouter redirect guard handles the dashboard redirect
+        debugPrint('SplashScreen: Profile loaded, GoRouter will redirect.');
+        return;
       }
-      return;
+
+      if (userState.error != null && !userState.isLoading) {
+        _navigationHandled = true;
+        debugPrint('SplashScreen: Profile error → /auth/login');
+        if (mounted) context.go('/auth/login');
+        return;
+      }
+      // Profile still loading — continue polling
     }
 
-    final localStorage = ref.read(localStorageServiceProvider);
-    final isFirstLaunch = await localStorage.isFirstLaunch();
-
-    // Maintain splash for at least 1500ms for branding
-    await Future.delayed(const Duration(milliseconds: 1500));
-
-    if (mounted) {
-      if (isFirstLaunch) {
-        context.go('/onboarding');
-      } else {
-        context.go('/auth/role-selection');
-      }
-    }
+    // Safety timeout
+    if (!mounted || _navigationHandled) return;
+    _navigationHandled = true;
+    debugPrint('SplashScreen: Timeout → /auth/login');
+    if (mounted) context.go('/auth/login');
   }
 
   @override

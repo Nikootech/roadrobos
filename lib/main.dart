@@ -22,6 +22,7 @@ import 'core/services/payment_service.dart';
 import 'core/security/jailbreak_guard.dart';
 import 'core/security/encrypted_column.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
+import 'core/utils/app_debugger.dart';
 
 import 'package:flutter/foundation.dart';
 
@@ -44,6 +45,12 @@ void main() {
       WidgetsFlutterBinding.ensureInitialized();
       AppConfig.init();
 
+      // ── DEBUG DIAGNOSTICS (debug mode only) ─────────────────────────────────
+      if (kDebugMode) {
+        AppDebugger.run();
+        AppDebugger.printKnownIssues();
+      }
+
       // ── FRAME-0 CRITICAL PATH ───────────────────────────────────────────────
       // Only these two inits are required before first frame.
       await Firebase.initializeApp(
@@ -61,19 +68,34 @@ void main() {
       final isCompromised = await JailbreakGuard.check();
 
       // ── LAUNCH APP (frame 1 is free to render) ──────────────────────────────
-      await SentryFlutter.init(
-        (options) {
-          options.dsn = AppConfig.sentryDsn;
-          options.tracesSampleRate = 1.0;
-        },
-        appRunner: () => runApp(ProviderScope(
+      // ISSUE-08 FIX: Only init Sentry when a real DSN is configured.
+      // Empty DSN causes the SDK to log warnings and waste network calls.
+      const sentryDsn = AppConfig.sentryDsn;
+      if (sentryDsn.isNotEmpty) {
+        await SentryFlutter.init(
+          (options) {
+            options.dsn = sentryDsn;
+            options.tracesSampleRate = 1.0;
+          },
+          appRunner: () => runApp(ProviderScope(
+            overrides: [
+              sharedPreferencesProvider.overrideWithValue(prefs),
+              jailbreakProvider.overrideWithValue(isCompromised),
+            ],
+            child: const RoadRobosApp(),
+          )),
+        );
+      } else {
+        // No Sentry DSN — run the app without error tracking
+        if (kDebugMode) debugPrint('Sentry disabled: SENTRY_DSN is not set.');
+        runApp(ProviderScope(
           overrides: [
             sharedPreferencesProvider.overrideWithValue(prefs),
             jailbreakProvider.overrideWithValue(isCompromised),
           ],
           child: const RoadRobosApp(),
-        )),
-      );
+        ));
+      }
 
       // ── POST-FRAME DEFERRED SETUP ───────────────────────────────────────────
       // Nothing here blocks the first render. All heavy setup is deferred.

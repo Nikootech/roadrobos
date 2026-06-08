@@ -586,10 +586,32 @@ final List<RouteBase> customerRoutes = [
       final bookingId = extra['bookingId'] as String? ?? '';
       final receiverId = extra['receiverId'] as String? ?? '';
       final receiverName = extra['receiverName'] as String? ?? 'User';
-      
+
       return AppTransitions.slideUp(
         child: ChatScreen(
           bookingId: bookingId,
+          receiverId: receiverId,
+          receiverName: receiverName,
+        ),
+        state: state,
+      );
+    },
+  ),
+
+  // ── ISSUE-11 FIX: Parametric chat route for notification deep-links ──
+  // notification_service.dart calls context.push('/chat/$roomId').
+  // Without this route that resolves to a 404.  bookingId == roomId here.
+  GoRoute(
+    path: '/chat/:roomId',
+    pageBuilder: (context, state) {
+      final roomId = state.pathParameters['roomId'] ?? '';
+      final extra = state.extra as Map<String, dynamic>? ?? {};
+      final receiverId = extra['receiverId'] as String? ?? '';
+      final receiverName = extra['receiverName'] as String? ?? 'Support';
+
+      return AppTransitions.slideUp(
+        child: ChatScreen(
+          bookingId: roomId,
           receiverId: receiverId,
           receiverName: receiverName,
         ),

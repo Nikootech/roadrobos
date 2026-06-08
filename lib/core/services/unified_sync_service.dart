@@ -2,6 +2,7 @@
 
 import 'dart:convert';
 import 'dart:math' as math;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart';
@@ -20,18 +21,31 @@ import '../repositories/service_booking_repository.dart';
 import '../../navigation/app_router.dart';
 
 final unifiedSyncServiceProvider = Provider<UnifiedSyncService>((ref) {
+  // ISSUE-04: On web there is no offline queue — Drift/SQLite is not used.
+  // Repositories call Supabase directly on web so the sync service is a no-op.
+  if (kIsWeb) return UnifiedSyncService.webStub(ref);
   final db = ref.watch(localDatabaseProvider);
   return UnifiedSyncService(db, ref);
 });
 
 class UnifiedSyncService {
-  final AppDatabase _db;
+  final AppDatabase? _db; // nullable — null on web (ISSUE-04)
   final Ref _ref;
   final SupabaseClient _supabase;
   final Mutex _mutex = Mutex();
 
-  UnifiedSyncService(this._db, this._ref, {SupabaseClient? supabaseClient})
-      : _supabase = supabaseClient ?? Supabase.instance.client {
+  UnifiedSyncService(AppDatabase db, this._ref, {SupabaseClient? supabaseClient})
+      : _db = db,
+        _supabase = supabaseClient ?? Supabase.instance.client {
+    _startConnectivityListener();
+  }
+
+  /// Web stub — no DB, no queue listener. enqueue() is a no-op on web.
+  UnifiedSyncService.webStub(this._ref)
+      : _db = null,
+        _supabase = Supabase.instance.client;
+
+  void _startConnectivityListener() {
     // Listen to network changes and trigger sync
     final subscription = Connectivity().onConnectivityChanged.listen((List<ConnectivityResult> results) {
       if (results.any((result) => result != ConnectivityResult.none)) {
@@ -53,19 +67,23 @@ class UnifiedSyncService {
     required Map<String, dynamic> payload,
     String? idempotencyKey,
   }) async {
+    // ISSUE-04: No offline queue on web — skip silently.
+    if (_db == null) return;
+
     final key = idempotencyKey ?? const Uuid().v4();
-    
+
     // Check if duplicate idempotency key exists
-    final exists = await (_db.select(_db.syncQueue)
+    final db = _db;
+    final exists = await (db.select(db.syncQueue)
           ..where((t) => t.idempotencyKey.equals(key)))
         .getSingleOrNull();
-        
+
     if (exists != null) {
       debugPrint('UnifiedSyncService: Action already exists with key $key');
       return;
     }
 
-    await _db.into(_db.syncQueue).insert(
+    await db.into(db.syncQueue).insert(
       SyncQueueCompanion.insert(
         idempotencyKey: key,
         entityType: entityType,
@@ -81,12 +99,16 @@ class UnifiedSyncService {
 
   /// Serialized queue processing utilizing a Mutex to prevent concurrency issues
   Future<void> processQueue() async {
+    // ISSUE-04: No offline queue on web.
+    if (_db == null) return;
+
     final connectivity = await Connectivity().checkConnectivity();
     if (connectivity.contains(ConnectivityResult.none)) return;
 
+    final db = _db;
     await _mutex.protect(() async {
       try {
-        final pending = await (_db.select(_db.syncQueue)
+        final pending = await (db.select(db.syncQueue)
               ..where((t) => t.nextRetryAt.isNull() | t.nextRetryAt.isSmallerOrEqualValue(DateTime.now()))
               ..orderBy([(t) => OrderingTerm(expression: t.createdAt)]))
             .get();
@@ -101,7 +123,7 @@ class UnifiedSyncService {
             await _dispatch(task, payload);
 
             // Success: delete record
-            await (_db.delete(_db.syncQueue)..where((t) => t.id.equals(task.id))).go();
+            await (db.delete(db.syncQueue)..where((t) => t.id.equals(task.id))).go();
             debugPrint('UnifiedSyncService: Successfully processed and deleted task ${task.id}');
             
             // Show global success snackbar if applicable
@@ -112,7 +134,7 @@ class UnifiedSyncService {
 
             if (newAttempts >= 5) {
               // Move to dead letter queue
-              await _db.into(_db.deadLetterQueue).insert(
+              await db.into(db.deadLetterQueue).insert(
                 DeadLetterQueueCompanion.insert(
                   idempotencyKey: task.idempotencyKey,
                   entityType: task.entityType,
@@ -124,7 +146,7 @@ class UnifiedSyncService {
                 ),
               );
               // Delete from sync queue
-              await (_db.delete(_db.syncQueue)..where((t) => t.id.equals(task.id))).go();
+              await (db.delete(db.syncQueue)..where((t) => t.id.equals(task.id))).go();
               debugPrint('UnifiedSyncService: Task ${task.id} exceeded max retries. Moved to Dead Letter Queue.');
             } else {
               // Exponential backoff
@@ -132,7 +154,7 @@ class UnifiedSyncService {
               if (backoffMinutes > 32) backoffMinutes = 32;
               final nextRetry = DateTime.now().add(Duration(minutes: backoffMinutes));
 
-              await (_db.update(_db.syncQueue)..where((t) => t.id.equals(task.id))).write(
+              await (db.update(db.syncQueue)..where((t) => t.id.equals(task.id))).write(
                 SyncQueueCompanion(
                   attempts: Value(newAttempts),
                   nextRetryAt: Value(nextRetry),

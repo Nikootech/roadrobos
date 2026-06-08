@@ -79,7 +79,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (kDebugMode) {
         debugPrint(
           'Router: location=$location isLoggedIn=$isLoggedIn '
-          'authLoading=${authState.isLoading} role=${user?.role} profileError=${userState.error}',
+          'profileLoading=${userState.isLoading} role=${user?.role} profileError=${userState.error}',
         );
       }
 
@@ -112,23 +112,18 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
 
       if (isLoggedIn && isPublicPath) {
-        // If profile failed to load (error + not loading + no user), break deadlock
+        // Profile load error — break deadlock
         if (user == null && userState.error != null && !userState.isLoading) {
           if (kDebugMode) debugPrint('Router: Profile load error → /auth/login');
           return '/auth/login';
         }
 
-        // If profile is still being fetched, hold current route (splash or callback).
-        // Do not bounce to /splash from /login-callback — the SplashScreen
-        // rendered there handles the wait loop itself.
-        if (user == null && userState.isLoading) {
-          if (kDebugMode) debugPrint('Router: profile still loading — holding route at $location.');
-          return null;
-        }
-
-        // If profile isn't loaded yet (and not loading), go to splash to show loading UI
+        // Profile still loading — stay on current public route.
+        // The SplashScreen widget handles its own timeout logic.
+        // NOTE: Do NOT hold here indefinitely — if something went wrong
+        // the splash screen will timeout and navigate to /auth/login.
         if (user == null) {
-          if (location == '/splash') return null;
+          if (location == '/splash' || location == '/login-callback') return null;
           return '/splash';
         }
 
