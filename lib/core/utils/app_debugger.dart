@@ -18,6 +18,31 @@ import '../config/app_config.dart';
 class AppDebugger {
   AppDebugger._();
 
+  static final Map<String, String> startupSteps = {};
+  static final List<String> debugLogs = [];
+  static String? initError;
+
+  static void logStep(String name, String status, {String? error}) {
+    startupSteps[name] = status;
+    if (error != null) {
+      initError = error;
+      addLog('Step $name failed: $error');
+    } else {
+      addLog('Step $name: $status');
+    }
+  }
+
+  static void addLog(String msg) {
+    final timestamp = DateTime.now().toIso8601String().substring(11, 19);
+    debugLogs.add('[$timestamp] $msg');
+    if (debugLogs.length > 200) {
+      debugLogs.removeAt(0);
+    }
+    if (kDebugMode) {
+      debugPrint('[DEBUGGER] $msg');
+    }
+  }
+
   static const _divider = '──────────────────────────────────────────────────';
 
   /// Run all diagnostics. Call once in main() inside `if (kDebugMode)`.

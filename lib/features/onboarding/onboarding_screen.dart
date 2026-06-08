@@ -258,39 +258,43 @@ class _OnboardingPage extends StatelessWidget {
             ),
           ),
 
-          // Text content area (matches Figma "Text & Action Area")
+          // Text content area — wrapped in scroll to prevent overflow on
+          // short browser windows (logged as RenderFlex overflow 17px)
           Expanded(
             flex: 3,
-            child: Column(
-              children: [
-                Text(
-                  data.title,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                    height: 1.2,
-                  ),
-                )
-                    .animate()
-                    .fadeIn(duration: 500.ms)
-                    .slideY(begin: 0.2, end: 0, duration: 500.ms),
-                const SizedBox(height: 16),
-                Text(
-                  data.description,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w400,
-                    color: AppColors.textSecondary.withValues(alpha: 0.8),
-                    height: 1.5,
-                  ),
-                )
-                    .animate(delay: 200.ms)
-                    .fadeIn(duration: 500.ms)
-                    .slideY(begin: 0.2, end: 0, duration: 500.ms),
-              ],
+            child: SingleChildScrollView(
+              physics: const NeverScrollableScrollPhysics(),
+              child: Column(
+                children: [
+                  Text(
+                    data.title,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                      height: 1.2,
+                    ),
+                  )
+                      .animate()
+                      .fadeIn(duration: 500.ms)
+                      .slideY(begin: 0.2, end: 0, duration: 500.ms),
+                  const SizedBox(height: 12),
+                  Text(
+                    data.description,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: AppColors.textSecondary.withValues(alpha: 0.8),
+                      height: 1.5,
+                    ),
+                  )
+                      .animate(delay: 200.ms)
+                      .fadeIn(duration: 500.ms)
+                      .slideY(begin: 0.2, end: 0, duration: 500.ms),
+                ],
+              ),
             ),
           ),
         ],

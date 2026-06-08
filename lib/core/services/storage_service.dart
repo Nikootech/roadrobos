@@ -5,7 +5,7 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path_provider/path_provider.dart';
 
 class StorageService {
-  final SupabaseClient _client = Supabase.instance.client;
+  SupabaseClient get _client => Supabase.instance.client;
   static const String _bucketName = 'roadrobos-media';
 
   /// Uploads an image to Supabase Storage and returns the public URL

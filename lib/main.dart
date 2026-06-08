@@ -23,6 +23,7 @@ import 'core/security/jailbreak_guard.dart';
 import 'core/security/encrypted_column.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'core/utils/app_debugger.dart';
+import 'shared/widgets/startup_error_app.dart';
 
 import 'package:flutter/foundation.dart';
 
@@ -43,7 +44,20 @@ void main() {
   runZonedGuarded(
     () async {
       WidgetsFlutterBinding.ensureInitialized();
-      AppConfig.init();
+
+      SharedPreferences? prefs;
+      bool isCompromised = false;
+      String? criticalError;
+
+      // 1. Initialize AppConfig
+      try {
+        AppDebugger.logStep('AppConfig', 'Initializing...');
+        AppConfig.init();
+        AppDebugger.logStep('AppConfig', 'SUCCESS');
+      } catch (e) {
+        criticalError = 'Config initialization failed: $e';
+        AppDebugger.logStep('AppConfig', 'FAILED', error: e.toString());
+      }
 
       // ── DEBUG DIAGNOSTICS (debug mode only) ─────────────────────────────────
       if (kDebugMode) {
@@ -51,25 +65,90 @@ void main() {
         AppDebugger.printKnownIssues();
       }
 
-      // ── FRAME-0 CRITICAL PATH ───────────────────────────────────────────────
-      // Only these two inits are required before first frame.
-      await Firebase.initializeApp(
-          options: DefaultFirebaseOptions.currentPlatform);
-      await Supabase.initialize(
-          url: AppConfig.supabaseUrl,
-          anonKey: AppConfig.supabaseAnonKey,
-          debug: kDebugMode,
-      );
+      if (criticalError == null) {
+        // 2. Initialize SharedPreferences (Critical)
+        try {
+          AppDebugger.logStep('SharedPreferences', 'Initializing...');
+          prefs = await SharedPreferences.getInstance().timeout(const Duration(seconds: 3));
+          AppDebugger.logStep('SharedPreferences', 'SUCCESS');
+        } catch (e) {
+          criticalError = 'Failed to load SharedPreferences: $e';
+          AppDebugger.logStep('SharedPreferences', 'FAILED', error: e.toString());
+        }
 
-      // Pre-fetch AES encryption key into memory (warm cache for DB writes)
-      await ColumnEncryptionKey.prefetch();
+        // 3. Initialize Jailbreak Guard (Non-critical)
+        try {
+          AppDebugger.logStep('Jailbreak Guard', 'Initializing...');
+          isCompromised = await JailbreakGuard.check().timeout(const Duration(seconds: 2));
+          AppDebugger.logStep('Jailbreak Guard', 'SUCCESS');
+        } catch (e) {
+          AppDebugger.logStep('Jailbreak Guard', 'FAILED', error: e.toString());
+        }
+      }
 
-      final prefs = await SharedPreferences.getInstance();
-      final isCompromised = await JailbreakGuard.check();
+      if (criticalError == null) {
+        // 4. Initialize other integrations in parallel with individual safety bounds
+        await Future.wait([
+          (() async {
+            try {
+              AppDebugger.logStep('Firebase', 'Initializing...');
+              await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform)
+                  .timeout(const Duration(seconds: 4));
+              AppDebugger.logStep('Firebase', 'SUCCESS');
+            } catch (e) {
+              AppDebugger.logStep('Firebase', 'FAILED', error: e.toString());
+            }
+          })(),
+          (() async {
+            try {
+              AppDebugger.logStep('Supabase', 'Initializing...');
+              if (AppConfig.supabaseUrl.isEmpty || AppConfig.supabaseAnonKey.isEmpty) {
+                throw ArgumentError('Supabase URL or Anon Key is empty. Check .dart_defines');
+              }
+              await Supabase.initialize(
+                url: AppConfig.supabaseUrl,
+                anonKey: AppConfig.supabaseAnonKey,
+                debug: kDebugMode,
+              ).timeout(const Duration(seconds: 4));
+              AppDebugger.logStep('Supabase', 'SUCCESS');
+            } catch (e) {
+              AppDebugger.logStep('Supabase', 'FAILED', error: e.toString());
+              // Fallback initialization to construct a valid client singleton
+              // and prevent crashes when other services read Supabase.instance.client
+              try {
+                await Supabase.initialize(
+                  url: 'https://placeholder.supabase.co',
+                  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsYWNlaG9sZGVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwNDc1NzMsImV4cCI6MjA5MTYyMzU3M30.VuJ13qv1rEyJyfdAvpCI_qUvPSQPcZqbluLWWo4loBM',
+                  debug: kDebugMode,
+                );
+              } catch (_) {}
+            }
+          })(),
+          (() async {
+            try {
+              AppDebugger.logStep('Encryption Key', 'Initializing...');
+              await ColumnEncryptionKey.prefetch().timeout(const Duration(seconds: 2));
+              AppDebugger.logStep('Encryption Key', 'SUCCESS');
+            } catch (e) {
+              AppDebugger.logStep('Encryption Key', 'FAILED', error: e.toString());
+            }
+          })(),
+        ]);
+      }
 
-      // ── LAUNCH APP (frame 1 is free to render) ──────────────────────────────
-      // ISSUE-08 FIX: Only init Sentry when a real DSN is configured.
-      // Empty DSN causes the SDK to log warnings and waste network calls.
+      // If we have a critical error, run the diagnostic error screen
+      if (criticalError != null) {
+        runApp(StartupErrorApp(
+          errorMessage: criticalError,
+          onRetry: () {
+            main();
+          },
+        ));
+        return;
+      }
+
+      // ── LAUNCH APP ──────────────────────────────────────────────────────────
+      final prefsValue = prefs!;
       const sentryDsn = AppConfig.sentryDsn;
       if (sentryDsn.isNotEmpty) {
         await SentryFlutter.init(
@@ -79,18 +158,17 @@ void main() {
           },
           appRunner: () => runApp(ProviderScope(
             overrides: [
-              sharedPreferencesProvider.overrideWithValue(prefs),
+              sharedPreferencesProvider.overrideWithValue(prefsValue),
               jailbreakProvider.overrideWithValue(isCompromised),
             ],
             child: const RoadRobosApp(),
           )),
         );
       } else {
-        // No Sentry DSN — run the app without error tracking
         if (kDebugMode) debugPrint('Sentry disabled: SENTRY_DSN is not set.');
         runApp(ProviderScope(
           overrides: [
-            sharedPreferencesProvider.overrideWithValue(prefs),
+            sharedPreferencesProvider.overrideWithValue(prefsValue),
             jailbreakProvider.overrideWithValue(isCompromised),
           ],
           child: const RoadRobosApp(),

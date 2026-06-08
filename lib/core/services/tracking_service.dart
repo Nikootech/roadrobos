@@ -15,7 +15,7 @@ class TrackingService {
   Timer? _upsertTimer;
   Position? _latestPosition;
   String? _trackingDriverId;
-  final SupabaseClient _supabase = Supabase.instance.client;
+  SupabaseClient get _supabase => Supabase.instance.client;
 
   TrackingService();
 

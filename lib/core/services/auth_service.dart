@@ -21,37 +21,42 @@ final authServiceProvider = Provider<AuthService>((ref) {
 class AuthNotifier extends _$AuthNotifier {
   @override
   FutureOr<sb.User?> build() async {
-    final client = sb.Supabase.instance.client;
+    try {
+      final client = sb.Supabase.instance.client;
 
-    // 1. Cold start — restore session from Supabase's secure storage
-    final initialUser = client.auth.currentSession?.user;
+      // 1. Cold start — restore session from Supabase's secure storage
+      final initialUser = client.auth.currentSession?.user;
 
-    // 2. Listen to all Supabase auth state changes
-    final subscription = client.auth.onAuthStateChange.listen((data) {
-      if (kDebugMode) {
-        debugPrint('AuthNotifier: ${data.event}');
-      }
+      // 2. Listen to all Supabase auth state changes
+      final subscription = client.auth.onAuthStateChange.listen((data) {
+        if (kDebugMode) {
+          debugPrint('AuthNotifier: ${data.event}');
+        }
 
-      // ── S7: Forced logout on JWT expiry / 401 ──────────────────────────────
-      // Supabase fires signedOut when refresh fails. We must clear all state
-      // to prevent the user staying logged in with stale data.
-      if (data.event == sb.AuthChangeEvent.signedOut &&
-          state.value != null) {
-        unawaited(
-          SecureTokenStorage.instance.clearAll().catchError((_) {}),
-        );
-        state = const AsyncData(null);
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          navigatorKey.currentContext?.go('/auth/login');
-        });
-        return;
-      }
+        // ── S7: Forced logout on JWT expiry / 401 ──────────────────────────────
+        // Supabase fires signedOut when refresh fails. We must clear all state
+        // to prevent the user staying logged in with stale data.
+        if (data.event == sb.AuthChangeEvent.signedOut &&
+            state.value != null) {
+          unawaited(
+            SecureTokenStorage.instance.clearAll().catchError((_) {}),
+          );
+          state = const AsyncData(null);
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            navigatorKey.currentContext?.go('/auth/login');
+          });
+          return;
+        }
 
-      state = AsyncData(data.session?.user);
-    });
+        state = AsyncData(data.session?.user);
+      });
 
-    ref.onDispose(() => subscription.cancel());
-    return initialUser;
+      ref.onDispose(() => subscription.cancel());
+      return initialUser;
+    } catch (e, stack) {
+      debugPrint('AuthNotifier: Supabase initialization error: $e\n$stack');
+      return null;
+    }
   }
 }
 
@@ -59,7 +64,7 @@ class AuthNotifier extends _$AuthNotifier {
 const _googleClientId = String.fromEnvironment('GOOGLE_CLIENT_ID');
 
 class AuthService {
-  final sb.SupabaseClient _supabase = sb.Supabase.instance.client;
+  sb.SupabaseClient get _supabase => sb.Supabase.instance.client;
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     // The web/server client ID is required on Android to get an ID token
     // that can be verified by Supabase (backend).

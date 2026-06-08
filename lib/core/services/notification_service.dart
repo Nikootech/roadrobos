@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:go_router/go_router.dart';
 import '../../main.dart' show scaffoldMessengerKey, navigatorKey;
@@ -15,7 +16,7 @@ final notificationServiceProvider = Provider<NotificationService>((ref) {
 });
 
 class NotificationService {
-  final FirebaseMessaging _fcm = FirebaseMessaging.instance;
+  FirebaseMessaging? get _fcm => Firebase.apps.isNotEmpty ? FirebaseMessaging.instance : null;
   final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
 
   static final NotificationService _instance = NotificationService._internal();
@@ -23,6 +24,11 @@ class NotificationService {
   NotificationService._internal();
 
   Future<void> initialize() async {
+    if (Firebase.apps.isEmpty) {
+      debugPrint('NotificationService: Skipping init. Firebase not initialized.');
+      return;
+    }
+
     // Permissions are no longer requested automatically on app launch.
     // They must be explicitly requested via requestNotificationPermission()
     // during onboarding or after login to comply with Android/Web best practices.
@@ -49,29 +55,38 @@ class NotificationService {
     FirebaseMessaging.onMessageOpenedApp.listen(handleNotificationNavigation);
 
     // 5. Handle Cold Start
-    final initialMessage = await _fcm.getInitialMessage();
-    if (initialMessage != null) {
-      Future.delayed(const Duration(milliseconds: 500), () {
-        handleNotificationNavigation(initialMessage);
+    final fcm = _fcm;
+    if (fcm != null) {
+      final initialMessage = await fcm.getInitialMessage();
+      if (initialMessage != null) {
+        Future.delayed(const Duration(milliseconds: 500), () {
+          handleNotificationNavigation(initialMessage);
+        });
+      }
+
+      // 6. Handle Token Refresh
+      fcm.onTokenRefresh.listen((newToken) async {
+        final user = Supabase.instance.client.auth.currentUser;
+        if (user != null) {
+          try {
+            await Supabase.instance.client.from('profiles').update({'fcm_token': newToken}).eq('id', user.id);
+          } catch (_) {}
+          try {
+            await Supabase.instance.client.from('drivers').update({'fcm_token': newToken}).eq('id', user.id);
+          } catch (_) {}
+        }
       });
     }
-
-    // 6. Handle Token Refresh
-    _fcm.onTokenRefresh.listen((newToken) async {
-      final user = Supabase.instance.client.auth.currentUser;
-      if (user != null) {
-        try {
-          await Supabase.instance.client.from('profiles').update({'fcm_token': newToken}).eq('id', user.id);
-        } catch (_) {}
-        try {
-          await Supabase.instance.client.from('drivers').update({'fcm_token': newToken}).eq('id', user.id);
-        } catch (_) {}
-      }
-    });
   }
 
   Future<bool> requestNotificationPermission() async {
-    final NotificationSettings settings = await _fcm.requestPermission();
+    final fcm = _fcm;
+    if (fcm == null) {
+      debugPrint('FCM requestPermission skipped: Firebase not initialized.');
+      return false;
+    }
+
+    final NotificationSettings settings = await fcm.requestPermission();
 
     if (settings.authorizationStatus == AuthorizationStatus.authorized) {
       if (kDebugMode) {
@@ -114,9 +129,15 @@ class NotificationService {
   }
 
   Future<String?> getToken() async {
+    final fcm = _fcm;
+    if (fcm == null) {
+      debugPrint('FCM getToken skipped: Firebase not initialized.');
+      return null;
+    }
+
     String? token;
     try {
-      token = await _fcm.getToken();
+      token = await fcm.getToken();
       // ✅ Never log the actual token — only its length for debug confirmation
       if (kDebugMode) {
         debugPrint('FCM Token obtained. Length: ${token?.length ?? 0} chars.');

@@ -11,7 +11,7 @@ final userRepositoryProvider = Provider<UserRepository>((ref) {
 });
 
 class UserRepository {
-  final SupabaseClient _supabase = Supabase.instance.client;
+  SupabaseClient get _supabase => Supabase.instance.client;
   final AppDatabase _db;
 
   UserRepository(this._db);

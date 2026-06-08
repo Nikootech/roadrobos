@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import '../extensions/datetime_extensions.dart';
 
@@ -9,8 +10,8 @@ import '../extensions/datetime_extensions.dart';
 /// 2. Push Notification Synchronization
 /// 3. Instant Document Upload Tracking
 class EnterpriseWorkflowService {
-  final SupabaseClient _supabase = Supabase.instance.client;
-  final FirebaseMessaging _fcm = FirebaseMessaging.instance;
+  SupabaseClient get _supabase => Supabase.instance.client;
+  FirebaseMessaging? get _fcm => Firebase.apps.isNotEmpty ? FirebaseMessaging.instance : null;
 
   // ---------------------------------------------------------------------------
   // 1. RESET PASSWORD WORKFLOW
@@ -50,8 +51,14 @@ class EnterpriseWorkflowService {
     final user = _supabase.auth.currentUser;
     if (user == null) return;
 
+    final fcm = _fcm;
+    if (fcm == null) {
+      debugPrint('FCM Sync skipped: Firebase not initialized.');
+      return;
+    }
+
     try {
-      final String? token = await _fcm.getToken();
+      final String? token = await fcm.getToken();
       if (token != null) {
         await _supabase.from('profiles').update({
           'fcm_token': token,

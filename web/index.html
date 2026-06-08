@@ -124,13 +124,24 @@
 
       observer.observe(document.documentElement, { childList: true, subtree: true });
 
-      // Clean up after Flutter finishes loading
-      window.addEventListener('flutter-initialized', function () {
+      function cleanUp() {
         observer.disconnect();
+        clearInterval(checkTimer);
         var loader = document.getElementById('rr-loader');
         if (loader) loader.remove();
         removeSplashFromWeb();
-      });
+      }
+
+      // Clean up after Flutter finishes loading
+      window.addEventListener('flutter-initialized', cleanUp);
+      window.addEventListener('flutter-first-frame', cleanUp);
+
+      // Check for Flutter elements periodically as a fail-safe
+      var checkTimer = setInterval(function() {
+        if (document.querySelector('flt-glass-pane') || document.querySelector('flutter-view')) {
+          cleanUp();
+        }
+      }, 100);
     })();
 
     // Called by Flutter's splash removal mechanism

@@ -7,6 +7,7 @@ import '../../core/constants/app_strings.dart';
 import '../../core/services/local_storage_service.dart';
 import '../../core/services/auth_service.dart';
 import '../profile/user_provider.dart';
+import '../../core/utils/app_debugger.dart';
 
 /// Splash Screen - Animated logo reveal with auto-navigation
 /// Matches precisely with user-provided image (Light theme, small blue circles)
@@ -52,8 +53,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
         final localStorage = ref.read(localStorageServiceProvider);
         final isFirstLaunch = await localStorage.isFirstLaunch();
 
-        // Minimum 1500ms branding time
-        final remaining = 1500 - elapsed;
+        // Minimum 500ms branding time (HTML splash already shows the logo)
+        final remaining = 500 - elapsed;
         if (remaining > 0 && !brandingShown) {
           await Future.delayed(Duration(milliseconds: remaining));
           brandingShown = true;
@@ -198,20 +199,34 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
           // Bottom loading indicator
           Positioned(
-            bottom: 80,
+            bottom: 60,
             left: 0,
             right: 0,
-            child: Center(
-              child: SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(
-                  strokeWidth: 1.2,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    AppColors.primaryBlue.withValues(alpha: 0.4),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 1.2,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      AppColors.primaryBlue.withValues(alpha: 0.4),
+                    ),
                   ),
                 ),
-              ),
+                if (AppDebugger.startupSteps.values.any((status) => status.startsWith('FAILED'))) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    'Running in fallback mode (some services offline)',
+                    style: TextStyle(
+                      color: Colors.amber.withValues(alpha: 0.8),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ],
             )
                 .animate(delay: 800.ms)
                 .fadeIn(duration: 500.ms),
