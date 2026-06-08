@@ -6,6 +6,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/services/local_storage_service.dart';
 import '../../core/services/auth_service.dart';
+import '../profile/user_provider.dart';
 
 /// Splash Screen - Animated logo reveal with auto-navigation
 /// Matches precisely with user-provided image (Light theme, small blue circles)
@@ -24,21 +25,48 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   }
 
   Future<void> _handleNavigation() async {
-    // If user is already logged in, do not manually redirect to /auth/login.
-    // GoRouter's refresh notifier listens to auth changes and will route the user
-    // to their home screen once their profile loads.
     final authState = ref.read(authNotifierProvider);
+
     if (authState.value != null) {
-      debugPrint('SplashScreen: User is logged in, skipping manual login redirection');
+      // User is authenticated — wait for profile to load, with a timeout fallback.
+      // GoRouter's refresh notifier will redirect once userProvider updates.
+      debugPrint('SplashScreen: User is logged in, waiting for profile...');
+
+      const maxWaitMs = 8000;
+      const pollMs = 300;
+      var elapsed = 0;
+
+      while (mounted && elapsed < maxWaitMs) {
+        await Future.delayed(const Duration(milliseconds: pollMs));
+        elapsed += pollMs;
+
+        final userState = ref.read(userProvider);
+
+        // Profile loaded successfully — GoRouter handles the redirect.
+        if (userState.user != null) return;
+
+        // Profile fetch hit an error — break deadlock by sending to login.
+        if (userState.error != null && !userState.isLoading) {
+          debugPrint('SplashScreen: Profile load error (${userState.error}), redirecting to login.');
+          if (mounted) context.go('/auth/login');
+          return;
+        }
+      }
+
+      // Timeout reached without a profile — clear auth and go to login.
+      if (mounted) {
+        debugPrint('SplashScreen: Profile load timed out, redirecting to login.');
+        context.go('/auth/login');
+      }
       return;
     }
 
     final localStorage = ref.read(localStorageServiceProvider);
     final isFirstLaunch = await localStorage.isFirstLaunch();
-    
+
     // Maintain splash for at least 1500ms for branding
     await Future.delayed(const Duration(milliseconds: 1500));
-    
+
     if (mounted) {
       if (isFirstLaunch) {
         context.go('/onboarding');

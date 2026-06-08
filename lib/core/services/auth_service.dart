@@ -120,10 +120,12 @@ class AuthService {
   Future<bool> signInWithGoogle() async {
     try {
       if (kIsWeb) {
-        // Web: use Supabase OAuth redirect (opens browser tab, expected on web)
+        // Web: use Supabase OAuth redirect. Point to /login-callback so the
+        // PKCE code lands on a dedicated, validated route (not the root URL).
+        final redirectUrl = '${Uri.base.origin}/login-callback';
         return await _supabase.auth.signInWithOAuth(
           sb.OAuthProvider.google,
-          redirectTo: Uri.base.origin,
+          redirectTo: redirectUrl,
           queryParams: {'prompt': 'select_account'},
         );
       }

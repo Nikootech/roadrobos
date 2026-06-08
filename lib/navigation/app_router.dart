@@ -70,7 +70,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (kDebugMode) {
         debugPrint(
           'Router: location=$location isLoggedIn=$isLoggedIn '
-          'role=${user?.role}',
+          'role=${user?.role} profileError=${userState.error}',
         );
       }
 
@@ -103,6 +103,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
 
       if (isLoggedIn && isPublicPath) {
+        // If profile failed to load (error + not loading + no user), break deadlock
+        if (user == null && userState.error != null && !userState.isLoading) {
+          if (kDebugMode) debugPrint('Router: Profile load error → /auth/login');
+          return '/auth/login';
+        }
+
         // If profile isn't loaded yet, go to splash screen to show a loading state
         if (user == null) {
           if (location == '/splash') return null;
