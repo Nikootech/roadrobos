@@ -1,7 +1,7 @@
 name: roadrobos
 description: "RoadRobos - Vehicle Service & Ride Booking App"
 publish_to: 'none'
-version: 1.0.0+2
+version: 1.0.0+3
 
 environment:
   sdk: '>=3.3.4 <4.0.0'
@@ -24,7 +24,7 @@ dependencies:
   flutter_animate: ^4.5.0
 
   # ── UI Components ───────────────────────────────────────────────────────────
-  google_fonts: ^6.3.0
+  google_fonts: ^8.1.0
   cached_network_image: ^3.3.1
   flutter_cache_manager: ^3.3.1   # Disk image cache for AppNetworkImage
   shimmer: ^3.0.0

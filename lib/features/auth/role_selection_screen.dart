@@ -48,6 +48,7 @@ class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
                     padding: const EdgeInsets.all(8),
@@ -62,13 +63,16 @@ class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen> {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  Text(
-                    'RoAd RoBo\'s',
-                    style: GoogleFonts.outfit(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w900,
-                      color: const Color(0xFF1E293B),
-                      letterSpacing: -0.5,
+                  Flexible(
+                    child: Text(
+                      'RoAd RoBo\'s',
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.outfit(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
+                        color: const Color(0xFF1E293B),
+                        letterSpacing: -0.5,
+                      ),
                     ),
                   ),
                 ],

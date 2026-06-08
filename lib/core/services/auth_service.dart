@@ -61,6 +61,9 @@ const _googleClientId = String.fromEnvironment('GOOGLE_CLIENT_ID');
 class AuthService {
   final sb.SupabaseClient _supabase = sb.Supabase.instance.client;
   final GoogleSignIn _googleSignIn = GoogleSignIn(
+    // The web/server client ID is required on Android to get an ID token
+    // that can be verified by Supabase (backend).
+    serverClientId: kIsWeb ? null : '542549978836-l55rm9ftucubic1ibc3domifpgc8ikst.apps.googleusercontent.com',
     clientId: kIsWeb && _googleClientId.isNotEmpty ? _googleClientId : null,
   );
   
@@ -112,20 +115,42 @@ class AuthService {
     await _supabase.auth.resetPasswordForEmail(email);
   }
 
-  // --- Google Sign-In ---
+  // --- Google Sign-In (Native in-app, no browser redirect) ---
 
   Future<bool> signInWithGoogle() async {
     try {
-      // Use Supabase native OAuth for the best cross-platform compatibility
-      return await _supabase.auth.signInWithOAuth(
-        sb.OAuthProvider.google,
-        redirectTo: kIsWeb 
-          ? Uri.base.origin
-          : 'com.roadrobos.app://login-callback',
-        queryParams: {
-          'prompt': 'select_account',
-        },
+      if (kIsWeb) {
+        // Web: use Supabase OAuth redirect (opens browser tab, expected on web)
+        return await _supabase.auth.signInWithOAuth(
+          sb.OAuthProvider.google,
+          redirectTo: Uri.base.origin,
+          queryParams: {'prompt': 'select_account'},
+        );
+      }
+
+      // Mobile: use native Google Sign-In (shows in-app account picker)
+      final googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) {
+        // User cancelled the sign-in
+        return false;
+      }
+
+      final googleAuth = await googleUser.authentication;
+      final idToken = googleAuth.idToken;
+      final accessToken = googleAuth.accessToken;
+
+      if (idToken == null) {
+        throw Exception('Google Sign-In failed: No ID token received.');
+      }
+
+      // Exchange Google tokens with Supabase
+      await _supabase.auth.signInWithIdToken(
+        provider: sb.OAuthProvider.google,
+        idToken: idToken,
+        accessToken: accessToken,
       );
+
+      return true;
     } catch (e) {
       if (kDebugMode) debugPrint('Google Sign-In Error: $e');
       rethrow;

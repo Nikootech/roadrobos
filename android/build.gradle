@@ -5,12 +5,11 @@ allprojects {
     }
 }
 
-// Relocating build directory to C: drive to fix Flutter/Kotlin multi-drive "different roots" bug on Windows
-String tmpdir = System.getProperty("java.io.tmpdir")
-rootProject.layout.buildDirectory.set(new File(tmpdir, "roadrobosapp_build"))
+// Set build directory relative to project root so Flutter CLI can find build outputs
+rootProject.buildDir = "${rootProject.projectDir}/../build"
 
 subprojects {
-    project.layout.buildDirectory.set(rootProject.layout.buildDirectory.dir(project.name))
+    project.buildDir = "${rootProject.buildDir}/${project.name}"
 
     afterEvaluate { project ->
         if (project.hasProperty('android')) {
@@ -37,5 +36,5 @@ subprojects {
 }
 
 tasks.register("clean", Delete) {
-    delete rootProject.layout.buildDirectory
+    delete rootProject.buildDir
 }

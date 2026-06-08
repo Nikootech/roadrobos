@@ -27,7 +27,7 @@ import 'package:flutter/foundation.dart';
 
 final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey =
     GlobalKey<ScaffoldMessengerState>();
-final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+final GlobalKey<NavigatorState> navigatorKey = rootNavigatorKey;
 
 // ── Top-level FCM background handler (must be top-level function) ────────────
 @pragma('vm:entry-point')

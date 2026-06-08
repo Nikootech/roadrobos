@@ -52,24 +52,33 @@ CREATE INDEX IF NOT EXISTS idx_delivery_orders_driver_id   ON public.delivery_or
 CREATE INDEX IF NOT EXISTS idx_delivery_orders_status      ON public.delivery_orders(status);
 
 -- Enable realtime
-ALTER PUBLICATION supabase_realtime ADD TABLE public.delivery_orders;
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'delivery_orders') THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.delivery_orders;
+  END IF;
+END;
+$$;
 
 -- ── 3. Row-Level Security ────────────────────────────────────────────────────
 ALTER TABLE public.delivery_orders ENABLE ROW LEVEL SECURITY;
 
 -- Customers: can see only their own non-deleted orders
+DROP POLICY IF EXISTS "delivery_customer_select" ON public.delivery_orders;
 CREATE POLICY "delivery_customer_select"
   ON public.delivery_orders
   FOR SELECT
   USING (auth.uid() = customer_id AND deleted_at IS NULL);
 
 -- Customers: can create orders for themselves
+DROP POLICY IF EXISTS "delivery_customer_insert" ON public.delivery_orders;
 CREATE POLICY "delivery_customer_insert"
   ON public.delivery_orders
   FOR INSERT
   WITH CHECK (auth.uid() = customer_id);
 
 -- Drivers: can view orders assigned to them OR all pending orders (to accept)
+DROP POLICY IF EXISTS "delivery_driver_select" ON public.delivery_orders;
 CREATE POLICY "delivery_driver_select"
   ON public.delivery_orders
   FOR SELECT
@@ -81,6 +90,7 @@ CREATE POLICY "delivery_driver_select"
   );
 
 -- Drivers: can update only their assigned orders (accept + status transitions)
+DROP POLICY IF EXISTS "delivery_driver_update" ON public.delivery_orders;
 CREATE POLICY "delivery_driver_update"
   ON public.delivery_orders
   FOR UPDATE
@@ -91,6 +101,7 @@ CREATE POLICY "delivery_driver_update"
   WITH CHECK (true);
 
 -- Admins: full access (role-based via app metadata)
+DROP POLICY IF EXISTS "delivery_admin_all" ON public.delivery_orders;
 CREATE POLICY "delivery_admin_all"
   ON public.delivery_orders
   FOR ALL
@@ -110,6 +121,7 @@ VALUES (
 ON CONFLICT (id) DO NOTHING;
 
 -- Drivers can upload to delivery-proofs/<order_id>/
+DROP POLICY IF EXISTS "delivery_proof_upload" ON storage.objects;
 CREATE POLICY "delivery_proof_upload"
   ON storage.objects
   FOR INSERT
@@ -117,6 +129,7 @@ CREATE POLICY "delivery_proof_upload"
   WITH CHECK (bucket_id = 'delivery-proofs');
 
 -- Anyone can view delivery proof images (public bucket)
+DROP POLICY IF EXISTS "delivery_proof_select" ON storage.objects;
 CREATE POLICY "delivery_proof_select"
   ON storage.objects
   FOR SELECT

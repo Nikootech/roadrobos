@@ -149,15 +149,16 @@ class AppDatabase extends _$AppDatabase {
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) => m.createAll(),
     onUpgrade: (m, from, to) async {
-      if (from < 2) {
-        // V1→V2: idempotency_key + HttpResponseCache table
-        await m.addColumn(syncQueue, syncQueue.idempotencyKey);
-        await m.createTable(httpResponseCache);
-      }
       if (from < 3) {
-        // V2→V3: dead letter queue table + entity_type and next_retry_at columns in syncQueue
-        await m.addColumn(syncQueue, syncQueue.entityType);
-        await m.addColumn(syncQueue, syncQueue.nextRetryAt);
+        // Recreate syncQueue to avoid SQLite ALTER TABLE limitations on UNIQUE/NOT NULL columns
+        try {
+          await m.drop(syncQueue);
+        } catch (_) {}
+        await m.createTable(syncQueue);
+
+        if (from < 2) {
+          await m.createTable(httpResponseCache);
+        }
         await m.createTable(deadLetterQueue);
       }
     },

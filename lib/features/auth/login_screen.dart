@@ -316,8 +316,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             data: const {'method': 'google'},
           ),
         ));
+        // Router will automatically navigate once authNotifierProvider updates.
+        // Clear loading state here as a safety fallback.
+        if (mounted) setState(() => _isLoading = false);
       } else {
-        setState(() => _isLoading = false);
+        // User cancelled
+        if (mounted) setState(() => _isLoading = false);
         unawaited(Sentry.addBreadcrumb(
           Breadcrumb(
             message: 'Login failed',

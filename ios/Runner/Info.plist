@@ -82,6 +82,12 @@
 		<!-- Face ID for biometric login -->
 		<key>NSFaceIDUsageDescription</key>
 		<string>RoAdRoBos uses Face ID for secure, quick authentication and to protect wallet transactions.</string>
+		<!-- Background Modes for Location Tracking -->
+		<key>UIBackgroundModes</key>
+		<array>
+			<string>location</string>
+			<string>fetch</string>
+		</array>
 		<!-- Deep Linking for Supabase OAuth -->
 		<key>CFBundleURLTypes</key>
 		<array>

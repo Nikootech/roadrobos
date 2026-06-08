@@ -38,17 +38,35 @@ CREATE TABLE IF NOT EXISTS public.technicians (
 ALTER TABLE public.drivers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.technicians ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Drivers viewable by everyone (for tracking)" ON public.drivers;
 CREATE POLICY "Drivers viewable by everyone (for tracking)" ON public.drivers FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Drivers can update their own data" ON public.drivers;
 CREATE POLICY "Drivers can update their own data" ON public.drivers FOR UPDATE USING (auth.uid() = id);
 
+DROP POLICY IF EXISTS "Technicians viewable by everyone" ON public.technicians;
 CREATE POLICY "Technicians viewable by everyone" ON public.technicians FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Technicians can update their own data" ON public.technicians;
 CREATE POLICY "Technicians can update their own data" ON public.technicians FOR UPDATE USING (auth.uid() = id);
 
 -- 4. Enable Realtime
-ALTER PUBLICATION supabase_realtime ADD TABLE public.drivers;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.technicians;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.ride_bookings;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.service_bookings;
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'drivers') THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.drivers;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'technicians') THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.technicians;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'ride_bookings') THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.ride_bookings;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'service_bookings') THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.service_bookings;
+  END IF;
+END;
+$$;
 -- PARTNER KYC SCHEMA FOR ROADROBOS
 -- This script manages partner document verification
 
@@ -72,12 +90,15 @@ ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS kyc_status TEXT DEFAULT 'no
 -- 3. RLS Policies
 ALTER TABLE public.partner_kyc ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Partners can view their own KYC docs" ON public.partner_kyc;
 CREATE POLICY "Partners can view their own KYC docs" ON public.partner_kyc 
 FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Partners can upload their own KYC docs" ON public.partner_kyc;
 CREATE POLICY "Partners can upload their own KYC docs" ON public.partner_kyc 
 FOR INSERT WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Admins can view and update KYC docs" ON public.partner_kyc;
 CREATE POLICY "Admins can view and update KYC docs" ON public.partner_kyc 
 FOR ALL USING (
   EXISTS (
