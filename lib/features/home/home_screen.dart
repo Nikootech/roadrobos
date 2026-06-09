@@ -537,7 +537,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildQuickActionItem(QuickAction action) {
-    final color = IconHelper.getColor(action.color);
+    final rawColor = IconHelper.getColor(action.color);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    // In light theme, make pastel/light colors darker and more vibrant for contrast.
+    Color color = rawColor;
+    if (!isDark) {
+      final hsl = HSLColor.fromColor(rawColor);
+      if (hsl.lightness > 0.6) {
+        color = hsl.withLightness(0.4).withSaturation(0.85).toColor();
+      }
+    }
+
     return GestureDetector(
       onTap: () {
         HapticFeedback.lightImpact();
@@ -570,7 +581,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             width: 60,
             height: 60,
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.05),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Icon(IconHelper.getIcon(action.icon), color: color, size: 28),

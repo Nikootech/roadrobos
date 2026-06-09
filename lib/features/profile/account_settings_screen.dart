@@ -336,10 +336,38 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
             Icons.lock_outline_rounded, 
             'Change Password', 
             'Update your security credentials',
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Password reset link sent to your email!'), behavior: SnackBarBehavior.floating),
-              );
+            onTap: () async {
+              final user = ref.read(userProvider).user;
+              if (user != null && user.email != null && user.email!.isNotEmpty) {
+                try {
+                  await ref.read(authServiceProvider).resetPassword(user.email!);
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Password reset link sent to your email!'),
+                      backgroundColor: AppColors.successGreen,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                } catch (e) {
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to send reset link: $e'),
+                      backgroundColor: AppColors.dangerRed,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('No email address associated with your profile.'),
+                    backgroundColor: AppColors.dangerRed,
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
             },
           ),
           _buildSettingsTile(

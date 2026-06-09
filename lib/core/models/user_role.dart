@@ -131,6 +131,7 @@ class AppUser {
       'profile_pic': profilePic,
       'current_device_id': currentDeviceId,
       'is_approved': isApproved,
+      'saved_locations': savedLocations.map((x) => x.toMap()).toList(),
     };
   }
 

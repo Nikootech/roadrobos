@@ -67,41 +67,116 @@ class ServiceHistoryScreen extends ConsumerWidget {
 
   Widget _buildHistoryCard(dynamic service, BuildContext context) {
     final dateStr = DateFormat('MMM dd, yyyy').format(service.createdAt);
-    
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? AppColors.bgDarkCard : Colors.white;
+    final textCol = isDark ? AppColors.textOnDark : AppColors.textPrimary;
+    final subTextCol = isDark ? AppColors.textOnDarkMuted : AppColors.textSecondary;
+    final borderCol = isDark ? Colors.transparent : AppColors.border;
+
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: AppColors.border)),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: borderCol),
+        boxShadow: isDark ? [] : [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          )
+        ],
+      ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: AppColors.primaryBlue.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.build_rounded,
+                  color: AppColors.primaryBlue,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(service.packageName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                    Text(service.vehicleName, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                    Text(
+                      service.packageName,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                        color: textCol,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      service.vehicleName,
+                      style: TextStyle(
+                        color: subTextCol,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                   ],
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(color: AppColors.primaryBlue.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
-                child: Text('₹${service.totalCost}', style: const TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.bold, fontSize: 12)),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryBlue.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  '₹${service.totalCost}',
+                  style: const TextStyle(
+                    color: AppColors.primaryBlue,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 13,
+                  ),
+                ),
               ),
             ],
           ),
-          const Divider(height: 24),
+          const Divider(height: 24, thickness: 1),
           Row(
             children: [
-              const Icon(Icons.calendar_today_rounded, size: 16, color: AppColors.textSecondary),
+              Icon(
+                Icons.calendar_today_rounded,
+                size: 14,
+                color: subTextCol,
+              ),
               const SizedBox(width: 8),
-              Text(dateStr, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+              Text(
+                dateStr,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: subTextCol,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
               const Spacer(),
-              TextButton(
+              TextButton.icon(
                 onPressed: () => NavHelpers.showSuccess(context, 'Invoice PDF downloaded successfully!'),
-                child: const Text('Download Invoice', style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.bold, fontSize: 12)),
+                icon: const Icon(Icons.download_rounded, size: 16),
+                label: const Text('Invoice'),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.primaryBlue,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  textStyle: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
               ),
             ],
           ),

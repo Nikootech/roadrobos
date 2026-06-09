@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/repositories/user_vehicle_repository.dart';
 import '../profile/user_provider.dart';
@@ -24,37 +25,52 @@ final vehicleProvider = StateNotifierProvider<SelectedVehicleNotifier, Vehicle>(
 
 class AllVehiclesNotifier extends StateNotifier<List<Vehicle>> {
   final Ref ref;
+  StreamSubscription<List<Vehicle>>? _subscription;
   
   AllVehiclesNotifier(this.ref) : super([]) {
-    _fetchVehicles();
+    _init();
   }
 
-  Future<void> _fetchVehicles() async {
-    final userState = ref.read(userProvider);
-    if (userState.user == null) {
+  void _init() {
+    ref.listen<UserState>(userProvider, (previous, next) {
+      if (next.user?.id != previous?.user?.id) {
+        _subscribeToVehicles(next.user?.id);
+      }
+    }, fireImmediately: true);
+  }
+
+  void _subscribeToVehicles(String? userId) {
+    _subscription?.cancel();
+    if (userId == null || userId.isEmpty || userId.startsWith('demo_')) {
       // Fallback dummy for unauthenticated demo state
       state = [
-        Vehicle(id: 'v1', userId: 'demo', name: 'Honda City', plate: 'MH 04 XY 4321', fuel: 'Petrol', year: '2022', type: 'Car')
+        Vehicle(id: 'v1', userId: 'demo', name: 'Honda City', plate: 'MH 04 XY 4321', fuel: 'Petrol', year: 2022, type: 'Car')
       ];
       return;
     }
 
     try {
       final repo = ref.read(userVehicleRepositoryProvider);
-      final vehicles = await repo.getUserVehicles(userState.user!.id);
-      
-      if (vehicles.isNotEmpty) {
-        state = vehicles;
-        if (ref.read(vehicleProvider).id == 'placeholder') {
-          ref.read(vehicleProvider.notifier).setVehicle(vehicles.first);
-        }
-      } else {
-        state = [];
-      }
+      _subscription = repo.getUserVehiclesStream(userId).listen(
+        (vehicles) {
+          state = vehicles;
+          if (vehicles.isNotEmpty && ref.read(vehicleProvider).id == 'placeholder') {
+            ref.read(vehicleProvider.notifier).setVehicle(vehicles.first);
+          }
+        },
+        onError: (e) {
+          state = [];
+        },
+      );
     } catch (e) {
-      // Keep empty state on error
       state = [];
     }
+  }
+
+  @override
+  void dispose() {
+    _subscription?.cancel();
+    super.dispose();
   }
 
   void addVehicle(Vehicle vehicle) {

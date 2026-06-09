@@ -140,6 +140,9 @@ class UserNotifier extends StateNotifier<UserState> {
         if (updatedUser.profilePic != state.user?.profilePic || 
             updatedUser.points != state.user?.points ||
             updatedUser.name != state.user?.name ||
+            updatedUser.phone != state.user?.phone ||
+            updatedUser.email != state.user?.email ||
+            !listEquals(updatedUser.savedLocations, state.user?.savedLocations) ||
             updatedUser.currentDeviceId != state.user?.currentDeviceId) {
           state = state.copyWith(user: updatedUser);
           debugPrint('Real-time Profile Update Received: ${updatedUser.name}');

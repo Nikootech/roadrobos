@@ -9,6 +9,27 @@ import '../../shared/widgets/custom_button.dart';
 import '../../navigation/nav_helpers.dart';
 import '../profile/user_provider.dart';
 
+String _generateUniqueReferralCode(String? userId, String? name) {
+  final seedStr = (userId != null && userId.isNotEmpty) ? userId : (name ?? 'GUEST');
+  int hash = 5381;
+  for (int i = 0; i < seedStr.length; i++) {
+    hash = ((hash << 5) + hash) + seedStr.codeUnitAt(i);
+  }
+  const m = 2147483647;
+  const a = 48271;
+  int state = hash.abs() % m;
+  if (state == 0) state = 1;
+
+  const alphabet = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+  final code = StringBuffer();
+  for (int i = 0; i < 12; i++) {
+    state = (state * a) % m;
+    final index = state % alphabet.length;
+    code.write(alphabet[index]);
+  }
+  return code.toString();
+}
+
 /// Refer & Earn Rewards matching Figma Screen [20]
 class ReferralScreen extends ConsumerWidget {
   const ReferralScreen({super.key});
@@ -17,10 +38,12 @@ class ReferralScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(userProvider).user;
     
-    // Generate a code if one isn't assigned (Fallback)
-    final referralCode = (user?.referralCode != null && user!.referralCode.isNotEmpty) 
-        ? user.referralCode 
-        : 'ROADROBO_${user?.name.split(' ').first.toUpperCase() ?? 'GUEST'}';
+    // Generate a secure 12-digit random code if user has no assigned code
+    // or if the assigned code matches the legacy guessable format (like ROADROBO_SUDHAN)
+    final rawCode = user?.referralCode ?? '';
+    final referralCode = (rawCode.isNotEmpty && !rawCode.startsWith('ROADROBO_')) 
+        ? rawCode 
+        : _generateUniqueReferralCode(user?.id, user?.name);
 
     final shareMessage = 'Hey! Use my referral code $referralCode to get ₹500 discount on your first service with RoAd RoBo\'s. Download now: https://roadrobos.com/download';
 

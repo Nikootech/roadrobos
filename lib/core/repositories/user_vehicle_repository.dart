@@ -118,6 +118,19 @@ class UserVehicleRepository {
     }
   }
 
+  Stream<List<UserVehicle>> getUserVehiclesStream(String userId) {
+    return _supabase
+        .from('user_vehicles')
+        .stream(primaryKey: ['id'])
+        .eq('user_id', userId)
+        .map((data) {
+          return data
+              .where((map) => map['deleted_at'] == null)
+              .map<UserVehicle>((map) => UserVehicle.fromMap(map, map['id'].toString()))
+              .toList();
+        });
+  }
+
   Future<void> addVehicle(UserVehicle vehicle) async {
     try {
       final map = vehicle.toMap();

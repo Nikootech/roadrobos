@@ -263,7 +263,7 @@ class RoadRobosApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.dark,
+      themeMode: ThemeMode.light,
       routerConfig: router,
       localizationsDelegates: const [
         AppLocalizations.delegate,
