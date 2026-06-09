@@ -5,11 +5,13 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import '../../core/theme/app_colors.dart';
 import 'user_provider.dart';
 import '../../core/providers/favorites_provider.dart';
 import '../../core/services/biometric_service.dart';
 import '../../core/services/auth_service.dart';
+import '../../core/services/two_factor_auth_service.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class AccountSettingsScreen extends ConsumerStatefulWidget {
@@ -27,6 +29,15 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
   late TextEditingController _emailController;
   late TextEditingController _phoneController;
   bool _isBiometricEnabled = false;
+
+  // ── 2FA dialog state ──────────────────────────────────────────────────────
+  bool _is2FADialogLoading = false;
+  String? _twoFaQrUri;
+  String? _twoFaSecret;
+  String? _twoFaFactorId;
+  String? _twoFaError;
+  int _twoFaStep = 0; // 0=loading/QR, 1=verify code, 2=success
+  final _totpCodeController = TextEditingController();
 
   @override
   void initState() {
@@ -185,7 +196,427 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
     _nameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
+    _totpCodeController.dispose();
     super.dispose();
+  }
+
+  // ── Real 2FA dialog ──────────────────────────────────────────────────────────
+
+  Future<void> _showTwoFactorDialog() async {
+    final userState = ref.read(userProvider);
+
+    // If already enabled → offer to disable
+    if (userState.mfaEnabled) {
+      await _showDisable2FADialog();
+      return;
+    }
+
+    // Reset dialog state
+    setState(() {
+      _is2FADialogLoading = true;
+      _twoFaStep = 0;
+      _twoFaQrUri = null;
+      _twoFaSecret = null;
+      _twoFaFactorId = null;
+      _twoFaError = null;
+      _totpCodeController.clear();
+    });
+
+    // Show dialog immediately (spinner while enrolling)
+    if (!mounted) return;
+    unawaited(showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogCtx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => _build2FADialog(dialogCtx, setDialogState),
+      ),
+    ));
+
+    // Start TOTP enrollment in background
+    try {
+      final svc = ref.read(twoFactorAuthServiceProvider);
+      final result = await svc.enrollTOTP();
+      if (!mounted) return;
+      setState(() {
+        _twoFaQrUri = result.qrCodeUri;
+        _twoFaSecret = result.secret;
+        _twoFaFactorId = result.factorId;
+        _is2FADialogLoading = false;
+        _twoFaStep = 0;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _twoFaError = e.toString();
+        _is2FADialogLoading = false;
+      });
+    }
+  }
+
+  Widget _build2FADialog(BuildContext dialogCtx, StateSetter setDialogState) {
+    return AlertDialog(
+      backgroundColor: const Color(0xFF1A1F2E),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+      contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+      title: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.primaryBlue.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(Icons.verified_user_rounded, color: AppColors.primaryBlue, size: 22),
+          ),
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Text(
+              'Two-Factor Authentication',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 16),
+            ),
+          ),
+        ],
+      ),
+      content: _twoFaError != null
+          ? _build2FAErrorContent(dialogCtx)
+          : _twoFaStep == 2
+              ? _build2FASuccessContent(dialogCtx)
+              : _twoFaStep == 1
+                  ? _build2FAVerifyContent(dialogCtx, setDialogState)
+                  : _build2FAQrContent(dialogCtx),
+    );
+  }
+
+  /// Step 0 — QR code display
+  Widget _build2FAQrContent(BuildContext dialogCtx) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const SizedBox(height: 8),
+        const Text(
+          'Scan this QR code with your Authenticator app (Google Authenticator, Authy, etc.)',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Color(0xFFB0B8D1), fontSize: 13, height: 1.5),
+        ),
+        const SizedBox(height: 20),
+        _is2FADialogLoading
+            ? const SizedBox(
+                height: 180,
+                child: Center(child: CircularProgressIndicator(color: AppColors.primaryBlue)),
+              )
+            : Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: QrImageView(
+                  data: _twoFaQrUri ?? '',
+                  size: 180,
+                  eyeStyle: const QrEyeStyle(
+                    eyeShape: QrEyeShape.square,
+                    color: Color(0xFF1A1F2E),
+                  ),
+                  dataModuleStyle: const QrDataModuleStyle(
+                    dataModuleShape: QrDataModuleShape.square,
+                    color: Color(0xFF1A1F2E),
+                  ),
+                ),
+              ),
+        if (!_is2FADialogLoading && _twoFaSecret != null) ...[
+          const SizedBox(height: 16),
+          const Text(
+            'Or enter this code manually:',
+            style: TextStyle(color: Color(0xFF8892A4), fontSize: 11),
+          ),
+          const SizedBox(height: 6),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: const Color(0xFF252B3B),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.3)),
+            ),
+            child: SelectableText(
+              _twoFaSecret!,
+              style: const TextStyle(
+                color: AppColors.primaryBlue,
+                fontFamily: 'monospace',
+                fontSize: 13,
+                letterSpacing: 2,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+        const SizedBox(height: 20),
+        Row(
+          children: [
+            Expanded(
+              child: TextButton(
+                onPressed: () => Navigator.pop(dialogCtx),
+                child: const Text('CANCEL', style: TextStyle(color: Color(0xFF8892A4), fontWeight: FontWeight.bold)),
+              ),
+            ),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: _is2FADialogLoading ? null : () {
+                  setState(() => _twoFaStep = 1);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryBlue,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                child: const Text('NEXT →', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900)),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// Step 1 — Enter TOTP code for verification
+  Widget _build2FAVerifyContent(BuildContext dialogCtx, StateSetter setDialogState) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.primaryBlue.withValues(alpha: 0.1),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(Icons.phonelink_lock_rounded, color: AppColors.primaryBlue, size: 36),
+        ),
+        const SizedBox(height: 16),
+        const Text(
+          'Enter the 6-digit code from your Authenticator app to confirm setup.',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Color(0xFFB0B8D1), fontSize: 13, height: 1.5),
+        ),
+        const SizedBox(height: 20),
+        TextField(
+          controller: _totpCodeController,
+          keyboardType: TextInputType.number,
+          maxLength: 6,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 28,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 10,
+          ),
+          decoration: InputDecoration(
+            counterText: '',
+            hintText: '······',
+            hintStyle: const TextStyle(color: Color(0xFF4A5568), fontSize: 28, letterSpacing: 10),
+            filled: true,
+            fillColor: const Color(0xFF252B3B),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: AppColors.primaryBlue.withValues(alpha: 0.4)),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: AppColors.primaryBlue.withValues(alpha: 0.4)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: AppColors.primaryBlue, width: 2),
+            ),
+            errorText: _twoFaError,
+            errorStyle: const TextStyle(color: Color(0xFFFF5252), fontSize: 12),
+          ),
+        ),
+        const SizedBox(height: 20),
+        Row(
+          children: [
+            Expanded(
+              child: TextButton(
+                onPressed: () => setState(() {
+                  _twoFaStep = 0;
+                  _twoFaError = null;
+                  _totpCodeController.clear();
+                }),
+                child: const Text('← BACK', style: TextStyle(color: Color(0xFF8892A4), fontWeight: FontWeight.bold)),
+              ),
+            ),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: _is2FADialogLoading ? null : () async {
+                  final code = _totpCodeController.text.trim();
+                  if (code.length != 6) {
+                    setState(() => _twoFaError = 'Please enter a 6-digit code.');
+                    return;
+                  }
+                  setState(() {
+                    _is2FADialogLoading = true;
+                    _twoFaError = null;
+                  });
+                  try {
+                    final svc = ref.read(twoFactorAuthServiceProvider);
+                    await svc.challengeAndVerify(
+                      factorId: _twoFaFactorId!,
+                      totpCode: code,
+                    );
+                    // Persist to DB + update provider state
+                    await ref.read(userProvider.notifier).enable2FA();
+                    if (mounted) {
+                      setState(() {
+                        _twoFaStep = 2;
+                        _is2FADialogLoading = false;
+                      });
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      setState(() {
+                        _twoFaError = 'Invalid code. Please try again.';
+                        _is2FADialogLoading = false;
+                      });
+                    }
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryBlue,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                child: _is2FADialogLoading
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    : const Text('VERIFY & ENABLE', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 12)),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// Step 2 — Success
+  Widget _build2FASuccessContent(BuildContext dialogCtx) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const SizedBox(height: 12),
+        TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0.0, end: 1.0),
+          duration: const Duration(milliseconds: 600),
+          curve: Curves.elasticOut,
+          builder: (ctx, val, child) => Transform.scale(scale: val, child: child),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: const BoxDecoration(
+              color: Color(0xFF1A3A2A),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.shield_rounded, color: Color(0xFF4CAF50), size: 48),
+          ),
+        ),
+        const SizedBox(height: 20),
+        const Text(
+          '2FA is now Active!',
+          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900),
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          'Your account is now protected with Two-Factor Authentication. You will be asked for a code on future logins.',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Color(0xFFB0B8D1), fontSize: 12, height: 1.5),
+        ),
+        const SizedBox(height: 24),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: () => Navigator.pop(dialogCtx),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF4CAF50),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              padding: const EdgeInsets.symmetric(vertical: 14),
+            ),
+            child: const Text('DONE ✓', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900)),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Error state inside dialog
+  Widget _build2FAErrorContent(BuildContext dialogCtx) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const Icon(Icons.error_outline_rounded, color: Color(0xFFFF5252), size: 48),
+        const SizedBox(height: 16),
+        Text(
+          _twoFaError ?? 'An error occurred.',
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: Color(0xFFB0B8D1), fontSize: 13),
+        ),
+        const SizedBox(height: 20),
+        SizedBox(
+          width: double.infinity,
+          child: TextButton(
+            onPressed: () => Navigator.pop(dialogCtx),
+            child: const Text('CLOSE', style: TextStyle(color: Color(0xFF8892A4), fontWeight: FontWeight.bold)),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Shown when 2FA is already enabled — offers to disable it
+  Future<void> _showDisable2FADialog() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1F2E),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: const Text('Disable 2FA?', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900)),
+        content: const Text(
+          'Removing Two-Factor Authentication will make your account less secure. Are you sure?',
+          style: TextStyle(color: Color(0xFFB0B8D1), fontSize: 13, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx, false),
+            child: const Text('CANCEL', style: TextStyle(color: Color(0xFF8892A4), fontWeight: FontWeight.bold)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx, true),
+            child: const Text('DISABLE', style: TextStyle(color: Color(0xFFFF5252), fontWeight: FontWeight.w900)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    try {
+      final svc = ref.read(twoFactorAuthServiceProvider);
+      final factor = await svc.getVerifiedTotpFactor();
+      if (factor != null) await svc.unenroll(factor.id);
+      await ref.read(userProvider.notifier).disable2FA();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Two-Factor Authentication disabled.'),
+          backgroundColor: AppColors.dangerRed,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to disable 2FA: $e'),
+          backgroundColor: AppColors.dangerRed,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   Future<void> _saveProfile() async {
@@ -383,43 +814,21 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
           _buildSettingsTile(
             Icons.verified_user_outlined, 
             'Two-Factor Authentication', 
-            'Add extra layer of security',
-            onTap: () {
-              showDialog(
-                context: context,
-                builder: (dialogContext) => AlertDialog(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                  title: const Text('Two-Factor Authentication', style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.w900)),
-                  content: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.security, size: 48, color: AppColors.primaryBlue),
-                      const SizedBox(height: 16),
-                      const Text('Scan this QR code with your Authenticator app to enable 2FA.', textAlign: TextAlign.center, style: TextStyle(color: AppColors.textSecondary)),
-                      const SizedBox(height: 16),
-                      Container(
-                        height: 150,
-                        width: 150,
-                        color: Colors.grey[200],
-                        child: const Center(child: Icon(Icons.qr_code, size: 100, color: Colors.grey)),
-                      ),
-                    ],
-                  ),
-                  actions: [
-                    TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('CANCEL', style: TextStyle(color: AppColors.textMuted, fontWeight: FontWeight.bold))),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(dialogContext);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('2FA Enabled Successfully!'), backgroundColor: AppColors.successGreen),
-                        );
-                      }, 
-                      child: const Text('ENABLE 2FA', style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.w900)),
+            user.mfaEnabled ? 'Enabled ✓ — Tap to disable' : 'Add extra layer of security',
+            onTap: _showTwoFactorDialog,
+            trailing: user.mfaEnabled
+                ? Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1A3A2A),
+                      borderRadius: BorderRadius.circular(20),
                     ),
-                  ],
-                ),
-              );
-            },
+                    child: const Text(
+                      'ON',
+                      style: TextStyle(color: Color(0xFF4CAF50), fontWeight: FontWeight.w900, fontSize: 11),
+                    ),
+                  )
+                : const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.textMuted),
           ),
         ]),
         const SizedBox(height: 24),

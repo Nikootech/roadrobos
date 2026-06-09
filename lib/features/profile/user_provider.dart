@@ -12,6 +12,7 @@ import '../../core/services/auth_service.dart';
 import '../../core/services/notification_service.dart';
 import '../../core/services/local_storage_service.dart';
 import '../../core/extensions/datetime_extensions.dart';
+import '../../core/services/two_factor_auth_service.dart';
 
 // Helper: map a loaded user's role to their home route
 String _homeRouteForUser(AppUser user) {
@@ -41,6 +42,8 @@ class UserState {
   final String? error;
   final bool showSessionMismatchPrompt;
   final AppUser? pendingUser;
+  /// Whether TOTP 2FA is currently active for this user
+  final bool mfaEnabled;
 
   UserState({
     this.user,
@@ -49,6 +52,7 @@ class UserState {
     this.error,
     this.showSessionMismatchPrompt = false,
     this.pendingUser,
+    this.mfaEnabled = false,
   });
 
   // Helper getters for stable UI access
@@ -67,6 +71,7 @@ class UserState {
     String? error,
     bool? showSessionMismatchPrompt,
     AppUser? pendingUser,
+    bool? mfaEnabled,
   }) {
     return UserState(
       user: user ?? this.user,
@@ -75,6 +80,7 @@ class UserState {
       error: error ?? this.error,
       showSessionMismatchPrompt: showSessionMismatchPrompt ?? this.showSessionMismatchPrompt,
       pendingUser: pendingUser ?? this.pendingUser,
+      mfaEnabled: mfaEnabled ?? this.mfaEnabled,
     );
   }
 }
@@ -308,7 +314,19 @@ class UserNotifier extends StateNotifier<UserState> {
           }
         }
         
-        state = state.copyWith(user: user, isLoading: false, isDemo: isDemoId);
+        // Load mfa_enabled from the profiles DB row
+        bool mfaEnabledFromDb = false;
+        if (!isDemoId) {
+          try {
+            final mfaRow = await sb.Supabase.instance.client
+                .from('profiles')
+                .select('mfa_enabled')
+                .eq('id', uid)
+                .maybeSingle();
+            mfaEnabledFromDb = (mfaRow?['mfa_enabled'] as bool?) ?? false;
+          } catch (_) {}
+        }
+        state = state.copyWith(user: user, isLoading: false, isDemo: isDemoId, mfaEnabled: mfaEnabledFromDb);
         
         // Cache the home route for instant redirect on next splash
         if (!isDemoId) {
@@ -423,6 +441,36 @@ class UserNotifier extends StateNotifier<UserState> {
       await logout();
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+
+  // ── 2FA helpers ──────────────────────────────────────────────────────────────
+
+  /// Called after successful TOTP enrollment + verification.
+  /// Marks `mfa_enabled = true` in DB and refreshes local state.
+  Future<void> enable2FA() async {
+    final uid = state.user?.id;
+    if (uid == null || state.isDemo) return;
+    try {
+      await _ref.read(twoFactorAuthServiceProvider).markMfaEnabledInProfile(uid);
+      state = state.copyWith(mfaEnabled: true);
+      debugPrint('UserNotifier: 2FA enabled for user $uid');
+    } catch (e) {
+      debugPrint('UserNotifier.enable2FA error: $e');
+    }
+  }
+
+  /// Called after unenrolling TOTP factor.
+  /// Marks `mfa_enabled = false` in DB and refreshes local state.
+  Future<void> disable2FA() async {
+    final uid = state.user?.id;
+    if (uid == null || state.isDemo) return;
+    try {
+      await _ref.read(twoFactorAuthServiceProvider).markMfaDisabledInProfile(uid);
+      state = state.copyWith(mfaEnabled: false);
+      debugPrint('UserNotifier: 2FA disabled for user $uid');
+    } catch (e) {
+      debugPrint('UserNotifier.disable2FA error: $e');
     }
   }
 

@@ -30,6 +30,7 @@ dependencies:
   shimmer: ^3.0.0
   smooth_page_indicator: ^1.1.0
   carousel_slider: ^5.0.0
+  qr_flutter: ^4.1.0              # Real QR code rendering for 2FA TOTP setup
 
   # ── Icons ────────────────────────────────────────────────────────────────────
   flutter_svg: ^2.0.10
