@@ -40,6 +40,15 @@ class _CustomTextFieldState extends State<CustomTextField> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textStyleColor = isDark ? AppColors.textOnDark : AppColors.textPrimary;
+    final defaultFillColor = isDark ? AppColors.bgDarkCard : AppColors.bgLightCard;
+    final focusedFillColor = isDark ? AppColors.bgDarkSurface : AppColors.bgWhite;
+    final labelColor = isDark ? AppColors.textOnDarkMuted : AppColors.textSecondary;
+    final prefixIconColor = _isFocused ? AppColors.primaryBlue : (isDark ? AppColors.textOnDarkMuted : AppColors.textMuted);
+    final suffixIconColor = isDark ? AppColors.textOnDarkMuted : AppColors.textMuted;
+    final borderCol = isDark ? Colors.transparent : AppColors.border;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -48,10 +57,10 @@ class _CustomTextFieldState extends State<CustomTextField> {
             widget.label!,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
-              color: AppColors.textSecondary,
+              color: labelColor,
             ),
           ),
           const SizedBox(height: 8),
@@ -67,15 +76,15 @@ class _CustomTextFieldState extends State<CustomTextField> {
             validator: widget.validator,
             onChanged: widget.onChanged,
             maxLines: widget.maxLines,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w400,
-              color: AppColors.textPrimary,
+              color: textStyleColor,
             ),
             decoration: InputDecoration(
               hintText: widget.hint,
               filled: true,
-              fillColor: _isFocused ? AppColors.bgWhite : AppColors.bgLightCard,
+              fillColor: _isFocused ? focusedFillColor : defaultFillColor,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 20,
                 vertical: 16,
@@ -83,9 +92,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
               prefixIcon: widget.prefixIcon != null
                   ? Icon(
                       widget.prefixIcon,
-                      color: _isFocused
-                          ? AppColors.primaryBlue
-                          : AppColors.textMuted,
+                      color: prefixIconColor,
                       size: 20,
                     )
                   : null,
@@ -98,24 +105,24 @@ class _CustomTextFieldState extends State<CustomTextField> {
                         _obscureText
                             ? Icons.visibility_off_outlined
                             : Icons.visibility_outlined,
-                        color: AppColors.textMuted,
+                        color: suffixIconColor,
                         size: 20,
                       ),
                     )
                   : widget.suffixIcon != null
                       ? Icon(
                           widget.suffixIcon,
-                          color: AppColors.textMuted,
+                          color: suffixIconColor,
                           size: 20,
                         )
                       : null,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppTheme.radiusMD),
-                borderSide: const BorderSide(color: AppColors.border),
+                borderSide: BorderSide(color: borderCol),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppTheme.radiusMD),
-                borderSide: const BorderSide(color: AppColors.border),
+                borderSide: BorderSide(color: borderCol),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppTheme.radiusMD),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 
 import '../../shared/widgets/live_map_widget.dart';
@@ -32,6 +33,7 @@ class TaxiRideScreen extends ConsumerStatefulWidget {
 
 class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
   final DraggableScrollableController _sheetController = DraggableScrollableController();
+  bool get isDark => Theme.of(context).brightness == Brightness.dark;
   @override
   void initState() {
     super.initState();
@@ -69,7 +71,7 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       extendBodyBehindAppBar: true,
       body: Stack(
         children: [
@@ -179,7 +181,7 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
       builder: (context, scrollController) {
         return Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDark ? AppColors.bgDarkCard : Colors.white,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
             boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 20)],
           ),
@@ -187,7 +189,7 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
             controller: scrollController,
             padding: const EdgeInsets.all(24),
             children: [
-              Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(2)))),
+              Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: isDark ? Colors.grey[700] : Colors.grey[200], borderRadius: BorderRadius.circular(2)))),
               const SizedBox(height: 24),
               
               if (state.status == RideStatus.idle || 
@@ -212,7 +214,14 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Plan Your Ride', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
+        Text(
+          'Plan Your Ride',
+          style: GoogleFonts.outfit(
+            fontSize: 22,
+            fontWeight: FontWeight.w900,
+            color: isDark ? AppColors.textOnDark : AppColors.textPrimary,
+          ),
+        ),
         const SizedBox(height: 24),
         CustomTextField(
           label: 'Pickup Location',
@@ -280,7 +289,14 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text('Roadrobo Arriving', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+            Text(
+              'Roadrobo Arriving',
+              style: GoogleFonts.outfit(
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+                color: isDark ? AppColors.textOnDark : AppColors.textPrimary,
+              ),
+            ),
             Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4), decoration: BoxDecoration(color: Colors.green[50], borderRadius: BorderRadius.circular(8)), child: Text('OTP: ${state.otp}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green))),
           ],
         ),
@@ -352,7 +368,14 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
       children: [
         const Icon(Icons.check_circle, color: Colors.green, size: 64),
         const SizedBox(height: 16),
-        const Text('Ride Completed!', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
+        Text(
+          'Ride Completed!',
+          style: GoogleFonts.outfit(
+            fontSize: 20,
+            fontWeight: FontWeight.w900,
+            color: isDark ? AppColors.textOnDark : AppColors.textPrimary,
+          ),
+        ),
         const SizedBox(height: 24),
         const Text('How was your experience?', style: TextStyle(color: AppColors.textSecondary)),
         const SizedBox(height: 16),
@@ -402,8 +425,12 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(12),
-        decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 8)]),
-        child: Icon(icon, size: 20, color: AppColors.textPrimary),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.bgDarkSurface : Colors.white,
+          shape: BoxShape.circle,
+          boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 8)],
+        ),
+        child: Icon(icon, size: 20, color: isDark ? Colors.white : AppColors.textPrimary),
       ),
     );
   }

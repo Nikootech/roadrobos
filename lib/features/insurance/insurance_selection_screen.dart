@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
+import '../../shared/widgets/custom_text_field.dart';
 import '../home/vehicle_provider.dart';
 
 class InsuranceSelectionScreen extends ConsumerStatefulWidget {
@@ -186,16 +187,21 @@ class _InsuranceSelectionScreenState extends ConsumerState<InsuranceSelectionScr
   @override
   Widget build(BuildContext context) {
     final vehicle = ref.watch(vehicleProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         elevation: 0,
         leading: GestureDetector(
           onTap: () => context.pop(),
-          child: const Center(
-            child: Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: AppColors.textPrimary),
+          child: Center(
+            child: Icon(
+              Icons.arrow_back_ios_new_rounded,
+              size: 18,
+              color: Theme.of(context).appBarTheme.foregroundColor ?? (isDark ? Colors.white : AppColors.textPrimary),
+            ),
           ),
         ),
         title: Text(
@@ -203,7 +209,7 @@ class _InsuranceSelectionScreenState extends ConsumerState<InsuranceSelectionScr
           style: GoogleFonts.outfit(
             fontSize: 18,
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: Theme.of(context).appBarTheme.titleTextStyle?.color ?? (isDark ? Colors.white : AppColors.textPrimary),
           ),
         ),
       ),
@@ -218,9 +224,11 @@ class _InsuranceSelectionScreenState extends ConsumerState<InsuranceSelectionScr
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: AppColors.bgSkyLight,
+                  color: isDark ? AppColors.bgDarkCard : AppColors.bgSkyLight,
                   borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.15)),
+                  border: Border.all(
+                    color: isDark ? Colors.transparent : AppColors.primaryBlue.withValues(alpha: 0.15),
+                  ),
                 ),
                 child: Row(
                   children: [
@@ -246,15 +254,15 @@ class _InsuranceSelectionScreenState extends ConsumerState<InsuranceSelectionScr
                             style: GoogleFonts.outfit(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: AppColors.textPrimary,
+                              color: isDark ? AppColors.textOnDark : AppColors.textPrimary,
                             ),
                           ),
                           const SizedBox(height: 2),
                           Text(
                             'Reg No: ${vehicle.plate}',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
-                              color: AppColors.textSecondary,
+                              color: isDark ? AppColors.textOnDarkMuted : AppColors.textSecondary,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -288,7 +296,7 @@ class _InsuranceSelectionScreenState extends ConsumerState<InsuranceSelectionScr
                 style: GoogleFonts.outfit(
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
+                  color: isDark ? AppColors.textOnDark : AppColors.textPrimary,
                 ),
               ),
               const SizedBox(height: 14),
@@ -302,10 +310,12 @@ class _InsuranceSelectionScreenState extends ConsumerState<InsuranceSelectionScr
                 itemBuilder: (context, index) {
                   final pkg = _packages[index];
                   final isSelected = _selectedPackageIndex == index;
-                  final borderCol = isSelected ? pkg['color'] as Color : AppColors.border;
+                  final borderCol = isSelected 
+                      ? pkg['color'] as Color 
+                      : (isDark ? Colors.transparent : AppColors.border);
                   final bgCol = isSelected 
-                      ? (pkg['color'] as Color).withValues(alpha: 0.03) 
-                      : Colors.white;
+                      ? (pkg['color'] as Color).withValues(alpha: 0.05) 
+                      : (isDark ? AppColors.bgDarkCard : Colors.white);
 
                   return GestureDetector(
                     onTap: () {
@@ -335,14 +345,14 @@ class _InsuranceSelectionScreenState extends ConsumerState<InsuranceSelectionScr
                                       style: GoogleFonts.outfit(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
-                                        color: AppColors.textPrimary,
+                                        color: isDark ? AppColors.textOnDark : AppColors.textPrimary,
                                       ),
                                     ),
                                     Text(
                                       pkg['subtitle'],
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 12,
-                                        color: AppColors.textSecondary,
+                                        color: isDark ? AppColors.textOnDarkMuted : AppColors.textSecondary,
                                       ),
                                     ),
                                   ],
@@ -371,9 +381,9 @@ class _InsuranceSelectionScreenState extends ConsumerState<InsuranceSelectionScr
                                     Expanded(
                                       child: Text(
                                         pkg['benefits'][i],
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontSize: 12,
-                                          color: AppColors.textSecondary,
+                                          color: isDark ? AppColors.textOnDarkMuted : AppColors.textSecondary,
                                         ),
                                       ),
                                     ),
@@ -425,86 +435,74 @@ class _InsuranceSelectionScreenState extends ConsumerState<InsuranceSelectionScr
               const SizedBox(height: 24),
 
               Text(
-                'Already Insured? Link Policy',
-                style: GoogleFonts.outfit(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 6),
-              const Text(
-                'Add your current policy details to link it with RoadRobos and get service renewal alerts.',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 18),
-
-              // Existing Policy link fields
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: AppColors.bgLightGrey,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: Column(
-                  children: [
-                    TextField(
-                      controller: _providerController,
-                      decoration: const InputDecoration(
-                        labelText: 'Insurance Provider',
-                        hintText: 'e.g., Acko, HDFC Ergo, ICICI Lombard',
-                        floatingLabelBehavior: FloatingLabelBehavior.always,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(12)),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: _policyNoController,
-                      decoration: const InputDecoration(
-                        labelText: 'Policy Number',
-                        hintText: 'e.g., POL-123456789',
-                        floatingLabelBehavior: FloatingLabelBehavior.always,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(12)),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton(
-                        onPressed: _isLinking ? null : () => _handleLinkPolicy(vehicle),
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: AppColors.primaryBlue),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                        child: _isLinking
-                            ? const SizedBox(
-                                height: 18,
-                                width: 18,
-                                child: CircularProgressIndicator(color: AppColors.primaryBlue, strokeWidth: 2.0),
-                              )
-                            : const Text(
-                                'Link Policy Number',
-                                style: TextStyle(
-                                  color: AppColors.primaryBlue,
-                                  fontWeight: FontWeight.bold,
+                                'Already Insured? Link Policy',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                  color: isDark ? AppColors.textOnDark : AppColors.textPrimary,
                                 ),
                               ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                'Add your current policy details to link it with RoadRobos and get service renewal alerts.',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: isDark ? AppColors.textOnDarkMuted : AppColors.textSecondary,
+                                ),
+                              ),
+                              const SizedBox(height: 18),
+
+                              // Existing Policy link fields
+                              Container(
+                                padding: const EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  color: isDark ? AppColors.bgDarkCard : AppColors.bgLightGrey,
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: isDark ? Colors.transparent : AppColors.border,
+                                  ),
+                                ),
+                                child: Column(
+                                  children: [
+                                    CustomTextField(
+                                      controller: _providerController,
+                                      label: 'Insurance Provider',
+                                      hint: 'e.g., Acko, HDFC Ergo, ICICI Lombard',
+                                    ),
+                                    const SizedBox(height: 16),
+                                    CustomTextField(
+                                      controller: _policyNoController,
+                                      label: 'Policy Number',
+                                      hint: 'e.g., POL-123456789',
+                                    ),
+                                    const SizedBox(height: 20),
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: OutlinedButton(
+                                        onPressed: _isLinking ? null : () => _handleLinkPolicy(vehicle),
+                                        style: OutlinedButton.styleFrom(
+                                          side: const BorderSide(color: AppColors.primaryBlue),
+                                          padding: const EdgeInsets.symmetric(vertical: 14),
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                        ),
+                                        child: _isLinking
+                                            ? const SizedBox(
+                                                height: 18,
+                                                width: 18,
+                                                child: CircularProgressIndicator(color: AppColors.primaryBlue, strokeWidth: 2.0),
+                                              )
+                                            : const Text(
+                                                'Link Policy Number',
+                                                style: TextStyle(
+                                                  color: AppColors.primaryBlue,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
 
               const SizedBox(height: 40),
             ],
