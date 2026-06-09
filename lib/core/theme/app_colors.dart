@@ -54,18 +54,18 @@ class AppColors {
   static const Color bgLightSurface = Color(0xFFF8FAFC);
 
   // ── Dark Theme Backgrounds ──
-  static const Color bgDark = Color(0xFFF8FAFC);
-  static const Color bgDarkAlt = Color(0xFFF8F9FA);
-  static const Color bgDarkDeep = Color(0xFF0F1117);
-  static const Color bgDarkSurface = Color(0xFF1A1D27);
-  static const Color bgDarkCard = Color(0xFF222533);
-  static const Color bgDarkNavy = Color(0xFF1B8A5A);
-  static const Color bgDarkNav = Color(0xFFF8FAFC);
-  static const Color bgDarkDeepest = Color(0xFFFFFFFF);
-  static const Color bgDarkBottom = Color(0xFFFFFFFF);
-  static const Color bgDarkProfile = Color(0xFFF1F5F9);
-  static const Color bgDarkFeedback = Color(0xFFF0FBF5);
-  static const Color bgDarkRevenue = Color(0xFFF0FBF5);
+  static const Color bgDark = Color(0xFF0F1117);
+  static const Color bgDarkAlt = Color(0xFF1A1D27);
+  static const Color bgDarkDeep = Color(0xFF0A0C10);
+  static const Color bgDarkSurface = Color(0xFF161B22);
+  static const Color bgDarkCard = Color(0xFF21262D);
+  static const Color bgDarkNavy = Color(0xFF003322);
+  static const Color bgDarkNav = Color(0xFF161B22);
+  static const Color bgDarkDeepest = Color(0xFF010409);
+  static const Color bgDarkBottom = Color(0xFF161B22);
+  static const Color bgDarkProfile = Color(0xFF1A1D27);
+  static const Color bgDarkFeedback = Color(0xFF21262D);
+  static const Color bgDarkRevenue = Color(0xFF21262D);
 
   // ── Text Colors ──
   static const Color textPrimary = Color(0xFF111827);

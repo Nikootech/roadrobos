@@ -73,13 +73,14 @@ class AuthNotifier extends _$AuthNotifier {
 
 /// Google Client ID injected at compile time via --dart-define-from-file
 const _googleClientId = String.fromEnvironment('GOOGLE_CLIENT_ID');
+const _googleServerClientId = String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID');
 
 class AuthService {
   sb.SupabaseClient get _supabase => sb.Supabase.instance.client;
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     // The web/server client ID is required on Android to get an ID token
     // that can be verified by Supabase (backend).
-    serverClientId: kIsWeb ? null : '542549978836-l55rm9ftucubic1ibc3domifpgc8ikst.apps.googleusercontent.com',
+    serverClientId: kIsWeb ? null : (_googleServerClientId.isNotEmpty ? _googleServerClientId : null),
     clientId: kIsWeb && _googleClientId.isNotEmpty ? _googleClientId : null,
   );
   
