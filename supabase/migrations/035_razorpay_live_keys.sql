@@ -148,45 +148,4 @@ BEGIN
 END;
 $$;
 
--- Redefine request_wallet_withdrawal
-CREATE OR REPLACE FUNCTION request_wallet_withdrawal(
-  p_user_id UUID,
-  p_amount NUMERIC,
-  p_bank_account_number TEXT,
-  p_bank_ifsc TEXT
-)
-RETURNS JSONB
-LANGUAGE plpgsql
-SECURITY DEFINER
-AS $$
-DECLARE
-  v_wallet_balance NUMERIC;
-  v_request_id UUID;
-  rzp_secret TEXT;
-BEGIN
-  SELECT balance INTO v_wallet_balance FROM wallets WHERE user_id = p_user_id FOR UPDATE;
-  
-  IF NOT FOUND THEN
-    RETURN jsonb_build_object('success', false, 'error', 'Wallet not found');
-  END IF;
-  
-  IF v_wallet_balance < p_amount THEN
-    RETURN jsonb_build_object('success', false, 'error', 'Insufficient funds');
-  END IF;
 
-  UPDATE wallets SET balance = balance - p_amount, updated_at = NOW() WHERE user_id = p_user_id;
-
-  INSERT INTO wallet_withdrawal_requests (user_id, amount, status, bank_account_number, bank_ifsc)
-  VALUES (p_user_id, p_amount, 'pending', p_bank_account_number, p_bank_ifsc)
-  RETURNING id INTO v_request_id;
-
-  SELECT value INTO rzp_secret FROM public.app_secrets WHERE key = 'razorpay_secret';
-  IF rzp_secret IS NULL OR rzp_secret = '' THEN
-    rzp_secret := 'rzp_test_placeholderSecret';
-  END IF;
-
-  RETURN jsonb_build_object('success', true, 'message', 'Withdrawal requested successfully');
-EXCEPTION WHEN OTHERS THEN
-  RETURN jsonb_build_object('success', false, 'error', SQLERRM);
-END;
-$$;
