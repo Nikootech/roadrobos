@@ -53,6 +53,7 @@ class HelpCenterScreen extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(color: AppColors.bgLightGrey, borderRadius: BorderRadius.circular(16)),
               child: const TextField(
+                style: TextStyle(color: AppColors.textPrimary, fontSize: 15),
                 decoration: InputDecoration(
                   icon: Icon(Icons.search_rounded, size: 20, color: AppColors.textSecondary),
                   hintText: 'Search for help...',
@@ -62,7 +63,7 @@ class HelpCenterScreen extends StatelessWidget {
             ),
             
             const SizedBox(height: 32),
-            const Text('Popular Categories', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+             const Text('Popular Categories', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
             const SizedBox(height: 16),
             GridView.count(
               shrinkWrap: true,
@@ -114,7 +115,7 @@ class HelpCenterScreen extends StatelessWidget {
           children: [
             Icon(icon, color: AppColors.primaryBlue, size: 28),
             const SizedBox(height: 12),
-            Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+             Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.textPrimary)),
           ],
         ),
       ),
@@ -136,7 +137,7 @@ class HelpCenterScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                   Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textPrimary)),
                   Text(subtitle, style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
                 ],
               ),

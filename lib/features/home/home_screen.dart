@@ -132,64 +132,72 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       bottom: false,
       child: Padding(
         padding: ResponsiveLayout.responsivePadding(context, horizontal: 20, vertical: 16).copyWith(bottom: 0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            GestureDetector(
-              onTap: () => context.push('/main/profile'),
-              child: AppAvatar(
-                imageUrl: imageUrl,
-                radius: 20,
-                backgroundColor: Colors.white,
-              ),
-            ).animate().fadeIn(duration: 500.ms),
-            
-            Text(
-              '${l10n.get('good_morning')}, ${userName.split(' ')[0]}',
-              style: GoogleFonts.outfit(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
-              ),
-            ).animate().fadeIn(duration: 500.ms),
-
             Row(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                PopupMenuButton<AppLanguage>(
-                  onSelected: (AppLanguage lang) {
-                    ref.read(languageProvider.notifier).setLanguage(lang);
-                  },
-                  offset: const Offset(0, 40),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(value: AppLanguage.en, child: Text('English (EN)')),
-                    const PopupMenuItem(value: AppLanguage.hi, child: Text('हिन्दी (HI)')),
-                    const PopupMenuItem(value: AppLanguage.kn, child: Text('ಕನ್ನಡ (KN)')),
-                    const PopupMenuItem(value: AppLanguage.ta, child: Text('தமிழ் (TA)')),
-                    const PopupMenuItem(value: AppLanguage.te, child: Text('తెలుగు (TE)')),
-                  ],
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppColors.bgSkyLight,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      ref.watch(languageProvider).name.toUpperCase(),
-                      style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primaryBlue, fontSize: 12),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
                 GestureDetector(
-                  onTap: () {
-                    HapticFeedback.lightImpact();
-                    context.push('/notifications');
-                  },
-                  child: const Icon(Iconsax.notification, size: 22, color: AppColors.textPrimary),
+                  onTap: () => context.push('/main/profile'),
+                  child: AppAvatar(
+                    imageUrl: imageUrl,
+                    radius: 20,
+                    backgroundColor: Colors.white,
+                  ),
                 ).animate().fadeIn(duration: 500.ms),
+                
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    PopupMenuButton<AppLanguage>(
+                      onSelected: (AppLanguage lang) {
+                        ref.read(languageProvider.notifier).setLanguage(lang);
+                      },
+                      offset: const Offset(0, 40),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      itemBuilder: (context) => [
+                        const PopupMenuItem(value: AppLanguage.en, child: Text('English (EN)')),
+                        const PopupMenuItem(value: AppLanguage.hi, child: Text('हिन्दी (HI)')),
+                        const PopupMenuItem(value: AppLanguage.kn, child: Text('ಕನ್ನಡ (KN)')),
+                        const PopupMenuItem(value: AppLanguage.ta, child: Text('தமிழ் (TA)')),
+                        const PopupMenuItem(value: AppLanguage.te, child: Text('తెలుగు (TE)')),
+                      ],
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppColors.bgSkyLight,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          ref.watch(languageProvider).name.toUpperCase(),
+                          style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primaryBlue, fontSize: 12),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    GestureDetector(
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        context.push('/notifications');
+                      },
+                      child: const Icon(Iconsax.notification, size: 22, color: AppColors.textPrimary),
+                    ).animate().fadeIn(duration: 500.ms),
+                  ],
+                ),
               ],
+            ),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                '${l10n.get('good_morning')} ${userName.split(' ')[0]}',
+                style: GoogleFonts.outfit(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ).animate().fadeIn(duration: 500.ms),
             ),
           ],
         ),
@@ -228,7 +236,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 children: [
                   Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.bgLightGrey, borderRadius: BorderRadius.circular(2))),
                   const SizedBox(height: 24),
-                  Text('Select Vehicle', style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w800)),
+                  Text('Select Vehicle', style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
                   const SizedBox(height: 16),
                   Flexible(
                     child: ListView.builder(
@@ -249,8 +257,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               color: AppColors.primaryBlue,
                             ),
                           ),
-                          title: Text(vehicle.name, style: const TextStyle(fontWeight: FontWeight.w600)),
-                          subtitle: Text(vehicle.plate),
+                          title: Text(vehicle.name, style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                          subtitle: Text(vehicle.plate, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
                           trailing: selectedVehicle.plate == vehicle.plate ? const Icon(Icons.check_circle_rounded, color: AppColors.successGreen) : null,
                         );
                       },
@@ -519,7 +527,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Recent Services', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w800)),
+              Text('Recent Services', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
               const SizedBox(height: 12),
               ...bookings.take(2).map((booking) => _buildRecentServiceCard(booking)),
             ],
@@ -556,7 +564,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(booking.packageName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                    Text(booking.packageName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textPrimary)),
                     Text('${booking.vehicleName} • ${booking.status.toUpperCase()}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
                   ],
                 ),
@@ -644,7 +652,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (err, stack) => Center(child: Text('Error loading categories: $err')),
+            error: (err, stack) => Center(child: Text('Error loading categories: $err', style: const TextStyle(color: AppColors.textSecondary))),
           ),
         ],
       ),
@@ -755,7 +763,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (err, stack) => Center(child: Text('Error loading offers: $err')),
+            error: (err, stack) => Center(child: Text('Error loading offers: $err', style: const TextStyle(color: AppColors.textSecondary))),
           ).animate(delay: 800.ms).fadeIn(duration: 500.ms).slideY(begin: 0.1, end: 0),
         ],
       ),

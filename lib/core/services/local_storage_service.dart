@@ -11,6 +11,7 @@ class LocalStorageService {
   static const String _keySelectedRole = 'selected_role';
   static const String _keyDeviceId = 'local_device_id';
   static const String _keyMultiDeviceLogout = 'multi_device_logout';
+  static const String _keyLastHomeRoute = 'last_home_route';
 
   /// Check if this is the first time the app is launched
   Future<bool> isFirstLaunch() async {
@@ -67,5 +68,24 @@ class LocalStorageService {
       await prefs.setBool(_keyMultiDeviceLogout, false);
     }
     return val;
+  }
+
+  /// Save the user's last known home route (e.g. /main/home, /admin-home)
+  /// Called after profile loads so next splash can redirect instantly.
+  Future<void> saveLastHomeRoute(String route) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyLastHomeRoute, route);
+  }
+
+  /// Get the cached home route — used by splash for instant redirect
+  Future<String?> getLastHomeRoute() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_keyLastHomeRoute);
+  }
+
+  /// Clear cached home route (called on logout)
+  Future<void> clearLastHomeRoute() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_keyLastHomeRoute);
   }
 }

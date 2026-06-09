@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
@@ -6,6 +7,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
 import 'user_provider.dart';
+import '../../core/providers/favorites_provider.dart';
+import '../../core/services/biometric_service.dart';
+import '../../core/services/auth_service.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class AccountSettingsScreen extends ConsumerStatefulWidget {
   const AccountSettingsScreen({super.key});
@@ -34,13 +39,145 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
   }
 
   Future<void> _loadBiometricSettings() async {
+    final prefs = ref.read(sharedPreferencesProvider);
     setState(() {
-      _isBiometricEnabled = false; // Initial
+      _isBiometricEnabled = prefs.getBool('biometric_enabled') ?? false;
     });
   }
 
   Future<void> _toggleBiometric(bool value) async {
-    setState(() => _isBiometricEnabled = value);
+    final messenger = ScaffoldMessenger.of(context);
+    final biometricService = ref.read(biometricServiceProvider);
+    
+    if (value) {
+      final available = await biometricService.isAvailable();
+      if (!available) {
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text('Biometric authentication is not available on this device.'),
+            backgroundColor: AppColors.dangerRed,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
+      
+      if (!mounted) return;
+      final String? password = await showDialog<String>(
+        context: context,
+        builder: (dialogContext) {
+          final controller = TextEditingController();
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            title: const Text('Confirm Password', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Please enter your password to enable biometric login.', style: TextStyle(color: AppColors.textSecondary)),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: controller,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    prefixIcon: const Icon(Icons.lock_outline_rounded, color: AppColors.primaryBlue),
+                    hintText: 'Enter password',
+                    filled: true,
+                    fillColor: AppColors.bgLightGrey,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: const Text('CANCEL', style: TextStyle(color: AppColors.textMuted, fontWeight: FontWeight.bold)),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext, controller.text),
+                child: const Text('CONFIRM', style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.bold)),
+              ),
+            ],
+          );
+        },
+      );
+
+      if (password == null || password.isEmpty) {
+        return;
+      }
+
+      if (!mounted) return;
+      unawaited(showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(child: CircularProgressIndicator()),
+      ));
+
+      try {
+        final authService = ref.read(authServiceProvider);
+        final user = ref.read(userProvider).user;
+        if (user == null) throw Exception('No user profile loaded');
+        final email = user.email;
+        if (email == null || email.isEmpty) throw Exception('No email associated with this profile');
+        
+        await authService.signInWithEmail(email, password);
+        
+        if (mounted) Navigator.pop(context); // Dismiss loading spinner
+        
+        final authenticated = await biometricService.authenticate(
+          localizedReason: 'Confirm biometric login setup',
+        );
+        
+        if (authenticated) {
+          final prefs = ref.read(sharedPreferencesProvider);
+          await prefs.setBool('biometric_enabled', true);
+          const storage = FlutterSecureStorage();
+          await storage.write(key: 'email', value: email);
+          await storage.write(key: 'password', value: password);
+          
+          setState(() => _isBiometricEnabled = true);
+          messenger.showSnackBar(
+            const SnackBar(
+              content: Text('Biometric login enabled successfully!'),
+              backgroundColor: AppColors.successGreen,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        } else {
+          messenger.showSnackBar(
+            const SnackBar(
+              content: Text('Biometric authentication failed.'),
+              backgroundColor: AppColors.dangerRed,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) Navigator.pop(context); // Dismiss loading spinner
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text('Incorrect password or verification failed: $e'),
+            backgroundColor: AppColors.dangerRed,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } else {
+      final prefs = ref.read(sharedPreferencesProvider);
+      await prefs.setBool('biometric_enabled', false);
+      const storage = FlutterSecureStorage();
+      await storage.delete(key: 'email');
+      await storage.delete(key: 'password');
+      
+      setState(() => _isBiometricEnabled = false);
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Biometric login disabled.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   @override

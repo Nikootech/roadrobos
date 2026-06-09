@@ -157,6 +157,80 @@ class AuthService {
         accessToken: accessToken,
       );
 
+      // Fetch and sync profile details from Google Account
+      final currentUser = _supabase.auth.currentUser;
+      if (currentUser != null) {
+        final googlePhotoUrl = googleUser.photoUrl;
+        final googleName = googleUser.displayName;
+
+        // 1. Update Supabase Auth metadata
+        final Map<String, dynamic> metadata = Map<String, dynamic>.from(currentUser.userMetadata ?? {});
+        bool needsMetaUpdate = false;
+        if (googlePhotoUrl != null && metadata['avatar_url'] == null) {
+          metadata['avatar_url'] = googlePhotoUrl;
+          needsMetaUpdate = true;
+        }
+        if (googleName != null && metadata['full_name'] == null) {
+          metadata['full_name'] = googleName;
+          needsMetaUpdate = true;
+        }
+
+        if (needsMetaUpdate) {
+          try {
+            await _supabase.auth.updateUser(
+              sb.UserAttributes(data: metadata),
+            );
+          } catch (e) {
+            if (kDebugMode) debugPrint('Google Sign-In: Failed to update auth metadata: $e');
+          }
+        }
+
+        // 2. Direct database profiles table sync (to bypass delay or edge cases)
+        final updates = <String, dynamic>{};
+        if (googlePhotoUrl != null) {
+          updates['profile_pic'] = googlePhotoUrl;
+        }
+        if (googleName != null) {
+          updates['name'] = googleName;
+        }
+
+        if (updates.isNotEmpty) {
+          try {
+            final profileResponse = await _supabase
+                .from('profiles')
+                .select('profile_pic, name')
+                .eq('id', currentUser.id)
+                .maybeSingle();
+
+            if (profileResponse != null) {
+              final existingPic = profileResponse['profile_pic'] as String?;
+              final existingName = profileResponse['name'] as String?;
+              
+              final dbUpdates = <String, dynamic>{};
+              if ((existingPic == null || existingPic.isEmpty) && googlePhotoUrl != null) {
+                dbUpdates['profile_pic'] = googlePhotoUrl;
+              }
+              if ((existingName == null || existingName.isEmpty || existingName == 'New User') && googleName != null) {
+                dbUpdates['name'] = googleName;
+              }
+
+              if (dbUpdates.isNotEmpty) {
+                await _supabase.from('profiles').update(dbUpdates).eq('id', currentUser.id);
+              }
+            } else {
+              await _supabase.from('profiles').insert({
+                'id': currentUser.id,
+                'name': googleName ?? 'New User',
+                'email': currentUser.email,
+                'profile_pic': googlePhotoUrl,
+              });
+            }
+          } catch (e) {
+            if (kDebugMode) debugPrint('Google Sign-In: Failed to sync database profile: $e');
+          }
+        }
+      }
+
       return true;
     } catch (e) {
       if (kDebugMode) debugPrint('Google Sign-In Error: $e');

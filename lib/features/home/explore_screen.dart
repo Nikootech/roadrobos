@@ -184,8 +184,8 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                       (context, index) {
                         final cat = filtered[index];
                         final icon = IconHelper.getIcon(cat.icon);
-                        const color = AppColors.primaryBlue;
                         final route = getCategoryRoute(cat.label);
+                        final theme = _getCategoryTheme(cat.label);
 
                         return GestureDetector(
                           onTap: () {
@@ -211,27 +211,56 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                           },
                           child: Container(
                             decoration: BoxDecoration(
-                              color: AppColors.bgSkyLight,
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.1)),
+                              gradient: LinearGradient(
+                                colors: theme.gradient,
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(24),
+                              border: Border.all(color: theme.primary.withValues(alpha: 0.12)),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: theme.primary.withValues(alpha: 0.04),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
                             ),
-                            padding: const EdgeInsets.all(14),
+                            padding: const EdgeInsets.all(16),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Container(
-                                  width: 40,
-                                  height: 40,
-                                  decoration: BoxDecoration(
-                                    color: color.withValues(alpha: 0.12),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Icon(
-                                    icon,
-                                    color: color,
-                                    size: 20,
-                                  ),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Container(
+                                      width: 44,
+                                      height: 44,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withValues(alpha: 0.8),
+                                        borderRadius: BorderRadius.circular(14),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: theme.primary.withValues(alpha: 0.12),
+                                            blurRadius: 6,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Icon(
+                                        icon,
+                                        color: theme.primary,
+                                        size: 20,
+                                      ),
+                                    ),
+                                    Icon(
+                                      Icons.arrow_forward_ios_rounded,
+                                      color: theme.primary.withValues(alpha: 0.4),
+                                      size: 14,
+                                    ),
+                                  ],
                                 ),
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -239,16 +268,26 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                                     Text(
                                       cat.label,
                                       style: GoogleFonts.outfit(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w700,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w800,
                                         color: AppColors.textPrimary,
+                                        letterSpacing: -0.2,
                                       ),
                                     ),
-                                    Text(
-                                      '${cat.count} services',
-                                      style: const TextStyle(
-                                        fontSize: 11,
-                                        color: AppColors.textSecondary,
+                                    const SizedBox(height: 6),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: theme.primary.withValues(alpha: 0.08),
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Text(
+                                        '${cat.count} services',
+                                        style: GoogleFonts.inter(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w700,
+                                          color: theme.accent,
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -275,4 +314,63 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
       ),
     );
   }
+
+  _CategoryTheme _getCategoryTheme(String label) {
+    switch (label.toLowerCase()) {
+      case 'repair':
+        return const _CategoryTheme(
+          primary: Color(0xFF3B82F6), // Blue
+          accent: Color(0xFF1D4ED8),
+          gradient: [Color(0xFFEFF6FF), Color(0xFFDBEAFE)],
+        );
+      case 'rentals':
+        return const _CategoryTheme(
+          primary: Color(0xFF10B981), // Emerald
+          accent: Color(0xFF047857),
+          gradient: [Color(0xFFECFDF5), Color(0xFFD1FAE5)],
+        );
+      case 'ev service':
+        return const _CategoryTheme(
+          primary: Color(0xFFF59E0B), // Amber
+          accent: Color(0xFFB45309),
+          gradient: [Color(0xFFFEF3C7), Color(0xFFFDE68A)],
+        );
+      case 'water service':
+        return const _CategoryTheme(
+          primary: Color(0xFF06B6D4), // Cyan
+          accent: Color(0xFF0E7490),
+          gradient: [Color(0xFFECFEFF), Color(0xFFCFFAFE)],
+        );
+      case 'logistics':
+        return const _CategoryTheme(
+          primary: Color(0xFF8B5CF6), // Violet
+          accent: Color(0xFF6D28D9),
+          gradient: [Color(0xFFF5F3FF), Color(0xFFEDE9FE)],
+        );
+      case 'oil & fluids':
+        return const _CategoryTheme(
+          primary: Color(0xFFEF4444), // Red
+          accent: Color(0xFFB91C1C),
+          gradient: [Color(0xFFFEF2F2), Color(0xFFFEE2E2)],
+        );
+      default:
+        return const _CategoryTheme(
+          primary: Color(0xFF6366F1), // Indigo
+          accent: Color(0xFF4338CA),
+          gradient: [Color(0xFFEEF2FF), Color(0xFFE0E7FF)],
+        );
+    }
+  }
+}
+
+class _CategoryTheme {
+  final Color primary;
+  final Color accent;
+  final List<Color> gradient;
+
+  const _CategoryTheme({
+    required this.primary,
+    required this.accent,
+    required this.gradient,
+  });
 }

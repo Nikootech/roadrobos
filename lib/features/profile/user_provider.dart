@@ -13,6 +13,19 @@ import '../../core/services/notification_service.dart';
 import '../../core/services/local_storage_service.dart';
 import '../../core/extensions/datetime_extensions.dart';
 
+// Helper: map a loaded user's role to their home route
+String _homeRouteForUser(AppUser user) {
+  if (user.role.isAdmin) return '/admin-home';
+  switch (user.role) {
+    case UserRole.driver:
+      return '/driver-home';
+    case UserRole.technician:
+      return '/tech-dashboard';
+    default:
+      return '/main/home';
+  }
+}
+
 // ── Web Platform Note ─────────────────────────────────────────────────────────
 // On web (Vercel), Google OAuth redirects the entire browser tab, so the
 // device-ID update that normally runs after signInWithOAuth never executes.
@@ -294,6 +307,12 @@ class UserNotifier extends StateNotifier<UserState> {
         
         state = state.copyWith(user: user, isLoading: false, isDemo: isDemoId);
         
+        // Cache the home route for instant redirect on next splash
+        if (!isDemoId) {
+          final route = _homeRouteForUser(user);
+          unawaited(_ref.read(localStorageServiceProvider).saveLastHomeRoute(route));
+        }
+        
         // Sync FCM token to backend (P0 Integration)
         if (!isDemoId) {
           // ignore: unawaited_futures
@@ -332,6 +351,12 @@ class UserNotifier extends StateNotifier<UserState> {
         }
         
         state = state.copyWith(user: newUser, isLoading: false, isDemo: isDemoId);
+
+        // Cache the home route for instant redirect on next splash
+        if (!isDemoId) {
+          final route = _homeRouteForUser(newUser);
+          unawaited(_ref.read(localStorageServiceProvider).saveLastHomeRoute(route));
+        }
       }
       if (state.user != null) {
         final u = state.user!;
@@ -376,6 +401,8 @@ class UserNotifier extends StateNotifier<UserState> {
 
   Future<void> logout() async {
     await _authService.signOut();
+    // Clear the cached home route so the next user doesn't get a stale redirect
+    unawaited(_ref.read(localStorageServiceProvider).clearLastHomeRoute());
     state = UserState();
     Sentry.configureScope((scope) => scope.setUser(null));
   }

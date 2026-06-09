@@ -118,16 +118,22 @@ final routerProvider = Provider<GoRouter>((ref) {
           return '/auth/login';
         }
 
-        // Profile still loading — stay on current public route.
-        // The SplashScreen widget handles its own timeout logic.
-        // NOTE: Do NOT hold here indefinitely — if something went wrong
-        // the splash screen will timeout and navigate to /auth/login.
+        // Profile still loading — stay on current public route and wait.
+        // ── KEY FIX ──────────────────────────────────────────────────────────
+        // Previously this returned '/splash' for any non-splash public path
+        // (e.g. /auth/login after sign-in), causing a visible splash bounce.
+        // Now we return null (stay put) for ALL public paths while loading.
+        // GoRouter will re-run this redirect automatically when userProvider
+        // emits the loaded profile, and then redirect to the correct home.
+        // SplashScreen's own polling loop handles the /splash timeout case.
         if (user == null) {
-          if (location == '/splash' || location == '/login-callback') return null;
-          return '/splash';
+          if (kDebugMode) {
+            debugPrint('Router: Profile loading on $location — holding redirect.');
+          }
+          return null; // Stay on current public page, no splash bounce
         }
 
-        // Redirect based on role
+        // Profile loaded — redirect based on role
         if (user.role.isAdmin) {
           return '/admin-home';
         }
