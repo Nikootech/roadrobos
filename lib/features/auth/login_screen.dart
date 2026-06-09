@@ -34,6 +34,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   
   bool _isLoading = false;
   bool _isSigningUp = false; // Toggle for register vs login
+  bool _dialogShowing = false;
 
   @override
   void initState() {
@@ -109,15 +110,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   void _handleEmailLogin() async {
     setState(() => _isLoading = true);
     try {
-      final response = await ref.read(authServiceProvider).signInWithEmail(
+      await ref.read(authServiceProvider).signInWithEmail(
         _emailController.text.trim(),
         _passwordController.text.trim(),
       );
-      
-      if (response.user != null) {
-        final deviceId = await ref.read(localStorageServiceProvider).getLocalDeviceId();
-        await ref.read(userRepositoryProvider).updateField(response.user!.id, 'current_device_id', deviceId);
-      }
       
       unawaited(Sentry.addBreadcrumb(
         Breadcrumb(
@@ -303,12 +299,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     try {
       final success = await ref.read(authServiceProvider).signInWithGoogle();
       if (success) {
-        final currentUser = ref.read(authServiceProvider).currentUser;
-        if (currentUser != null) {
-          final deviceId = await ref.read(localStorageServiceProvider).getLocalDeviceId();
-          await ref.read(userRepositoryProvider).updateField(currentUser.id, 'current_device_id', deviceId);
-        }
-        
         unawaited(Sentry.addBreadcrumb(
           Breadcrumb(
             message: 'Login succeeded',
@@ -353,9 +343,61 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
 
 
+  void _showSessionMismatchDialog() {
+    if (_dialogShowing) return;
+    _dialogShowing = true;
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.devices_rounded, color: AppColors.primaryBlue),
+            SizedBox(width: 8),
+            Text('Active Session Detected', style: TextStyle(fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: const Text(
+          'Your account is currently active on another device/browser. '
+          'Do you want to terminate that session and log in here? '
+          'Otherwise, you will be signed out from this device.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _dialogShowing = false;
+              ref.read(userProvider.notifier).cancelSessionTakeover();
+            },
+            child: const Text('Cancel / Keep Old', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.brandGreen,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: () {
+              Navigator.of(context).pop();
+              _dialogShowing = false;
+              ref.read(userProvider.notifier).confirmSessionTakeover();
+            },
+            child: const Text('Terminate & Continue', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     ref.listen<UserState>(userProvider, (previous, next) {
+      if (next.showSessionMismatchPrompt) {
+        if (_isLoading) setState(() => _isLoading = false);
+        _showSessionMismatchDialog();
+        return;
+      }
       if (next.error != null && next.error != previous?.error) {
         if (_isLoading) setState(() => _isLoading = false);
         NavHelpers.showError(context, 'Profile error: ${next.error}');

@@ -26,12 +26,16 @@ class UserState {
   final bool isLoading;
   final bool isDemo;
   final String? error;
+  final bool showSessionMismatchPrompt;
+  final AppUser? pendingUser;
 
   UserState({
     this.user,
     this.isLoading = false,
     this.isDemo = false,
     this.error,
+    this.showSessionMismatchPrompt = false,
+    this.pendingUser,
   });
 
   // Helper getters for stable UI access
@@ -48,12 +52,16 @@ class UserState {
     bool? isLoading,
     bool? isDemo,
     String? error,
+    bool? showSessionMismatchPrompt,
+    AppUser? pendingUser,
   }) {
     return UserState(
       user: user ?? this.user,
       isLoading: isLoading ?? this.isLoading,
       isDemo: isDemo ?? this.isDemo,
       error: error ?? this.error,
+      showSessionMismatchPrompt: showSessionMismatchPrompt ?? this.showSessionMismatchPrompt,
+      pendingUser: pendingUser ?? this.pendingUser,
     );
   }
 }
@@ -130,26 +138,74 @@ class UserNotifier extends StateNotifier<UserState> {
   Future<bool> _checkDeviceSession(AppUser user) async {
     if (user.id.startsWith('demo_')) return true;
 
-    // ── Web: skip device-ID check ─────────────────────────────────────────────
-    // On web, Google OAuth redirects the browser away from the app, so the
-    // device-ID is never written to the DB on the callback. Enforcing this
-    // check on web always results in a false mismatch → forced logout loop.
-    if (kIsWeb) return true;
-
-    if (user.currentDeviceId == null || user.currentDeviceId!.isEmpty) return true;
-
     final localDeviceId = await _ref.read(localStorageServiceProvider).getLocalDeviceId();
+
+    // If no device ID is registered yet in DB, set it automatically to current device ID
+    if (user.currentDeviceId == null || user.currentDeviceId!.isEmpty) {
+      if (kDebugMode) {
+        debugPrint('UserNotifier: No device ID registered. Registering $localDeviceId');
+      }
+      await _userRepository.updateField(user.id, 'current_device_id', localDeviceId);
+      return true;
+    }
+
     if (user.currentDeviceId != localDeviceId) {
-      debugPrint('UserNotifier: Device mismatch! DB DeviceID: ${user.currentDeviceId}, Local DeviceID: $localDeviceId');
-      
-      // Set the multi-device logout flag so LoginScreen can show a custom dialog
-      await _ref.read(localStorageServiceProvider).setMultiDeviceLogout(true);
-      
-      // Force logout
-      await logout();
+      if (kDebugMode) {
+        debugPrint('UserNotifier: Device mismatch! DB DeviceID: ${user.currentDeviceId}, Local DeviceID: $localDeviceId');
+      }
+
+      // Check if we are already logged in and active on this device (meaning we were hijacked)
+      if (state.user != null && state.user!.id == user.id && state.user!.currentDeviceId == localDeviceId) {
+        if (kDebugMode) {
+          debugPrint('UserNotifier: Active session hijacked! Forcing logout.');
+        }
+        await _ref.read(localStorageServiceProvider).setMultiDeviceLogout(true);
+        await logout();
+        return false;
+      }
+
+      // Otherwise, this is a login or cold-start attempt on a new device. Prompt the user!
+      state = state.copyWith(
+        isLoading: false,
+        showSessionMismatchPrompt: true,
+        pendingUser: user,
+      );
       return false;
     }
     return true;
+  }
+
+  Future<void> confirmSessionTakeover() async {
+    final pending = state.pendingUser;
+    if (pending == null) return;
+
+    state = UserState(isLoading: true, isDemo: state.isDemo);
+    try {
+      final localDeviceId = await _ref.read(localStorageServiceProvider).getLocalDeviceId();
+      await _userRepository.updateField(pending.id, 'current_device_id', localDeviceId);
+      
+      final updatedUser = pending.copyWith(currentDeviceId: localDeviceId);
+      state = UserState(
+        user: updatedUser,
+        isDemo: state.isDemo,
+      );
+      
+      // Resume notifications sync
+      unawaited(NotificationService().syncTokenToBackend(pending.id));
+    } catch (e) {
+      state = UserState(
+        isDemo: state.isDemo,
+        error: e.toString(),
+      );
+    }
+  }
+
+  Future<void> cancelSessionTakeover() async {
+    state = UserState(
+      user: state.user,
+      isDemo: state.isDemo,
+    );
+    await logout();
   }
 
 

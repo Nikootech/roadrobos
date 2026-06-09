@@ -3,7 +3,7 @@
 class DeeplinkValidator {
   DeeplinkValidator._();
 
-  static const _allowedSchemes = {'roadrobos', 'https'};
+  static const _allowedSchemes = {'roadrobos', 'https', 'http'};
 
   /// Extract the host portion from the SUPABASE_URL env var.
   /// e.g. "https://YOUR_PROJECT_ID.supabase.co" → "YOUR_PROJECT_ID.supabase.co"
@@ -15,6 +15,9 @@ class DeeplinkValidator {
 
   static Set<String> get _allowedHosts => {
     'roadrobos.app',
+    'roadrobos.vercel.app',
+    'localhost',
+    '127.0.0.1',
     // Supabase project URL — used for OAuth redirects
     if (_supabaseHost.isNotEmpty) _supabaseHost,
   };
@@ -25,9 +28,22 @@ class DeeplinkValidator {
     // 1. Scheme check
     if (!_allowedSchemes.contains(uri.scheme)) return false;
 
-    // 2. For https deeplinks, host must be in allowlist
-    if (uri.scheme == 'https' && !_allowedHosts.contains(uri.host)) {
-      return false;
+    // 2. For https/http deeplinks, host must be in allowlist or end with .vercel.app
+    if (uri.scheme == 'https' || uri.scheme == 'http') {
+      final host = uri.host;
+      
+      // Strict rule: http is ONLY allowed for localhost/127.0.0.1
+      if (uri.scheme == 'http' && host != 'localhost' && host != '127.0.0.1') {
+        return false;
+      }
+
+      // Check against allowlist or Vercel preview domains
+      if (host != 'localhost' && 
+          host != '127.0.0.1' && 
+          !_allowedHosts.contains(host) && 
+          !host.endsWith('.vercel.app')) {
+        return false;
+      }
     }
 
     // 3. OAuth callback: must have a non-trivial code param

@@ -20,6 +20,7 @@ class SplashScreen extends ConsumerStatefulWidget {
 
 class _SplashScreenState extends ConsumerState<SplashScreen> {
   bool _navigationHandled = false;
+  bool _dialogShowing = false;
 
   @override
   void initState() {
@@ -69,6 +70,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       // ── Logged in — wait for profile ───────────────────────────────────────
       final userState = ref.read(userProvider);
 
+      if (userState.showSessionMismatchPrompt) {
+        // Session mismatch detected — pause loop and wait for user's action
+        continue;
+      }
+
       if (userState.user != null) {
         // Profile ready — GoRouter redirect guard handles the dashboard redirect
         debugPrint('SplashScreen: Profile loaded, GoRouter will redirect.');
@@ -91,8 +97,61 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     if (mounted) context.go('/auth/login');
   }
 
+  void _showSessionMismatchDialog() {
+    if (_dialogShowing) return;
+    _dialogShowing = true;
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.devices_rounded, color: AppColors.primaryBlue),
+            SizedBox(width: 8),
+            Text('Active Session Detected', style: TextStyle(fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: const Text(
+          'Your account is currently active on another device/browser. '
+          'Do you want to terminate that session and log in here? '
+          'Otherwise, you will be signed out from this device.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _dialogShowing = false;
+              ref.read(userProvider.notifier).cancelSessionTakeover();
+            },
+            child: const Text('Cancel / Keep Old', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.brandGreen,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: () {
+              Navigator.of(context).pop();
+              _dialogShowing = false;
+              ref.read(userProvider.notifier).confirmSessionTakeover();
+            },
+            child: const Text('Terminate & Continue', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    ref.listen<UserState>(userProvider, (previous, next) {
+      if (next.showSessionMismatchPrompt) {
+        _showSessionMismatchDialog();
+      }
+    });
+
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
