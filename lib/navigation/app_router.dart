@@ -151,7 +151,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // -- Simple Role Guards --
       if (isLoggedIn && user != null) {
-        if (location.startsWith('/admin-') && !user.role.isAdmin) {
+        if ((location.startsWith('/admin-') || location.startsWith('/admin/')) && !user.role.isAdmin) {
           return '/main/home'; // Unauthorised
         }
         if (location.startsWith('/tech-') &&

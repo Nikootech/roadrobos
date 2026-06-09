@@ -1,19 +1,32 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/repositories/admin_ops_repository.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/live_map_widget.dart';
 
-class ActiveRidesScreen extends StatefulWidget {
+final activeRidesStreamProvider = StreamProvider.autoDispose<List<Map<String, dynamic>>>((ref) {
+  final supabase = Supabase.instance.client;
+  return supabase
+      .from('ride_bookings')
+      .stream(primaryKey: ['id'])
+      .order('created_at')
+      .map((list) => list.where((item) => ['searching', 'accepted', 'on_trip'].contains(item['status'])).toList());
+});
+
+class ActiveRidesScreen extends ConsumerStatefulWidget {
   const ActiveRidesScreen({super.key});
 
   @override
-  State<ActiveRidesScreen> createState() => _ActiveRidesScreenState();
+  ConsumerState<ActiveRidesScreen> createState() => _ActiveRidesScreenState();
 }
 
-class _ActiveRidesScreenState extends State<ActiveRidesScreen> {
+class _ActiveRidesScreenState extends ConsumerState<ActiveRidesScreen> {
   bool _isMapMode = false;
 
   @override
@@ -128,34 +141,162 @@ class _ActiveRidesScreenState extends State<ActiveRidesScreen> {
   }
 
   Widget _buildListView() {
-    return Column(
-      children: [
-        // Summary bar
-        Container(
-          color: Colors.white,
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildSummaryItem('Total Active', '42'),
-              _buildSummaryItem('In Transit', '28'),
-              _buildSummaryItem('Pending', '14'),
+    final activeRidesAsync = ref.watch(activeRidesStreamProvider);
+
+    return activeRidesAsync.when(
+      data: (rides) {
+        final total = rides.length;
+        final transit = rides.where((r) => r['status'] == 'on_trip').length;
+        final pending = rides.where((r) => r['status'] == 'searching' || r['status'] == 'accepted').length;
+
+        return Column(
+          children: [
+            // Summary bar
+            Container(
+              color: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildSummaryItem('Total Active', total.toString()),
+                  _buildSummaryItem('In Transit', transit.toString()),
+                  _buildSummaryItem('Pending', pending.toString()),
+                ],
+              ),
+            ),
+            
+            Expanded(
+              child: rides.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Iconsax.radar, size: 80, color: AppColors.textMuted.withValues(alpha: 0.2)),
+                          const SizedBox(height: 16),
+                          const Text('No active rides at the moment', style: TextStyle(color: AppColors.textSecondary)),
+                        ],
+                      ),
+                    )
+                  : ListView.separated(
+                      padding: const EdgeInsets.all(20),
+                      itemCount: rides.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 16),
+                      itemBuilder: (context, index) {
+                        return _buildRideCard(rides[index], context);
+                      },
+                    ),
+            ),
+          ],
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primaryBlue)),
+      error: (err, stack) => Center(child: Text('Error loading active rides: $err')),
+    );
+  }
+
+  void _showAssignDriverDialog(BuildContext context, Map<String, dynamic> ride) async {
+    final repo = ref.read(adminOpsRepositoryProvider);
+    
+    unawaited(showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator(color: AppColors.primaryBlue)),
+    ));
+
+    List<Map<String, dynamic>> allDrivers = [];
+    try {
+      allDrivers = await repo.getAllDrivers();
+      if (context.mounted) Navigator.pop(context); // Pop loading
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.pop(context); // Pop loading
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error loading drivers: $e')));
+      }
+      return;
+    }
+
+    final onlineDrivers = allDrivers.where((d) => d['is_online'] == true).toList();
+
+    if (onlineDrivers.isEmpty) {
+      if (context.mounted) {
+        unawaited(showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: const Text('No Online Drivers'),
+            content: const Text('There are currently no drivers online to assign.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
             ],
           ),
-        ),
-        
-        Expanded(
-          child: ListView.separated(
-            padding: const EdgeInsets.all(20),
-            itemCount: 5,
-            separatorBuilder: (_, __) => const SizedBox(height: 16),
-            itemBuilder: (context, index) {
-              return _buildRideCard(index, context);
-            },
+        ));
+      }
+      return;
+    }
+
+    if (context.mounted) {
+      unawaited(showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text('Assign Driver'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView.separated(
+              shrinkWrap: true,
+              itemCount: onlineDrivers.length,
+              separatorBuilder: (_, __) => const Divider(),
+              itemBuilder: (context, index) {
+                final driver = onlineDrivers[index];
+                final driverId = driver['id'].toString();
+                final driverName = driver['name'] ?? 'Driver';
+                final vehicleModel = driver['vehicle_model'] ?? 'N/A';
+
+                return ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: CircleAvatar(
+                    backgroundColor: AppColors.primaryBlue.withValues(alpha: 0.1),
+                    child: const Icon(Icons.person, color: AppColors.primaryBlue),
+                  ),
+                  title: Text(driverName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                  subtitle: Text('Vehicle: $vehicleModel', style: const TextStyle(fontSize: 12)),
+                  onTap: () async {
+                    Navigator.pop(context); // Close list dialog
+                    unawaited(showDialog(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (context) => const Center(child: CircularProgressIndicator(color: AppColors.primaryBlue)),
+                    ));
+
+                    try {
+                      await repo.assignDriverToRide(ride['id'].toString(), driverId);
+                      if (context.mounted) {
+                        Navigator.pop(context); // Pop progress
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Driver assigned successfully!')));
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        Navigator.pop(context); // Pop progress
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to assign driver: $e')));
+                      }
+                    }
+                  },
+                );
+              },
+            ),
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+          ],
         ),
-      ],
-    );
+      ));
+    }
   }
 
   Widget _buildMapView() {
@@ -182,7 +323,7 @@ class _ActiveRidesScreenState extends State<ActiveRidesScreen> {
                 const Icon(Iconsax.radar, color: AppColors.primaryBlue, size: 20),
                 const SizedBox(width: 12),
                 Text(
-                  'Tracking 42 Live Rides',
+                  'Tracking Live Rides',
                   style: GoogleFonts.outfit(fontWeight: FontWeight.w600, color: AppColors.textPrimary),
                 ),
               ],
@@ -202,7 +343,15 @@ class _ActiveRidesScreenState extends State<ActiveRidesScreen> {
     );
   }
 
-  Widget _buildRideCard(int index, BuildContext context) {
+  Widget _buildRideCard(Map<String, dynamic> ride, BuildContext context) {
+    final status = ride['status']?.toString().toUpperCase() ?? 'SEARCHING';
+    final isSearching = status == 'SEARCHING';
+    final fare = ride['fare'] ?? '0';
+    final vehicleType = ride['vehicle_type'] ?? 'Taxi';
+    final pickup = ride['pickup_address'] ?? 'Pickup';
+    final dest = ride['destination_address'] ?? 'Destination';
+    final rideId = ride['id']?.toString() ?? '';
+
     return Container(
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: AppColors.border)),
       padding: const EdgeInsets.all(16),
@@ -216,48 +365,78 @@ class _ActiveRidesScreenState extends State<ActiveRidesScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Ravi Verma', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
-                    Text('ID: RID-201938', style: GoogleFonts.inter(color: AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.w500)),
+                    Text('Ride Request', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                    Text('ID: RID-${rideId.length > 8 ? rideId.substring(0, 8).toUpperCase() : rideId.toUpperCase()}', style: GoogleFonts.inter(color: AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.w500)),
                   ],
                 ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(color: AppColors.successGreen.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
-                child: const Text('ON TRIP', style: TextStyle(color: AppColors.successGreen, fontSize: 10, fontWeight: FontWeight.bold)),
+                decoration: BoxDecoration(
+                  color: isSearching 
+                      ? AppColors.warningAmber.withValues(alpha: 0.1) 
+                      : AppColors.successGreen.withValues(alpha: 0.1), 
+                  borderRadius: BorderRadius.circular(6)
+                ),
+                child: Text(
+                  status, 
+                  style: TextStyle(
+                    color: isSearching ? AppColors.warningAmber : AppColors.successGreen, 
+                    fontSize: 10, 
+                    fontWeight: FontWeight.bold
+                  )
+                ),
               ),
             ],
           ),
           const Divider(height: 24),
-          _buildLocationRow(Icons.radio_button_checked, AppColors.primaryBlue, 'Hitech City, Hyderabad'),
+          _buildLocationRow(Icons.radio_button_checked, AppColors.primaryBlue, pickup),
           const SizedBox(height: 12),
-          _buildLocationRow(Icons.location_on_rounded, AppColors.dangerRed, 'Gachibowli DLF, Hyderabad'),
+          _buildLocationRow(Icons.location_on_rounded, AppColors.dangerRed, dest),
           const Divider(height: 24),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Column(
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Maruti Suzuki Swift', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
-                  Text('TS 08 EX 4567', style: TextStyle(color: AppColors.textSecondary, fontSize: 11)),
+                  Text(vehicleType.toUpperCase(), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+                  Text('Fare: ₹$fare', style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
                 ],
               ),
-              TextButton(
-                onPressed: () => context.push('/live-tracking'),
-                child: Text(
-                  'View Live',
-                  style: GoogleFonts.outfit(
-                    color: AppColors.primaryBlue,
-                    fontWeight: FontWeight.w700,
+              Row(
+                children: [
+                  if (isSearching) ...[
+                    ElevatedButton(
+                      onPressed: () => _showAssignDriverDialog(context, ride),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primaryBlue,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      child: const Text('Assign Driver', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                  TextButton(
+                    onPressed: () => context.push('/live-tracking'),
+                    child: Text(
+                      'View Live',
+                      style: GoogleFonts.outfit(
+                        color: AppColors.primaryBlue,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
             ],
           ),
         ],
       ),
-    ).animate().fadeIn(delay: 50.ms * index).slideX(begin: 0.1, end: 0);
+    );
   }
 
   Widget _buildLocationRow(IconData icon, Color color, String text) {
@@ -265,7 +444,14 @@ class _ActiveRidesScreenState extends State<ActiveRidesScreen> {
       children: [
         Icon(icon, size: 16, color: color),
         const SizedBox(width: 12),
-        Text(text, style: const TextStyle(fontSize: 13, color: AppColors.textPrimary)),
+        Expanded(
+          child: Text(
+            text, 
+            maxLines: 1, 
+            overflow: TextOverflow.ellipsis, 
+            style: const TextStyle(fontSize: 13, color: AppColors.textPrimary)
+          ),
+        ),
       ],
     );
   }

@@ -513,6 +513,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       '/car-service-booking',
       '/ev-bike-service-booking',
       '/water-service-booking',
+      '/insurance',
     };
     if (validRoutes.contains(route)) return route;
 
@@ -520,9 +521,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     switch (route) {
       case '/insurance-selection':
       case '/insurance':
-        return null; // No insurance screen yet
+        return '/insurance';
       case '/service-selection':
       case '/service':
+      case '/select-service-type':
         return '/select-service';
       case '/rental-selection':
       case '/rental':

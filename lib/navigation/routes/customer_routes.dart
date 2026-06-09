@@ -66,6 +66,7 @@ import '../../features/services/service_type_selector.dart';
 import '../../features/services/book_service_screen.dart';
 import '../../features/home/service_booking_detail_screen.dart';
 import '../../core/models/service_booking.dart';
+import '../../features/insurance/insurance_selection_screen.dart';
 import '../app_transitions.dart';
 
 // Navigator key for shell route — shared with app_router.dart
@@ -169,6 +170,13 @@ final List<RouteBase> customerRoutes = [
     ),
   ),
   GoRoute(
+    path: '/select-service-type',
+    pageBuilder: (context, state) => AppTransitions.slideRight(
+      child: const SelectServiceTypeScreen(),
+      state: state,
+    ),
+  ),
+  GoRoute(
     path: '/schedule-appointment',
     pageBuilder: (context, state) => AppTransitions.slideUp(
       child: const ScheduleAppointmentScreen(),
@@ -255,6 +263,13 @@ final List<RouteBase> customerRoutes = [
   ),
   GoRoute(
     path: '/taxi/home',
+    pageBuilder: (context, state) => AppTransitions.fade(
+      child: const TaxiRideScreen(),
+      state: state,
+    ),
+  ),
+  GoRoute(
+    path: '/taxi',
     pageBuilder: (context, state) => AppTransitions.fade(
       child: const TaxiRideScreen(),
       state: state,
@@ -371,6 +386,20 @@ final List<RouteBase> customerRoutes = [
     path: '/rentals-selection',
     pageBuilder: (context, state) => AppTransitions.slideRight(
       child: const VehicleSelectionScreen(),
+      state: state,
+    ),
+  ),
+  GoRoute(
+    path: '/insurance',
+    pageBuilder: (context, state) => AppTransitions.slideRight(
+      child: const InsuranceSelectionScreen(),
+      state: state,
+    ),
+  ),
+  GoRoute(
+    path: '/insurance-selection',
+    pageBuilder: (context, state) => AppTransitions.slideRight(
+      child: const InsuranceSelectionScreen(),
       state: state,
     ),
   ),

@@ -340,6 +340,107 @@ class AdminOpsRepository {
       throw AdminOpsRepositoryException('Failed to update employee status', e);
     }
   }
+
+  /// Assign a technician to a service booking and create/update its job card
+  Future<void> assignTechnicianToBooking(String bookingId, String techId) async {
+    try {
+      // 1. Update the booking itself
+      await _supabase
+          .from('service_bookings')
+          .update({'tech_id': techId})
+          .eq('id', bookingId);
+
+      // 2. Fetch the booking to sync details into technician_jobs
+      final bookingRes = await _supabase
+          .from('service_bookings')
+          .select()
+          .eq('id', bookingId)
+          .maybeSingle();
+
+      if (bookingRes == null) {
+        throw Exception('Service booking not found');
+      }
+
+      // 3. Upsert into technician_jobs
+      final existingJob = await _supabase
+          .from('technician_jobs')
+          .select('id')
+          .eq('booking_id', bookingId)
+          .maybeSingle();
+
+      final jobPayload = {
+        'assigned_tech_id': techId,
+        'booking_id': bookingId,
+        'status': 'SCHEDULED',
+        'vehicle_model': bookingRes['vehicle_name'] ?? 'Vehicle',
+        'vehicle_plate': bookingRes['vehicle_plate'] ?? 'Plate',
+        'service_type': 'General Service',
+        'package_name': bookingRes['package_name'] ?? 'Package',
+        'date': bookingRes['booking_date'] ?? '',
+        'time': bookingRes['booking_time'] ?? '',
+        'price': '₹${(bookingRes['total_cost'] ?? 0.0).toString()}',
+        'progress': 0.0,
+        'checklist': [],
+        'parts': [],
+      };
+
+      if (existingJob != null) {
+        await _supabase
+            .from('technician_jobs')
+            .update(jobPayload)
+            .eq('id', existingJob['id']);
+      } else {
+        await _supabase
+            .from('technician_jobs')
+            .insert(jobPayload);
+      }
+    } catch (e) {
+      throw AdminOpsRepositoryException('Failed to assign technician to booking', e);
+    }
+  }
+
+  /// Fetch all unassigned service bookings
+  Future<List<Map<String, dynamic>>> getUnassignedServiceBookings() async {
+    try {
+      final response = await _supabase
+          .from('service_bookings')
+          .select()
+          .isFilter('tech_id', null)
+          .order('created_at', ascending: false);
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      throw AdminOpsRepositoryException('Failed to fetch unassigned service bookings', e);
+    }
+  }
+
+  /// Assign a driver to a ride booking
+  Future<void> assignDriverToRide(String rideId, String driverId) async {
+    try {
+      await _supabase
+          .from('ride_bookings')
+          .update({
+            'driver_id': driverId,
+            'status': 'accepted',
+          })
+          .eq('id', rideId);
+    } catch (e) {
+      throw AdminOpsRepositoryException('Failed to assign driver to ride', e);
+    }
+  }
+
+  /// Fetch all active or searching ride bookings
+  Future<List<Map<String, dynamic>>> getActiveSearchingRides() async {
+    try {
+      final response = await _supabase
+          .from('ride_bookings')
+          .select()
+          .inFilter('status', ['searching', 'accepted', 'on_trip'])
+          .order('created_at', ascending: false);
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      throw AdminOpsRepositoryException('Failed to fetch active/searching rides', e);
+    }
+  }
 }
 
 final adminOpsRepositoryProvider = Provider<AdminOpsRepository>((ref) {

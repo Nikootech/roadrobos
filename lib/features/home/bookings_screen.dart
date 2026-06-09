@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../providers/connectivity_provider.dart';
+import 'user_bookings_provider.dart';
 
 /// Bookings Screen - Shows ride/service booking history
 /// Matches Figma Screen [21]: "My Rides History"
@@ -12,13 +14,7 @@ class BookingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final bookings = [
-      _BookingItem('General Service', 'Hyundai Creta', 'Completed', '28 Feb 2026', '₹2,499', AppColors.successDark, Icons.build_rounded),
-      _BookingItem('Monthly Rental', 'Mahindra Thar', 'Active', '01 Mar - 31 Mar', '₹45,000', AppColors.primaryBlue, Icons.car_rental_rounded),
-      _BookingItem('Oil Change', 'Honda City', 'In Progress', '07 Mar 2026', '₹899', AppColors.warningAmber, Icons.build_rounded),
-      _BookingItem('Daily Rental', 'Hyundai Venue', 'Scheduled', '12 Mar 2026', '₹2,500', AppColors.primaryBlue, Icons.car_rental_rounded),
-      _BookingItem('AC Service', 'Hyundai Creta', 'Scheduled', '10 Mar 2026', '₹1,799', AppColors.primaryBlue, Icons.build_rounded),
-    ];
+    final bookingsAsync = ref.watch(userBookingsProvider);
 
     return Scaffold(
       backgroundColor: AppColors.bgLightGrey,
@@ -59,104 +55,150 @@ class BookingsScreen extends ConsumerWidget {
               ),
             ),
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: bookings.length,
-              itemBuilder: (context, index) {
-                final booking = bookings[index];
-          return Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.bgWhite,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: const [
-                BoxShadow(
-                  color: AppColors.shadowLight,
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: booking.statusColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Icon(
-                    booking.icon,
-                    color: booking.statusColor,
-                    size: 22,
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        booking.service,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${booking.vehicle} • ${booking.date}',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      booking.price,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                      ),
+            child: bookingsAsync.when(
+              data: (bookings) {
+                if (bookings.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Iconsax.calendar_remove, size: 80, color: AppColors.textMuted.withValues(alpha: 0.2)),
+                        const SizedBox(height: 16),
+                        const Text('No bookings found', style: TextStyle(color: AppColors.textSecondary)),
+                      ],
                     ),
-                    const SizedBox(height: 4),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: booking.statusColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        booking.status,
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: booking.statusColor,
+                  );
+                }
+
+                return ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: bookings.length,
+                  itemBuilder: (context, index) {
+                    final booking = bookings[index];
+                    final statusColor = _getStatusColor(booking.status);
+                    final icon = _getIcon(booking.type);
+
+                    return GestureDetector(
+                      onTap: () {
+                        if (booking.type == BookingType.service) {
+                          context.push('/service-booking-detail', extra: booking.originalObject);
+                        } else if (booking.type == BookingType.ride) {
+                          context.push('/live-tracking', extra: booking.originalObject);
+                        } else if (booking.type == BookingType.rental) {
+                          context.push('/rental-detail/${booking.id}');
+                        }
+                      },
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppColors.bgWhite,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: AppColors.shadowLight,
+                              blurRadius: 8,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: statusColor.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: Icon(
+                                icon,
+                                color: statusColor,
+                                size: 22,
+                              ),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    booking.title,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    booking.subtitle,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    booking.date,
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      color: AppColors.textMuted,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  booking.price,
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.textPrimary,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: statusColor.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    booking.status.toUpperCase(),
+                                    style: TextStyle(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w600,
+                                      color: statusColor,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                    )
+                        .animate(delay: Duration(milliseconds: 50 * index))
+                        .fadeIn(duration: 400.ms)
+                        .slideX(begin: 0.05, end: 0);
+                  },
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primaryBlue)),
+              error: (err, stack) => Center(child: Text('Error loading bookings: $err')),
             ),
-          )
-              .animate(delay: Duration(milliseconds: 100 * index))
-              .fadeIn(duration: 400.ms)
-              .slideX(begin: 0.05, end: 0);
-            },
           ),
-        ),
-      ],
-    ),
+        ],
+      ),
   );
 }
 
@@ -239,17 +281,33 @@ class BookingsScreen extends ConsumerWidget {
       ),
     );
   }
-}
 
-class _BookingItem {
-  final String service;
-  final String vehicle;
-  final String status;
-  final String date;
-  final String price;
-  final Color statusColor;
-  final IconData icon;
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'completed':
+      case 'paid':
+        return AppColors.successDark;
+      case 'active':
+      case 'in_progress':
+      case 'in progress':
+      case 'confirmed':
+        return AppColors.primaryBlue;
+      case 'cancelled':
+        return AppColors.dangerRed;
+      default:
+        return AppColors.warningAmber;
+    }
+  }
 
-  _BookingItem(this.service, this.vehicle, this.status, this.date, this.price, this.statusColor, this.icon);
+  IconData _getIcon(BookingType type) {
+    switch (type) {
+      case BookingType.service:
+        return Icons.build_rounded;
+      case BookingType.ride:
+        return Icons.local_taxi_rounded;
+      case BookingType.rental:
+        return Icons.car_rental_rounded;
+    }
+  }
 }
 

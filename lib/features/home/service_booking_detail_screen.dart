@@ -1,19 +1,56 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/models/service_booking.dart';
+import '../../core/models/user_role.dart';
 import '../../core/theme/app_colors.dart';
+import '../profile/user_provider.dart';
 
-class ServiceBookingDetailScreen extends StatelessWidget {
+class ServiceBookingDetailScreen extends ConsumerWidget {
   final ServiceBooking booking;
 
   const ServiceBookingDetailScreen({super.key, required this.booking});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userState = ref.watch(userProvider);
+    final currentUser = userState.user;
+
+    if (currentUser != null) {
+      final isCustomer = currentUser.id == booking.customerId;
+      final isTechnician = currentUser.id == booking.techId;
+      final isAdmin = currentUser.role.isAdmin;
+
+      if (!isCustomer && !isTechnician && !isAdmin) {
+        return Scaffold(
+          backgroundColor: AppColors.bgLightAlt,
+          appBar: AppBar(
+            backgroundColor: Colors.white,
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: AppColors.textPrimary),
+              onPressed: () => context.pop(),
+            ),
+            title: const Text('Access Denied'),
+          ),
+          body: const Center(
+            child: Padding(
+              padding: EdgeInsets.all(24.0),
+              child: Text(
+                'You are not authorized to view this booking.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 16, color: AppColors.textSecondary, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+        );
+      }
+    }
+
     final statusColor = _statusColor(booking.status);
     final statusLabel = booking.status.toUpperCase();
 
