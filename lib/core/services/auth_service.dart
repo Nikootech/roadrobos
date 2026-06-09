@@ -5,6 +5,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:async';
 
 import '../../main.dart' show navigatorKey;
@@ -16,6 +17,8 @@ part 'auth_service.g.dart';
 final authServiceProvider = Provider<AuthService>((ref) {
   return AuthService();
 });
+
+final passwordRecoveryProvider = StateProvider<bool>((ref) => false);
 
 @riverpod
 class AuthNotifier extends _$AuthNotifier {
@@ -31,6 +34,14 @@ class AuthNotifier extends _$AuthNotifier {
       final subscription = client.auth.onAuthStateChange.listen((data) {
         if (kDebugMode) {
           debugPrint('AuthNotifier: ${data.event}');
+        }
+
+        if (data.event == sb.AuthChangeEvent.passwordRecovery) {
+          ref.read(passwordRecoveryProvider.notifier).state = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            navigatorKey.currentContext?.go('/reset-password');
+          });
+          return;
         }
 
         // ── S7: Forced logout on JWT expiry / 401 ──────────────────────────────
@@ -117,7 +128,10 @@ class AuthService {
   }
 
   Future<void> resetPassword(String email) async {
-    await _supabase.auth.resetPasswordForEmail(email);
+    await _supabase.auth.resetPasswordForEmail(
+      email,
+      redirectTo: kIsWeb ? null : 'com.roadrobos.app://login-callback',
+    );
   }
 
   /// Changes the current logged-in user's password in real-time.

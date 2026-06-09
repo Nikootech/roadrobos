@@ -4,7 +4,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../../core/theme/app_colors.dart';
 import 'user_provider.dart';
@@ -1046,21 +1045,20 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                 ? Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1A3A2A),
-                      borderRadius: BorderRadius.circular(20),
+                      color: AppColors.successGreen.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Text(
                       'ON',
-                      style: TextStyle(color: Color(0xFF4CAF50), fontWeight: FontWeight.w900, fontSize: 11),
+                      style: TextStyle(
+                        color: AppColors.successGreen,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   )
                 : const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.textMuted),
           ),
-        ]),
-        const SizedBox(height: 24),
-        _buildSettingsGroup('Preferences', [
-          _buildSettingsTile(Icons.notifications_none_rounded, 'Notification Settings', 'Manage push and email alerts', onTap: () => context.push('/notification-settings')),
-          _buildSettingsTile(Icons.language_rounded, 'Language', 'Choose your preferred language', onTap: () => context.push('/language')),
         ]),
         const SizedBox(height: 24),
         _buildSettingsGroup('Legal', [
@@ -1068,19 +1066,13 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
             Icons.privacy_tip_outlined,
             'Privacy Policy',
             'How we collect, use, and protect your data',
-            onTap: () => launchUrl(
-              Uri.parse('https://roadrobos.com/privacy'),
-              mode: LaunchMode.externalApplication,
-            ),
+            onTap: () => context.push('/privacy-policy'),
           ),
           _buildSettingsTile(
             Icons.description_outlined,
             'Terms of Service',
             'Read our terms and conditions',
-            onTap: () => launchUrl(
-              Uri.parse('https://roadrobos.com/terms'),
-              mode: LaunchMode.externalApplication,
-            ),
+            onTap: () => context.push('/terms-of-service'),
           ),
         ]),
         const SizedBox(height: 48),

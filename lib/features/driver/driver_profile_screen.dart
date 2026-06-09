@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/bottom_nav_bar.dart';
 import '../profile/user_provider.dart';
@@ -139,7 +138,8 @@ class DriverProfileScreen extends ConsumerWidget {
             _buildPremiumMenuItem(Icons.analytics_outlined, 'Analytics', 'Weekly reports & stats', () => _showAnalyticsBottomSheet(context)),
             _buildPremiumMenuItem(Icons.star_outline_rounded, 'Reviews', 'Passenger feedback', () => _showReviewsBottomSheet(context, avgRatingStr, reviewsCount)),
             _buildPremiumMenuItem(Icons.help_outline_rounded, 'Help & Support', 'FAQs & Contact Support', () => context.push('/help-center')),
-            _buildPremiumMenuItem(Icons.privacy_tip_outlined, 'Privacy Policy', 'Data usage and security', () => launchUrl(Uri.parse('https://roadrobos.com/privacy'))),
+            _buildPremiumMenuItem(Icons.privacy_tip_outlined, 'Privacy Policy', 'Data usage and security', () => context.push('/privacy-policy')),
+            _buildPremiumMenuItem(Icons.description_outlined, 'Terms of Service', 'Read our terms and conditions', () => context.push('/terms-of-service')),
             
             const SizedBox(height: 32),
             

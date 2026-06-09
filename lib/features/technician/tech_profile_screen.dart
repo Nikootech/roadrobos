@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
 import '../profile/user_provider.dart';
 import '../../core/repositories/ratings_repository.dart';
@@ -139,7 +138,11 @@ class TechProfileScreen extends ConsumerWidget {
             }),
             _buildMenuItem(Icons.privacy_tip_outlined, 'Privacy Policy', 'Data usage and security', () {
               HapticFeedback.lightImpact();
-              launchUrl(Uri.parse('https://roadrobos.com/privacy'));
+              context.push('/privacy-policy');
+            }),
+            _buildMenuItem(Icons.description_outlined, 'Terms of Service', 'Read our terms and conditions', () {
+              HapticFeedback.lightImpact();
+              context.push('/terms-of-service');
             }),
             
             const SizedBox(height: 32),

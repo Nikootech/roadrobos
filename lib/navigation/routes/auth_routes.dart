@@ -7,6 +7,7 @@ import '../../features/auth/register_screen.dart';
 import '../../features/auth/partner_kyc_screen.dart';
 import '../../features/auth/role_selection_screen.dart';
 import '../../features/auth/pending_approval_screen.dart';
+import '../../features/auth/reset_password_screen.dart';
 import '../app_transitions.dart';
 
 /// Auth & onboarding routes.
@@ -67,6 +68,13 @@ final List<RouteBase> authRoutes = [
     path: '/login-callback',
     pageBuilder: (context, state) => AppTransitions.fade(
       child: const SplashScreen(),
+      state: state,
+    ),
+  ),
+  GoRoute(
+    path: '/reset-password',
+    pageBuilder: (context, state) => AppTransitions.slideUp(
+      child: const ResetPasswordScreen(),
       state: state,
     ),
   ),

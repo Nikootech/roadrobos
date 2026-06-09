@@ -22,7 +22,7 @@ class EnterpriseWorkflowService {
     try {
       await _supabase.auth.resetPasswordForEmail(
         email,
-        redirectTo: kIsWeb ? null : 'com.roadrobos.app://reset-password',
+        redirectTo: kIsWeb ? null : 'com.roadrobos.app://login-callback',
       );
     } catch (e) {
       debugPrint('Reset Password Error: $e');

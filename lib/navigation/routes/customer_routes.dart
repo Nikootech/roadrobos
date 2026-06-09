@@ -67,6 +67,8 @@ import '../../features/services/book_service_screen.dart';
 import '../../features/home/service_booking_detail_screen.dart';
 import '../../core/models/service_booking.dart';
 import '../../features/insurance/insurance_selection_screen.dart';
+import '../../features/legal/privacy_policy_screen.dart';
+import '../../features/legal/terms_of_service_screen.dart';
 import '../app_transitions.dart';
 
 // Navigator key for shell route — shared with app_router.dart
@@ -617,6 +619,22 @@ final List<RouteBase> customerRoutes = [
     path: '/referral',
     pageBuilder: (context, state) => AppTransitions.slideRight(
       child: const ReferralScreen(),
+      state: state,
+    ),
+  ),
+
+  // ── Legal screens ──
+  GoRoute(
+    path: '/privacy-policy',
+    pageBuilder: (context, state) => AppTransitions.slideRight(
+      child: const PrivacyPolicyScreen(),
+      state: state,
+    ),
+  ),
+  GoRoute(
+    path: '/terms-of-service',
+    pageBuilder: (context, state) => AppTransitions.slideRight(
+      child: const TermsOfServiceScreen(),
       state: state,
     ),
   ),

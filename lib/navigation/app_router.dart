@@ -45,6 +45,15 @@ final routerProvider = Provider<GoRouter>((ref) {
 
     // Auth guard and navigation redirect logic
     redirect: (context, state) {
+      // If we are recovering password, force /reset-password
+      final isRecovering = ref.read(passwordRecoveryProvider);
+      if (isRecovering) {
+        if (state.matchedLocation != '/reset-password') {
+          return '/reset-password';
+        }
+        return null;
+      }
+
       // ── S6: Deeplink validation ──────────────────────────────────────────
       // Reject forged OAuth callbacks and path-traversal deeplinks.
       if (state.uri.path == '/login-callback') {
@@ -92,6 +101,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         '/auth/login',
         '/auth/register',
         '/login-callback',
+        '/reset-password',
       ];
       final isPublicPath = publicPaths.contains(location);
 

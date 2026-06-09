@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/constants/app_strings.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -241,7 +240,8 @@ class ProfileScreen extends ConsumerWidget {
                   _buildMenuItem(Icons.notifications_none_rounded, 'Notifications', 'Manage alerts', () => context.push('/notifications')),
                   _buildMenuItem(Icons.card_giftcard_rounded, 'Refer & Earn', 'Invite friends & earn', () => context.push('/referral')),
                   _buildMenuItem(Icons.help_outline_rounded, 'Help Center', 'FAQ & support chat', () => context.push('/help-center')),
-                  _buildMenuItem(Icons.privacy_tip_outlined, 'Privacy Policy', 'Data usage and security', () => launchUrl(Uri.parse('https://roadrobos.com/privacy'), mode: LaunchMode.externalApplication)),
+                  _buildMenuItem(Icons.privacy_tip_outlined, 'Privacy Policy', 'Data usage and security', () => context.push('/privacy-policy')),
+                  _buildMenuItem(Icons.description_outlined, 'Terms of Service', 'Read our terms and conditions', () => context.push('/terms-of-service')),
                   const SizedBox(height: 12),
                   // Logout button
                   GestureDetector(
