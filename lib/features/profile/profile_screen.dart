@@ -237,7 +237,6 @@ class ProfileScreen extends ConsumerWidget {
                   _buildMenuItem(Icons.history_rounded, 'Ride History', 'View past trips', () => context.push('/ride-history')),
                   _buildMenuItem(Icons.notifications_active_outlined, 'Service Reminders', 'Upcoming maintenance alerts', () => context.push('/service-reminders')),
                   _buildMenuItem(Icons.assignment_outlined, 'Service History', 'Maintenance logs & invoices', () => context.push('/service-history')),
-                  _buildMenuItem(Icons.notifications_none_rounded, 'Notifications', 'Manage alerts', () => context.push('/notifications')),
                   _buildMenuItem(Icons.card_giftcard_rounded, 'Refer & Earn', 'Invite friends & earn', () => context.push('/referral')),
                   _buildMenuItem(Icons.help_outline_rounded, 'Help Center', 'FAQ & support chat', () => context.push('/help-center')),
                   _buildMenuItem(Icons.privacy_tip_outlined, 'Privacy Policy', 'Data usage and security', () => context.push('/privacy-policy')),

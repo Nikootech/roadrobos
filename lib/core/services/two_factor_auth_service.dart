@@ -4,6 +4,7 @@
 // The TOTP secret is NEVER stored in our own DB — Supabase Auth owns it.
 // We only track mfa_enabled flag in the profiles table for display purposes.
 
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
@@ -46,6 +47,9 @@ class TwoFactorAuthService {
     try {
       final response = await _supabase.auth.mfa.enroll(
         issuer: 'RoadRobos',
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () => throw TimeoutException('Supabase MFA enroll request timed out.'),
       );
 
       final totp = response.totp;
@@ -80,6 +84,9 @@ class TwoFactorAuthService {
       // Step 1: Create a challenge
       final challengeResponse = await _supabase.auth.mfa.challenge(
         factorId: factorId,
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () => throw TimeoutException('Supabase MFA challenge request timed out.'),
       );
 
       // Step 2: Verify with user-entered code
@@ -87,6 +94,9 @@ class TwoFactorAuthService {
         factorId: factorId,
         challengeId: challengeResponse.id,
         code: totpCode,
+      ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () => throw TimeoutException('Supabase MFA verification request timed out.'),
       );
 
       if (kDebugMode) {
@@ -107,7 +117,10 @@ class TwoFactorAuthService {
   /// Removes a TOTP factor for the current user (disabling 2FA).
   Future<void> unenroll(String factorId) async {
     try {
-      await _supabase.auth.mfa.unenroll(factorId);
+      await _supabase.auth.mfa.unenroll(factorId).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () => throw TimeoutException('Supabase MFA unenroll request timed out.'),
+      );
       if (kDebugMode) debugPrint('TwoFactorAuthService: Factor $factorId unenrolled.');
     } catch (e) {
       if (kDebugMode) debugPrint('TwoFactorAuthService.unenroll error: $e');

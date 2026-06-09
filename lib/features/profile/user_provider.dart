@@ -420,6 +420,36 @@ class UserNotifier extends StateNotifier<UserState> {
     }
   }
 
+  Future<void> updateNotificationPreferences(Map<String, dynamic> prefs) async {
+    final currentAppUser = state.user;
+    if (currentAppUser == null) return;
+
+    // Reset error state before attempt
+    state = state.copyWith(isLoading: true);
+    try {
+      final updatedUser = currentAppUser.copyWith(
+        notificationPreferences: {
+          ...currentAppUser.notificationPreferences,
+          ...prefs,
+        },
+      );
+      
+      // Safeguard: Do not attempt database write for Demo Users
+      if (!state.isDemo) {
+        await _userRepository.updateField(
+          currentAppUser.id,
+          'notification_preferences',
+          updatedUser.notificationPreferences,
+        );
+      }
+      
+      state = state.copyWith(user: updatedUser, isLoading: false);
+    } catch (e) {
+      debugPrint('Notification Preferences Update Error: $e');
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+
   Future<void> logout() async {
     await _authService.signOut();
     // Clear the cached home route so the next user doesn't get a stale redirect
@@ -450,7 +480,12 @@ class UserNotifier extends StateNotifier<UserState> {
   /// Marks `mfa_enabled = true` in DB and refreshes local state.
   Future<void> enable2FA() async {
     final uid = state.user?.id;
-    if (uid == null || state.isDemo) return;
+    if (uid == null) return;
+    if (state.isDemo) {
+      state = state.copyWith(mfaEnabled: true);
+      debugPrint('UserNotifier: 2FA enabled for demo user $uid');
+      return;
+    }
     try {
       await _ref.read(twoFactorAuthServiceProvider).markMfaEnabledInProfile(uid);
       state = state.copyWith(mfaEnabled: true);
@@ -464,7 +499,12 @@ class UserNotifier extends StateNotifier<UserState> {
   /// Marks `mfa_enabled = false` in DB and refreshes local state.
   Future<void> disable2FA() async {
     final uid = state.user?.id;
-    if (uid == null || state.isDemo) return;
+    if (uid == null) return;
+    if (state.isDemo) {
+      state = state.copyWith(mfaEnabled: false);
+      debugPrint('UserNotifier: 2FA disabled for demo user $uid');
+      return;
+    }
     try {
       await _ref.read(twoFactorAuthServiceProvider).markMfaDisabledInProfile(uid);
       state = state.copyWith(mfaEnabled: false);

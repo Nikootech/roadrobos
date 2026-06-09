@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
+import 'user_provider.dart';
 
-class NotificationSettingsScreen extends StatefulWidget {
+class NotificationSettingsScreen extends ConsumerStatefulWidget {
   const NotificationSettingsScreen({super.key});
 
   @override
-  State<NotificationSettingsScreen> createState() => _NotificationSettingsScreenState();
+  ConsumerState<NotificationSettingsScreen> createState() => _NotificationSettingsScreenState();
 }
 
-class _NotificationSettingsScreenState extends State<NotificationSettingsScreen> {
+class _NotificationSettingsScreenState extends ConsumerState<NotificationSettingsScreen> {
   // Notification Channels
   bool _pushNotifications = true;
   bool _emailNotifications = true;
@@ -26,6 +28,24 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
   // Advanced Preferences
   bool _quietHours = false;
   bool _soundVibration = true;
+
+  @override
+  void initState() {
+    super.initState();
+    final prefs = ref.read(userProvider).user?.notificationPreferences;
+    if (prefs != null) {
+      _pushNotifications = prefs['push'] ?? true;
+      _emailNotifications = prefs['email'] ?? true;
+      _smsAlerts = prefs['sms'] ?? false;
+      _whatsappUpdates = prefs['whatsapp'] ?? true;
+      _rides = prefs['rides'] ?? true;
+      _offers = prefs['offers'] ?? true;
+      _maintenance = prefs['maintenance'] ?? true;
+      _wallet = prefs['wallet'] ?? false;
+      _quietHours = prefs['quiet'] ?? false;
+      _soundVibration = prefs['sound'] ?? true;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +85,10 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                 'Push Notifications',
                 'Instantly receive alerts on your device screen',
                 _pushNotifications,
-                (v) => setState(() => _pushNotifications = v),
+                (v) {
+                  setState(() => _pushNotifications = v);
+                  ref.read(userProvider.notifier).updateNotificationPreferences({'push': v});
+                },
               ),
               const Divider(height: 1, indent: 60),
               _buildSwitchTile(
@@ -73,7 +96,10 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                 'Email Notifications',
                 'Weekly summaries, invoices, and service updates',
                 _emailNotifications,
-                (v) => setState(() => _emailNotifications = v),
+                (v) {
+                  setState(() => _emailNotifications = v);
+                  ref.read(userProvider.notifier).updateNotificationPreferences({'email': v});
+                },
               ),
               const Divider(height: 1, indent: 60),
               _buildSwitchTile(
@@ -81,7 +107,10 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                 'SMS Alerts',
                 'Urgent travel updates and verification alerts',
                 _smsAlerts,
-                (v) => setState(() => _smsAlerts = v),
+                (v) {
+                  setState(() => _smsAlerts = v);
+                  ref.read(userProvider.notifier).updateNotificationPreferences({'sms': v});
+                },
               ),
               const Divider(height: 1, indent: 60),
               _buildSwitchTile(
@@ -89,7 +118,10 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                 'WhatsApp Updates',
                 'Get updates, tracking links, and customer support via WhatsApp',
                 _whatsappUpdates,
-                (v) => setState(() => _whatsappUpdates = v),
+                (v) {
+                  setState(() => _whatsappUpdates = v);
+                  ref.read(userProvider.notifier).updateNotificationPreferences({'whatsapp': v});
+                },
               ),
             ]),
             const SizedBox(height: 28),
@@ -101,7 +133,10 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                 'Ride Updates',
                 'Status, driver details, and live trip alerts',
                 _rides,
-                (v) => setState(() => _rides = v),
+                (v) {
+                  setState(() => _rides = v);
+                  ref.read(userProvider.notifier).updateNotificationPreferences({'rides': v});
+                },
               ),
               const Divider(height: 1, indent: 60),
               _buildSwitchTile(
@@ -109,7 +144,10 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                 'Promotions & Offers',
                 'Exclusive loyalty discounts, coupons, and campaigns',
                 _offers,
-                (v) => setState(() => _offers = v),
+                (v) {
+                  setState(() => _offers = v);
+                  ref.read(userProvider.notifier).updateNotificationPreferences({'offers': v});
+                },
               ),
               const Divider(height: 1, indent: 60),
               _buildSwitchTile(
@@ -117,7 +155,10 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                 'Vehicle Maintenance',
                 'Service booking alerts, renewals, and diagnostic checks',
                 _maintenance,
-                (v) => setState(() => _maintenance = v),
+                (v) {
+                  setState(() => _maintenance = v);
+                  ref.read(userProvider.notifier).updateNotificationPreferences({'maintenance': v});
+                },
               ),
               const Divider(height: 1, indent: 60),
               _buildSwitchTile(
@@ -125,7 +166,10 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                 'Wallet & Billing',
                 'Monthly statement alerts, transaction confirmations',
                 _wallet,
-                (v) => setState(() => _wallet = v),
+                (v) {
+                  setState(() => _wallet = v);
+                  ref.read(userProvider.notifier).updateNotificationPreferences({'wallet': v});
+                },
               ),
             ]),
             const SizedBox(height: 28),
@@ -137,7 +181,10 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                 'Quiet Hours',
                 'Mute all non-critical notifications from 10:00 PM to 7:00 AM',
                 _quietHours,
-                (v) => setState(() => _quietHours = v),
+                (v) {
+                  setState(() => _quietHours = v);
+                  ref.read(userProvider.notifier).updateNotificationPreferences({'quiet': v});
+                },
               ),
               const Divider(height: 1, indent: 60),
               _buildSwitchTile(
@@ -145,7 +192,10 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
                 'Sound & Vibration',
                 'Play alert tones and trigger haptics for incoming alerts',
                 _soundVibration,
-                (v) => setState(() => _soundVibration = v),
+                (v) {
+                  setState(() => _soundVibration = v);
+                  ref.read(userProvider.notifier).updateNotificationPreferences({'sound': v});
+                },
               ),
             ]),
             const SizedBox(height: 32),

@@ -134,12 +134,23 @@ class WalletRepository {
   /// Withdraw funds to bank
   Future<bool> withdrawFunds(String userId, double amount, String bankDetails) async {
     try {
-      final success = await payFromWallet(userId, amount, 'Withdrawal to $bankDetails');
-      return success;
+      await _supabase.rpc('create_payout_request', params: {
+        'p_user_id': userId,
+        'p_amount': amount,
+        'p_bank_details': bankDetails,
+      });
+      return true;
+    } on PostgrestException catch (e, st) {
+      if (e.code == 'P0001') {
+        throw InsufficientBalanceException();
+      }
+      unawaited(Sentry.captureException(e, stackTrace: st));
+      debugPrint('Withdrawal Error: $e');
+      rethrow;
     } catch (e, st) {
       unawaited(Sentry.captureException(e, stackTrace: st));
       debugPrint('Withdrawal Error: $e');
-      throw Exception(e.toString().replaceAll('Exception: ', ''));
+      rethrow;
     }
   }
 }

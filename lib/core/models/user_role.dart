@@ -71,6 +71,7 @@ class AppUser {
   final List<String> emergencyContacts;
   final String referralCode;
   final List<SavedLocation> savedLocations;
+  final Map<String, dynamic> notificationPreferences;
 
   const AppUser({
     required this.id,
@@ -88,6 +89,18 @@ class AppUser {
     this.kycStatus = 'not_started',
     this.currentDeviceId,
     this.isApproved = true,
+    this.notificationPreferences = const {
+      'push': true,
+      'email': true,
+      'sms': false,
+      'whatsapp': true,
+      'rides': true,
+      'offers': true,
+      'maintenance': true,
+      'wallet': false,
+      'quiet': false,
+      'sound': true
+    },
   });
 
   factory AppUser.fromMap(Map<String, dynamic> map, String id) {
@@ -110,6 +123,18 @@ class AppUser {
       kycStatus: map['kyc_status'] ?? 'not_started',
       currentDeviceId: map['current_device_id'],
       isApproved: map['is_approved'] ?? true,
+      notificationPreferences: Map<String, dynamic>.from(map['notification_preferences'] ?? {
+        'push': true,
+        'email': true,
+        'sms': false,
+        'whatsapp': true,
+        'rides': true,
+        'offers': true,
+        'maintenance': true,
+        'wallet': false,
+        'quiet': false,
+        'sound': true
+      }),
     );
   }
 
@@ -132,6 +157,7 @@ class AppUser {
       'current_device_id': currentDeviceId,
       'is_approved': isApproved,
       'saved_locations': savedLocations.map((x) => x.toMap()).toList(),
+      'notification_preferences': notificationPreferences,
     };
   }
 
@@ -169,6 +195,7 @@ class AppUser {
     String? kycStatus,
     String? currentDeviceId,
     bool? isApproved,
+    Map<String, dynamic>? notificationPreferences,
   }) {
     return AppUser(
       id: id ?? this.id,
@@ -186,6 +213,7 @@ class AppUser {
       kycStatus: kycStatus ?? this.kycStatus,
       currentDeviceId: currentDeviceId ?? this.currentDeviceId,
       isApproved: isApproved ?? this.isApproved,
+      notificationPreferences: notificationPreferences ?? this.notificationPreferences,
     );
   }
 }

@@ -3,24 +3,40 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/custom_button.dart';
 import '../../core/security/jailbreak_guard.dart';
+import '../../core/repositories/wallet_repository.dart';
+import '../profile/user_provider.dart';
+import '../wallet/wallet_providers.dart';
+import '../wallet/widgets/insufficient_balance_sheet.dart';
 
 /// Driver Bank Withdrawal Screen — Premium Overhaul
-class DriverBankWithdrawalScreen extends StatefulWidget {
+class DriverBankWithdrawalScreen extends ConsumerStatefulWidget {
   const DriverBankWithdrawalScreen({super.key});
 
   @override
-  State<DriverBankWithdrawalScreen> createState() => _DriverBankWithdrawalScreenState();
+  ConsumerState<DriverBankWithdrawalScreen> createState() => _DriverBankWithdrawalScreenState();
 }
 
-class _DriverBankWithdrawalScreenState extends State<DriverBankWithdrawalScreen> {
+class _DriverBankWithdrawalScreenState extends ConsumerState<DriverBankWithdrawalScreen> {
   final TextEditingController _amountController = TextEditingController(text: '5000');
   bool _isProcessing = false;
+  String _selectedBankName = 'HDFC Bank';
+  String _selectedBankAcc = '**** 1234';
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final walletAsync = ref.watch(walletProvider);
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -69,7 +85,18 @@ class _DriverBankWithdrawalScreenState extends State<DriverBankWithdrawalScreen>
                     ],
                   ),
                   const SizedBox(height: 8),
-                  const Text('₹12,450.00', style: TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.w900, letterSpacing: -1)),
+                  walletAsync.when(
+                    data: (wallet) => Text(
+                      NumberFormat.simpleCurrency(name: 'INR').format(wallet?.balance ?? 0.0),
+                      style: const TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.w900, letterSpacing: -1),
+                    ),
+                    loading: () => const SizedBox(
+                      height: 36,
+                      width: 36,
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                    ),
+                    error: (_, __) => const Text('₹0.00', style: TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.w900, letterSpacing: -1)),
+                  ),
                 ],
               ),
             ).animate().fadeIn().slideY(begin: 0.1, end: 0),
@@ -119,13 +146,13 @@ class _DriverBankWithdrawalScreenState extends State<DriverBankWithdrawalScreen>
                     child: const Icon(Iconsax.bank, color: AppColors.primaryBlue, size: 26),
                   ),
                   const SizedBox(width: 20),
-                  const Expanded(
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('HDFC Bank', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 17, color: AppColors.textPrimary)),
-                        SizedBox(height: 4),
-                        Text('Account No: **** 1234', style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
+                        Text(_selectedBankName, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 17, color: AppColors.textPrimary)),
+                        const SizedBox(height: 4),
+                        Text('Account No: $_selectedBankAcc', style: const TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
                       ],
                     ),
                   ),
@@ -152,23 +179,73 @@ class _DriverBankWithdrawalScreenState extends State<DriverBankWithdrawalScreen>
                       }
                       return;
                     }
+
+                    final amountText = _amountController.text.trim();
+                    final amount = double.tryParse(amountText);
+                    if (amount == null || amount <= 0) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Please enter a valid amount')),
+                      );
+                      return;
+                    }
+
+                    final currentBalance = ref.read(walletProvider).value?.balance ?? 0.0;
+                    if (amount > currentBalance) {
+                      InsufficientBalanceSheet.show(
+                        context,
+                        currentBalance: currentBalance,
+                        requiredAmount: amount,
+                      );
+                      return;
+                    }
+
+                    final user = ref.read(userProvider).user;
+                    if (user == null) return;
+
                     // ignore: unawaited_futures
                     HapticFeedback.mediumImpact();
                     setState(() => _isProcessing = true);
-                    await Future.delayed(const Duration(seconds: 2));
-                    if (!context.mounted) return;
-                    setState(() => _isProcessing = false);
-                    // ignore: unawaited_futures
-                    HapticFeedback.heavyImpact();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: const Text('Withdrawal request submitted!'),
-                        behavior: SnackBarBehavior.floating,
-                        backgroundColor: AppColors.deepNavy,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                    );
-                    context.pop();
+
+                    try {
+                      final success = await ref.read(walletRepositoryProvider).withdrawFunds(
+                        user.id,
+                        amount,
+                        '$_selectedBankName ($_selectedBankAcc)',
+                      );
+                      if (success) {
+                        if (!context.mounted) return;
+                        // ignore: unawaited_futures
+                        HapticFeedback.heavyImpact();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: const Text('Withdrawal request submitted!'),
+                            behavior: SnackBarBehavior.floating,
+                            backgroundColor: AppColors.deepNavy,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                        );
+                        context.pop();
+                      } else {
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Failed to submit withdrawal request')),
+                        );
+                      }
+                    } on InsufficientBalanceException catch (_) {
+                      if (!context.mounted) return;
+                      InsufficientBalanceSheet.show(
+                        context,
+                        currentBalance: currentBalance,
+                        requiredAmount: amount,
+                      );
+                    } catch (e) {
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(e.toString()), backgroundColor: AppColors.dangerRed),
+                      );
+                    } finally {
+                      if (mounted) setState(() => _isProcessing = false);
+                    }
                   },
                   backgroundColor: AppColors.deepNavy,
                 ).animate().scale(delay: 200.ms),
@@ -198,36 +275,61 @@ class _DriverBankWithdrawalScreenState extends State<DriverBankWithdrawalScreen>
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Select Bank Account', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.deepNavy)),
-            const SizedBox(height: 24),
-            _buildBankOption('HDFC Bank', '**** 1234', true),
-            const SizedBox(height: 12),
-            _buildBankOption('ICICI Bank', '**** 5678', false),
-            const SizedBox(height: 12),
-            _buildBankOption('SBI Bank', '**** 9012', false),
-            const SizedBox(height: 32),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => Navigator.pop(context),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.deepNavy,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) {
+          return Container(
+            decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Select Bank Account', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.deepNavy)),
+                const SizedBox(height: 24),
+                GestureDetector(
+                  onTap: () => setModalState(() {
+                    _selectedBankName = 'HDFC Bank';
+                    _selectedBankAcc = '**** 1234';
+                  }),
+                  child: _buildBankOption('HDFC Bank', '**** 1234', _selectedBankName == 'HDFC Bank'),
                 ),
-                child: const Text('Confirm Selection', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-              ),
+                const SizedBox(height: 12),
+                GestureDetector(
+                  onTap: () => setModalState(() {
+                    _selectedBankName = 'ICICI Bank';
+                    _selectedBankAcc = '**** 5678';
+                  }),
+                  child: _buildBankOption('ICICI Bank', '**** 5678', _selectedBankName == 'ICICI Bank'),
+                ),
+                const SizedBox(height: 12),
+                GestureDetector(
+                  onTap: () => setModalState(() {
+                    _selectedBankName = 'SBI Bank';
+                    _selectedBankAcc = '**** 9012';
+                  }),
+                  child: _buildBankOption('SBI Bank', '**** 9012', _selectedBankName == 'SBI Bank'),
+                ),
+                const SizedBox(height: 32),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      setState(() {});
+                      Navigator.pop(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.deepNavy,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                    child: const Text('Confirm Selection', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
             ),
-            const SizedBox(height: 12),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

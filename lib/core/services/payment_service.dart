@@ -89,7 +89,8 @@ class PaymentService extends _$PaymentService {
         final orderId = response?.orderId ?? 'sim_order_${DateTime.now().millisecondsSinceEpoch}';
 
         // All sensitive fields go directly to the server via TLS — not logged
-        final isValid = await _supabase.rpc('verify_payment', params: {
+        final rpcName = AppConfig.isDev ? 'verify_payment_dev' : 'verify_payment';
+        final isValid = await _supabase.rpc(rpcName, params: {
           'p_order_id': orderId,
           'p_payment_id': paymentId,
           'p_signature': signature,
@@ -171,9 +172,37 @@ class PaymentService extends _$PaymentService {
       return _paymentCompleter!.future;
     }
 
+    // Call Supabase Edge Function to create Razorpay Order
+    String? orderId;
+    try {
+      final response = await _supabase.functions.invoke(
+        'create_razorpay_order',
+        body: {
+          'amount': amountInPaise,
+          'currency': 'INR',
+        },
+      );
+      
+      if (response.status != 200) {
+        throw Exception('Failed to create order on server: ${response.data}');
+      }
+      
+      orderId = response.data['order_id'] as String?;
+      if (orderId == null || orderId.isEmpty) {
+        throw Exception('Order ID returned from server was null or empty');
+      }
+    } catch (e) {
+      debugPrint('Error generating Razorpay Order ID: $e');
+      if (!_paymentCompleter!.isCompleted) {
+        _paymentCompleter!.completeError('Order generation failed: $e');
+      }
+      return _paymentCompleter!.future;
+    }
+
     final options = {
       'key': apiKey,
       'amount': amountInPaise,
+      'order_id': orderId,
       'name': 'RoadRobos Services',
       'description': details.description,
       'prefill': {

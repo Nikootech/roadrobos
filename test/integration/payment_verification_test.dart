@@ -13,6 +13,7 @@ import 'package:roadrobos/core/security/jailbreak_guard.dart';
 
 // ── Mock classes ─────────────────────────────────────────────────────────────
 class MockSupabaseClient extends Mock implements SupabaseClient {}
+class MockFunctionsClient extends Mock implements FunctionsClient {}
 
 class MockPostgrestFilterBuilder extends Mock implements PostgrestFilterBuilder<dynamic> {
   final dynamic futureValue;
@@ -55,8 +56,19 @@ void main() {
     mockSupabase = MockSupabaseClient();
     mockRazorpay = MockRazorpay();
 
-    // Register default dummy mocktail fallbacks
+    // Register fallbacks
     registerFallbackValue(Uri());
+    registerFallbackValue(HttpMethod.post);
+
+    final mockFunctions = MockFunctionsClient();
+    when(() => mockSupabase.functions).thenReturn(mockFunctions);
+    when(() => mockFunctions.invoke(
+          any(),
+          body: any(named: 'body'),
+        )).thenAnswer((_) async => FunctionResponse(
+          status: 200,
+          data: {'order_id': 'order_mock_123'},
+        ));
 
     // Stub the mockRazorpay methods BEFORE building the PaymentService provider
     when(() => mockRazorpay.on(any(), any())).thenAnswer((_) {});

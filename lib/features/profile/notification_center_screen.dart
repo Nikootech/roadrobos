@@ -25,6 +25,10 @@ class NotificationCenterScreen extends ConsumerWidget {
         ),
         title: const Text('Notifications', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_outlined, color: AppColors.textPrimary),
+            onPressed: () => context.push('/notification-settings'),
+          ),
           if (notifications.isNotEmpty)
             PopupMenuButton(
               icon: const Icon(Icons.more_vert_rounded, color: AppColors.textPrimary),

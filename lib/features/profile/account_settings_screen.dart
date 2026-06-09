@@ -243,6 +243,20 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
 
     // Start TOTP enrollment in background
     try {
+      if (userState.isDemo) {
+        await Future.delayed(const Duration(milliseconds: 500));
+        if (!mounted) return;
+        setState(() {
+          _twoFaQrUri = 'otpauth://totp/RoadRobos:demo@roadrobos.com?secret=JBSWY3DPEHPK3PXP&issuer=RoadRobos';
+          _twoFaSecret = 'JBSWY3DPEHPK3PXP';
+          _twoFaFactorId = 'demo_factor_id';
+          _is2FADialogLoading = false;
+          _twoFaStep = 0;
+        });
+        _dialogSetState?.call(() {});
+        return;
+      }
+
       final svc = ref.read(twoFactorAuthServiceProvider);
       final result = await svc.enrollTOTP();
       if (!mounted) return;
@@ -475,6 +489,20 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                   });
                   _dialogSetState?.call(() {});
                   try {
+                    final isDemo = ref.read(userProvider).isDemo;
+                    if (isDemo) {
+                      await Future.delayed(const Duration(milliseconds: 600));
+                      await ref.read(userProvider.notifier).enable2FA();
+                      if (mounted) {
+                        setState(() {
+                          _twoFaStep = 2;
+                          _is2FADialogLoading = false;
+                        });
+                        _dialogSetState?.call(() {});
+                      }
+                      return;
+                    }
+
                     final svc = ref.read(twoFactorAuthServiceProvider);
                     await svc.challengeAndVerify(
                       factorId: _twoFaFactorId!,
@@ -613,6 +641,20 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
     );
 
     if (confirmed != true || !mounted) return;
+
+    final isDemo = ref.read(userProvider).isDemo;
+    if (isDemo) {
+      await ref.read(userProvider.notifier).disable2FA();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Two-Factor Authentication disabled.'),
+          backgroundColor: AppColors.dangerRed,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
 
     try {
       final svc = ref.read(twoFactorAuthServiceProvider);

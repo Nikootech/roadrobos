@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/custom_button.dart';
 import '../../core/services/payment_service.dart';
-import '../../core/repositories/wallet_repository.dart';
 import '../profile/user_provider.dart';
 
 class WalletTopupScreen extends ConsumerStatefulWidget {
@@ -147,12 +146,6 @@ class _WalletTopupScreenState extends ConsumerState<WalletTopupScreen> {
                     )
                   );
                   
-                  // Verification is done on server, so we just do UI logic
-                  await ref.read(walletRepositoryProvider).topUpWallet(
-                    userId, 
-                    amount, 
-                    'Direct'
-                  );
                   if (!context.mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                     content: Text('Wallet Top-up Successful!'),
