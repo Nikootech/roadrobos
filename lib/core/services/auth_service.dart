@@ -120,6 +120,18 @@ class AuthService {
     await _supabase.auth.resetPasswordForEmail(email);
   }
 
+  /// Changes the current logged-in user's password in real-time.
+  /// Requires re-authentication first (handled in the UI layer).
+  /// Uses Supabase updateUser — no email link needed.
+  Future<void> updatePassword(String newPassword) async {
+    final response = await _supabase.auth.updateUser(
+      sb.UserAttributes(password: newPassword),
+    );
+    if (response.user == null) {
+      throw Exception('Password update failed — please try again.');
+    }
+  }
+
   // --- Google Sign-In (Native in-app, no browser redirect) ---
 
   Future<bool> signInWithGoogle() async {

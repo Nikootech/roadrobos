@@ -38,6 +38,9 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
   String? _twoFaError;
   int _twoFaStep = 0; // 0=loading/QR, 1=verify code, 2=success
   final _totpCodeController = TextEditingController();
+  /// Holds the StatefulBuilder's setDialogState so we can trigger dialog redraws
+  /// from outside the dialog's own widget subtree (e.g. after async enrollment).
+  StateSetter? _dialogSetState;
 
   @override
   void initState() {
@@ -228,15 +231,23 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
       context: context,
       barrierDismissible: false,
       builder: (dialogCtx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => _build2FADialog(dialogCtx, setDialogState),
+        builder: (ctx, setDialogState) {
+          // Capture the dialog's own setState so async enrollment can trigger redraws
+          _dialogSetState = setDialogState;
+          return _build2FADialog(dialogCtx, setDialogState);
+        },
       ),
-    ));
+    ).then((_) {
+      // Clean up reference when dialog is closed
+      _dialogSetState = null;
+    }));
 
     // Start TOTP enrollment in background
     try {
       final svc = ref.read(twoFactorAuthServiceProvider);
       final result = await svc.enrollTOTP();
       if (!mounted) return;
+      // Update parent state
       setState(() {
         _twoFaQrUri = result.qrCodeUri;
         _twoFaSecret = result.secret;
@@ -244,12 +255,15 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
         _is2FADialogLoading = false;
         _twoFaStep = 0;
       });
+      // CRITICAL: Also trigger dialog's own StatefulBuilder to redraw with QR data
+      _dialogSetState?.call(() {});
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _twoFaError = e.toString();
         _is2FADialogLoading = false;
       });
+      _dialogSetState?.call(() {});
     }
   }
 
@@ -436,11 +450,14 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
           children: [
             Expanded(
               child: TextButton(
-                onPressed: () => setState(() {
-                  _twoFaStep = 0;
-                  _twoFaError = null;
-                  _totpCodeController.clear();
-                }),
+                onPressed: () {
+                  setState(() {
+                    _twoFaStep = 0;
+                    _twoFaError = null;
+                    _totpCodeController.clear();
+                  });
+                  _dialogSetState?.call(() {});
+                },
                 child: const Text('← BACK', style: TextStyle(color: Color(0xFF8892A4), fontWeight: FontWeight.bold)),
               ),
             ),
@@ -450,12 +467,14 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                   final code = _totpCodeController.text.trim();
                   if (code.length != 6) {
                     setState(() => _twoFaError = 'Please enter a 6-digit code.');
+                    _dialogSetState?.call(() {});
                     return;
                   }
                   setState(() {
                     _is2FADialogLoading = true;
                     _twoFaError = null;
                   });
+                  _dialogSetState?.call(() {});
                   try {
                     final svc = ref.read(twoFactorAuthServiceProvider);
                     await svc.challengeAndVerify(
@@ -469,6 +488,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                         _twoFaStep = 2;
                         _is2FADialogLoading = false;
                       });
+                      _dialogSetState?.call(() {});
                     }
                   } catch (e) {
                     if (mounted) {
@@ -476,6 +496,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                         _twoFaError = 'Invalid code. Please try again.';
                         _is2FADialogLoading = false;
                       });
+                      _dialogSetState?.call(() {});
                     }
                   }
                 },
@@ -617,6 +638,243 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
         ),
       );
     }
+  }
+
+  // ── Real-time Change Password dialog ─────────────────────────────────────────
+
+  Future<void> _showChangePasswordDialog() async {
+    final currentPwController  = TextEditingController();
+    final newPwController      = TextEditingController();
+    final confirmPwController  = TextEditingController();
+    bool isLoading = false;
+    String? errorMsg;
+    bool obscureCurrent = true;
+    bool obscureNew     = true;
+    bool obscureConfirm = true;
+
+    final userEmail = ref.read(userProvider).user?.email ?? '';
+
+    if (!mounted) return;
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogCtx) => StatefulBuilder(
+        builder: (ctx, setDS) {
+          return AlertDialog(
+            backgroundColor: const Color(0xFF1A1F2E),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+            contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+            title: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryBlue.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.lock_reset_rounded, color: AppColors.primaryBlue, size: 22),
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  'Change Password',
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 16),
+                ),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 4),
+                const Text(
+                  'Enter your current password then choose a new one.',
+                  style: TextStyle(color: Color(0xFFB0B8D1), fontSize: 12, height: 1.5),
+                ),
+                const SizedBox(height: 20),
+
+                // ── Current password ───────────────────────────────────────────
+                _buildPwField(
+                  controller: currentPwController,
+                  label: 'Current Password',
+                  obscure: obscureCurrent,
+                  onToggle: () => setDS(() => obscureCurrent = !obscureCurrent),
+                ),
+                const SizedBox(height: 14),
+
+                // ── New password ───────────────────────────────────────────────
+                _buildPwField(
+                  controller: newPwController,
+                  label: 'New Password',
+                  obscure: obscureNew,
+                  onToggle: () => setDS(() => obscureNew = !obscureNew),
+                ),
+                const SizedBox(height: 14),
+
+                // ── Confirm new password ──────────────────────────────────────
+                _buildPwField(
+                  controller: confirmPwController,
+                  label: 'Confirm New Password',
+                  obscure: obscureConfirm,
+                  onToggle: () => setDS(() => obscureConfirm = !obscureConfirm),
+                ),
+
+                if (errorMsg != null) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF3A1A1A),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.error_outline_rounded, color: Color(0xFFFF5252), size: 16),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            errorMsg!,
+                            style: const TextStyle(color: Color(0xFFFF5252), fontSize: 12),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
+                        onPressed: isLoading ? null : () => Navigator.pop(dialogCtx),
+                        child: const Text(
+                          'CANCEL',
+                          style: TextStyle(color: Color(0xFF8892A4), fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: isLoading ? null : () async {
+                          final currentPw = currentPwController.text.trim();
+                          final newPw     = newPwController.text.trim();
+                          final confirmPw = confirmPwController.text.trim();
+
+                          // ── Validation ───────────────────────────────────────
+                          if (currentPw.isEmpty || newPw.isEmpty || confirmPw.isEmpty) {
+                            setDS(() => errorMsg = 'All fields are required.');
+                            return;
+                          }
+                          if (newPw.length < 8) {
+                            setDS(() => errorMsg = 'New password must be at least 8 characters.');
+                            return;
+                          }
+                          if (newPw != confirmPw) {
+                            setDS(() => errorMsg = 'New passwords do not match.');
+                            return;
+                          }
+                          if (newPw == currentPw) {
+                            setDS(() => errorMsg = 'New password must differ from current password.');
+                            return;
+                          }
+
+                          setDS(() { isLoading = true; errorMsg = null; });
+
+                          try {
+                            final authService = ref.read(authServiceProvider);
+
+                            // Step 1: Re-authenticate with current password
+                            await authService.signInWithEmail(userEmail, currentPw);
+
+                            // Step 2: Update password in Supabase (real-time, no email)
+                            await authService.updatePassword(newPw);
+
+                            if (!dialogCtx.mounted) return;
+                            Navigator.pop(dialogCtx);
+                            if (!mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Password changed successfully! ✓'),
+                                backgroundColor: AppColors.successGreen,
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                          } catch (e) {
+                            String msg = e.toString();
+                            // Make Supabase error messages user-friendly
+                            if (msg.contains('Invalid login credentials') ||
+                                msg.contains('invalid_credentials')) {
+                              msg = 'Current password is incorrect.';
+                            } else if (msg.contains('Password should be')) {
+                              msg = 'New password is too weak. Use at least 8 characters.';
+                            } else if (msg.contains('same_password')) {
+                              msg = 'New password must be different from current password.';
+                            }
+                            setDS(() { isLoading = false; errorMsg = msg; });
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primaryBlue,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          padding: const EdgeInsets.symmetric(vertical: 13),
+                        ),
+                        child: isLoading
+                            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                            : const Text('UPDATE', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 13)),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+
+    currentPwController.dispose();
+    newPwController.dispose();
+    confirmPwController.dispose();
+  }
+
+  /// Reusable dark-themed password field for Change Password dialog
+  Widget _buildPwField({
+    required TextEditingController controller,
+    required String label,
+    required bool obscure,
+    required VoidCallback onToggle,
+  }) {
+    return TextField(
+      controller: controller,
+      obscureText: obscure,
+      style: const TextStyle(color: Colors.white, fontSize: 14),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(color: Color(0xFF8892A4), fontSize: 13),
+        filled: true,
+        fillColor: const Color(0xFF252B3B),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: AppColors.primaryBlue.withValues(alpha: 0.3)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: AppColors.primaryBlue.withValues(alpha: 0.25)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppColors.primaryBlue, width: 1.5),
+        ),
+        suffixIcon: IconButton(
+          icon: Icon(
+            obscure ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+            color: const Color(0xFF8892A4),
+            size: 20,
+          ),
+          onPressed: onToggle,
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      ),
+    );
   }
 
   Future<void> _saveProfile() async {
@@ -767,39 +1025,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
             Icons.lock_outline_rounded, 
             'Change Password', 
             'Update your security credentials',
-            onTap: () async {
-              final user = ref.read(userProvider).user;
-              if (user != null && user.email != null && user.email!.isNotEmpty) {
-                try {
-                  await ref.read(authServiceProvider).resetPassword(user.email!);
-                  if (!mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Password reset link sent to your email!'),
-                      backgroundColor: AppColors.successGreen,
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                } catch (e) {
-                  if (!mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Failed to send reset link: $e'),
-                      backgroundColor: AppColors.dangerRed,
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                }
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('No email address associated with your profile.'),
-                    backgroundColor: AppColors.dangerRed,
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-              }
-            },
+            onTap: _showChangePasswordDialog,
           ),
           _buildSettingsTile(
             Icons.fingerprint_rounded, 
