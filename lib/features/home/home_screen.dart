@@ -494,10 +494,74 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     ).animate(delay: 400.ms).fadeIn();
   }
 
+  /// Maps quick-action route strings from Supabase to valid GoRouter paths.
+  /// Returns null for routes that have no screen yet (shows "coming soon").
+  String? _resolveQuickActionRoute(String route) {
+    // Already-registered routes — pass through as-is
+    const validRoutes = <String>{
+      '/select-service',
+      '/rentals-selection',
+      '/taxi/home',
+      '/book-ride',
+      '/wallet',
+      '/loyalty',
+      '/delivery/create',
+      '/help-center',
+      '/main/explore',
+      '/services',
+      '/bike-service-booking',
+      '/car-service-booking',
+      '/ev-bike-service-booking',
+      '/water-service-booking',
+    };
+    if (validRoutes.contains(route)) return route;
+
+    // Map commonly-used Supabase route slugs to real routes
+    switch (route) {
+      case '/insurance-selection':
+      case '/insurance':
+        return null; // No insurance screen yet
+      case '/service-selection':
+      case '/service':
+        return '/select-service';
+      case '/rental-selection':
+      case '/rental':
+        return '/rentals-selection';
+      case '/taxi':
+        return '/taxi/home';
+      default:
+        return null; // Unknown route — treat as coming soon
+    }
+  }
+
   Widget _buildQuickActionItem(QuickAction action) {
     final color = IconHelper.getColor(action.color);
     return GestureDetector(
-      onTap: () => context.push(action.route),
+      onTap: () {
+        HapticFeedback.lightImpact();
+        final resolved = _resolveQuickActionRoute(action.route);
+        if (resolved != null) {
+          context.push(resolved);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.rocket_launch_rounded, color: Colors.white, size: 20),
+                  const SizedBox(width: 12),
+                  Text('${action.label} — coming soon!',
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13)),
+                ],
+              ),
+              backgroundColor: const Color(0xFFF97316),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+      },
       child: Column(
         children: [
           Container(
@@ -540,8 +604,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildRecentServiceCard(ServiceBooking booking) {
+    final statusColor = _bookingStatusColor(booking.status);
     return GestureDetector(
-      onTap: () => context.push('/live-service-status'),
+      onTap: () {
+        HapticFeedback.lightImpact();
+        context.push('/service-booking-detail', extra: booking);
+      },
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
@@ -556,8 +624,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               Container(
                 width: 44,
                 height: 44,
-                decoration: BoxDecoration(color: AppColors.primaryBlue.withValues(alpha: 0.1), shape: BoxShape.circle),
-                child: const Icon(Icons.build_rounded, color: AppColors.primaryBlue, size: 20),
+                decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.1), shape: BoxShape.circle),
+                child: Icon(Icons.build_rounded, color: statusColor, size: 20),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -565,17 +633,47 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(booking.packageName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.textPrimary)),
-                    Text('${booking.vehicleName} • ${booking.status.toUpperCase()}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                    const SizedBox(height: 2),
+                    Text('${booking.vehicleName} • ${booking.vehiclePlate}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
                   ],
                 ),
               ),
-              const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.textSecondary),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: statusColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      booking.status.toUpperCase(),
+                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: statusColor),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  const Icon(Icons.arrow_forward_ios_rounded, size: 12, color: AppColors.textSecondary),
+                ],
+              ),
             ],
           ),
         ),
       ),
     );
   }
+
+  Color _bookingStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'completed': return const Color(0xFF10B981);
+      case 'in_progress':
+      case 'in progress': return AppColors.primaryBlue;
+      case 'confirmed': return const Color(0xFF059669);
+      case 'cancelled': return AppColors.dangerRed;
+      default: return AppColors.accentOrange; // pending
+    }
+  }
+
 
   Widget _buildExploreGrid() {
     final categoriesAsync = ref.watch(homeCategoriesProvider);

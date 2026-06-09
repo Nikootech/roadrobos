@@ -64,6 +64,8 @@ import '../../features/delivery/create_delivery_screen.dart';
 import '../../features/delivery/delivery_tracking_screen.dart';
 import '../../features/services/service_type_selector.dart';
 import '../../features/services/book_service_screen.dart';
+import '../../features/home/service_booking_detail_screen.dart';
+import '../../core/models/service_booking.dart';
 import '../app_transitions.dart';
 
 // Navigator key for shell route — shared with app_router.dart
@@ -179,6 +181,16 @@ final List<RouteBase> customerRoutes = [
       child: const ServiceFeedbackScreen(),
       state: state,
     ),
+  ),
+  GoRoute(
+    path: '/service-booking-detail',
+    pageBuilder: (context, state) {
+      final booking = state.extra as ServiceBooking;
+      return AppTransitions.slideRight(
+        child: ServiceBookingDetailScreen(booking: booking),
+        state: state,
+      );
+    },
   ),
   GoRoute(
     path: '/services',
