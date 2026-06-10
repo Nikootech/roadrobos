@@ -42,6 +42,7 @@ class ChatRepository {
     }
 
     // 2. Insert the message into chat_messages
-    await _supabase.from('chat_messages').insert(message.toMap());
+    final messageData = message.toMap()..remove('receiver_id');
+    await _supabase.from('chat_messages').insert(messageData);
   }
 }

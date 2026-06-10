@@ -252,7 +252,14 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
         controller: controller,
         focusNode: focusNode,
         style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.black87),
-        decoration: InputDecoration(hintText: hint, hintStyle: const TextStyle(color: Colors.black38), border: InputBorder.none, isDense: true, contentPadding: EdgeInsets.zero),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: const TextStyle(color: Colors.black38),
+          border: InputBorder.none,
+          isDense: true,
+          contentPadding: EdgeInsets.zero,
+          filled: false,
+        ),
       ),
     );
   }

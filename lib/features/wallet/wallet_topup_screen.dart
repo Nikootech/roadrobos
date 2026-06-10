@@ -112,6 +112,7 @@ class _WalletTopupScreenState extends ConsumerState<WalletTopupScreen> {
                       prefixText: '₹ ',
                       prefixStyle: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                       border: InputBorder.none,
+                      filled: false,
                     ),
                   ),
                 ],

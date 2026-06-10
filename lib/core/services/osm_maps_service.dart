@@ -14,7 +14,7 @@ class OSMMapsService {
 
     try {
       final response = await http.get(
-        Uri.parse('$_nominatimUrl/search?q=$query&format=json&addressdetails=1&limit=5'),
+        Uri.parse('$_nominatimUrl/search?q=${Uri.encodeComponent(query)}&format=json&addressdetails=1&limit=5&countrycodes=in'),
         headers: {'User-Agent': 'RoadRobos_App_v1.0'},
       );
 
