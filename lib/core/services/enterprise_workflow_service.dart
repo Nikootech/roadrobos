@@ -4,46 +4,20 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import '../extensions/datetime_extensions.dart';
 
-
 /// A consolidated service for Enterprise workflows:
-/// 1. Password Reset
-/// 2. Push Notification Synchronization
-/// 3. Instant Document Upload Tracking
+/// 1. Push Notification Synchronization
+/// 2. Instant Document Upload Tracking
+///
+/// NOTE (MED-04): Password reset was removed from this class.
+/// Use [AuthService.resetPassword] and [AuthService.updatePassword] instead.
+/// EnterpriseWorkflowService had duplicate implementations that diverged —
+/// keeping password reset in one place (AuthService) avoids future inconsistency.
 class EnterpriseWorkflowService {
   SupabaseClient get _supabase => Supabase.instance.client;
   FirebaseMessaging? get _fcm => Firebase.apps.isNotEmpty ? FirebaseMessaging.instance : null;
 
   // ---------------------------------------------------------------------------
-  // 1. RESET PASSWORD WORKFLOW
-  // ---------------------------------------------------------------------------
-
-  /// Initiates the password reset process by sending an email.
-  Future<void> sendResetPasswordEmail(String email) async {
-    try {
-      await _supabase.auth.resetPasswordForEmail(
-        email,
-        redirectTo: kIsWeb ? null : 'com.roadrobos.app://login-callback',
-      );
-    } catch (e) {
-      debugPrint('Reset Password Error: $e');
-      rethrow;
-    }
-  }
-
-  /// Updates the password after the user has been redirected back to the app.
-  Future<void> updatePassword(String newPassword) async {
-    try {
-      await _supabase.auth.updateUser(
-        UserAttributes(password: newPassword),
-      );
-    } catch (e) {
-      debugPrint('Update Password Error: $e');
-      rethrow;
-    }
-  }
-
-  // ---------------------------------------------------------------------------
-  // 2. PUSH NOTIFICATION SYNC
+  // 1. PUSH NOTIFICATION SYNC
   // ---------------------------------------------------------------------------
 
   /// Syncs the FCM token with the user's profile to enable push notifications.
@@ -70,7 +44,7 @@ class EnterpriseWorkflowService {
   }
 
   // ---------------------------------------------------------------------------
-  // 3. DOCUMENT UPLOAD & APPROVAL TRIGGER
+  // 2. DOCUMENT UPLOAD & APPROVAL TRIGGER
   // ---------------------------------------------------------------------------
 
   /// Submits a document for approval and links it to the storage bucket.

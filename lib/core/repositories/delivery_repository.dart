@@ -165,4 +165,20 @@ class DeliveryRepository {
           };
         });
   }
+
+  Future<void> syncDeliveryOrder(String action, Map<String, dynamic> payload) async {
+    switch (action) {
+      case 'create_delivery_order':
+        await _supabase.from('delivery_orders').upsert(payload);
+        break;
+      case 'update_delivery_status':
+        await _supabase
+            .from('delivery_orders')
+            .update({'status': payload['status']})
+            .eq('id', payload['id']);
+        break;
+      default:
+        throw Exception('Unknown delivery_order action: $action');
+    }
+  }
 }

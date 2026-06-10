@@ -16,9 +16,10 @@ import 'navigation/app_router.dart';
 import 'features/rentals/rental_providers.dart';
 import 'shared/widgets/rental_completion_dialog.dart';
 import 'shared/widgets/error_screen.dart';
-import 'core/providers/favorites_provider.dart';
+import 'core/providers/theme_provider.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/payment_service.dart';
+import 'core/services/pricing_service.dart';
 import 'core/security/jailbreak_guard.dart';
 import 'core/security/encrypted_column.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -149,6 +150,13 @@ void main() {
 
       // ── LAUNCH APP ──────────────────────────────────────────────────────────
       final prefsValue = prefs!;
+      final container = ProviderContainer(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefsValue),
+          jailbreakProvider.overrideWithValue(isCompromised),
+        ],
+      );
+
       const sentryDsn = AppConfig.sentryDsn;
       if (sentryDsn.isNotEmpty) {
         await SentryFlutter.init(
@@ -156,21 +164,15 @@ void main() {
             options.dsn = sentryDsn;
             options.tracesSampleRate = 1.0;
           },
-          appRunner: () => runApp(ProviderScope(
-            overrides: [
-              sharedPreferencesProvider.overrideWithValue(prefsValue),
-              jailbreakProvider.overrideWithValue(isCompromised),
-            ],
+          appRunner: () => runApp(UncontrolledProviderScope(
+            container: container,
             child: const RoadRobosApp(),
           )),
         );
       } else {
         if (kDebugMode) debugPrint('Sentry disabled: SENTRY_DSN is not set.');
-        runApp(ProviderScope(
-          overrides: [
-            sharedPreferencesProvider.overrideWithValue(prefsValue),
-            jailbreakProvider.overrideWithValue(isCompromised),
-          ],
+        runApp(UncontrolledProviderScope(
+          container: container,
           child: const RoadRobosApp(),
         ));
       }
@@ -178,6 +180,10 @@ void main() {
       // ── POST-FRAME DEFERRED SETUP ───────────────────────────────────────────
       // Nothing here blocks the first render. All heavy setup is deferred.
       WidgetsBinding.instance.addPostFrameCallback((_) {
+        // Configure image cache bounds to prevent OOM errors (PERF-01)
+        PaintingBinding.instance.imageCache.maximumSize = 100; // max 100 images
+        PaintingBinding.instance.imageCache.maximumSizeBytes = 50 * 1024 * 1024; // max 50 MB
+
         // ① Sentry & Crashlytics error handlers
         FlutterError.onError = (FlutterErrorDetails details) {
           Sentry.captureException(details.exception, stackTrace: details.stack);
@@ -209,10 +215,10 @@ void main() {
         }
 
         // ③ Notification service (non-blocking)
+        // Use the Riverpod-managed service via the container.
         unawaited(
-          NotificationService().initialize().then((_) {
-            // Request permission on app start (critical for Android 13+)
-            return NotificationService().requestNotificationPermission();
+          container.read(notificationServiceProvider).initialize().then((_) {
+            return container.read(notificationServiceProvider).requestNotificationPermission();
           }).catchError((e) {
             if (kDebugMode) {
               debugPrint('NotificationService init error: $e');
@@ -220,6 +226,9 @@ void main() {
             return false;
           }),
         );
+
+        // ④ Pricing configuration (non-blocking)
+        unawaited(container.read(pricingConfigProvider.future));
 
       });
     },
@@ -243,6 +252,9 @@ class RoadRobosApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+    // Watch the persisted theme preference (SharedPrefs-backed).
+    // Defaults to ThemeMode.system so the OS preference is respected.
+    final themeMode = ref.watch(themeModeProvider);
 
     // Global listener for rental completion dialog
     ref.listen(activeRentalProvider, (previous, next) {
@@ -263,7 +275,7 @@ class RoadRobosApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.light,
+      themeMode: themeMode,  // Previously hardcoded ThemeMode.light — now Riverpod-driven
       routerConfig: router,
       localizationsDelegates: const [
         AppLocalizations.delegate,

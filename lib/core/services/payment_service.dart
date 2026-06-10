@@ -66,10 +66,42 @@ class PaymentService extends _$PaymentService {
     _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
     _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
 
+    // Validate Razorpay config early — throws in production if key is missing.
+    _validateProductionConfig();
+
     ref.onDispose(() {
       // Clear event listeners on dispose to prevent memory leaks
       _razorpay.clear();
     });
+  }
+
+  /// Validates that the Razorpay API key is properly configured.
+  ///
+  /// In release builds: throws [FlutterError] immediately if key is empty
+  /// or still holds the placeholder value — preventing silent fake payments.
+  ///
+  /// In debug builds: only logs a warning so that developers using test
+  /// keys can still exercise the payment UI without a real Razorpay account.
+  void _validateProductionConfig() {
+    const apiKey = AppConfig.razorpayKey;
+    final isPlaceholder = apiKey.isEmpty || apiKey == 'rzp_test_placeholderKey';
+
+    if (isPlaceholder) {
+      if (!kDebugMode) {
+        // Release / profile builds: hard-fail immediately.
+        throw FlutterError(
+          'Razorpay production key is not configured. '
+          'Build with --dart-define=RAZORPAY_KEY_ID=rzp_live_... '
+          'or include it in dart_defines/prod.json.',
+        );
+      } else {
+        // Debug builds: warn but allow test keys.
+        debugPrint(
+          'WARNING: PaymentService — Razorpay key is empty or a placeholder. '
+          'Payments will fail unless a valid rzp_test_... key is provided.',
+        );
+      }
+    }
   }
 
   Future<void> _handlePaymentSuccess(PaymentSuccessResponse? response) async {
@@ -165,12 +197,10 @@ class PaymentService extends _$PaymentService {
     final amountInPaise = (details.totalCost * 100).toInt();
     const apiKey = AppConfig.razorpayKey;
 
-    if (_mockRazorpay == null && (apiKey.isEmpty || apiKey == 'rzp_test_placeholderKey')) {
-      debugPrint('Simulation Mode: Triggering immediate payment success.');
-      // ignore: unawaited_futures
-      Future.microtask(() => _handlePaymentSuccess(null));
-      return _paymentCompleter!.future;
-    }
+    // Silent simulation removed. If key is invalid in a non-mock context,
+    // _validateProductionConfig() (called in build()) has already thrown.
+    // In debug with no key, we fall through to the Supabase order creation
+    // which will fail with a clear error message.
 
     // Call Supabase Edge Function to create Razorpay Order
     String? orderId;

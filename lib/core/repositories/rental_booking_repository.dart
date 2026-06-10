@@ -46,4 +46,20 @@ class RentalBookingRepository {
       throw Exception('Failed to fetch rental bookings: $e');
     }
   }
+
+  Future<void> syncRentalBooking(String action, Map<String, dynamic> payload) async {
+    switch (action) {
+      case 'create_rental_booking':
+        await _supabase.from('rental_bookings').upsert(payload);
+        break;
+      case 'update_rental_status':
+        await _supabase
+            .from('rental_bookings')
+            .update({'status': payload['status']})
+            .eq('id', payload['id']);
+        break;
+      default:
+        throw Exception('Unknown rental_booking action: $action');
+    }
+  }
 }

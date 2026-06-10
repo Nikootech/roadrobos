@@ -6,6 +6,37 @@ enum ApprovalStatus {
   rejected,
 }
 
+/// Explicit DB value mapping for [ApprovalStatus].
+///
+/// Always use [dbValue] for database writes and [fromDbValue] for reads
+/// instead of `.name` / `.byName`. This prevents silent breakage if
+/// an enum member is renamed for clarity in the future.
+extension ApprovalStatusExtension on ApprovalStatus {
+  /// The exact string value stored in the database.
+  String get dbValue {
+    switch (this) {
+      case ApprovalStatus.pending:
+        return 'pending';
+      case ApprovalStatus.approved:
+        return 'approved';
+      case ApprovalStatus.rejected:
+        return 'rejected';
+    }
+  }
+
+  /// Converts a DB string to the corresponding [ApprovalStatus].
+  /// Throws [Exception] for unknown values to surface data integrity issues.
+  static ApprovalStatus fromDbValue(String value) {
+    return ApprovalStatus.values.firstWhere(
+      (e) => e.dbValue == value,
+      orElse: () => throw Exception(
+        'Unknown ApprovalStatus DB value: "$value". '
+        'Expected one of: pending, approved, rejected.',
+      ),
+    );
+  }
+}
+
 enum ApprovalType {
   refund,
   pricing,
@@ -93,11 +124,12 @@ class ApprovalRequest {
     }
   }
 
-  static ApprovalStatus _parseStatus(String status) {
-    switch (status) {
-      case 'approved': return ApprovalStatus.approved;
-      case 'rejected': return ApprovalStatus.rejected;
-      default: return ApprovalStatus.pending;
+  static ApprovalStatus _parseStatus(String? status) {
+    if (status == null) return ApprovalStatus.pending;
+    try {
+      return ApprovalStatusExtension.fromDbValue(status);
+    } catch (_) {
+      return ApprovalStatus.pending;
     }
   }
 }

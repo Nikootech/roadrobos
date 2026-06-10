@@ -80,6 +80,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             phone: _phoneController.text.trim(),
             email: _emailController.text.trim(),
             role: _selectedRole,
+            isApproved: _selectedRole != UserRole.technician,
             createdAt: DateTime.now(),
           );
           await ref.read(userRepositoryProvider).saveUser(appUser);

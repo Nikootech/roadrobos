@@ -18,6 +18,13 @@ import 'routes/admin_routes.dart';
 
 export 'routes/customer_routes.dart' show shellNavigatorKey;
 
+// ── Compile-time demo-mode gate ──────────────────────────────────────────────
+// Pass --dart-define=DEMO_MODE_ENABLED=true at build time to enable demo paths.
+// In release builds this constant is always false regardless of dart-define.
+const bool _demoModeEnabled =
+    kDebugMode && bool.fromEnvironment('DEMO_MODE_ENABLED');
+
+
 final rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
 
 class RouterNotifier extends ChangeNotifier {
@@ -78,9 +85,23 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
 
       final hasFirebaseUser = authState.value != null;
-      final hasDemoUser = userState.isDemo && userState.user != null;
-      final hasDemoIdUser =
-          userState.user != null && userState.user!.id.startsWith('demo_');
+
+      // Demo mode is ONLY active in debug builds with DEMO_MODE_ENABLED=true.
+      // In release builds both flags evaluate to false at compile time.
+      final hasDemoUser =
+          _demoModeEnabled && userState.isDemo && userState.user != null;
+      final hasDemoIdUser = _demoModeEnabled &&
+          userState.user != null &&
+          userState.user!.id.startsWith('demo_');
+
+      // Release-mode safety assertion: demo state must never be active in prod.
+      assert(
+        !kReleaseMode || (!hasDemoUser && !hasDemoIdUser),
+        'SECURITY: Demo mode must not be active in release builds. '
+        'Ensure DEMO_MODE_ENABLED is not passed to release builds.',
+      );
+
+      // In release builds isLoggedIn depends ONLY on real Supabase auth.
       final isLoggedIn = hasFirebaseUser || hasDemoUser || hasDemoIdUser;
       final user = userState.user;
       final location = state.matchedLocation;

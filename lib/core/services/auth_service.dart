@@ -7,9 +7,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:async';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'rbac_service.dart';
 
 import '../../main.dart' show navigatorKey;
 import '../security/secure_token_storage.dart';
+import '../security/auth_rate_limiter.dart';
 import 'package:go_router/go_router.dart';
 
 part 'auth_service.g.dart';
@@ -76,7 +79,12 @@ const _googleClientId = String.fromEnvironment('GOOGLE_CLIENT_ID');
 const _googleServerClientId = String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID');
 
 class AuthService {
-  sb.SupabaseClient get _supabase => sb.Supabase.instance.client;
+  sb.SupabaseClient? _mockSupabase;
+
+  @visibleForTesting
+  set mockSupabaseClient(sb.SupabaseClient client) => _mockSupabase = client;
+
+  sb.SupabaseClient get _supabase => _mockSupabase ?? sb.Supabase.instance.client;
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     // The web/server client ID is required on Android to get an ID token
     // that can be verified by Supabase (backend).
@@ -122,13 +130,37 @@ class AuthService {
   }
 
   Future<sb.AuthResponse> signInWithEmail(String email, String password) async {
-    return await _supabase.auth.signInWithPassword(
-      email: email,
-      password: password,
-    );
+    AuthRateLimiter.checkRateLimit(email);
+    AuthRateLimiter.recordAttempt(email);
+
+    try {
+      final response = await _supabase.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
+      
+      AuthRateLimiter.reset(email);
+
+      // Fetch RBAC permissions immediately after successful login.
+      // Populates the SharedPreferences cache used by PermissionGate.
+      final userId = response.user?.id;
+      if (userId != null) {
+        try {
+          await RbacService(_supabase).fetchUserPermissions(userId);
+        } catch (e) {
+          if (kDebugMode) debugPrint('AuthService: RBAC fetch failed after login: $e');
+        }
+      }
+      return response;
+    } catch (e) {
+      rethrow;
+    }
   }
 
   Future<void> resetPassword(String email) async {
+    AuthRateLimiter.checkRateLimit(email);
+    AuthRateLimiter.recordAttempt(email);
+
     await _supabase.auth.resetPasswordForEmail(
       email,
       redirectTo: kIsWeb ? null : 'com.roadrobos.app://login-callback',
@@ -213,48 +245,90 @@ class AuthService {
         }
 
         // 2. Direct database profiles table sync (to bypass delay or edge cases)
-        final updates = <String, dynamic>{};
-        if (googlePhotoUrl != null) {
-          updates['profile_pic'] = googlePhotoUrl;
-        }
-        if (googleName != null) {
-          updates['name'] = googleName;
-        }
+        try {
+          final profileResponse = await _supabase
+              .from('profiles')
+              .select('profile_pic, name, role')
+              .eq('id', currentUser.id)
+              .maybeSingle();
 
-        if (updates.isNotEmpty) {
-          try {
-            final profileResponse = await _supabase
-                .from('profiles')
-                .select('profile_pic, name')
-                .eq('id', currentUser.id)
-                .maybeSingle();
+          final prefs = await SharedPreferences.getInstance();
+          final savedRoleName = prefs.getString('selected_role') ?? 'customer';
+          final isApproved = savedRoleName != 'technician';
 
-            if (profileResponse != null) {
-              final existingPic = profileResponse['profile_pic'] as String?;
-              final existingName = profileResponse['name'] as String?;
-              
-              final dbUpdates = <String, dynamic>{};
-              if ((existingPic == null || existingPic.isEmpty) && googlePhotoUrl != null) {
-                dbUpdates['profile_pic'] = googlePhotoUrl;
-              }
-              if ((existingName == null || existingName.isEmpty || existingName == 'New User') && googleName != null) {
-                dbUpdates['name'] = googleName;
-              }
-
-              if (dbUpdates.isNotEmpty) {
-                await _supabase.from('profiles').update(dbUpdates).eq('id', currentUser.id);
-              }
-            } else {
-              await _supabase.from('profiles').insert({
-                'id': currentUser.id,
-                'name': googleName ?? 'New User',
-                'email': currentUser.email,
-                'profile_pic': googlePhotoUrl,
-              });
+          if (profileResponse != null) {
+            final existingPic = profileResponse['profile_pic'] as String?;
+            final existingName = profileResponse['name'] as String?;
+            final existingRole = profileResponse['role'] as String?;
+            
+            final dbUpdates = <String, dynamic>{};
+            if ((existingPic == null || existingPic.isEmpty) && googlePhotoUrl != null) {
+              dbUpdates['profile_pic'] = googlePhotoUrl;
             }
-          } catch (e) {
-            if (kDebugMode) debugPrint('Google Sign-In: Failed to sync database profile: $e');
+            if ((existingName == null || existingName.isEmpty || existingName == 'New User') && googleName != null) {
+              dbUpdates['name'] = googleName;
+            }
+            if (existingRole == null) {
+              dbUpdates['role'] = savedRoleName;
+              dbUpdates['is_approved'] = isApproved;
+            }
+
+            if (dbUpdates.isNotEmpty) {
+              await _supabase.from('profiles').update(dbUpdates).eq('id', currentUser.id);
+            }
+
+            // If their role is driver, ensure driver record exists
+            final effectiveRole = existingRole ?? savedRoleName;
+            if (effectiveRole == 'driver') {
+              try {
+                await _supabase.from('drivers').upsert({
+                  'id': currentUser.id,
+                  'name': googleName ?? existingName ?? 'New Driver',
+                  'phone': currentUser.phone ?? '',
+                  'vehicle_model': 'Pending Update',
+                  'chassis_number': 'Pending Update',
+                  'license_number': 'Pending Update',
+                  'approval_status': 'approved',
+                  'is_online': false,
+                  'today_earnings': 0.0,
+                  'created_at': DateTime.now().toUtc().toIso8601String(),
+                });
+              } catch (e) {
+                if (kDebugMode) debugPrint('Google Sign-In: Failed to sync driver record: $e');
+              }
+            }
+          } else {
+            // First time Google Sign-In, profile does not exist yet
+            await _supabase.from('profiles').insert({
+              'id': currentUser.id,
+              'name': googleName ?? 'New User',
+              'email': currentUser.email,
+              'profile_pic': googlePhotoUrl,
+              'role': savedRoleName,
+              'is_approved': isApproved,
+            });
+
+            if (savedRoleName == 'driver') {
+              try {
+                await _supabase.from('drivers').upsert({
+                  'id': currentUser.id,
+                  'name': googleName ?? 'New Driver',
+                  'phone': currentUser.phone ?? '',
+                  'vehicle_model': 'Pending Update',
+                  'chassis_number': 'Pending Update',
+                  'license_number': 'Pending Update',
+                  'approval_status': 'approved',
+                  'is_online': false,
+                  'today_earnings': 0.0,
+                  'created_at': DateTime.now().toUtc().toIso8601String(),
+                });
+              } catch (e) {
+                if (kDebugMode) debugPrint('Google Sign-In: Failed to create driver record: $e');
+              }
+            }
           }
+        } catch (e) {
+          if (kDebugMode) debugPrint('Google Sign-In: Failed to sync database profile: $e');
         }
       }
 
@@ -268,6 +342,12 @@ class AuthService {
   // --- Sign Out ---
 
   Future<void> signOut() async {
+    // Clear RBAC permissions cache before signing out.
+    try {
+      await RbacService(_supabase).clearCache();
+    } catch (e) {
+      if (kDebugMode) debugPrint('AuthService: RBAC cache clear failed on logout: $e');
+    }
     if (!kIsWeb) await _googleSignIn.signOut();
     await _supabase.auth.signOut();
   }

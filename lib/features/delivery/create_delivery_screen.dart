@@ -8,10 +8,13 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/custom_button.dart';
 import '../../shared/widgets/custom_text_field.dart';
+import '../../core/services/osm_maps_service.dart';
 import 'delivery_providers.dart';
 
 class CreateDeliveryScreen extends ConsumerStatefulWidget {
@@ -27,6 +30,63 @@ class _CreateDeliveryScreenState extends ConsumerState<CreateDeliveryScreen> {
   final _dropoffCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializePickupLocation();
+    });
+  }
+
+  Future<void> _initializePickupLocation() async {
+    try {
+      final bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        _setMockPickupAddress();
+        return;
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+          _setMockPickupAddress();
+          return;
+        }
+      }
+
+      if (mounted) {
+        _pickupCtrl.text = 'Detecting current location...';
+      }
+      
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 5),
+      );
+
+      final address = await OSMMapsService().getAddressFromCoords(
+        LatLng(position.latitude, position.longitude),
+      );
+
+      if (address != null && mounted) {
+        _pickupCtrl.text = address;
+        ref.read(deliveryOrderProvider.notifier).setPickup(address);
+      } else {
+        _setMockPickupAddress();
+      }
+    } catch (e) {
+      debugPrint('Error detecting pickup location: $e');
+      _setMockPickupAddress();
+    }
+  }
+
+  void _setMockPickupAddress() {
+    if (!mounted) return;
+    const defaultAddress = 'SEBCHRIS MOBILITY, Kalyan Nagar, Bengaluru, Karnataka 560043';
+    _pickupCtrl.text = defaultAddress;
+    ref.read(deliveryOrderProvider.notifier).setPickup(defaultAddress);
+  }
 
   @override
   void dispose() {
@@ -142,57 +202,69 @@ class _CreateDeliveryScreenState extends ConsumerState<CreateDeliveryScreen> {
               size: 18, color: AppColors.textPrimary),
         ),
       ),
-      flexibleSpace: FlexibleSpaceBar(
-        background: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-            ),
-          ),
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 60, 24, 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(Iconsax.box, color: Colors.white, size: 22),
+      flexibleSpace: LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          final double top = constraints.biggest.height;
+          final double statusBarHeight = MediaQuery.of(context).padding.top;
+          final double collapsedHeight = kToolbarHeight + statusBarHeight;
+          
+          final double heightRange = 180.0 - collapsedHeight;
+          final double progress = heightRange > 0 
+              ? ((180.0 - top) / heightRange).clamp(0.0, 1.0) 
+              : 0.0;
+              
+          return FlexibleSpaceBar(
+            background: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                ),
+              ),
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 60, 24, 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Iconsax.box, color: Colors.white, size: 22),
+                      ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'New Delivery',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 28,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -0.5),
+                      ),
+                      const Text(
+                        'Fast & secure package delivery',
+                        style: TextStyle(color: Colors.white70, fontSize: 13),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'New Delivery',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 28,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: -0.5),
-                  ),
-                  const Text(
-                    'Fast & secure package delivery',
-                    style: TextStyle(color: Colors.white70, fontSize: 13),
-                  ),
-                ],
+                ),
               ),
             ),
-          ),
-        ),
-        title: const Text(
-          'New Delivery',
-          style: TextStyle(
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.w800,
-              fontSize: 17),
-        ),
-        titlePadding:
-            const EdgeInsets.only(left: 56, bottom: 16),
+            title: Text(
+              'New Delivery',
+              style: TextStyle(
+                  color: AppColors.textPrimary.withValues(alpha: progress),
+                  fontWeight: FontWeight.w800,
+                  fontSize: 17),
+            ),
+            titlePadding: const EdgeInsets.only(left: 56, bottom: 16),
+          );
+        },
       ),
     );
   }

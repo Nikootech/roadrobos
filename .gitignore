@@ -60,7 +60,9 @@ GoogleService-Info.plist
 dart_defines/dev.env
 dart_defines/staging.env
 dart_defines/prod.env
-# Keep: dart_defines/dev.env.template (safe placeholder, no real values)
+dart_defines/prod.json
+dart_defines/staging.json
+# Keep: dart_defines/*.json.example or *.json.template (safe placeholders, no real values)
 
 # Android signing — never commit keystores or passwords
 *.jks

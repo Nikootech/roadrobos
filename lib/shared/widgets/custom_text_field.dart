@@ -15,6 +15,7 @@ class CustomTextField extends StatefulWidget {
   final TextInputType keyboardType;
   final void Function(String)? onChanged;
   final int maxLines;
+  final FocusNode? focusNode;
 
   const CustomTextField({
     super.key,
@@ -28,6 +29,7 @@ class CustomTextField extends StatefulWidget {
     this.keyboardType = TextInputType.text,
     this.onChanged,
     this.maxLines = 1,
+    this.focusNode,
   });
 
   @override
@@ -70,6 +72,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
             setState(() => _isFocused = focused);
           },
           child: TextFormField(
+            focusNode: widget.focusNode,
             controller: widget.controller,
             obscureText: widget.isPassword ? _obscureText : false,
             keyboardType: widget.keyboardType,

@@ -95,35 +95,59 @@ class WalletRepository {
     }
   }
 
-  /// Transfer funds to another user
+  /// Transfer funds to another user atomically via a single Supabase RPC.
+  ///
+  /// Uses the `transfer_funds` PostgreSQL function (migration
+  /// 20260610_003_transfer_funds_atomic.sql) which wraps both the debit and
+  /// credit in a single transaction — no funds can disappear if the app
+  /// crashes or the network drops between two separate calls.
   Future<bool> transferFunds(String senderId, String recipientPhone, double amount) async {
     try {
       // 1. Find recipient by phone using secure RPC
       final recipientRes = await lookupUserByPhone(recipientPhone);
-      
+
       if (recipientRes == null) {
         throw Exception('User with this phone number not found.');
       }
-      
+
       final recipientId = recipientRes['id'] as String;
-      final recipientName = recipientRes['full_name'] as String;
-      
+
       if (recipientId == senderId) {
         throw Exception('Cannot transfer to yourself.');
       }
 
-      // 2. Deduct from sender
-      final debitSuccess = await payFromWallet(senderId, amount, 'Transfer to $recipientName');
-      if (!debitSuccess) return false;
-
-      // 3. Add to recipient
-      await _supabase.rpc('update_wallet_balance', params: {
-        'wallet_id': recipientId,
-        'amount': amount,
-        'transaction_type': 'credit',
+      // 2. Single atomic RPC — replaces the old 2-step debit + credit pattern.
+      //    The DB function uses SELECT FOR UPDATE locking to prevent race conditions.
+      final result = await _supabase.rpc('transfer_funds', params: {
+        'sender_id':   senderId,
+        'receiver_id': recipientId,
+        'amount':      amount,
+        'description': 'Transfer to ${recipientRes['full_name'] ?? recipientPhone}',
       });
-      
+
+      final success = result?['success'] == true;
+      if (!success) {
+        throw Exception('Transfer failed. Please try again.');
+      }
+
       return true;
+    } on PostgrestException catch (e, st) {
+      // Map named PostgreSQL exceptions to user-friendly messages.
+      final msg = e.message;
+      if (msg.contains('insufficient_funds')) {
+        throw Exception('Insufficient wallet balance.');
+      } else if (msg.contains('receiver_not_found')) {
+        throw Exception('Recipient wallet not found. They may need to add funds first.');
+      } else if (msg.contains('sender_not_found')) {
+        throw Exception('Your wallet was not found. Please contact support.');
+      } else if (msg.contains('invalid_amount')) {
+        throw Exception('Invalid transfer amount. Amount must be greater than zero.');
+      } else if (msg.contains('same_account')) {
+        throw Exception('Cannot transfer funds to yourself.');
+      }
+      unawaited(Sentry.captureException(e, stackTrace: st));
+      debugPrint('Transfer PostgrestException: $e');
+      throw Exception('Transfer failed: ${e.message}');
     } catch (e, st) {
       unawaited(Sentry.captureException(e, stackTrace: st));
       debugPrint('Transfer Error: $e');
@@ -151,6 +175,22 @@ class WalletRepository {
       unawaited(Sentry.captureException(e, stackTrace: st));
       debugPrint('Withdrawal Error: $e');
       rethrow;
+    }
+  }
+
+  Future<void> syncTransaction(String action, Map<String, dynamic> payload) async {
+    switch (action) {
+      case 'create_transaction':
+        await _supabase.from('wallet_transactions').upsert(payload);
+        break;
+      case 'update_transaction_status':
+        await _supabase
+            .from('wallet_transactions')
+            .update({'status': payload['status']})
+            .eq('id', payload['id']);
+        break;
+      default:
+        throw Exception('Unknown wallet_transaction action: $action');
     }
   }
 }

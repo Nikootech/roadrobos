@@ -8,11 +8,20 @@ import 'dart:async';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import '../../core/models/user_role.dart';
 import '../../core/repositories/user_repository.dart';
+import '../../core/repositories/driver_repository.dart';
 import '../../core/services/auth_service.dart';
 import '../../core/services/notification_service.dart';
 import '../../core/services/local_storage_service.dart';
 import '../../core/extensions/datetime_extensions.dart';
 import '../../core/services/two_factor_auth_service.dart';
+
+// ── Compile-time demo-mode gate (mirrors app_router.dart) ─────────────────────
+// Demo mode is ONLY active when both kDebugMode is true AND
+// --dart-define=DEMO_MODE_ENABLED=true is passed at build time.
+// In release builds this constant evaluates to false at compile time.
+const bool _demoModeEnabled =
+    kDebugMode && bool.fromEnvironment('DEMO_MODE_ENABLED');
+
 
 // Helper: map a loaded user's role to their home route
 String _homeRouteForUser(AppUser user) {
@@ -113,8 +122,9 @@ class UserNotifier extends StateNotifier<UserState> {
     }
 
     _authSubscription = _authService.authStateChanges.listen((sb.User? sbUser) async {
-      // If we are in demo mode, ignore null auth states
-      if (state.isDemo && sbUser == null) return;
+      // If we are in demo mode, ignore null auth states.
+      // Guard: demo mode is compile-time gated; always false in release builds.
+      if (_demoModeEnabled && state.isDemo && sbUser == null) return;
       
       if (sbUser == null) {
         // ignore: unawaited_futures
@@ -134,7 +144,9 @@ class UserNotifier extends StateNotifier<UserState> {
   }
 
   void _setupRealtimeListener(String uid) {
-    if (uid.startsWith('demo_')) return;
+    // Skip realtime setup for demo users (demo IDs are only valid in debug mode).
+    // In release builds _demoModeEnabled is false so this guard never applies.
+    if (_demoModeEnabled && uid.startsWith('demo_')) return;
     
     _profileSubscription?.cancel();
     _profileSubscription = _userRepository.getUserStream(uid).listen((updatedUser) async {
@@ -212,8 +224,8 @@ class UserNotifier extends StateNotifier<UserState> {
         isDemo: state.isDemo,
       );
       
-      // Resume notifications sync
-      unawaited(NotificationService().syncTokenToBackend(pending.id));
+      // Resume notifications sync via Riverpod-managed service (not singleton)
+      unawaited(_ref.read(notificationServiceProvider).syncTokenToBackend(pending.id));
     } catch (e) {
       state = UserState(
         isDemo: state.isDemo,
@@ -336,8 +348,8 @@ class UserNotifier extends StateNotifier<UserState> {
         
         // Sync FCM token to backend (P0 Integration)
         if (!isDemoId) {
-          // ignore: unawaited_futures
-          NotificationService().syncTokenToBackend(uid);
+          // Use Riverpod-managed service (not singleton) for testability.
+          unawaited(_ref.read(notificationServiceProvider).syncTokenToBackend(uid));
         }
       } else {
         if (kDebugMode) {
@@ -351,12 +363,19 @@ class UserNotifier extends StateNotifier<UserState> {
                         currentSupabaseUser?.userMetadata?['image'] ??
                         currentSupabaseUser?.userMetadata?['photo_url'];
 
+        final savedRoleName = await _ref.read(localStorageServiceProvider).getSelectedRole();
+        final selectedRole = UserRole.values.firstWhere(
+          (e) => e.name == savedRoleName,
+          orElse: () => UserRole.customer,
+        );
+
         final newUser = AppUser(
           id: uid,
           name: isDemoId ? 'Demo User' : oauthName,
           phone: isDemoId ? '9876543210' : (currentSupabaseUser?.phone ?? ''),
           email: isDemoId ? 'demo@roadrobos.com' : currentSupabaseUser?.email,
-          role: UserRole.customer,
+          role: selectedRole,
+          isApproved: selectedRole != UserRole.technician,
           profilePic: isDemoId ? '' : (oauthPic ?? ''),
         );
         
@@ -368,6 +387,24 @@ class UserNotifier extends StateNotifier<UserState> {
           await _userRepository.saveUser(newUser);
           if (kDebugMode) {
             debugPrint('UserNotifier: Save new profile successful.');
+          }
+
+          // If the selected role is driver, also register the driver profile
+          if (selectedRole == UserRole.driver) {
+            try {
+              await _ref.read(driverRepositoryProvider).registerDriver(
+                uid: uid,
+                name: newUser.name,
+                phone: newUser.phone,
+                vehicleModel: 'Pending Update',
+                chassisNumber: 'Pending Update',
+                licenseNumber: 'Pending Update',
+              );
+            } catch (e) {
+              if (kDebugMode) {
+                debugPrint('UserNotifier: Failed to register driver profile: $e');
+              }
+            }
           }
         }
         

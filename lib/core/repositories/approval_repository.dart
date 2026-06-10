@@ -47,7 +47,7 @@ class ApprovalRepository {
     if (user == null) throw Exception('User not authenticated');
 
     await _supabase.from('approvals').update({
-      'status': status.name,
+      'status': status.dbValue,
       'checker_id': user.id,
       'rejection_reason': reason,
       'updated_at': DateTime.now().utcIso,

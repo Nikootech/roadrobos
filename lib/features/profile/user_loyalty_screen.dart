@@ -57,7 +57,7 @@ class UserLoyaltyScreen extends StatelessWidget {
             const SizedBox(height: 32),
             _buildSectionHeader('How to earn?'),
             const SizedBox(height: 16),
-            const Text('Earn 1 point for every ₹10 spent on rides, rentals, or services.', style: TextStyle(color: AppColors.textSecondary, fontSize: 14)),
+            const Text('Earn 1 point for every ₹1 spent on rides, rentals, or services.', style: TextStyle(color: AppColors.textSecondary, fontSize: 14)),
           ],
         ),
       ),

@@ -18,6 +18,9 @@ import '../models/service_booking.dart';
 import '../repositories/user_repository.dart';
 import '../repositories/ride_booking_repository.dart';
 import '../repositories/service_booking_repository.dart';
+import '../repositories/rental_booking_repository.dart';
+import '../repositories/wallet_repository.dart';
+import '../repositories/delivery_repository.dart';
 import '../../navigation/app_router.dart';
 
 final unifiedSyncServiceProvider = Provider<UnifiedSyncService>((ref) {
@@ -185,8 +188,20 @@ class UnifiedSyncService {
       case 'service_booking':
         await _processServiceBooking(task.action, payload);
         break;
+      case 'rental_booking':
+        await _processRentalBooking(task.action, payload);
+        break;
+      case 'wallet_transaction':
+        await _processWalletTransaction(task.action, payload);
+        break;
+      case 'delivery_order':
+        await _processDeliveryOrder(task.action, payload);
+        break;
       default:
-        throw Exception('Unknown entityType: ${task.entityType}');
+        throw Exception(
+          'Unknown entityType: ${task.entityType}. '
+          'Task: ${jsonEncode(task.toJson())}',
+        );
     }
   }
 
@@ -276,5 +291,20 @@ class UnifiedSyncService {
       default:
         throw Exception('Unknown service_booking action: $action');
     }
+  }
+
+  /// Handles offline rental booking sync.
+  Future<void> _processRentalBooking(String action, Map<String, dynamic> payload) async {
+    await _ref.read(rentalBookingRepositoryProvider).syncRentalBooking(action, payload);
+  }
+
+  /// Handles offline wallet transaction sync.
+  Future<void> _processWalletTransaction(String action, Map<String, dynamic> payload) async {
+    await _ref.read(walletRepositoryProvider).syncTransaction(action, payload);
+  }
+
+  /// Handles offline delivery order sync.
+  Future<void> _processDeliveryOrder(String action, Map<String, dynamic> payload) async {
+    await _ref.read(deliveryRepositoryProvider).syncDeliveryOrder(action, payload);
   }
 }

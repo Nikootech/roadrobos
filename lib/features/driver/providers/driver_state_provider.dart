@@ -171,7 +171,7 @@ class MapStateNotifier extends StateNotifier<MapState> {
     
     if (newStatus) {
       // Sync FCM token when going online
-      final token = await NotificationService().getToken();
+      final token = await ref.read(notificationServiceProvider).getToken();
       if (token != null) {
         await ref.read(driverRepositoryProvider).updateFcmToken(user.user?.id ?? 'demo', token);
       }

@@ -8,21 +8,42 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:go_router/go_router.dart';
+import 'dart:async';
 import '../../main.dart' show scaffoldMessengerKey, navigatorKey;
 import '../theme/app_colors.dart';
 
+// ── Abstract interface ────────────────────────────────────────────────────────
+// Allows mock injection in widget and integration tests.
+
+abstract class INotificationService {
+  Future<void> initialize();
+  Future<bool> requestNotificationPermission();
+  void handleNotificationNavigation(RemoteMessage message);
+  Future<String?> getToken();
+  Future<void> syncTokenToBackend(String uid);
+  void showError(String title, {String? message, dynamic error, StackTrace? stackTrace});
+}
+
+// ── Riverpod provider ─────────────────────────────────────────────────────────
+// Riverpod fully controls the lifecycle. No singleton pattern — every test
+// can inject a MockNotificationService via ProviderScope overrides.
+
 final notificationServiceProvider = Provider<NotificationService>((ref) {
-  return NotificationService();
+  return NotificationService(ref);
 });
 
-class NotificationService {
-  FirebaseMessaging? get _fcm => Firebase.apps.isNotEmpty ? FirebaseMessaging.instance : null;
-  final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
+// ── Implementation ────────────────────────────────────────────────────────────
 
-  static final NotificationService _instance = NotificationService._internal();
-  factory NotificationService() => _instance;
-  NotificationService._internal();
+class NotificationService implements INotificationService {
+  /// Constructor accepts Ref to satisfy Riverpod provider instantiation.
+  NotificationService(Ref? ref);
 
+  FirebaseMessaging? get _fcm =>
+      Firebase.apps.isNotEmpty ? FirebaseMessaging.instance : null;
+  final FlutterLocalNotificationsPlugin _localNotifications =
+      FlutterLocalNotificationsPlugin();
+
+  @override
   Future<void> initialize() async {
     if (Firebase.apps.isEmpty) {
       debugPrint('NotificationService: Skipping init. Firebase not initialized.');
@@ -69,16 +90,21 @@ class NotificationService {
         final user = Supabase.instance.client.auth.currentUser;
         if (user != null) {
           try {
-            await Supabase.instance.client.from('profiles').update({'fcm_token': newToken}).eq('id', user.id);
+            await Supabase.instance.client
+                .from('profiles')
+                .update({'fcm_token': newToken}).eq('id', user.id);
           } catch (_) {}
           try {
-            await Supabase.instance.client.from('drivers').update({'fcm_token': newToken}).eq('id', user.id);
+            await Supabase.instance.client
+                .from('drivers')
+                .update({'fcm_token': newToken}).eq('id', user.id);
           } catch (_) {}
         }
       });
     }
   }
 
+  @override
   Future<bool> requestNotificationPermission() async {
     final fcm = _fcm;
     if (fcm == null) {
@@ -89,9 +115,7 @@ class NotificationService {
     final NotificationSettings settings = await fcm.requestPermission();
 
     if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-      if (kDebugMode) {
-        debugPrint('User granted notification permission');
-      }
+      if (kDebugMode) debugPrint('User granted notification permission');
       return true;
     } else {
       if (kDebugMode) {
@@ -101,10 +125,11 @@ class NotificationService {
     }
   }
 
+  @override
   void handleNotificationNavigation(RemoteMessage message) {
     final type = message.data['type'] as String?;
     final id = message.data['id'] as String?;
-    
+
     final context = navigatorKey.currentContext;
     if (context == null || type == null) return;
 
@@ -128,6 +153,7 @@ class NotificationService {
     }
   }
 
+  @override
   Future<String?> getToken() async {
     final fcm = _fcm;
     if (fcm == null) {
@@ -149,6 +175,7 @@ class NotificationService {
     }
   }
 
+  @override
   Future<void> syncTokenToBackend(String uid) async {
     if (uid.isEmpty) return;
     try {
@@ -157,14 +184,12 @@ class NotificationService {
         try {
           await Supabase.instance.client
               .from('profiles')
-              .update({'fcm_token': token})
-              .eq('id', uid);
+              .update({'fcm_token': token}).eq('id', uid);
         } catch (_) {}
         try {
           await Supabase.instance.client
               .from('drivers')
-              .update({'fcm_token': token})
-              .eq('id', uid);
+              .update({'fcm_token': token}).eq('id', uid);
         } catch (_) {}
         // ✅ Never log UID or token — only confirm success
         if (kDebugMode) debugPrint('FCM Token synced successfully.');
@@ -173,17 +198,23 @@ class NotificationService {
       if (kDebugMode) {
         debugPrint('FCM Token Sync Failure: $e');
       } else if (!kIsWeb) {
-        // ignore: unawaited_futures
-        FirebaseCrashlytics.instance.recordError(
-          e, stack,
+        unawaited(FirebaseCrashlytics.instance.recordError(
+          e,
+          stack,
           reason: 'FCM token sync failed',
           // ✅ Never include uid in Crashlytics metadata
-        );
+        ));
       }
     }
   }
 
-  void showError(String title, {String? message, dynamic error, StackTrace? stackTrace}) {
+  @override
+  void showError(
+    String title, {
+    String? message,
+    dynamic error,
+    StackTrace? stackTrace,
+  }) {
     // 1. Log to Crashlytics
     if (!kIsWeb) {
       FirebaseCrashlytics.instance.recordError(
@@ -257,10 +288,20 @@ class NotificationService {
       importance: Importance.max,
       priority: Priority.high,
     );
-    const NotificationDetails platformDetails = NotificationDetails(android: androidDetails);
-    
+    const NotificationDetails platformDetails =
+        NotificationDetails(android: androidDetails);
+
+    // ── Notification ID strategy ──────────────────────────────────────────
+    // Use a hash of message type + entity ID so that:
+    //   - Different notifications get unique IDs (no replacement).
+    //   - Updates for the SAME entity replace each other intentionally.
+    // Masked to a positive int to avoid Android notification ID overflow.
+    final type = message.data['type'] ?? '';
+    final entityId = message.data['id'] ?? message.messageId ?? '';
+    final notificationId = '${type}_$entityId'.hashCode & 0x7FFFFFFF;
+
     _localNotifications.show(
-      0,
+      notificationId,
       message.notification?.title ?? 'New Update',
       message.notification?.body ?? 'Touch to view',
       platformDetails,
@@ -272,5 +313,3 @@ class NotificationService {
 // _firebaseMessagingBackgroundHandler and registered via
 // FirebaseMessaging.onBackgroundMessage() in the post-frame callback.
 // Do NOT add a second top-level handler here — it would never be registered.
-
-
