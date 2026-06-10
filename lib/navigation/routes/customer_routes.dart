@@ -59,6 +59,8 @@ import '../../features/profile/service_reminders_screen.dart';
 import '../../features/support/help_center_screen.dart';
 import '../../features/home/emergency_help_screen.dart';
 import '../../features/chat/screens/chat_screen.dart';
+import '../../shared/widgets/chat/chat_screen.dart' as support_chat;
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/repositories/rental_catalog_repository.dart';
 import '../../features/delivery/create_delivery_screen.dart';
 import '../../features/delivery/delivery_tracking_screen.dart';
@@ -658,13 +660,25 @@ final List<RouteBase> customerRoutes = [
       final extra = state.extra as Map<String, dynamic>? ?? {};
       final bookingId = extra['bookingId'] as String? ?? '';
       final receiverId = extra['receiverId'] as String? ?? '';
-      final receiverName = extra['receiverName'] as String? ?? 'User';
+      final receiverName = extra['receiverName'] as String? ?? '';
+
+      if (bookingId.isEmpty || !_isValidUuid(bookingId)) {
+        final currentUserId = Supabase.instance.client.auth.currentUser?.id ?? 'demo';
+        final roomId = bookingId.isNotEmpty ? bookingId : '${currentUserId}_support';
+        return AppTransitions.slideUp(
+          child: support_chat.ChatScreen(
+            roomId: roomId,
+            otherPartyName: receiverName.isNotEmpty ? receiverName : 'Support Agent',
+          ),
+          state: state,
+        );
+      }
 
       return AppTransitions.slideUp(
         child: ChatScreen(
           bookingId: bookingId,
           receiverId: receiverId,
-          receiverName: receiverName,
+          receiverName: receiverName.isNotEmpty ? receiverName : 'User',
         ),
         state: state,
       );
@@ -682,6 +696,16 @@ final List<RouteBase> customerRoutes = [
       final receiverId = extra['receiverId'] as String? ?? '';
       final receiverName = extra['receiverName'] as String? ?? 'Support';
 
+      if (roomId.isEmpty || !_isValidUuid(roomId)) {
+        return AppTransitions.slideUp(
+          child: support_chat.ChatScreen(
+            roomId: roomId.isNotEmpty ? roomId : 'support',
+            otherPartyName: receiverName,
+          ),
+          state: state,
+        );
+      }
+
       return AppTransitions.slideUp(
         child: ChatScreen(
           bookingId: roomId,
@@ -693,3 +717,11 @@ final List<RouteBase> customerRoutes = [
     },
   ),
 ];
+
+bool _isValidUuid(String str) {
+  if (str.isEmpty) return false;
+  final uuidRegex = RegExp(
+    r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
+  );
+  return uuidRegex.hasMatch(str);
+}

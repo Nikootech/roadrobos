@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/chat_message.dart';
@@ -17,7 +18,7 @@ class ChatRepository {
   /// Watch messages stream for a specific room using Realtime
   Stream<List<ChatMessage>> watchMessages(String roomId) {
     return _supabase
-        .from('chat')
+        .from('chat_messages')
         .stream(primaryKey: ['id'])
         .eq('room_id', roomId)
         .order('created_at')
@@ -28,6 +29,19 @@ class ChatRepository {
 
   /// Send a message
   Future<void> sendMessage(ChatMessage message) async {
-    await _supabase.from('chat').insert(message.toMap());
+    // 1. Ensure the chat room exists in chat_rooms table before inserting a message
+    try {
+      await _supabase.from('chat_rooms').upsert({
+        'id': message.roomId,
+        'participants': [message.senderId, message.receiverId],
+        'last_message': message.message,
+        'last_timestamp': DateTime.now().toUtc().toIso8601String(),
+      });
+    } catch (e) {
+      debugPrint('Error upserting chat_rooms: $e');
+    }
+
+    // 2. Insert the message into chat_messages
+    await _supabase.from('chat_messages').insert(message.toMap());
   }
 }

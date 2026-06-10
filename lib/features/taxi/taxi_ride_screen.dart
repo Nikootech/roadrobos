@@ -21,7 +21,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/services/payment_service.dart';
 import '../../core/services/pricing_service.dart';
 import '../../shared/widgets/sos_button.dart';
-import '../../shared/widgets/chat/chat_screen.dart';
+import 'package:go_router/go_router.dart';
 import '../profile/user_provider.dart';
 import '../profile/sos_provider.dart';
 
@@ -490,17 +490,14 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
               IconButton(
                 icon: const Icon(Iconsax.message, color: AppColors.primaryBlue),
                 onPressed: () {
-                  final currentUserId = ref.read(userProvider).user?.id ?? 'demo';
-                  final driverId = state.driverId ?? 'driver_demo';
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ChatScreen(
-                        roomId: '${currentUserId}_$driverId',
-                        otherPartyName: state.roadroboName ?? 'Roadrobo',
-                      ),
-                    ),
-                  );
+                  final rideId = state.rideId ?? '';
+                  final driverId = state.driverId ?? '';
+                  final driverName = state.roadroboName ?? 'Roadrobo';
+                  context.push('/chat', extra: {
+                    'bookingId': rideId,
+                    'receiverId': driverId,
+                    'receiverName': driverName,
+                  });
                 },
               ),
               IconButton(

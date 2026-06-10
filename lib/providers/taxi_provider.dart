@@ -315,6 +315,7 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
       status: RideStatus.tracking,
       roadroboName: 'Driver Assigned', 
       otp: '1234', 
+      driverId: ride.driverId,
     );
 
     _driverLocationSubscription?.cancel();
