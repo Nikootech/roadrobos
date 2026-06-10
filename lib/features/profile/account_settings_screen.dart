@@ -80,23 +80,38 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
         context: context,
         builder: (dialogContext) {
           final controller = TextEditingController();
+          final isDark = Theme.of(dialogContext).brightness == Brightness.dark;
           return AlertDialog(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-            title: const Text('Confirm Password', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+            title: Text(
+              'Confirm Password',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: isDark ? AppColors.textOnDark : AppColors.textPrimary,
+              ),
+            ),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Please enter your password to enable biometric login.', style: TextStyle(color: AppColors.textSecondary)),
+                Text(
+                  'Please enter your RoadRobos account password to enable biometric login.',
+                  style: TextStyle(
+                    color: isDark ? AppColors.textOnDarkMuted : AppColors.textSecondary,
+                  ),
+                ),
                 const SizedBox(height: 16),
                 TextField(
                   controller: controller,
                   obscureText: true,
+                  style: TextStyle(
+                    color: isDark ? Colors.white : AppColors.textPrimary,
+                  ),
                   decoration: InputDecoration(
                     prefixIcon: const Icon(Icons.lock_outline_rounded, color: AppColors.primaryBlue),
                     hintText: 'Enter password',
                     filled: true,
-                    fillColor: AppColors.bgLightGrey,
+                    fillColor: isDark ? const Color(0xFF252B3B) : AppColors.bgLightGrey,
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
                   ),
                 ),
@@ -326,30 +341,31 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
           style: TextStyle(color: Color(0xFFB0B8D1), fontSize: 13, height: 1.5),
         ),
         const SizedBox(height: 20),
-        _is2FADialogLoading
-            ? const SizedBox(
-                height: 180,
-                child: Center(child: CircularProgressIndicator(color: AppColors.primaryBlue)),
-              )
-            : Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: QrImageView(
-                  data: _twoFaQrUri ?? '',
-                  size: 180,
-                  eyeStyle: const QrEyeStyle(
-                    eyeShape: QrEyeShape.square,
-                    color: Color(0xFF1A1F2E),
+        SizedBox(
+          width: 204,
+          height: 204,
+          child: _is2FADialogLoading
+              ? const Center(child: CircularProgressIndicator(color: AppColors.primaryBlue))
+              : Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  dataModuleStyle: const QrDataModuleStyle(
-                    dataModuleShape: QrDataModuleShape.square,
-                    color: Color(0xFF1A1F2E),
+                  child: QrImageView(
+                    data: _twoFaQrUri ?? '',
+                    size: 180,
+                    eyeStyle: const QrEyeStyle(
+                      eyeShape: QrEyeShape.square,
+                      color: Color(0xFF1A1F2E),
+                    ),
+                    dataModuleStyle: const QrDataModuleStyle(
+                      dataModuleShape: QrDataModuleShape.square,
+                      color: Color(0xFF1A1F2E),
+                    ),
                   ),
                 ),
-              ),
+        ),
         if (!_is2FADialogLoading && _twoFaSecret != null) ...[
           const SizedBox(height: 16),
           const Text(
@@ -1135,10 +1151,15 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
           onPressed: () {
             showDialog(
               context: context,
-              builder: (dialogContext) => AlertDialog(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                title: const Text('Request Account Deletion?', style: TextStyle(color: AppColors.dangerRed, fontWeight: FontWeight.w900)),
-                content: const Text('This will flag your account for permanent deletion. This action cannot be undone once processed by admin.', style: TextStyle(color: AppColors.textSecondary)),
+              builder: (dialogContext) {
+                final isDark = Theme.of(dialogContext).brightness == Brightness.dark;
+                return AlertDialog(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                  title: const Text('Request Account Deletion?', style: TextStyle(color: AppColors.dangerRed, fontWeight: FontWeight.w900)),
+                  content: Text(
+                    'This will flag your account for permanent deletion. This action cannot be undone once processed by admin.',
+                    style: TextStyle(color: isDark ? AppColors.textOnDarkMuted : AppColors.textSecondary),
+                  ),
                 actions: [
                   TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('CANCEL', style: TextStyle(color: AppColors.textMuted, fontWeight: FontWeight.bold))),
                   TextButton(
@@ -1150,8 +1171,9 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                     child: const Text('CONFIRM DELETION', style: TextStyle(color: AppColors.dangerRed, fontWeight: FontWeight.w900)),
                   ),
                 ],
-              ),
-            );
+              );
+            },
+          );
           },
           child: Text(
             'DELETE ACCOUNT', 
