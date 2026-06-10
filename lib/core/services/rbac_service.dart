@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// RBAC Service — loads user permissions via a single Supabase RPC.
 ///
 /// The `get_user_permissions` PostgreSQL function (see migration
-/// 20260610_004_get_user_permissions_rpc.sql) performs a single JOIN across
+/// 039_get_user_permissions_rpc.sql) performs a single JOIN across
 /// user_roles, role_permissions, and permissions — replacing the previous
 /// N+1 sequential query pattern.
 ///

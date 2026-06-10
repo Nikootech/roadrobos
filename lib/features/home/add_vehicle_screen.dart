@@ -32,6 +32,10 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
   final _plateController = TextEditingController();
   final _yearController = TextEditingController();
 
+  DateTime? _fcExpiry;
+  DateTime? _insuranceExpiry;
+  DateTime? _taxExpiry;
+
   Future<void> _saveVehicle() async {
     if (_nameController.text.isNotEmpty && _plateController.text.isNotEmpty) {
       final user = ref.read(userProvider).user;
@@ -43,6 +47,9 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
         fuel: _selectedFuelType,
         year: _yearController.text,
         type: _selectedCategory,
+        fcExpiry: _fcExpiry,
+        insuranceExpiry: _insuranceExpiry,
+        taxExpiry: _taxExpiry,
       );
       
       ref.read(allVehiclesProvider.notifier).addVehicle(newVehicle);
@@ -183,6 +190,36 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                         prefixIcon: Icons.calendar_today_outlined,
                         keyboardType: TextInputType.number,
                       ),
+                      const SizedBox(height: 14),
+
+                      // FC Expiry
+                      _buildDatePickerField(
+                        label: 'Fitness Certificate (FC) Expiry',
+                        hint: 'Select FC Expiry Date',
+                        selectedDate: _fcExpiry,
+                        prefixIcon: Icons.description_rounded,
+                        onDateSelected: (date) => setState(() => _fcExpiry = date),
+                      ),
+                      const SizedBox(height: 14),
+
+                      // Insurance Expiry
+                      _buildDatePickerField(
+                        label: 'Insurance Expiry',
+                        hint: 'Select Insurance Expiry Date',
+                        selectedDate: _insuranceExpiry,
+                        prefixIcon: Icons.shield_rounded,
+                        onDateSelected: (date) => setState(() => _insuranceExpiry = date),
+                      ),
+                      const SizedBox(height: 14),
+
+                      // Road Tax Expiry
+                      _buildDatePickerField(
+                        label: 'Road Tax Expiry',
+                        hint: 'Select Road Tax Expiry Date',
+                        selectedDate: _taxExpiry,
+                        prefixIcon: Icons.receipt_long_rounded,
+                        onDateSelected: (date) => setState(() => _taxExpiry = date),
+                      ),
                     ],
                   ),
                 ),
@@ -274,6 +311,92 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildDatePickerField({
+    required String label,
+    required String hint,
+    required DateTime? selectedDate,
+    required IconData prefixIcon,
+    required ValueChanged<DateTime?> onDateSelected,
+  }) {
+    final formattedDate = selectedDate != null
+        ? '${selectedDate.day.toString().padLeft(2, '0')}/${selectedDate.month.toString().padLeft(2, '0')}/${selectedDate.year}'
+        : '';
+    final controller = TextEditingController(text: formattedDate);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.outfit(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: AppColors.textSecondary,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: controller,
+          readOnly: true,
+          onTap: () async {
+            final now = DateTime.now();
+            final initialDate = selectedDate ?? now;
+            final pickedDate = await showDatePicker(
+              context: context,
+              initialDate: initialDate,
+              firstDate: DateTime(2000),
+              lastDate: DateTime(now.year + 10),
+              builder: (context, child) {
+                return Theme(
+                  data: Theme.of(context).copyWith(
+                    colorScheme: const ColorScheme.light(
+                      primary: AppColors.deepNavy,
+                      onSurface: AppColors.textPrimary,
+                    ),
+                  ),
+                  child: child!,
+                );
+              },
+            );
+            if (pickedDate != null) {
+              onDateSelected(pickedDate);
+            }
+          },
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: GoogleFonts.outfit(color: AppColors.textMuted, fontSize: 14),
+            filled: true,
+            fillColor: AppColors.bgLightCard,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            prefixIcon: Icon(prefixIcon, color: AppColors.textMuted, size: 20),
+            suffixIcon: selectedDate != null
+                ? IconButton(
+                    icon: const Icon(Icons.clear_rounded, color: AppColors.textMuted, size: 18),
+                    onPressed: () => onDateSelected(null),
+                  )
+                : const Icon(Icons.calendar_today_rounded, color: AppColors.textMuted, size: 18),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.primaryBlue, width: 1.5),
+            ),
+          ),
+          style: GoogleFonts.outfit(
+            fontSize: 16,
+            color: AppColors.textPrimary,
+          ),
+        ),
+      ],
     );
   }
 }

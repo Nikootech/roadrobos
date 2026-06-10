@@ -1,5 +1,5 @@
 -- ============================================================
--- Migration: 20260610_005_pricing_config_table.sql
+-- Migration: 040_pricing_config_table.sql
 -- Purpose:   Move hardcoded pricing constants from PricingService
 --            into a database table for runtime configuration.
 --            See lib/core/services/pricing_service.dart for usage.

@@ -29,9 +29,9 @@ class BillBreakdown {
 }
 
 /// Dynamic, database-driven Pricing Service.
-///
 /// Fetches active pricing rates from the `pricing_config` table (see migration
-/// 20260610_005_pricing_config_table.sql) via [pricingConfigProvider].
+/// 040_pricing_config_table.sql) via [pricingConfigProvider].
+///
 /// If the network or DB fetch fails, falls back to default static constants.
 class PricingService {
   static double gstRate = 0.18;

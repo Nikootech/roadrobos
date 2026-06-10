@@ -1,5 +1,5 @@
 -- ============================================================
--- Migration: 20260610_002_chat_rls.sql
+-- Migration: 037_chat_rls.sql
 -- Purpose:   Enable Row Level Security on chat_messages table.
 --            Ensures users can only read/write their own messages.
 -- ============================================================
@@ -18,7 +18,10 @@ CREATE POLICY "chat_messages_select_own"
   FOR SELECT
   USING (
     auth.uid() = sender_id
-    OR auth.uid() = receiver_id
+    OR EXISTS (
+      SELECT 1 FROM chat_rooms r
+      WHERE r.id = room_id AND auth.uid() = ANY(r.participants)
+    )
   );
 
 -- ── INSERT policy ─────────────────────────────────────────────────────────────

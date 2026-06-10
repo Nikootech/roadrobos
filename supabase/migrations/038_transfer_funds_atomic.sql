@@ -1,5 +1,5 @@
 -- ============================================================
--- Migration: 20260610_003_transfer_funds_atomic.sql
+-- Migration: 038_transfer_funds_atomic.sql
 -- Purpose:   Atomic fund transfer via a single PostgreSQL function.
 --            Replaces the 2-step debit+credit in wallet_repository.dart
 --            which could leave funds in limbo if the app crashed mid-operation.

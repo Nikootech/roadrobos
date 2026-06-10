@@ -98,7 +98,7 @@ class WalletRepository {
   /// Transfer funds to another user atomically via a single Supabase RPC.
   ///
   /// Uses the `transfer_funds` PostgreSQL function (migration
-  /// 20260610_003_transfer_funds_atomic.sql) which wraps both the debit and
+  /// 038_transfer_funds_atomic.sql) which wraps both the debit and
   /// credit in a single transaction — no funds can disappear if the app
   /// crashes or the network drops between two separate calls.
   Future<bool> transferFunds(String senderId, String recipientPhone, double amount) async {

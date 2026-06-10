@@ -9,17 +9,16 @@ safe, repeatable deployments across all environments.
 ## Naming Convention
 
 ```
-YYYYMMDD_NNN_description.sql
+NNN_description.sql
 ```
 
-- `YYYYMMDD` — Date (UTC) the migration was authored
-- `NNN` — 3-digit sequence number (001, 002…) scoped to that day
+- `NNN` — 3-digit sequence number (001, 002…)
 - `description` — Snake_case lowercase description of the change
 
 **Examples:**
-- `20260610_001_wallet_rls.sql`
-- `20260610_002_chat_rls.sql`
-- `20260610_003_transfer_funds_atomic.sql`
+- `001_base_schema.sql`
+- `002_rbac.sql`
+- `037_chat_rls.sql`
 
 ---
 
@@ -27,11 +26,11 @@ YYYYMMDD_NNN_description.sql
 
 | File | Date | Description |
 |------|------|-------------|
-| `20260610_001_wallet_rls.sql` | 2026-06-10 | Enable RLS on wallets table |
-| `20260610_002_chat_rls.sql` | 2026-06-10 | Enable RLS on chat_messages + 4 policies |
-| `20260610_003_transfer_funds_atomic.sql` | 2026-06-10 | Atomic fund transfer RPC with SELECT FOR UPDATE locking |
-| `20260610_004_get_user_permissions_rpc.sql` | 2026-06-10 | Single-JOIN RBAC permissions RPC |
-| `20260610_005_pricing_config_table.sql` | 2026-06-10 | DB-driven pricing config table and active helper RPC |
+| `037_chat_rls.sql` | 2026-06-10 | Enable RLS on chat_messages + 4 policies |
+| `038_transfer_funds_atomic.sql` | 2026-06-10 | Atomic fund transfer RPC with SELECT FOR UPDATE locking |
+| `039_get_user_permissions_rpc.sql` | 2026-06-10 | Single-JOIN RBAC permissions RPC |
+| `040_pricing_config_table.sql` | 2026-06-10 | DB-driven pricing config table and active helper RPC |
+| `041_user_vehicles_expiry_dates.sql` | 2026-06-10 | Adds expiry date columns (fc_expiry, insurance_expiry, tax_expiry) to user_vehicles |
 
 ---
 

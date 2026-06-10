@@ -14,6 +14,9 @@ class UserVehicle {
   final bool isPrimary;
   final DateTime? createdAt;
   final DateTime? deletedAt;
+  final DateTime? fcExpiry;
+  final DateTime? insuranceExpiry;
+  final DateTime? taxExpiry;
 
   UserVehicle({
     required this.id,
@@ -26,6 +29,9 @@ class UserVehicle {
     this.isPrimary = false,
     this.createdAt,
     this.deletedAt,
+    this.fcExpiry,
+    this.insuranceExpiry,
+    this.taxExpiry,
     // Legacy named parameters for backward compatibility
     String? name,
     String? plate,
@@ -48,6 +54,9 @@ class UserVehicle {
       isPrimary: map['is_primary'] ?? map['isPrimary'] ?? false,
       createdAt: map['created_at'] != null ? DateTime.tryParse(map['created_at'].toString()) : null,
       deletedAt: map['deleted_at'] != null ? DateTime.tryParse(map['deleted_at'].toString()) : null,
+      fcExpiry: map['fc_expiry'] != null ? DateTime.tryParse(map['fc_expiry'].toString()) : null,
+      insuranceExpiry: map['insurance_expiry'] != null ? DateTime.tryParse(map['insurance_expiry'].toString()) : null,
+      taxExpiry: map['tax_expiry'] != null ? DateTime.tryParse(map['tax_expiry'].toString()) : null,
     );
   }
 
@@ -62,6 +71,9 @@ class UserVehicle {
       'is_primary': isPrimary,
       if (createdAt != null) 'created_at': createdAt!.toUtc().toIso8601String(),
       if (deletedAt != null) 'deleted_at': deletedAt!.toUtc().toIso8601String(),
+      'fc_expiry': fcExpiry?.toUtc().toIso8601String(),
+      'insurance_expiry': insuranceExpiry?.toUtc().toIso8601String(),
+      'tax_expiry': taxExpiry?.toUtc().toIso8601String(),
     };
   }
 
@@ -82,6 +94,9 @@ class UserVehicle {
     bool? isPrimary,
     DateTime? createdAt,
     DateTime? deletedAt,
+    DateTime? fcExpiry,
+    DateTime? insuranceExpiry,
+    DateTime? taxExpiry,
   }) {
     return UserVehicle(
       id: id ?? this.id,
@@ -94,6 +109,9 @@ class UserVehicle {
       isPrimary: isPrimary ?? this.isPrimary,
       createdAt: createdAt ?? this.createdAt,
       deletedAt: deletedAt ?? this.deletedAt,
+      fcExpiry: fcExpiry ?? this.fcExpiry,
+      insuranceExpiry: insuranceExpiry ?? this.insuranceExpiry,
+      taxExpiry: taxExpiry ?? this.taxExpiry,
     );
   }
 }
