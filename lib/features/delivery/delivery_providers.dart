@@ -8,6 +8,7 @@ import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../core/models/delivery_order.dart';
 import '../../core/repositories/delivery_repository.dart';
@@ -24,6 +25,8 @@ double calculateDeliveryPrice(double weightKg, {double distanceKm = 5.0}) {
 
 // ── Customer order form state ─────────────────────────────────────────────────
 class DeliveryFormState {
+  final LatLng? pickupLocation;
+  final LatLng? dropoffLocation;
   final String pickupAddress;
   final String dropoffAddress;
   final String packageDescription;
@@ -34,6 +37,8 @@ class DeliveryFormState {
   final DeliveryOrder? createdOrder;
 
   const DeliveryFormState({
+    this.pickupLocation,
+    this.dropoffLocation,
     this.pickupAddress = '',
     this.dropoffAddress = '',
     this.packageDescription = '',
@@ -48,6 +53,8 @@ class DeliveryFormState {
       calculateDeliveryPrice(weightKg, distanceKm: estimatedDistanceKm);
 
   DeliveryFormState copyWith({
+    LatLng? pickupLocation,
+    LatLng? dropoffLocation,
     String? pickupAddress,
     String? dropoffAddress,
     String? packageDescription,
@@ -60,6 +67,8 @@ class DeliveryFormState {
     bool clearOrder = false,
   }) {
     return DeliveryFormState(
+      pickupLocation: pickupLocation ?? this.pickupLocation,
+      dropoffLocation: dropoffLocation ?? this.dropoffLocation,
       pickupAddress: pickupAddress ?? this.pickupAddress,
       dropoffAddress: dropoffAddress ?? this.dropoffAddress,
       packageDescription: packageDescription ?? this.packageDescription,
@@ -76,10 +85,24 @@ class DeliveryOrderNotifier extends StateNotifier<DeliveryFormState> {
   final Ref ref;
   DeliveryOrderNotifier(this.ref) : super(const DeliveryFormState());
 
-  void setPickup(String address) =>
-      state = state.copyWith(pickupAddress: address, clearError: true);
-  void setDropoff(String address) =>
-      state = state.copyWith(dropoffAddress: address, clearError: true);
+  void setPickup(LatLng? location, String address) {
+    state = state.copyWith(pickupLocation: location, pickupAddress: address, clearError: true);
+    _calculateDistance();
+  }
+
+  void setDropoff(LatLng? location, String address) {
+    state = state.copyWith(dropoffLocation: location, dropoffAddress: address, clearError: true);
+    _calculateDistance();
+  }
+
+  void _calculateDistance() {
+    if (state.pickupLocation != null && state.dropoffLocation != null) {
+      const distanceCalc = Distance();
+      final double meters = distanceCalc.as(LengthUnit.Meter, state.pickupLocation!, state.dropoffLocation!);
+      final distanceKm = meters / 1000.0;
+      state = state.copyWith(estimatedDistanceKm: distanceKm);
+    }
+  }
   void setDescription(String desc) =>
       state = state.copyWith(packageDescription: desc, clearError: true);
   void setWeight(double kg) => state = state.copyWith(weightKg: kg);

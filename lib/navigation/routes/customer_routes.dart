@@ -503,6 +503,20 @@ final List<RouteBase> customerRoutes = [
     ),
   ),
   GoRoute(
+    path: '/delivery/search-location',
+    pageBuilder: (context, state) {
+      final extra = state.extra as Map<String, dynamic>?;
+      final focusPickup = extra?['focusPickup'] ?? false;
+      return AppTransitions.slideUp(
+        child: LocationSearchScreen(
+          focusPickup: focusPickup,
+          isDelivery: true,
+        ),
+        state: state,
+      );
+    },
+  ),
+  GoRoute(
     path: '/delivery/tracking/:orderId',
     pageBuilder: (context, state) {
       final orderId = state.pathParameters['orderId'] ?? '';

@@ -6,13 +6,19 @@ import 'package:flutter_animate/flutter_animate.dart';
 
 import 'package:go_router/go_router.dart';
 import '../../providers/taxi_provider.dart';
+import '../../features/delivery/delivery_providers.dart';
 import '../../core/services/osm_maps_service.dart';
 import 'package:latlong2/latlong.dart';
 import 'dart:async';
 
 class LocationSearchScreen extends ConsumerStatefulWidget {
   final bool focusPickup;
-  const LocationSearchScreen({super.key, this.focusPickup = false});
+  final bool isDelivery;
+  const LocationSearchScreen({
+    super.key,
+    this.focusPickup = false,
+    this.isDelivery = false,
+  });
 
   @override
   ConsumerState<LocationSearchScreen> createState() => _LocationSearchScreenState();
@@ -32,9 +38,15 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
   @override
   void initState() {
     super.initState();
-    final taxiState = ref.read(taxiProvider);
-    _pickupController = TextEditingController(text: taxiState.pickupAddress ?? '');
-    _dropoffController = TextEditingController(text: taxiState.dropoffAddress ?? '');
+    if (widget.isDelivery) {
+      final deliveryState = ref.read(deliveryOrderProvider);
+      _pickupController = TextEditingController(text: deliveryState.pickupAddress);
+      _dropoffController = TextEditingController(text: deliveryState.dropoffAddress);
+    } else {
+      final taxiState = ref.read(taxiProvider);
+      _pickupController = TextEditingController(text: taxiState.pickupAddress ?? '');
+      _dropoffController = TextEditingController(text: taxiState.dropoffAddress ?? '');
+    }
     _pickupFocusNode = FocusNode();
     _dropoffFocusNode = FocusNode();
 
@@ -151,19 +163,33 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
                     Iconsax.location, 
                     'Select from map',
                     onTap: () async {
+                      final router = GoRouter.of(context);
                       final result = await context.push<Map<String, dynamic>>('/taxi/map-picker');
-                      if (result != null && mounted) {
+                      if (!mounted) return;
+                      if (result != null) {
                         final address = result['address'] as String;
                         final location = result['location'] as LatLng;
                         
-                        if (_pickupFocusNode.hasFocus) {
-                          _pickupController.text = address;
-                          ref.read(taxiProvider.notifier).setPickup(location, address);
-                          _dropoffFocusNode.requestFocus();
+                        if (widget.isDelivery) {
+                          if (_pickupFocusNode.hasFocus) {
+                            _pickupController.text = address;
+                            ref.read(deliveryOrderProvider.notifier).setPickup(location, address);
+                            _dropoffFocusNode.requestFocus();
+                          } else {
+                            _dropoffController.text = address;
+                            ref.read(deliveryOrderProvider.notifier).setDropoff(location, address);
+                            router.pop();
+                          }
                         } else {
-                          _dropoffController.text = address;
-                          ref.read(taxiProvider.notifier).setDropoff(location, address);
-                          _confirmAndNavigate();
+                          if (_pickupFocusNode.hasFocus) {
+                            _pickupController.text = address;
+                            ref.read(taxiProvider.notifier).setPickup(location, address);
+                            _dropoffFocusNode.requestFocus();
+                          } else {
+                            _dropoffController.text = address;
+                            ref.read(taxiProvider.notifier).setDropoff(location, address);
+                            _confirmAndNavigate();
+                          }
                         }
                       }
                     },
@@ -284,15 +310,28 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
   void _onLocationSelected(Map<String, dynamic> loc) {
     final latLng = LatLng(loc['lat'], loc['lng']);
     final name = loc['name'];
+    final address = loc['address'] as String;
 
-    if (_pickupFocusNode.hasFocus) {
-      _pickupController.text = name;
-      ref.read(taxiProvider.notifier).setPickup(latLng, name);
-      _dropoffFocusNode.requestFocus();
+    if (widget.isDelivery) {
+      if (_pickupFocusNode.hasFocus) {
+        _pickupController.text = address;
+        ref.read(deliveryOrderProvider.notifier).setPickup(latLng, address);
+        _dropoffFocusNode.requestFocus();
+      } else {
+        _dropoffController.text = address;
+        ref.read(deliveryOrderProvider.notifier).setDropoff(latLng, address);
+        context.pop();
+      }
     } else {
-      _dropoffController.text = name;
-      ref.read(taxiProvider.notifier).setDropoff(latLng, name);
-      _confirmAndNavigate();
+      if (_pickupFocusNode.hasFocus) {
+        _pickupController.text = name;
+        ref.read(taxiProvider.notifier).setPickup(latLng, name);
+        _dropoffFocusNode.requestFocus();
+      } else {
+        _dropoffController.text = name;
+        ref.read(taxiProvider.notifier).setDropoff(latLng, name);
+        _confirmAndNavigate();
+      }
     }
   }
 

@@ -70,8 +70,10 @@ class _CreateDeliveryScreenState extends ConsumerState<CreateDeliveryScreen> {
       );
 
       if (address != null && mounted) {
-        _pickupCtrl.text = address;
-        ref.read(deliveryOrderProvider.notifier).setPickup(address);
+        ref.read(deliveryOrderProvider.notifier).setPickup(
+          LatLng(position.latitude, position.longitude),
+          address,
+        );
       } else {
         _setMockPickupAddress();
       }
@@ -84,8 +86,10 @@ class _CreateDeliveryScreenState extends ConsumerState<CreateDeliveryScreen> {
   void _setMockPickupAddress() {
     if (!mounted) return;
     const defaultAddress = 'SEBCHRIS MOBILITY, Kalyan Nagar, Bengaluru, Karnataka 560043';
-    _pickupCtrl.text = defaultAddress;
-    ref.read(deliveryOrderProvider.notifier).setPickup(defaultAddress);
+    ref.read(deliveryOrderProvider.notifier).setPickup(
+      const LatLng(13.0232, 77.6502),
+      defaultAddress,
+    );
   }
 
   @override
@@ -101,8 +105,15 @@ class _CreateDeliveryScreenState extends ConsumerState<CreateDeliveryScreen> {
     final formState = ref.watch(deliveryOrderProvider);
     final notifier = ref.read(deliveryOrderProvider.notifier);
 
-    // Listen for errors
+    // Listen for state changes to sync text controllers
     ref.listen<DeliveryFormState>(deliveryOrderProvider, (prev, next) {
+      if (next.pickupAddress != _pickupCtrl.text) {
+        _pickupCtrl.text = next.pickupAddress;
+      }
+      if (next.dropoffAddress != _dropoffCtrl.text) {
+        _dropoffCtrl.text = next.dropoffAddress;
+      }
+
       if (next.error != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -139,8 +150,6 @@ class _CreateDeliveryScreenState extends ConsumerState<CreateDeliveryScreen> {
                     _AddressCard(
                       pickupCtrl: _pickupCtrl,
                       dropoffCtrl: _dropoffCtrl,
-                      onPickupChanged: notifier.setPickup,
-                      onDropoffChanged: notifier.setDropoff,
                     ),
                     const SizedBox(height: 24),
 
@@ -208,10 +217,14 @@ class _CreateDeliveryScreenState extends ConsumerState<CreateDeliveryScreen> {
           final double statusBarHeight = MediaQuery.of(context).padding.top;
           final double collapsedHeight = kToolbarHeight + statusBarHeight;
           
-          final double heightRange = 180.0 - collapsedHeight;
-          final double progress = heightRange > 0 
-              ? ((180.0 - top) / heightRange).clamp(0.0, 1.0) 
-              : 0.0;
+          final double titleOpacity;
+          if (top <= collapsedHeight + 5) {
+            titleOpacity = 1.0;
+          } else if (top >= collapsedHeight + 25) {
+            titleOpacity = 0.0;
+          } else {
+            titleOpacity = (1.0 - ((top - (collapsedHeight + 5)) / 20.0)).clamp(0.0, 1.0);
+          }
               
           return FlexibleSpaceBar(
             background: Container(
@@ -255,12 +268,15 @@ class _CreateDeliveryScreenState extends ConsumerState<CreateDeliveryScreen> {
                 ),
               ),
             ),
-            title: Text(
-              'New Delivery',
-              style: TextStyle(
-                  color: AppColors.textPrimary.withValues(alpha: progress),
-                  fontWeight: FontWeight.w800,
-                  fontSize: 17),
+            title: Opacity(
+              opacity: titleOpacity,
+              child: const Text(
+                'New Delivery',
+                style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 17),
+              ),
             ),
             titlePadding: const EdgeInsets.only(left: 56, bottom: 16),
           );
@@ -296,14 +312,10 @@ class _SectionHeader extends StatelessWidget {
 class _AddressCard extends StatelessWidget {
   final TextEditingController pickupCtrl;
   final TextEditingController dropoffCtrl;
-  final ValueChanged<String> onPickupChanged;
-  final ValueChanged<String> onDropoffChanged;
 
   const _AddressCard({
     required this.pickupCtrl,
     required this.dropoffCtrl,
-    required this.onPickupChanged,
-    required this.onDropoffChanged,
   });
 
   @override
@@ -333,12 +345,21 @@ class _AddressCard extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: CustomTextField(
-                  label: 'Pickup Address',
-                  hint: 'Enter pickup location',
-                  controller: pickupCtrl,
-                  prefixIcon: Iconsax.location,
-                  onChanged: onPickupChanged,
+                child: GestureDetector(
+                  onTap: () {
+                    context.push(
+                      '/delivery/search-location',
+                      extra: {'focusPickup': true},
+                    );
+                  },
+                  child: AbsorbPointer(
+                    child: CustomTextField(
+                      label: 'Pickup Address',
+                      hint: 'Enter pickup location',
+                      controller: pickupCtrl,
+                      prefixIcon: Iconsax.location,
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -361,12 +382,21 @@ class _AddressCard extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: CustomTextField(
-                  label: 'Dropoff Address',
-                  hint: 'Enter delivery location',
-                  controller: dropoffCtrl,
-                  prefixIcon: Iconsax.routing,
-                  onChanged: onDropoffChanged,
+                child: GestureDetector(
+                  onTap: () {
+                    context.push(
+                      '/delivery/search-location',
+                      extra: {'focusPickup': false},
+                    );
+                  },
+                  child: AbsorbPointer(
+                    child: CustomTextField(
+                      label: 'Dropoff Address',
+                      hint: 'Enter delivery location',
+                      controller: dropoffCtrl,
+                      prefixIcon: Iconsax.routing,
+                    ),
+                  ),
                 ),
               ),
             ],
