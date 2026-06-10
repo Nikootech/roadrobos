@@ -222,6 +222,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       controller: _messageController,
                       decoration: const InputDecoration(
                         hintText: 'Type a message...',
+                        filled: false,
                         border: InputBorder.none,
                         focusedBorder: InputBorder.none,
                         enabledBorder: InputBorder.none,
