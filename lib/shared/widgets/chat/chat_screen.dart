@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconsax/iconsax.dart';
@@ -27,10 +28,202 @@ class ChatScreen extends ConsumerStatefulWidget {
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   final _messageController = TextEditingController();
   final _scrollController = ScrollController();
+  
+  StreamSubscription<List<ChatMessage>>? _messagesSubscription;
+  Timer? _busyMessageTimer;
+  Timer? _closeChatTimer;
+  bool _showingFeedback = false;
+  int _selectedRating = 5;
+  final _feedbackCommentController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _setupMessageListener();
+  }
+
+  void _setupMessageListener() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final messagesStream = ref.read(chatRepositoryProvider).watchMessages(widget.roomId);
+      _messagesSubscription = messagesStream.listen((messages) {
+        _onMessagesUpdated(messages);
+      });
+    });
+  }
+
+  void _onMessagesUpdated(List<ChatMessage> messages) {
+    if (messages.isEmpty) return;
+
+    final currentUserId = ref.read(userProvider).user?.id ?? 'demo';
+    final lastMessage = messages.last;
+
+    // Check if the last message is sent by the customer (me)
+    if (lastMessage.senderId == currentUserId) {
+      _closeChatTimer?.cancel();
+      _busyMessageTimer?.cancel();
+      _busyMessageTimer = Timer(const Duration(minutes: 2), () {
+        _sendAutomatedBusyMessage();
+      });
+    } else if (lastMessage.senderId == 'system') {
+      _busyMessageTimer?.cancel();
+      _closeChatTimer?.cancel();
+      _closeChatTimer = Timer(const Duration(minutes: 1), () {
+        _showFeedbackSheet();
+      });
+    } else {
+      // Support agent/manager replied! Cancel all timers
+      _busyMessageTimer?.cancel();
+      _closeChatTimer?.cancel();
+    }
+  }
+
+  Future<void> _sendAutomatedBusyMessage() async {
+    await ref.read(chatRepositoryProvider).sendSystemMessage(
+      widget.roomId,
+      'All agents are currently busy. For immediate assistance, please call us at +919844991225.',
+    );
+  }
+
+  void _showFeedbackSheet() {
+    if (_showingFeedback) return;
+    setState(() {
+      _showingFeedback = true;
+    });
+
+    showModalBottomSheet(
+      context: context,
+      isDismissible: false,
+      enableDrag: false,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 24,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Text(
+                    'Chat Session Closed',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'We hope we were able to assist you. Please rate your experience below.',
+                    style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 20),
+                  
+                  // Star Rating Bar
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(5, (index) {
+                      final starValue = index + 1;
+                      return IconButton(
+                        icon: Icon(
+                          starValue <= _selectedRating ? Icons.star_rounded : Icons.star_border_rounded,
+                          size: 40,
+                          color: AppColors.accentAmber,
+                        ),
+                        onPressed: () {
+                          setModalState(() {
+                            _selectedRating = starValue;
+                          });
+                        },
+                      );
+                    }),
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Comment input box
+                  TextField(
+                    controller: _feedbackCommentController,
+                    decoration: InputDecoration(
+                      hintText: 'Any comments or feedback? (Optional)',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    ),
+                    maxLines: 2,
+                  ),
+                  const SizedBox(height: 24),
+                  
+                  // Action Buttons
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => _handleSubmitFeedback(skip: true),
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size(0, 48),
+                            side: const BorderSide(color: AppColors.border),
+                          ),
+                          child: const Text('Skip'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () => _handleSubmitFeedback(skip: false),
+                          style: ElevatedButton.styleFrom(
+                            minimumSize: const Size(0, 48),
+                          ),
+                          child: const Text('Submit'),
+                        ),
+                      ),
+                    ],
+                  )
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _handleSubmitFeedback({required bool skip}) async {
+    final currentUserId = ref.read(userProvider).user?.id ?? 'demo';
+    
+    // Close bottom sheet
+    Navigator.pop(context);
+
+    if (!skip) {
+      // Submit feedback to DB
+      await ref.read(chatRepositoryProvider).submitFeedback(
+        widget.roomId,
+        currentUserId,
+        _selectedRating,
+        _feedbackCommentController.text.trim(),
+      );
+    }
+
+    // Complete data wipe
+    await ref.read(chatRepositoryProvider).wipeChatData(widget.roomId);
+
+    // Return to the previous screen (e.g. Profile)
+    if (mounted) {
+      context.pop();
+    }
+  }
 
   @override
   void dispose() {
+    _messagesSubscription?.cancel();
+    _busyMessageTimer?.cancel();
+    _closeChatTimer?.cancel();
     _messageController.dispose();
+    _feedbackCommentController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -187,8 +380,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   itemBuilder: (context, index) {
                     // Reverse index because we render bottom-up
                     final message = messages[messages.length - 1 - index];
-                    final isMe = message.senderId == currentUserId;
-                    return _buildMessageBubble(message.message, isMe);
+                    return _buildMessageBubble(message, currentUserId);
                   },
                 );
               },
@@ -252,7 +444,35 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  Widget _buildMessageBubble(String text, bool isMe) {
+  Widget _buildMessageBubble(ChatMessage message, String currentUserId) {
+    final isMe = message.senderId == currentUserId;
+    final isSystem = message.senderId == 'system';
+
+    if (isSystem) {
+      return Container(
+        margin: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        decoration: BoxDecoration(
+          color: Colors.amber.shade50,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.amber.shade200),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(Icons.info_outline_rounded, color: AppColors.accentOrange, size: 18),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                message.message,
+                style: const TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.4),
+              ),
+            ),
+          ],
+        ),
+      ).animate().fadeIn(duration: 300.ms);
+    }
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Row(
@@ -281,7 +501,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 ),
                 boxShadow: isMe ? [] : [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 5, offset: const Offset(0, 2))],
               ),
-              child: Text(text, style: TextStyle(fontSize: 14, color: isMe ? Colors.white : AppColors.textPrimary, height: 1.4)),
+              child: Text(message.message, style: TextStyle(fontSize: 14, color: isMe ? Colors.white : AppColors.textPrimary, height: 1.4)),
             ),
           ),
           

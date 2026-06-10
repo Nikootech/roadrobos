@@ -102,4 +102,46 @@ class ChatRepository {
       debugPrint('Error sending support notification: $e');
     }
   }
+
+  /// Send an automated system message to the chat
+  Future<void> sendSystemMessage(String roomId, String text) async {
+    try {
+      await _supabase.from('chat_messages').insert({
+        'room_id': roomId,
+        'sender_id': 'system',
+        'message': text,
+        'created_at': DateTime.now().toUtc().toIso8601String(),
+        'is_read': true,
+      });
+    } catch (e) {
+      debugPrint('Error sending system message: $e');
+    }
+  }
+
+  /// Submit user feedback/rating for the chat support session
+  Future<void> submitFeedback(String roomId, String? userId, int rating, String comment) async {
+    try {
+      await _supabase.from('chat_feedback').insert({
+        'room_id': roomId,
+        'user_id': userId == 'demo' ? null : userId,
+        'rating': rating,
+        'comment': comment,
+        'created_at': DateTime.now().toUtc().toIso8601String(),
+      });
+    } catch (e) {
+      debugPrint('Error submitting chat feedback: $e');
+    }
+  }
+
+  /// Complete data wipe of messages and room from database
+  Future<void> wipeChatData(String roomId) async {
+    try {
+      // 1. Delete all messages for this room
+      await _supabase.from('chat_messages').delete().eq('room_id', roomId);
+      // 2. Delete the room itself
+      await _supabase.from('chat_rooms').delete().eq('id', roomId);
+    } catch (e) {
+      debugPrint('Error wiping chat data: $e');
+    }
+  }
 }
