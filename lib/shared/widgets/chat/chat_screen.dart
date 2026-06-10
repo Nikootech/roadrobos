@@ -4,6 +4,7 @@ import 'package:iconsax/iconsax.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/repositories/chat_repository.dart';
 import '../../../core/models/chat_message.dart';
@@ -117,16 +118,40 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ],
         ),
         actions: [
-          IconButton(icon: const Icon(Icons.call_outlined, color: AppColors.textPrimary), onPressed: () async {
-            final Uri url = Uri(scheme: 'tel', path: '+18005550199');
-            if (await canLaunchUrl(url)) {
-              await launchUrl(url);
-            } else {
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not launch dialer')));
+          IconButton(
+            icon: const Icon(Icons.call_outlined, color: AppColors.textPrimary),
+            onPressed: () async {
+              String phoneNumber = '+919844991225'; // Fallback support hotline
+              try {
+                final response = await Supabase.instance.client
+                    .from('profiles')
+                    .select('phone')
+                    .eq('role', 'support_manager')
+                    .not('phone', 'is', null)
+                    .limit(1)
+                    .maybeSingle();
+
+                if (response != null &&
+                    response['phone'] != null &&
+                    response['phone'].toString().trim().isNotEmpty) {
+                  phoneNumber = response['phone'].toString().trim();
+                }
+              } catch (e) {
+                debugPrint('Error fetching support manager phone: $e');
               }
-            }
-          }),
+
+              final Uri url = Uri(scheme: 'tel', path: phoneNumber);
+              if (await canLaunchUrl(url)) {
+                await launchUrl(url);
+              } else {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Could not launch dialer')),
+                  );
+                }
+              }
+            },
+          ),
         ],
       ),
       body: Column(
