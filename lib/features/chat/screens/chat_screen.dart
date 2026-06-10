@@ -40,6 +40,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   late final ChatRepository _chatRepository;
 
+  bool _isValidUuid(String str) {
+    if (str.isEmpty) return false;
+    final uuidRegex = RegExp(
+      r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
+    );
+    return uuidRegex.hasMatch(str);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -61,6 +69,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Future<void> _loadInitialMessages() async {
+    if (widget.bookingId.isEmpty || !_isValidUuid(widget.bookingId)) {
+      setState(() {
+        _messages = [];
+        _isLoading = false;
+        _hasMore = false;
+      });
+      return;
+    }
     setState(() => _isLoading = true);
     try {
       final messages = await _chatRepository.getMessageHistory(
@@ -85,6 +101,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Future<void> _loadEarlierMessages() async {
+    if (widget.bookingId.isEmpty || !_isValidUuid(widget.bookingId)) return;
     if (_isLoading || !_hasMore) return;
     setState(() => _isLoading = true);
     
@@ -107,6 +124,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   void _setupRealtime() {
+    if (widget.bookingId.isEmpty || !_isValidUuid(widget.bookingId)) return;
     _chatChannel = Supabase.instance.client
         .channel('public:messages:booking_id=eq.${widget.bookingId}')
         .onPostgresChanges(
@@ -134,6 +152,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   void _setupPresence() {
+    if (widget.bookingId.isEmpty || !_isValidUuid(widget.bookingId)) return;
     final userId = Supabase.instance.client.auth.currentUser?.id;
     if (userId == null) return;
 
@@ -166,6 +185,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   void _onTyping(String text) {
+    if (widget.bookingId.isEmpty || !_isValidUuid(widget.bookingId)) return;
     if (text.isNotEmpty && !_isTyping) {
       _isTyping = true;
       _presenceChannel?.track({
@@ -193,7 +213,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Future<void> _markAsRead() async {
-    await _chatRepository.markRead(widget.bookingId);
+    if (widget.bookingId.isEmpty || !_isValidUuid(widget.bookingId)) return;
+    try {
+      await _chatRepository.markRead(widget.bookingId);
+    } catch (e) {
+      debugPrint('Error marking messages as read: $e');
+    }
   }
 
   Future<void> _sendMessage() async {

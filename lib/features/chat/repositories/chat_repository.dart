@@ -7,12 +7,23 @@ class ChatRepository {
   ChatRepository({SupabaseClient? supabase})
       : _supabase = supabase ?? Supabase.instance.client;
 
+  bool _isValidUuid(String str) {
+    if (str.isEmpty) return false;
+    final uuidRegex = RegExp(
+      r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
+    );
+    return uuidRegex.hasMatch(str);
+  }
+
   // Send a message
   Future<void> sendMessage({
     required String bookingId,
     required String receiverId,
     required String content,
   }) async {
+    if (bookingId.isEmpty || !_isValidUuid(bookingId)) {
+      throw ArgumentError('Cannot send message: invalid or empty bookingId');
+    }
     final senderId = _supabase.auth.currentUser?.id;
     if (senderId == null) throw Exception('User not authenticated');
 
@@ -26,6 +37,9 @@ class ChatRepository {
 
   // Stream messages for a specific booking
   Stream<List<ChatMessage>> streamMessages(String bookingId) {
+    if (bookingId.isEmpty || !_isValidUuid(bookingId)) {
+      return Stream.value(<ChatMessage>[]);
+    }
     return _supabase
         .from('messages')
         .stream(primaryKey: ['id'])
@@ -40,6 +54,9 @@ class ChatRepository {
     required int limit,
     required int offset,
   }) async {
+    if (bookingId.isEmpty || !_isValidUuid(bookingId)) {
+      return <ChatMessage>[];
+    }
     final response = await _supabase
         .from('messages')
         .select()
@@ -52,6 +69,7 @@ class ChatRepository {
 
   // Mark messages as read for a specific booking
   Future<void> markRead(String bookingId) async {
+    if (bookingId.isEmpty || !_isValidUuid(bookingId)) return;
     final userId = _supabase.auth.currentUser?.id;
     if (userId == null) return;
 
