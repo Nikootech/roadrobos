@@ -35,11 +35,86 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   bool _showingFeedback = false;
   int _selectedRating = 5;
   final _feedbackCommentController = TextEditingController();
+  
+  bool _isSupportOnline = false;
+  RealtimeChannel? _supportChannel;
 
   @override
   void initState() {
     super.initState();
     _setupMessageListener();
+    _setupSupportStatusListener();
+  }
+
+  void _setupSupportStatusListener() async {
+    await _checkSupportStatus();
+    try {
+      _supportChannel = Supabase.instance.client
+          .channel('public:profiles:support_status')
+          .onPostgresChanges(
+            event: PostgresChangeEvent.all,
+            schema: 'public',
+            table: 'profiles',
+            callback: (payload) {
+              _checkSupportStatus();
+            },
+          );
+      _supportChannel?.subscribe();
+    } catch (e) {
+      debugPrint('Error subscribing to support status: $e');
+    }
+  }
+
+  Future<void> _checkSupportStatus() async {
+    try {
+      final response = await Supabase.instance.client
+          .from('profiles')
+          .select('id')
+          .eq('role', 'support_manager')
+          .eq('is_online', true)
+          .limit(1)
+          .maybeSingle();
+
+      if (mounted) {
+        setState(() {
+          _isSupportOnline = response != null;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error checking support online status: $e');
+    }
+  }
+
+  Future<void> _launchPhoneCall() async {
+    String phoneNumber = '+919844991225'; // Fallback support hotline
+    try {
+      final response = await Supabase.instance.client
+          .from('profiles')
+          .select('phone')
+          .eq('role', 'support_manager')
+          .not('phone', 'is', null)
+          .limit(1)
+          .maybeSingle();
+
+      if (response != null &&
+          response['phone'] != null &&
+          response['phone'].toString().trim().isNotEmpty) {
+        phoneNumber = response['phone'].toString().trim();
+      }
+    } catch (e) {
+      debugPrint('Error fetching support manager phone: $e');
+    }
+
+    final Uri url = Uri(scheme: 'tel', path: phoneNumber);
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url);
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not launch dialer')),
+        );
+      }
+    }
   }
 
   void _setupMessageListener() {
@@ -90,11 +165,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       _showingFeedback = true;
     });
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showModalBottomSheet(
       context: context,
       isDismissible: false,
       enableDrag: false,
-      backgroundColor: Colors.white,
+      backgroundColor: isDark ? AppColors.bgDarkSurface : Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -112,15 +188,22 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text(
+                  Text(
                     'Chat Session Closed',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? AppColors.textOnDark : AppColors.textPrimary,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
-                  const Text(
+                  Text(
                     'We hope we were able to assist you. Please rate your experience below.',
-                    style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: isDark ? AppColors.textOnDarkMuted : AppColors.textSecondary,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 20),
@@ -149,9 +232,37 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   // Comment input box
                   TextField(
                     controller: _feedbackCommentController,
+                    style: TextStyle(
+                      color: isDark ? AppColors.textOnDark : AppColors.textPrimary,
+                      fontSize: 14,
+                    ),
                     decoration: InputDecoration(
                       hintText: 'Any comments or feedback? (Optional)',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      hintStyle: TextStyle(
+                        color: isDark ? AppColors.textOnDarkMuted : AppColors.textMuted,
+                        fontSize: 14,
+                      ),
+                      filled: true,
+                      fillColor: isDark ? AppColors.bgDarkDeep : AppColors.bgLightGrey,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: isDark ? AppColors.bgDarkCard : AppColors.border,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: isDark ? AppColors.bgDarkCard : AppColors.border,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: AppColors.primaryBlue,
+                          width: 1.5,
+                        ),
+                      ),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     ),
                     maxLines: 2,
@@ -166,7 +277,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                           onPressed: () => _handleSubmitFeedback(skip: true),
                           style: OutlinedButton.styleFrom(
                             minimumSize: const Size(0, 48),
-                            side: const BorderSide(color: AppColors.border),
+                            side: BorderSide(
+                              color: isDark ? AppColors.bgDarkCard : AppColors.border,
+                            ),
+                            foregroundColor: isDark ? AppColors.textOnDark : AppColors.textPrimary,
                           ),
                           child: const Text('Skip'),
                         ),
@@ -177,6 +291,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                           onPressed: () => _handleSubmitFeedback(skip: false),
                           style: ElevatedButton.styleFrom(
                             minimumSize: const Size(0, 48),
+                            backgroundColor: AppColors.primaryBlue,
+                            foregroundColor: Colors.white,
                           ),
                           child: const Text('Submit'),
                         ),
@@ -222,6 +338,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     _messagesSubscription?.cancel();
     _busyMessageTimer?.cancel();
     _closeChatTimer?.cancel();
+    if (_supportChannel != null) {
+      Supabase.instance.client.removeChannel(_supportChannel!);
+    }
     _messageController.dispose();
     _feedbackCommentController.dispose();
     _scrollController.dispose();
@@ -265,15 +384,20 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Widget build(BuildContext context) {
     final currentUserId = ref.watch(userProvider.select((s) => s.user?.id)) ?? 'demo';
     final messagesStream = ref.watch(chatRepositoryProvider).watchMessages(widget.roomId);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: AppColors.bgLightGrey,
+      backgroundColor: isDark ? AppColors.bgDarkDeep : AppColors.bgLightGrey,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: isDark ? AppColors.bgDarkAlt : Colors.white,
         elevation: 1,
         shadowColor: Colors.black.withValues(alpha: 0.05),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: AppColors.textPrimary),
+          icon: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            size: 18,
+            color: isDark ? AppColors.textOnDark : AppColors.textPrimary,
+          ),
           onPressed: () => context.pop(),
         ),
         title: Row(
@@ -295,7 +419,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   child: Container(
                     width: 10,
                     height: 10,
-                    decoration: BoxDecoration(color: AppColors.successGreen, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2)),
+                    decoration: BoxDecoration(
+                      color: _isSupportOnline ? AppColors.successGreen : AppColors.textMuted,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: isDark ? AppColors.bgDarkAlt : Colors.white, width: 2),
+                    ),
                   ),
                 )
               ],
@@ -304,51 +432,78 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(widget.otherPartyName, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-                const Text('Online', style: TextStyle(fontSize: 11, color: AppColors.successGreen, fontWeight: FontWeight.w600)),
+                Text(
+                  widget.otherPartyName,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? AppColors.textOnDark : AppColors.textPrimary,
+                  ),
+                ),
+                Text(
+                  _isSupportOnline ? 'Online' : 'Offline',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: _isSupportOnline ? AppColors.successGreen : AppColors.textMuted,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ],
             ),
           ],
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.call_outlined, color: AppColors.textPrimary),
-            onPressed: () async {
-              String phoneNumber = '+919844991225'; // Fallback support hotline
-              try {
-                final response = await Supabase.instance.client
-                    .from('profiles')
-                    .select('phone')
-                    .eq('role', 'support_manager')
-                    .not('phone', 'is', null)
-                    .limit(1)
-                    .maybeSingle();
-
-                if (response != null &&
-                    response['phone'] != null &&
-                    response['phone'].toString().trim().isNotEmpty) {
-                  phoneNumber = response['phone'].toString().trim();
-                }
-              } catch (e) {
-                debugPrint('Error fetching support manager phone: $e');
-              }
-
-              final Uri url = Uri(scheme: 'tel', path: phoneNumber);
-              if (await canLaunchUrl(url)) {
-                await launchUrl(url);
-              } else {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Could not launch dialer')),
-                  );
-                }
-              }
-            },
+            icon: Icon(
+              Icons.call_outlined,
+              color: isDark ? AppColors.textOnDark : AppColors.textPrimary,
+            ),
+            onPressed: _launchPhoneCall,
           ),
         ],
       ),
       body: Column(
         children: [
+          if (!_isSupportOnline)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0x1AF97316) : Colors.orange.shade50,
+                border: Border(
+                  bottom: BorderSide(
+                    color: isDark ? const Color(0x33F97316) : Colors.orange.shade100,
+                  ),
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.info_outline_rounded, color: AppColors.accentOrange, size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'All support managers are offline. For quick assistance, please call us directly.',
+                      style: TextStyle(
+                        color: isDark ? AppColors.textOnDark : AppColors.textPrimary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton.icon(
+                    onPressed: _launchPhoneCall,
+                    icon: const Icon(Icons.call_rounded, size: 14),
+                    label: const Text('Call Now', style: TextStyle(fontSize: 12)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primaryBlue,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(0, 36),
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           Expanded(
             child: StreamBuilder<List<ChatMessage>>(
               stream: messagesStream,
@@ -391,28 +546,47 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12).copyWith(bottom: 24),
             decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, -5))],
+              color: isDark ? AppColors.bgDarkAlt : Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, -5),
+                )
+              ],
             ),
             child: Row(
               children: [
                 Container(
                   padding: const EdgeInsets.all(10),
-                  decoration: const BoxDecoration(color: AppColors.bgLightGrey, shape: BoxShape.circle),
-                  child: const Icon(Icons.attachment_rounded, color: AppColors.textSecondary, size: 20),
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.bgDarkDeep : AppColors.bgLightGrey,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.attachment_rounded,
+                    color: isDark ? AppColors.textOnDarkMuted : AppColors.textSecondary,
+                    size: 20,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     decoration: BoxDecoration(
-                      color: AppColors.bgLightGrey,
+                      color: isDark ? AppColors.bgDarkDeep : AppColors.bgLightGrey,
                       borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: AppColors.border),
+                      border: Border.all(
+                        color: isDark ? AppColors.bgDarkCard : AppColors.border,
+                      ),
                     ),
                     child: TextField(
                       controller: _messageController,
-                      decoration: const InputDecoration(
+                      style: TextStyle(
+                        color: isDark ? AppColors.textOnDark : AppColors.textPrimary,
+                        fontSize: 14,
+                      ),
+                      decoration: InputDecoration(
                         hintText: 'Type a message...',
                         filled: false,
                         border: InputBorder.none,
@@ -421,7 +595,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         errorBorder: InputBorder.none,
                         disabledBorder: InputBorder.none,
                         contentPadding: EdgeInsets.zero,
-                        hintStyle: TextStyle(color: AppColors.textMuted, fontSize: 14),
+                        hintStyle: TextStyle(
+                          color: isDark ? AppColors.textOnDarkMuted : AppColors.textMuted,
+                          fontSize: 14,
+                        ),
                       ),
                       onSubmitted: (_) => _sendMessage(),
                     ),
@@ -447,15 +624,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Widget _buildMessageBubble(ChatMessage message, String currentUserId) {
     final isMe = message.senderId == currentUserId;
     final isSystem = message.senderId == 'system';
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     if (isSystem) {
       return Container(
         margin: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         decoration: BoxDecoration(
-          color: Colors.amber.shade50,
+          color: isDark ? const Color(0x1AFACC15) : Colors.amber.shade50,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.amber.shade200),
+          border: Border.all(
+            color: isDark ? const Color(0x33FACC15) : Colors.amber.shade200,
+          ),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -465,7 +645,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             Expanded(
               child: Text(
                 message.message,
-                style: const TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.4),
+                style: TextStyle(
+                  fontSize: 13,
+                  color: isDark ? AppColors.textOnDarkMuted : AppColors.textSecondary,
+                  height: 1.4,
+                ),
               ),
             ),
           ],
@@ -492,16 +676,29 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: isMe ? AppColors.primaryBlue : Colors.white,
+                color: isMe ? AppColors.primaryBlue : (isDark ? AppColors.bgDarkSurface : Colors.white),
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(16),
                   topRight: const Radius.circular(16),
                   bottomLeft: Radius.circular(isMe ? 16 : 4),
                   bottomRight: Radius.circular(isMe ? 4 : 16),
                 ),
-                boxShadow: isMe ? [] : [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 5, offset: const Offset(0, 2))],
+                boxShadow: isMe ? [] : [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.02),
+                    blurRadius: 5,
+                    offset: const Offset(0, 2),
+                  )
+                ],
               ),
-              child: Text(message.message, style: TextStyle(fontSize: 14, color: isMe ? Colors.white : AppColors.textPrimary, height: 1.4)),
+              child: Text(
+                message.message,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: isMe ? Colors.white : (isDark ? AppColors.textOnDark : AppColors.textPrimary),
+                  height: 1.4,
+                ),
+              ),
             ),
           ),
           
