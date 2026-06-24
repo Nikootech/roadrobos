@@ -350,15 +350,27 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
         if (_showSuggestions)
           _buildSuggestionsSection(state, notifier, pCtrl, dCtrl),
         const SizedBox(height: 32),
-        if (state.status == RideStatus.vehicleSelection)
-          _buildFareEstimate(state),
-        const SizedBox(height: 16),
+        if (state.status == RideStatus.vehicleSelection) ...[
+          _buildFareEstimate(state, notifier),
+          const SizedBox(height: 16),
+          // Payment methods row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              const Row(children: [Icon(Icons.money, color: Colors.green, size: 20), SizedBox(width: 4), Text('Cash', style: TextStyle(fontWeight: FontWeight.bold))]),
+              Container(width: 1, height: 20, color: Colors.grey),
+              const Row(children: [Icon(Icons.local_offer, color: Colors.green, size: 20), SizedBox(width: 4), Text('Coupon', style: TextStyle(fontWeight: FontWeight.bold))]),
+              Container(width: 1, height: 20, color: Colors.grey),
+              const Row(children: [Icon(Icons.person, color: Colors.grey, size: 20), SizedBox(width: 4), Text('Myself', style: TextStyle(fontWeight: FontWeight.bold))]),
+            ],
+          ),
+          const SizedBox(height: 16),
+        ],
         CustomButton(
-          label: state.status == RideStatus.vehicleSelection ? 'BOOK NOW' : 'SELECT LOCATIONS',
+          label: state.status == RideStatus.vehicleSelection ? 'Book ${state.selectedOption?.title ?? 'Ride'}' : 'SELECT LOCATIONS',
           onPressed: state.status == RideStatus.booked ? null : () {
             _triggerHaptic();
             if (state.status == RideStatus.vehicleSelection) {
-              // Fix: Centralized booking logic in Notifier ONLY to avoid duplicate writes
               notifier.bookRide(); 
             } else {
               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select both locations')));
@@ -484,22 +496,75 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
     );
   }
 
-  Widget _buildFareEstimate(TaxiState state) {
+  Widget _buildFareEstimate(TaxiState state, TaxiNotifier notifier) {
+    if (state.rideOptions.isEmpty) return const SizedBox.shrink();
+    
+    if (state.selectedOption == null && state.rideOptions.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifier.selectOption(state.rideOptions.first);
+      });
+    }
+
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: AppColors.primaryBlue.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(16)),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          const Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Estimated Fare', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-              Text('₹ 145 - 180', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: AppColors.primaryBlue)),
-            ],
-          ),
-          Text('${state.distance.toStringAsFixed(1)} km', style: const TextStyle(fontWeight: FontWeight.bold)),
-        ],
+      constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.4),
+      child: ListView.separated(
+        shrinkWrap: true,
+        padding: EdgeInsets.zero,
+        itemCount: state.rideOptions.length,
+        separatorBuilder: (context, index) => Divider(height: 1, color: isDark ? Colors.grey[800] : Colors.grey[200]),
+        itemBuilder: (context, index) {
+          final option = state.rideOptions[index];
+          final isSelected = state.selectedOption?.id == option.id;
+          
+          return GestureDetector(
+            onTap: () => notifier.selectOption(option),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+              decoration: BoxDecoration(
+                color: isSelected ? AppColors.primaryBlue.withValues(alpha: 0.1) : Colors.transparent,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isSelected ? AppColors.primaryBlue : Colors.transparent,
+                ),
+              ),
+              child: Row(
+                children: [
+                  if (option.assetPath != null)
+                    Image.asset(option.assetPath!, width: 40, height: 40)
+                  else
+                    Icon(option.icon, size: 40, color: isDark ? Colors.white : AppColors.primaryNavy),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(option.title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: isDark ? Colors.white : AppColors.textPrimary)),
+                            if (option.tag != null) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primaryBlue,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(option.tag!, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                              ),
+                            ]
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(option.subtitle, style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[400] : AppColors.textSecondary)),
+                      ],
+                    ),
+                  ),
+                  Text('₹${option.price.toInt()}', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: isDark ? Colors.white : AppColors.textPrimary)),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }

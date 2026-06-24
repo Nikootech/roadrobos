@@ -96,8 +96,20 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget> with SingleTicker
   }
 
   Future<void> _updateRoute() async {
+    final taxiState = ref.read(taxiProvider);
+
+    if (taxiState.status == RideStatus.vehicleSelection && taxiState.pickupLocation != null && taxiState.dropoffLocation != null) {
+      final points = await _osmService.getRoute(taxiState.pickupLocation!, taxiState.dropoffLocation!);
+      if (mounted) {
+        setState(() {
+          _routePoints = points;
+        });
+        _fitBounds(taxiState.pickupLocation!, taxiState.dropoffLocation!);
+      }
+      return;
+    }
+
     if (widget.roadroboLocation != null) {
-      final taxiState = ref.read(taxiProvider);
       LatLng? target;
       
       if (taxiState.status == RideStatus.headingToDropoff) {
@@ -150,6 +162,14 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget> with SingleTicker
     final mapState = ref.watch(mapControllerProvider);
     final taxiState = ref.watch(taxiProvider);
 
+    ref.listen<TaxiState>(taxiProvider, (previous, next) {
+      if (previous?.dropoffLocation != next.dropoffLocation || 
+          previous?.pickupLocation != next.pickupLocation || 
+          previous?.status != next.status) {
+        _updateRoute();
+      }
+    });
+
     // Auto-fit or Auto-follow logic
     if (widget.isTracking && widget.roadroboLocation != null) {
       LatLng? target;
@@ -170,16 +190,18 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget> with SingleTicker
     
     // Pickup/Drop Markers
     if (!widget.isTracking) {
-      markers.add(
-        Marker(
-          point: taxiState.pickupLocation ?? mapState.userLocation,
-          width: 60,
-          height: 60,
-          child: _buildLocationPin(isPickup: true, point: taxiState.pickupLocation ?? mapState.userLocation, label: 'Pickup Point'),
-        ),
-      );
+      if (taxiState.status != RideStatus.selectingPickup) {
+        markers.add(
+          Marker(
+            point: taxiState.pickupLocation ?? mapState.userLocation,
+            width: 60,
+            height: 60,
+            child: _buildLocationPin(isPickup: true, point: taxiState.pickupLocation ?? mapState.userLocation, label: 'Pickup Point'),
+          ),
+        );
+      }
 
-      if (taxiState.dropoffLocation != null) {
+      if (taxiState.dropoffLocation != null && taxiState.status != RideStatus.selectingDrop) {
         markers.add(
           Marker(
             point: taxiState.dropoffLocation!,
@@ -265,7 +287,7 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget> with SingleTicker
             ),
             children: [
               TileLayer(
-                urlTemplate: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
+                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 userAgentPackageName: 'com.roadrobos.app',
                 tileProvider: CancellableNetworkTileProvider(),
               ),
@@ -274,10 +296,10 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget> with SingleTicker
                   if (_routePoints.isNotEmpty)
                     Polyline(
                       points: _routePoints,
-                      color: AppColors.primaryBlue,
-                      strokeWidth: 5,
-                      borderColor: Colors.white,
-                      borderStrokeWidth: 2,
+                      color: Colors.black,
+                      strokeWidth: 4,
+                      borderColor: Colors.black,
+                      borderStrokeWidth: 1,
                     ),
                   ...mapState.polylines,
                 ],
@@ -421,7 +443,7 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget> with SingleTicker
             decoration: BoxDecoration(
               color: Colors.white,
               shape: BoxShape.circle,
-              border: Border.all(color: color, width: 3),
+              border: Border.all(width: 3),
               boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2))],
             ),
             child: Center(

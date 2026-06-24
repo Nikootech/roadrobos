@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:in_app_update/in_app_update.dart';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:upgrader/upgrader.dart';
 
 import 'package:iconsax/iconsax.dart';
@@ -42,7 +43,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    if (Platform.isAndroid) {
+    if (!kIsWeb && Platform.isAndroid) {
       _checkForUpdate();
     }
   }
@@ -142,7 +143,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
     );
 
-    if (Platform.isIOS) {
+    if (!kIsWeb && Platform.isIOS) {
       return UpgradeAlert(
         upgrader: Upgrader(),
         child: scaffold,
@@ -459,7 +460,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final TechnicianJob? activeJob = ref.watch(selectedJobProvider);
     if (activeRental == null && activeJob == null) return const SizedBox.shrink();
     final isRental = activeRental != null;
-    final title = isRental ? activeRental.vehicle['name'] : '${activeJob!.serviceType} - ${activeJob.packageName}';
+    final title = isRental ? (activeRental.vehicle['name'] ?? 'Rental Vehicle').toString() : '${activeJob!.serviceType} - ${activeJob.packageName}';
     final subtitle = isRental ? activeRental.status.name.toUpperCase() : '${activeJob!.vehicleModel} (${activeJob.vehiclePlate})';
     final statusColor = isRental ? (activeRental.status == RentalStatus.active ? AppColors.successGreen : AppColors.accentOrange) : AppColors.primaryBlue;
     return Padding(
