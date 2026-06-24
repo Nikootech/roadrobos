@@ -13,9 +13,10 @@ class OSMMapsService {
     if (query.length < 3) return [];
 
     try {
+      final headers = kIsWeb ? null : <String, String>{'User-Agent': 'RoadRobos_App_v1.0'};
       final response = await http.get(
         Uri.parse('$_nominatimUrl/search?q=${Uri.encodeComponent(query)}&format=json&addressdetails=1&limit=5&countrycodes=in'),
-        headers: {'User-Agent': 'RoadRobos_App_v1.0'},
+        headers: headers,
       );
 
       if (response.statusCode == 200) {
@@ -60,9 +61,10 @@ class OSMMapsService {
   /// Reverse geocoding: Get address from coordinates
   Future<String?> getAddressFromCoords(LatLng point) async {
     try {
+      final headers = kIsWeb ? null : <String, String>{'User-Agent': 'RoadRobosApp/1.0 (contact@roadrobos.com)'};
       final response = await http.get(
         Uri.parse('$_nominatimUrl/reverse?lat=${point.latitude}&lon=${point.longitude}&format=json&zoom=18&addressdetails=1'),
-        headers: {'User-Agent': 'RoadRobosApp/1.0 (contact@roadrobos.com)'},
+        headers: headers,
       );
 
       if (response.statusCode == 200) {
