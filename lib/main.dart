@@ -194,7 +194,7 @@ void main() {
               errorStr.contains('the `web` parameter needs to be set')) {
             return; // known non-fatal web warning
           }
-          if (!kDebugMode) {
+          if (!kDebugMode && !kIsWeb) {
             FirebaseCrashlytics.instance.recordFlutterFatalError(details);
           } else {
             FlutterError.presentError(details);
@@ -203,7 +203,7 @@ void main() {
 
         PlatformDispatcher.instance.onError = (error, stack) {
           Sentry.captureException(error, stackTrace: stack);
-          if (!kDebugMode) {
+          if (!kDebugMode && !kIsWeb) {
             FirebaseCrashlytics.instance
                 .recordError(error, stack, fatal: true);
           }
@@ -237,7 +237,7 @@ void main() {
     (error, stack) {
       // Zone-level uncaught error handler
       Sentry.captureException(error, stackTrace: stack);
-      if (!kDebugMode) {
+      if (!kDebugMode && !kIsWeb) {
         FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
       } else {
         debugPrint('Uncaught error: $error\n$stack');
