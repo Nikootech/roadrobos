@@ -61,13 +61,20 @@ class OSMMapsService {
   Future<String?> getAddressFromCoords(LatLng point) async {
     try {
       final response = await http.get(
-        Uri.parse('$_nominatimUrl/reverse?lat=${point.latitude}&lon=${point.longitude}&format=json'),
-        headers: {'User-Agent': 'RoadRobos_App_v1.0'},
+        Uri.parse('$_nominatimUrl/reverse?lat=${point.latitude}&lon=${point.longitude}&format=json&zoom=18&addressdetails=1'),
+        headers: {'User-Agent': 'RoadRobosApp/1.0 (contact@roadrobos.com)'},
       );
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        return data['display_name'];
+        if (data['display_name'] != null) {
+          final address = data['display_name'].toString();
+          final parts = address.split(', ');
+          if (parts.length > 3) {
+            return '${parts[0]}, ${parts[1]}, ${parts[2]}';
+          }
+          return address;
+        }
       }
     } catch (e) {
       debugPrint('Nominatim Reverse Geocode Error: $e');

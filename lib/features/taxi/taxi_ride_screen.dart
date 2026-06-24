@@ -21,6 +21,8 @@ import '../../core/theme/app_colors.dart';
 import '../../core/services/payment_service.dart';
 import '../../core/services/pricing_service.dart';
 import '../../shared/widgets/sos_button.dart';
+import 'dart:async';
+import '../../core/services/osm_maps_service.dart';
 import 'package:go_router/go_router.dart';
 import '../profile/user_provider.dart';
 import '../profile/sos_provider.dart';
@@ -40,17 +42,27 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
   final FocusNode _dropoffFocusNode = FocusNode();
   String _searchQuery = '';
   bool _showSuggestions = false;
+  bool _isPickupSearch = true;
 
-  final List<Map<String, dynamic>> _addressSuggestions = [
-    {'name': 'Current Location', 'address': 'Your current location', 'lat': 12.9716, 'lng': 77.5946},
-    {'name': 'Old Airport Road', 'address': 'Old Airport Road, Kodihalli, Bengaluru', 'lat': 12.9610, 'lng': 77.6487},
-    {'name': 'MG Road Metro Station', 'address': 'Mahatma Gandhi Road, Bengaluru', 'lat': 12.9756, 'lng': 77.6068},
-    {'name': 'Indiranagar Double Road', 'address': 'Indiranagar, Stage 2, Bengaluru', 'lat': 12.9719, 'lng': 77.6412},
-    {'name': 'Koramangala 4th Block', 'address': 'Koramangala, St. John\'s Hospital Road, Bengaluru', 'lat': 12.9352, 'lng': 77.6245},
-    {'name': 'Whitefield Railway Station', 'address': 'Kadugodi, Bengaluru', 'lat': 12.9698, 'lng': 77.7499},
-    {'name': 'Majestic Bus Station', 'address': 'Kempegowda Bus Station, Majestic, Bengaluru', 'lat': 12.9779, 'lng': 77.5724},
-    {'name': 'Electronic City Phase 1', 'address': 'Hosur Road, Bengaluru', 'lat': 12.8497, 'lng': 77.6749},
-  ];
+  final OSMMapsService _osmService = OSMMapsService();
+  List<Map<String, dynamic>> _apiSearchResults = [];
+  bool _isSearching = false;
+  Timer? _debounce;
+
+  List<Map<String, dynamic>> get _addressSuggestions {
+    final state = ref.read(taxiProvider);
+    final currentLoc = state.pickupLocation ?? const LatLng(12.9716, 77.5946);
+    return [
+      {'name': state.pickupAddress ?? 'Current Location', 'address': 'Your current location', 'lat': currentLoc.latitude, 'lng': currentLoc.longitude},
+      {'name': 'Old Airport Road', 'address': 'Old Airport Road, Kodihalli, Bengaluru', 'lat': 12.9610, 'lng': 77.6487},
+      {'name': 'MG Road Metro Station', 'address': 'Mahatma Gandhi Road, Bengaluru', 'lat': 12.9756, 'lng': 77.6068},
+      {'name': 'Indiranagar Double Road', 'address': 'Indiranagar, Stage 2, Bengaluru', 'lat': 12.9719, 'lng': 77.6412},
+      {'name': 'Koramangala 4th Block', 'address': 'Koramangala, St. John\'s Hospital Road, Bengaluru', 'lat': 12.9352, 'lng': 77.6245},
+      {'name': 'Whitefield Railway Station', 'address': 'Kadugodi, Bengaluru', 'lat': 12.9698, 'lng': 77.7499},
+      {'name': 'Majestic Bus Station', 'address': 'Kempegowda Bus Station, Majestic, Bengaluru', 'lat': 12.9779, 'lng': 77.5724},
+      {'name': 'Electronic City Phase 1', 'address': 'Hosur Road, Bengaluru', 'lat': 12.8497, 'lng': 77.6749},
+    ];
+  }
 
   @override
   void initState() {
@@ -63,6 +75,7 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
           setState(() {
             _showSuggestions = true;
             _searchQuery = ref.read(pickupControllerProvider).text;
+            _isPickupSearch = true;
           });
           _sheetController.animateTo(0.85, duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
           ref.read(taxiProvider.notifier).updateStatus(RideStatus.selectingPickup);
@@ -82,6 +95,7 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
           setState(() {
             _showSuggestions = true;
             _searchQuery = ref.read(dropoffControllerProvider).text;
+            _isPickupSearch = false;
           });
           _sheetController.animateTo(0.85, duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
           ref.read(taxiProvider.notifier).updateStatus(RideStatus.selectingDrop);
@@ -100,10 +114,32 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _sheetController.dispose();
     _pickupFocusNode.dispose();
     _dropoffFocusNode.dispose();
     super.dispose();
+  }
+
+  void _onSearchChanged(String query) {
+    if (_debounce?.isActive ?? false) _debounce?.cancel();
+    if (query.length < 3) {
+      setState(() {
+        _apiSearchResults = [];
+        _isSearching = false;
+      });
+      return;
+    }
+    _debounce = Timer(const Duration(milliseconds: 500), () async {
+      setState(() => _isSearching = true);
+      final results = await _osmService.searchAddress(query);
+      if (mounted) {
+        setState(() {
+          _apiSearchResults = results;
+          _isSearching = false;
+        });
+      }
+    });
   }
 
   void _triggerHaptic() {
@@ -120,11 +156,10 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
 
     // Sync controllers with state
     // Sync controllers with state ONLY if they are not currently focused to avoid jitter
-    final pFocus = FocusScope.of(context).focusedChild;
-    if (taxiState.pickupAddress != null && pickupController.text != taxiState.pickupAddress && pFocus == null) {
+    if (taxiState.pickupAddress != null && pickupController.text != taxiState.pickupAddress && !_pickupFocusNode.hasFocus) {
       pickupController.text = taxiState.pickupAddress!;
     }
-    if (taxiState.dropoffAddress != null && dropoffController.text != taxiState.dropoffAddress && pFocus == null) {
+    if (taxiState.dropoffAddress != null && dropoffController.text != taxiState.dropoffAddress && !_dropoffFocusNode.hasFocus) {
       dropoffController.text = taxiState.dropoffAddress!;
     }
 
@@ -292,6 +327,7 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
                _searchQuery = val;
                _showSuggestions = true;
              });
+             _onSearchChanged(val);
              notifier.updateStatus(RideStatus.selectingPickup);
           },
         ),
@@ -307,10 +343,11 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
                _searchQuery = val;
                _showSuggestions = true;
              });
+             _onSearchChanged(val);
              notifier.updateStatus(RideStatus.selectingDrop);
           },
         ),
-        if (_showSuggestions && (_pickupFocusNode.hasFocus || _dropoffFocusNode.hasFocus))
+        if (_showSuggestions)
           _buildSuggestionsSection(state, notifier, pCtrl, dCtrl),
         const SizedBox(height: 32),
         if (state.status == RideStatus.vehicleSelection)
@@ -334,7 +371,6 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
   }
 
   Widget _buildSuggestionsSection(TaxiState state, TaxiNotifier notifier, TextEditingController pCtrl, TextEditingController dCtrl) {
-    final isPickupActive = _pickupFocusNode.hasFocus;
     
     // Filter suggestions based on what the user types
     final filtered = _addressSuggestions.where((s) {
@@ -344,7 +380,9 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
       return query.isEmpty || name.contains(query) || address.contains(query);
     }).toList();
 
-    if (filtered.isEmpty) return const SizedBox.shrink();
+    final displayList = [...filtered, ..._apiSearchResults];
+
+    if (displayList.isEmpty && !_isSearching) return const SizedBox.shrink();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -360,18 +398,29 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
           ),
         ),
         const SizedBox(height: 8),
+        if (_isSearching)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12),
+            child: Row(
+              children: [
+                SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+                SizedBox(width: 12),
+                Text('Searching...', style: TextStyle(fontWeight: FontWeight.w500, color: Colors.grey)),
+              ],
+            ),
+          ),
         Container(
           constraints: const BoxConstraints(maxHeight: 250),
           child: ListView.separated(
             shrinkWrap: true,
             physics: const ClampingScrollPhysics(),
-            itemCount: filtered.length,
+            itemCount: displayList.length,
             separatorBuilder: (context, index) => Divider(
               color: isDark ? Colors.grey[800] : Colors.grey[200],
               height: 1,
             ),
             itemBuilder: (context, index) {
-              final suggestion = filtered[index];
+              final suggestion = displayList[index];
               return ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: Container(
@@ -407,7 +456,7 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
                   final latLng = LatLng(suggestion['lat'], suggestion['lng']);
                   final name = suggestion['name'];
 
-                  if (isPickupActive) {
+                  if (_isPickupSearch) {
                     pCtrl.text = name;
                     notifier.setPickup(latLng, name);
                   } else {
