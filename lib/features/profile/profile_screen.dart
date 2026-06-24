@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import '../../shared/widgets/app_avatar.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/constants/app_strings.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -97,25 +97,10 @@ class ProfileScreen extends ConsumerWidget {
                             shape: BoxShape.circle,
                             border: Border.all(color: AppColors.warningAmber, width: 2),
                           ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(32),
-                          child: (user.profileImageUrl.isNotEmpty)
-                              ? CachedNetworkImage(
-                                  imageUrl: user.profileImageUrl,
-                                  fit: BoxFit.cover,
-                                  placeholder: (context, url) => Container(
-                                    color: AppColors.bgSkyLight,
-                                    child: const Center(child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.warningAmber)),
-                                  ),
-                                  errorWidget: (_, __, ___) => Container(
-                                    color: AppColors.bgSkyLight,
-                                    child: const Icon(Icons.person_rounded, color: AppColors.textSecondary, size: 32),
-                                  ),
-                                )
-                              : Container(
-                                  color: AppColors.bgSkyLight,
-                                  child: const Icon(Icons.person_rounded, color: AppColors.textSecondary, size: 32),
-                                ),
+                        child: AppAvatar(
+                          imageUrl: user.profileImageUrl,
+                          radius: 30,
+                          backgroundColor: AppColors.bgSkyLight,
                         ),
                       ),
                       ),
@@ -133,11 +118,11 @@ class ProfileScreen extends ConsumerWidget {
                             const SizedBox(height: 4),
                              Row(
                               children: [
-                                Icon(Icons.star_rounded, size: 16, color: user.points > 5000 ? AppColors.warningAmber : (user.points > 2000 ? Colors.grey[400] : Colors.brown[400])),
+                                Icon(Icons.star_rounded, size: 16, color: user.points > 5000 ? AppColors.warningAmber : (user.points > 2000 ? Colors.grey.shade400 : Colors.brown.shade400)),
                                 const SizedBox(width: 4),
                                 Text(
                                   user.points > 5000 ? 'Gold Member' : (user.points > 2000 ? 'Silver Member' : 'Bronze Member'),
-                                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: user.points > 5000 ? AppColors.warningAmber : (user.points > 2000 ? Colors.grey[400] : Colors.brown[400])),
+                                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: user.points > 5000 ? AppColors.warningAmber : (user.points > 2000 ? Colors.grey.shade400 : Colors.brown.shade400)),
                                 ),
                               ],
                             ),
@@ -168,7 +153,7 @@ class ProfileScreen extends ConsumerWidget {
                               child: Row(
                                 children: [
                                   Text(
-                                    user.points.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},'),
+                                    user.points.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m.group(1) ?? ''},'),
                                     style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppColors.warningAmber),
                                   ),
                                   const SizedBox(width: 14),
