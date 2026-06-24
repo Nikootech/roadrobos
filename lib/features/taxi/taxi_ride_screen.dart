@@ -642,6 +642,21 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
           },
           backgroundColor: AppColors.errorRed,
         ),
+        const SizedBox(height: 16),
+        TextButton(
+          onPressed: () {
+            _triggerHaptic();
+            _showCancelDialog(context, notifier);
+          },
+          child: const Text(
+            'Cancel Ride',
+            style: TextStyle(
+              color: AppColors.errorRed,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
+        ),
       ],
     ).animate().fadeIn();
   }
@@ -753,6 +768,129 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
         ),
       ),
     ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack);
+  }
+
+  void _showCancelDialog(BuildContext context, TaxiNotifier notifier) {
+    String selectedReason = '';
+    final reasons = [
+      'Expected a shorter wait time',
+      'Driver asked me to cancel',
+      'Driver is too far away',
+      'I changed my mind',
+      'Other',
+    ];
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: isDark ? AppColors.bgDarkCard : Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (bottomSheetContext) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 24.0,
+                right: 24.0,
+                top: 24.0,
+                bottom: MediaQuery.of(bottomSheetContext).viewInsets.bottom + 24.0,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Cancel Ride',
+                    style: GoogleFonts.outfit(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: isDark ? AppColors.textOnDark : AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Please let us know why you are canceling.',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: isDark ? AppColors.textOnDarkMuted : AppColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ...reasons.map((reason) {
+                    return InkWell(
+                      onTap: () {
+                        setState(() {
+                          selectedReason = reason;
+                        });
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12.0),
+                        child: Row(
+                          children: [
+                            Icon(
+                              selectedReason == reason ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                              color: selectedReason == reason ? AppColors.primaryBlue : Colors.grey,
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Text(
+                                reason,
+                                style: TextStyle(
+                                  color: isDark ? AppColors.textOnDark : AppColors.textPrimary,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(bottomSheetContext),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            side: const BorderSide(color: AppColors.primaryBlue),
+                          ),
+                          child: const Text('Keep Ride', style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.bold)),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: CustomButton(
+                          label: 'Cancel Ride',
+                          onPressed: () {
+                            if (selectedReason.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Please select a reason first')),
+                              );
+                              return;
+                            }
+                            notifier.cancelRide();
+                            Navigator.pop(bottomSheetContext);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Ride canceled: $selectedReason')),
+                            );
+                          },
+                          backgroundColor: selectedReason.isEmpty ? Colors.grey : AppColors.errorRed,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   void _showCompletionDialog(BuildContext context, TaxiNotifier notifier) {
