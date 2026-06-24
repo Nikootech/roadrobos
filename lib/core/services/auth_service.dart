@@ -157,6 +157,24 @@ class AuthService {
     }
   }
 
+  /// Re-verifies the user's password without side effects (no rate limiting,
+  /// no RBAC fetch). Use this for password confirmation flows (biometric setup,
+  /// password change) where the user is already authenticated.
+  Future<void> reauthenticate(String email, String password) async {
+    try {
+      await _supabase.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
+    } on sb.AuthException catch (e) {
+      if (e.message.contains('Invalid login credentials') ||
+          e.statusCode == '400') {
+        throw Exception('Incorrect password. Please enter your RoadRobos account password.');
+      }
+      rethrow;
+    }
+  }
+
   Future<void> resetPassword(String email) async {
     AuthRateLimiter.checkRateLimit(email);
     AuthRateLimiter.recordAttempt(email);

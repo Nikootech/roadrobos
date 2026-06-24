@@ -4,6 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:in_app_update/in_app_update.dart';
+import 'dart:io';
+import 'package:upgrader/upgrader.dart';
 
 import 'package:iconsax/iconsax.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -36,14 +39,31 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
 
+  @override
+  void initState() {
+    super.initState();
+    if (Platform.isAndroid) {
+      _checkForUpdate();
+    }
+  }
 
-
+  Future<void> _checkForUpdate() async {
+    try {
+      final info = await InAppUpdate.checkForUpdate();
+      if (info.updateAvailability == UpdateAvailability.updateAvailable) {
+        await InAppUpdate.startFlexibleUpdate();
+        await InAppUpdate.completeFlexibleUpdate();
+      }
+    } catch (e) {
+      debugPrint('InAppUpdate Error: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(userProvider).user;
 
-    return Scaffold(
+    final Widget scaffold = Scaffold(
       backgroundColor: Colors.white,
       body: RefreshIndicator(
         color: AppColors.primaryBlue,
@@ -121,6 +141,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
       ),
     );
+
+    if (Platform.isIOS) {
+      return UpgradeAlert(
+        upgrader: Upgrader(),
+        child: scaffold,
+      );
+    }
+
+    return scaffold;
   }
 
   Widget _buildHeader(WidgetRef ref) {

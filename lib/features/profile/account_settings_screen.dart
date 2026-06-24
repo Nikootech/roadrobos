@@ -149,7 +149,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
         final email = user.email;
         if (email == null || email.isEmpty) throw Exception('No email associated with this profile');
         
-        await authService.signInWithEmail(email, password);
+        await authService.reauthenticate(email, password);
         
         if (mounted) Navigator.pop(context); // Dismiss loading spinner
         
@@ -183,9 +183,16 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
         }
       } catch (e) {
         if (mounted) Navigator.pop(context); // Dismiss loading spinner
+        String errorMsg = e.toString();
+        // Make error messages user-friendly
+        if (errorMsg.contains('Invalid login credentials') ||
+            errorMsg.contains('invalid_credentials') ||
+            errorMsg.contains('Incorrect password')) {
+          errorMsg = 'Incorrect password. Please enter your RoadRobos account password, not your device PIN.';
+        }
         messenger.showSnackBar(
           SnackBar(
-            content: Text('Incorrect password or verification failed: $e'),
+            content: Text(errorMsg),
             backgroundColor: AppColors.dangerRed,
             behavior: SnackBarBehavior.floating,
           ),
@@ -405,6 +412,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
               child: ElevatedButton(
                 onPressed: _is2FADialogLoading ? null : () {
                   setState(() => _twoFaStep = 1);
+                  _dialogSetState?.call(() {});
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryBlue,

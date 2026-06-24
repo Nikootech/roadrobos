@@ -74,4 +74,18 @@ class OSMMapsService {
     }
     return null;
   }
+
+  /// Calculate total distance of a route polyline in kilometers
+  double calculateDistanceInKm(List<LatLng> points) {
+    if (points.isEmpty || points.length == 1) return 0.0;
+    
+    double totalDistance = 0.0;
+    const distance = Distance();
+    
+    for (int i = 0; i < points.length - 1; i++) {
+      totalDistance += distance.as(LengthUnit.Meter, points[i], points[i + 1]);
+    }
+    
+    return totalDistance / 1000.0;
+  }
 }

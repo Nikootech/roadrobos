@@ -25,6 +25,7 @@ import 'core/security/encrypted_column.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'core/utils/app_debugger.dart';
 import 'shared/widgets/startup_error_app.dart';
+import 'core/services/background_service.dart';
 
 import 'package:flutter/foundation.dart';
 
@@ -45,6 +46,7 @@ void main() {
   runZonedGuarded(
     () async {
       WidgetsFlutterBinding.ensureInitialized();
+      await initializeBackgroundService();
 
       SharedPreferences? prefs;
       bool isCompromised = false;

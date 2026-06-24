@@ -1,6 +1,7 @@
 // IMPORTANT: All StreamSubscription fields must be cancelled in dispose/onDispose.
 
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
@@ -11,6 +12,7 @@ import '../core/models/ride_booking.dart';
 import '../core/repositories/ride_booking_repository.dart';
 import '../core/repositories/driver_repository.dart';
 import '../core/services/user_tracking_service.dart';
+import '../core/services/osm_maps_service.dart';
 
 
 enum RideStatus { 
@@ -164,9 +166,13 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
 
       final location = await _trackingService.getCurrentLocation() ?? const LatLng(12.9716, 77.5946);
       
+      // Auto fetch address
+      final osmService = OSMMapsService();
+      final address = await osmService.getAddressFromCoords(location);
+
       state = state.copyWith(
         pickupLocation: location,
-        pickupAddress: 'Current Location',
+        pickupAddress: address ?? 'Current Location',
         mockLocations: [
           {'name': 'MG Road', 'address': 'MG Road, Bengaluru', 'distance': '2.4 km', 'lat': 12.9716, 'lng': 77.5946},
           {'name': 'Indiranagar', 'address': 'Indiranagar, Bengaluru', 'distance': '4.1 km', 'lat': 12.9719, 'lng': 77.6412},
@@ -218,9 +224,10 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
 
   void _calculateDistance() async {
     if (state.pickupLocation != null && state.dropoffLocation != null) {
-      const distanceCalc = Distance();
-      final double meters = distanceCalc.as(LengthUnit.Meter, state.pickupLocation!, state.dropoffLocation!);
-      final distanceKm = meters / 1000.0;
+      final osmService = OSMMapsService();
+      final route = await osmService.getRoute(state.pickupLocation!, state.dropoffLocation!);
+      final distanceKm = osmService.calculateDistanceInKm(route);
+      
       state = state.copyWith(distance: distanceKm);
       _generateRideOptions(distanceKm);
     }
@@ -266,6 +273,8 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
     
     try {
       final user = ref.read(userProvider);
+      final random = Random();
+      final generatedOtp = (1000 + random.nextInt(9000)).toString(); // 4 digit OTP
 
       final booking = RideBooking(
         id: '', 
@@ -277,11 +286,12 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
         destLat: state.dropoffLocation!.latitude,
         destLng: state.dropoffLocation!.longitude,
         fare: state.selectedOption?.price ?? 0.0,
+        otp: generatedOtp,
         createdAt: DateTime.now(),
       );
 
       final bookingId = await ref.read(rideBookingRepositoryProvider).createRideBooking(booking);
-      state = state.copyWith(rideId: bookingId);
+      state = state.copyWith(rideId: bookingId, otp: generatedOtp, isOtpVerified: false);
       
       // ignore: unawaited_futures
       _rideSubscription?.cancel();
@@ -304,6 +314,30 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
               }
             }
           });
+
+      // ── Dispatch Simulation ──
+      // If no backend is running to auto-assign a driver, we simulate a 4-second search.
+      Future.delayed(const Duration(seconds: 4), () {
+        if (state.status == RideStatus.booked) {
+          // Simulate backend assigning a driver
+          final mockAssignedRide = RideBooking(
+            id: bookingId,
+            customerId: user.user?.id ?? 'demo',
+            driverId: 'mock_driver_999',
+            pickupAddress: state.pickupAddress ?? '',
+            destinationAddress: state.dropoffAddress ?? '',
+            pickupLat: state.pickupLocation!.latitude,
+            pickupLng: state.pickupLocation!.longitude,
+            destLat: state.dropoffLocation!.latitude,
+            destLng: state.dropoffLocation!.longitude,
+            fare: state.selectedOption?.price ?? 0.0,
+            status: 'assigned',
+            otp: generatedOtp,
+            createdAt: DateTime.now(),
+          );
+          _onDriverAssigned(mockAssignedRide);
+        }
+      });
     } catch (e) {
       debugPrint('Error booking ride: $e');
       state = state.copyWith(status: RideStatus.idle);
@@ -314,7 +348,6 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
     state = state.copyWith(
       status: RideStatus.tracking,
       roadroboName: 'Driver Assigned', 
-      otp: '1234', 
       driverId: ride.driverId,
     );
 
@@ -323,12 +356,19 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
         .watchDriver(ride.driverId!)
         .listen((driver) {
           if (driver != null && driver.currentPosition != null) {
+            final targetLocation = state.status == RideStatus.headingToDropoff 
+                ? state.dropoffLocation! 
+                : state.pickupLocation!;
+            
             const distanceCalc = Distance();
-            final double meters = distanceCalc.as(LengthUnit.Meter, driver.currentPosition!, state.pickupLocation!);
+            final double meters = distanceCalc.as(LengthUnit.Meter, driver.currentPosition!, targetLocation);
+            
+            final double distanceKm = meters / 1000.0;
+            final int etaMins = (meters / 200).ceil(); // Rough estimate based on speed
             
             state = state.copyWith(
               roadroboLocation: driver.currentPosition,
-              eta: '${(meters / 200).ceil()} mins',
+              eta: '${distanceKm.toStringAsFixed(1)} km • $etaMins mins',
             );
           }
         });
@@ -356,10 +396,22 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
     final d = distance ?? state.distance;
     final bool hasDistance = d > 0.1;
     
-    // Pricing formulas: Base + (Rate * Distance)
-    final double bikePrice = hasDistance ? (25 + (12 * d)) : 105;
-    final double autoPrice = hasDistance ? (45 + (15 * d)) : 178;
-    final double cabPrice = hasDistance ? (70 + (22 * d)) : 267;
+    // ── Surge Pricing Logic ──
+    final hour = DateTime.now().hour;
+    double surgeMultiplier = 1.0;
+    
+    if (hour >= 8 && hour <= 11) {
+      surgeMultiplier = 1.3; // Morning peak
+    } else if (hour >= 17 && hour <= 20) {
+      surgeMultiplier = 1.5; // Evening peak
+    } else if (hour >= 23 || hour <= 4) {
+      surgeMultiplier = 1.2; // Late night
+    }
+
+    // Pricing formulas: (Base + (Rate * Distance)) * Surge
+    final double bikePrice = (hasDistance ? (25 + (12 * d)) : 105) * surgeMultiplier;
+    final double autoPrice = (hasDistance ? (45 + (15 * d)) : 178) * surgeMultiplier;
+    final double cabPrice = (hasDistance ? (70 + (22 * d)) : 267) * surgeMultiplier;
 
     state = state.copyWith(
       rideOptions: [

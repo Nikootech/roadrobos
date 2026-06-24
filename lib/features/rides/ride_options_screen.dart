@@ -80,6 +80,26 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
                       decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
                     ),
 
+                    // Title and Distance (Image 3)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Suggested rides', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(20)),
+                            child: Text(
+                              '${taxiState.distance.toStringAsFixed(1)}km • ${taxiState.eta ?? '15 min'}',
+                              style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+
                     // Vehicle Options List
                     Expanded(
                       child: ListView.builder(
@@ -117,15 +137,18 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
                       ),
                     ),
 
-                    // Footer Settings (Cash / Offers)
+                    // Footer Settings (Cash / Coupons / Myself) - Image 3
                     const Divider(height: 1),
                     Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
                       child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          Expanded(child: _buildFooterOption(Icons.wallet, 'Cash')),
-                          Container(width: 1, height: 20, color: Colors.grey[200]),
-                          Expanded(child: _buildFooterOption(Icons.local_offer, 'Offers')),
+                          _buildFooterOption(Icons.money, 'Cash'),
+                          Container(width: 1, height: 20, color: Colors.grey[300]),
+                          _buildFooterOption(Icons.local_offer_outlined, 'Coupons'),
+                          Container(width: 1, height: 20, color: Colors.grey[300]),
+                          _buildFooterOption(Icons.person_outline, 'Myself'),
                         ],
                       ),
                     ),
@@ -159,9 +182,9 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
                             elevation: 0,
                           ),
-                          child: const Text(
-                            'Book Ride Direct',
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: 0.5),
+                          child: Text(
+                            'Book ${_selectedRide?.title ?? 'Any'}',
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: 0.5),
                           ),
                         ),
                       ),
@@ -392,13 +415,13 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
 
   Widget _buildFooterOption(IconData icon, String label) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 20, color: Colors.green),
-        const SizedBox(width: 8),
-        Text(label, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15)),
-        const SizedBox(width: 4),
-        const Icon(Icons.chevron_right, size: 16, color: Colors.grey),
+        Icon(icon, size: 20, color: Colors.black87),
+        const SizedBox(width: 6),
+        Text(label, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+        const SizedBox(width: 2),
+        const Icon(Icons.keyboard_arrow_down, size: 16, color: Colors.black54),
       ],
     );
   }

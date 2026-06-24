@@ -98,6 +98,10 @@ dependencies:
   flutter_image_compress: ^2.4.0
   screen_protector: ^1.5.2
   sentry_flutter: ^8.0.0
+  in_app_update: ^4.2.5
+  upgrader: ^13.5.0
+  firebase_in_app_messaging: ^0.8.1+10
+  flutter_background_service: ^5.1.0
 
 dev_dependencies:
   flutter_test:

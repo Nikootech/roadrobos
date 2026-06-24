@@ -13,6 +13,7 @@ class RideBooking {
   final String status;
   final double fare;
   final String? vehicleType;
+  final String? otp;
   final DateTime createdAt;
 
   RideBooking({
@@ -28,6 +29,7 @@ class RideBooking {
     this.status = 'searching',
     required this.fare,
     this.vehicleType,
+    this.otp,
     required this.createdAt,
   });
 
@@ -45,6 +47,7 @@ class RideBooking {
       status: map['status'] ?? 'searching',
       fare: (map['fare'] ?? 0.0).toDouble(),
       vehicleType: map['vehicle_type'],
+      otp: map['otp']?.toString(),
       createdAt: map['created_at'] != null ? DateTime.parse(map['created_at']) : DateTime.now(),
     );
   }
@@ -62,6 +65,7 @@ class RideBooking {
       'status': status,
       'fare': fare,
       'vehicle_type': vehicleType,
+      'otp': otp,
       'created_at': createdAt.utcIso,
     };
   }

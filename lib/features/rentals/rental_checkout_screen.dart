@@ -91,6 +91,39 @@ class _RentalCheckoutScreenState extends ConsumerState<RentalCheckoutScreen> {
               ),
             
             const SizedBox(height: 24),
+            _buildSectionHeader('Pickup & Drop-off'),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+              child: Column(
+                children: [
+                  _buildLocationRow(
+                    icon: Icons.trip_origin_rounded,
+                    iconColor: AppColors.successGreen,
+                    label: 'Pickup',
+                    value: ref.watch(rentalPickupLocationProvider)?['name'] as String? ?? 'Not selected',
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 11),
+                    child: Row(
+                      children: [
+                        Container(width: 1.5, height: 20, color: AppColors.border),
+                        const Spacer(),
+                      ],
+                    ),
+                  ),
+                  _buildLocationRow(
+                    icon: Icons.location_on_rounded,
+                    iconColor: AppColors.accentOrange,
+                    label: 'Drop-off',
+                    value: ref.watch(rentalDropoffLocationProvider)?['name'] as String? ?? 'Not selected',
+                  ),
+                ],
+              ),
+            ),
+            
+            const SizedBox(height: 24),
             _buildSectionHeader('Rental Dates'),
             const SizedBox(height: 12),
             Container(
@@ -245,6 +278,29 @@ class _RentalCheckoutScreenState extends ConsumerState<RentalCheckoutScreen> {
       children: [
         Text(label, style: TextStyle(fontSize: isTotal ? 16 : 14, fontWeight: isTotal ? FontWeight.w800 : FontWeight.normal)),
         Text(val, style: TextStyle(fontSize: isTotal ? 16 : 14, fontWeight: isTotal ? FontWeight.w800 : FontWeight.bold, color: isTotal ? AppColors.primaryBlue : AppColors.textPrimary)),
+      ],
+    );
+  }
+
+  Widget _buildLocationRow({
+    required IconData icon,
+    required Color iconColor,
+    required String label,
+    required String value,
+  }) {
+    return Row(
+      children: [
+        Icon(icon, color: iconColor, size: 22),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
+              Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14), maxLines: 1, overflow: TextOverflow.ellipsis),
+            ],
+          ),
+        ),
       ],
     );
   }

@@ -166,6 +166,13 @@ final rentalPriceProvider = Provider<String>((ref) {
   }
 });
 
+/// Selected pickup location for rental booking
+/// Stores {'name': 'Location Name', 'address': 'Full Address', 'lat': 0.0, 'lng': 0.0}
+final rentalPickupLocationProvider = StateProvider<Map<String, dynamic>?>((ref) => null);
+
+/// Selected drop-off location for rental booking
+final rentalDropoffLocationProvider = StateProvider<Map<String, dynamic>?>((ref) => null);
+
 final rentalCatalogProvider = FutureProvider<List<RentalVehicle>>((ref) async {
   return ref.watch(rentalCatalogRepositoryProvider).getRentalFleet();
 });

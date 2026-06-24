@@ -134,18 +134,50 @@ class NotificationService implements INotificationService {
     if (context == null || type == null) return;
 
     switch (type) {
+      // ── Rides & Taxi ──
       case 'ride_request':
         context.push('/taxi/home');
         break;
+      case 'driver_allocated':
+      case 'driver_arrived':
+      case 'ride_started':
+        context.push('/live-tracking');
+        break;
+      case 'ride_completed':
+      case 'driver_cancelled':
       case 'booking_update':
+      case 'order_update':
         context.push('/main/bookings');
         break;
+
+      // ── Rentals ──
+      case 'rental_confirmed':
+      case 'rental_pickup_reminder':
+      case 'rental_return_warning':
+      case 'rental_completed':
+        context.push('/main/bookings');
+        break;
+
+      // ── Marketing & Rewards ──
+      case 'promotion':
+      case 'we_miss_you':
+        context.push('/main/home');
+        break;
+      case 'referral_reward':
+        context.push('/wallet');
+        break;
+
+      // ── Account & Security ──
       case 'payment_success':
+      case 'payment_failed':
+      case 'wallet_low_balance':
         context.push('/wallet');
         break;
       case 'kyc_approved':
+      case 'new_login':
         context.push('/account-settings');
         break;
+        
       case 'chat_message':
         final roomId = id ?? 'default_room';
         context.push('/chat/$roomId');
@@ -282,13 +314,38 @@ class NotificationService implements INotificationService {
   }
 
   void _showLocalNotification(RemoteMessage message) {
-    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-      'high_importance_channel',
-      'High Importance Notifications',
-      importance: Importance.max,
-      priority: Priority.high,
-    );
-    const NotificationDetails platformDetails =
+    final type = message.data['type'] ?? '';
+    AndroidNotificationDetails androidDetails;
+
+    if (['promotion', 'we_miss_you', 'referral_reward'].contains(type)) {
+      androidDetails = const AndroidNotificationDetails(
+        'promotions_channel',
+        'Promotions & Offers',
+      );
+    } else if (['payment_failed', 'wallet_low_balance', 'kyc_approved', 'new_login'].contains(type)) {
+      androidDetails = const AndroidNotificationDetails(
+        'account_alerts_channel',
+        'Account & Security',
+        importance: Importance.high,
+        priority: Priority.high,
+      );
+    } else if (['order_update', 'booking_update', 'driver_allocated', 'driver_arrived', 'ride_started', 'ride_completed', 'driver_cancelled', 'rental_confirmed', 'rental_pickup_reminder', 'rental_return_warning', 'rental_completed'].contains(type)) {
+      androidDetails = const AndroidNotificationDetails(
+        'rides_channel',
+        'Rides & Rentals',
+        importance: Importance.max,
+        priority: Priority.high,
+      );
+    } else {
+      androidDetails = const AndroidNotificationDetails(
+        'high_importance_channel',
+        'High Importance Notifications',
+        importance: Importance.max,
+        priority: Priority.high,
+      );
+    }
+
+    final NotificationDetails platformDetails =
         NotificationDetails(android: androidDetails);
 
     // ── Notification ID strategy ──────────────────────────────────────────
@@ -296,7 +353,6 @@ class NotificationService implements INotificationService {
     //   - Different notifications get unique IDs (no replacement).
     //   - Updates for the SAME entity replace each other intentionally.
     // Masked to a positive int to avoid Android notification ID overflow.
-    final type = message.data['type'] ?? '';
     final entityId = message.data['id'] ?? message.messageId ?? '';
     final notificationId = '${type}_$entityId'.hashCode & 0x7FFFFFFF;
 

@@ -1,4 +1,5 @@
 // ignore_for_file: deprecated_member_use, unused_import
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -9,14 +10,186 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/live_map_widget.dart';
 import '../../core/providers/favorites_provider.dart';
+import '../../core/services/osm_maps_service.dart';
 import 'rental_providers.dart';
 
-class RentalVehicleDetailScreen extends ConsumerWidget {
+class RentalVehicleDetailScreen extends ConsumerStatefulWidget {
   const RentalVehicleDetailScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<RentalVehicleDetailScreen> createState() => _RentalVehicleDetailScreenState();
+}
+
+class _RentalVehicleDetailScreenState extends ConsumerState<RentalVehicleDetailScreen> {
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  void _showLocationSearchSheet({required bool isPickup}) {
+    final searchController = TextEditingController();
+    final osmService = OSMMapsService();
+    List<Map<String, dynamic>> results = [];
+    bool isSearching = false;
+    Timer? debounce;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetCtx) => StatefulBuilder(
+        builder: (ctx, setSheetState) {
+          return Container(
+            height: MediaQuery.of(context).size.height * 0.75,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+            ),
+            child: Column(
+              children: [
+                // Handle bar
+                Container(
+                  margin: const EdgeInsets.only(top: 12),
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isPickup ? 'Select Pickup Location' : 'Select Drop-off Location',
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: searchController,
+                        autofocus: true,
+                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                        decoration: InputDecoration(
+                          hintText: 'Search for a location...',
+                          hintStyle: const TextStyle(color: AppColors.textMuted, fontWeight: FontWeight.normal),
+                          prefixIcon: Icon(
+                            isPickup ? Icons.trip_origin_rounded : Icons.location_on_rounded,
+                            color: isPickup ? AppColors.successGreen : AppColors.accentOrange,
+                            size: 20,
+                          ),
+                          suffixIcon: isSearching
+                              ? const Padding(
+                                  padding: EdgeInsets.all(12),
+                                  child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+                                )
+                              : null,
+                          filled: true,
+                          fillColor: AppColors.bgLightGrey,
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        ),
+                        onChanged: (query) {
+                          debounce?.cancel();
+                          if (query.length < 3) {
+                            setSheetState(() {
+                              results = [];
+                              isSearching = false;
+                            });
+                            return;
+                          }
+                          debounce = Timer(const Duration(milliseconds: 500), () async {
+                            setSheetState(() => isSearching = true);
+                            final searchResults = await osmService.searchAddress(query);
+                            if (ctx.mounted) {
+                              setSheetState(() {
+                                results = searchResults;
+                                isSearching = false;
+                              });
+                            }
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Divider(height: 1),
+                // Results
+                Expanded(
+                  child: results.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Iconsax.location, size: 48, color: Colors.grey.shade300),
+                              const SizedBox(height: 12),
+                              Text(
+                                'Search for a location above',
+                                style: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+                              ),
+                            ],
+                          ),
+                        )
+                      : ListView.separated(
+                          padding: EdgeInsets.zero,
+                          itemCount: results.length,
+                          separatorBuilder: (_, __) => const Divider(height: 1, indent: 60),
+                          itemBuilder: (context, index) {
+                            final loc = results[index];
+                            return ListTile(
+                              leading: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: AppColors.bgLightGrey,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: const Icon(Iconsax.location, color: AppColors.primaryBlue, size: 20),
+                              ),
+                              title: Text(
+                                loc['name'] ?? '',
+                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              subtitle: Text(
+                                loc['address'] ?? '',
+                                style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              onTap: () {
+                                // ignore: unawaited_futures
+                                HapticFeedback.lightImpact();
+                                if (isPickup) {
+                                  ref.read(rentalPickupLocationProvider.notifier).state = loc;
+                                } else {
+                                  ref.read(rentalDropoffLocationProvider.notifier).state = loc;
+                                }
+                                Navigator.pop(sheetCtx);
+                              },
+                            );
+                          },
+                        ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    ).then((_) {
+      debounce?.cancel();
+      searchController.dispose();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final vehicle = ref.watch(selectedVehicleProvider);
+    final pickupLocation = ref.watch(rentalPickupLocationProvider);
+    final dropoffLocation = ref.watch(rentalDropoffLocationProvider);
     
     
     // Default placeholder vehicle if none selected
@@ -181,6 +354,47 @@ class RentalVehicleDetailScreen extends ConsumerWidget {
                     ).animate().fadeIn(delay: (400 + entry.key * 50).ms).scale()).toList(),
                   ),
                   const SizedBox(height: 32),
+
+                  // ── Pickup & Drop-off Location Section ─────────────────────
+                  const Text('Pickup & Drop-off', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Select where you want to pick up and return the vehicle',
+                    style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.bgLightGrey,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+                    ),
+                    child: Column(
+                      children: [
+                        // Pickup tile
+                        _buildLocationTile(
+                          icon: Icons.trip_origin_rounded,
+                          iconColor: AppColors.successGreen,
+                          label: 'Pickup Location',
+                          value: pickupLocation?['name'] as String?,
+                          address: pickupLocation?['address'] as String?,
+                          onTap: () => _showLocationSearchSheet(isPickup: true),
+                        ),
+                        Divider(height: 1, indent: 56, endIndent: 16, color: AppColors.border.withValues(alpha: 0.3)),
+                        // Drop-off tile
+                        _buildLocationTile(
+                          icon: Icons.location_on_rounded,
+                          iconColor: AppColors.accentOrange,
+                          label: 'Drop-off Location',
+                          value: dropoffLocation?['name'] as String?,
+                          address: dropoffLocation?['address'] as String?,
+                          onTap: () => _showLocationSearchSheet(isPickup: false),
+                        ),
+                      ],
+                    ),
+                  ).animate().fadeIn(delay: 450.ms).slideY(begin: 0.05, end: 0),
+                  const SizedBox(height: 32),
+
                   if (isEV) ...[
                     const Text('Eco-Friendly Advantage', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 12),
@@ -311,6 +525,37 @@ class RentalVehicleDetailScreen extends ConsumerWidget {
                         await launchUrl(Uri.parse('https://roadrobos.com'), mode: LaunchMode.externalApplication);
                       }
                     } else {
+                      // Validate pickup & drop-off locations before proceeding
+                      final pickup = ref.read(rentalPickupLocationProvider);
+                      final dropoff = ref.read(rentalDropoffLocationProvider);
+
+                      if (pickup == null || dropoff == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Row(
+                              children: [
+                                const Icon(Icons.info_outline_rounded, color: Colors.white, size: 18),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    pickup == null && dropoff == null
+                                        ? 'Please select pickup & drop-off locations'
+                                        : pickup == null
+                                            ? 'Please select a pickup location'
+                                            : 'Please select a drop-off location',
+                                    style: const TextStyle(fontWeight: FontWeight.w600),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            backgroundColor: AppColors.accentOrange,
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                        );
+                        return;
+                      }
+
                       // Internal booking flow for cars
                       // ignore: unawaited_futures
                       context.push('/rental-checkout');
@@ -335,6 +580,81 @@ class RentalVehicleDetailScreen extends ConsumerWidget {
                     ],
                   ),
                 ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLocationTile({
+    required IconData icon,
+    required Color iconColor,
+    required String label,
+    String? value,
+    String? address,
+    required VoidCallback onTap,
+  }) {
+    final bool hasValue = value != null && value.isNotEmpty;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: iconColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: iconColor, size: 20),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textSecondary,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      hasValue ? value : 'Tap to select location',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: hasValue ? FontWeight.w700 : FontWeight.w500,
+                        color: hasValue ? AppColors.textPrimary : AppColors.textMuted,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (hasValue && address != null) ...[
+                      const SizedBox(height: 1),
+                      Text(
+                        address,
+                        style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              Icon(
+                hasValue ? Icons.check_circle_rounded : Icons.arrow_forward_ios_rounded,
+                size: hasValue ? 20 : 14,
+                color: hasValue ? AppColors.successGreen : AppColors.textMuted,
               ),
             ],
           ),

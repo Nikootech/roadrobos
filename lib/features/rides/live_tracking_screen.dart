@@ -109,8 +109,35 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> with Si
               ),
             ).animate().fadeIn(),
 
-          // 4. Driver Details Card (Bottom)
-          if (!isSearching)
+          // 4. Driver Details Card / Searching UI (Bottom)
+          if (isSearching)
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(32),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(36)),
+                  boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 30, offset: Offset(0, -10))],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(
+                      width: 50, height: 50,
+                      child: CircularProgressIndicator(color: AppColors.primaryBlue, strokeWidth: 4),
+                    ).animate(onPlay: (c) => c.repeat()).shimmer(),
+                    const SizedBox(height: 24),
+                    const Text('Finding nearby drivers...', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: AppColors.primaryNavy)),
+                    const SizedBox(height: 8),
+                    const Text('This usually takes a few seconds', style: TextStyle(color: AppColors.textMuted, fontSize: 14)),
+                    const SizedBox(height: 32),
+                  ],
+                ),
+              ),
+            ).animate().slideY(begin: 1, end: 0, duration: 600.ms, curve: Curves.easeOutQuart)
+          else
             Align(
               alignment: Alignment.bottomCenter,
               child: _buildDriverBottomCard(context, taxiState),
@@ -138,11 +165,16 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> with Si
   }
 
   Widget _buildTrackingStatusPill(TaxiState state) {
-    String statusStr = 'Roadrobo is 2 mins away';
+    String statusStr = state.eta != null 
+        ? 'Arriving: ${state.eta}' 
+        : 'Roadrobo is arriving soon';
+        
     if (state.status == RideStatus.atPickup) {
       statusStr = 'Roadrobo has arrived!';
     } else if (state.status == RideStatus.headingToDropoff) {
-      statusStr = 'Heading to destination';
+      statusStr = state.eta != null 
+          ? 'Dropoff in: ${state.eta}' 
+          : 'Heading to destination';
     }
 
     return Container(
@@ -261,25 +293,26 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> with Si
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                if (state.status == RideStatus.atPickup) ...[
-                   const Column(
+                if (state.status == RideStatus.atPickup || state.status == RideStatus.tracking) ...[
+                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('VERIFY OTP', style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w900)),
-                      SizedBox(height: 4),
-                      Text('4582', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.green)),
+                      const Text('VERIFY OTP', style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w900)),
+                      const SizedBox(height: 4),
+                      Text(state.otp ?? '----', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.green)),
                     ],
                   ),
-                  ElevatedButton(
-                    onPressed: () => ref.read(taxiProvider.notifier).startTrip(),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  if (state.status == RideStatus.atPickup)
+                    ElevatedButton(
+                      onPressed: () => ref.read(taxiProvider.notifier).startTrip(),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      ),
+                      child: const Text('Start Trip', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
                     ),
-                    child: const Text('Start Trip', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
-                  ),
                 ] else if (state.status == RideStatus.headingToDropoff) ...[
                    Expanded(
                     child: Column(
