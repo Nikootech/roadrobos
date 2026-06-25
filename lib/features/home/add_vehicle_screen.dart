@@ -73,10 +73,135 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
   }
 
   Future<void> _pickImage() async {
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
-      setState(() => _pickedImage = image);
-    }
+    await showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) {
+        return Container(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+          decoration: const BoxDecoration(
+            color: AppColors.bgWhite,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 48,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: AppColors.border,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Upload / Capture Photo',
+                style: GoogleFonts.outfit(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () async {
+                        Navigator.pop(context);
+                        try {
+                          final XFile? image = await _picker.pickImage(
+                            source: ImageSource.camera,
+                            imageQuality: 80,
+                          );
+                          if (image != null) {
+                            setState(() => _pickedImage = image);
+                          }
+                        } catch (e) {
+                          debugPrint('Error picking image from camera: $e');
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 20),
+                        decoration: BoxDecoration(
+                          color: AppColors.bgLightCard,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: AppColors.border),
+                        ),
+                        child: const Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.camera_alt_rounded, color: AppColors.primaryBlue, size: 32),
+                            SizedBox(height: 8),
+                            Text(
+                              'Capture',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () async {
+                        Navigator.pop(context);
+                        try {
+                          final XFile? image = await _picker.pickImage(
+                            source: ImageSource.gallery,
+                            imageQuality: 80,
+                          );
+                          if (image != null) {
+                            setState(() => _pickedImage = image);
+                          }
+                        } catch (e) {
+                          debugPrint('Error picking image from gallery: $e');
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 20),
+                        decoration: BoxDecoration(
+                          color: AppColors.bgLightCard,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: AppColors.border),
+                        ),
+                        child: const Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.photo_library_rounded, color: AppColors.primaryBlue, size: 32),
+                            SizedBox(height: 8),
+                            Text(
+                              'Upload',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override

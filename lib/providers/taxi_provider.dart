@@ -284,9 +284,34 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
         return false;
       }
       
-      // If we reach here, we have at least one valid driver.
-      // We can pick the closest one or assign them randomly for now.
-      final assignedDriver = onlineDrivers.first;
+      // Filter by radius (5 km = 5000 meters) and sort closest first
+      const double maxRadiusMeters = 5000;
+      const distanceCalc = Distance();
+      
+      final nearbyDrivers = onlineDrivers.where((driver) {
+        if (driver.currentPosition == null) return false;
+        final double distance = distanceCalc.as(
+          LengthUnit.Meter,
+          state.pickupLocation!,
+          driver.currentPosition!,
+        );
+        return distance <= maxRadiusMeters;
+      }).toList();
+
+      if (nearbyDrivers.isEmpty) {
+        // No drivers within the search radius
+        state = state.copyWith(status: RideStatus.idle);
+        return false;
+      }
+
+      // Sort closest driver first
+      nearbyDrivers.sort((a, b) {
+        final distA = distanceCalc.as(LengthUnit.Meter, state.pickupLocation!, a.currentPosition!);
+        final distB = distanceCalc.as(LengthUnit.Meter, state.pickupLocation!, b.currentPosition!);
+        return distA.compareTo(distB);
+      });
+
+      final assignedDriver = nearbyDrivers.first;
 
       final random = Random();
       final generatedOtp = (1000 + random.nextInt(9000)).toString(); // 4 digit OTP
