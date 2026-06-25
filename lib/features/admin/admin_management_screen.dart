@@ -263,8 +263,15 @@ class _AdminManagementScreenState extends ConsumerState<AdminManagementScreen> {
     
     final displayName = role.toUpperCase().replaceAll('_', ' ');
 
-    return Container(
-      padding: const EdgeInsets.all(16),
+    return GestureDetector(
+      onTap: () async {
+        final shouldRefresh = await context.push<bool>('/admin-management-details', extra: emp);
+        if (shouldRefresh == true && mounted) {
+          await _loadEmployees();
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border)),
       child: Column(
         children: [
@@ -370,7 +377,7 @@ class _AdminManagementScreenState extends ConsumerState<AdminManagementScreen> {
           ),
         ],
       ),
-    );
+    ));
   }
 
   Widget _buildAuditLogTile(int index) {

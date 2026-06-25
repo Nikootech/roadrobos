@@ -257,11 +257,29 @@ class UserNotifier extends StateNotifier<UserState> {
         debugPrint('UserNotifier: Fetching user profile from repository...');
       }
       AppUser? user = await _userRepository.getUser(uid);
-      if (kDebugMode) {
-        debugPrint('UserNotifier: getUser returned user=${user?.name} (id=${user?.id}, role=${user?.role})');
-      }
-
+      
       if (user != null) {
+        // Fetch latest data from database to ensure sync
+        final dbUser = await _userRepository.getUser(user.id);
+        if (dbUser != null) {
+           user = dbUser;
+        }
+
+        // --- ADMIN BOOTSTRAP OVERRIDE ---
+        // Force these specific emails to their correct roles regardless of DB triggers
+        if (user.email == 'sudandpineee@gmail.com' && user.role != UserRole.superAdmin) {
+          user = user.copyWith(role: UserRole.superAdmin, isApproved: true);
+          await _userRepository.saveUser(user);
+        } else if (user.email == 'sudane2efymservices@gmail.com' && user.role != UserRole.driver) {
+          user = user.copyWith(role: UserRole.driver, isApproved: true);
+          await _userRepository.saveUser(user);
+        }
+        // --------------------------------
+        
+        if (kDebugMode) {
+          debugPrint('UserNotifier: getUser returned user=${user.name} (id=${user.id}, role=${user.role})');
+        }
+
         final isValid = await _checkDeviceSession(user);
         if (!isValid) return;
 
@@ -269,6 +287,25 @@ class UserNotifier extends StateNotifier<UserState> {
         bool needsUpdate = false;
         String updatedName = user.name;
         String? updatedPic = user.profilePic;
+        UserRole updatedRole = user.role;
+        bool updatedApproval = user.isApproved;
+
+        // Check if the user selected a new role from RoleSelectionScreen
+        final savedRoleName = await _ref.read(localStorageServiceProvider).getSelectedRole();
+        if (savedRoleName != null && savedRoleName.isNotEmpty) {
+          final selectedRole = UserRole.values.firstWhere(
+            (e) => e.name == savedRoleName,
+            orElse: () => user!.role,
+          );
+          
+          // Allow switching role if the user is not an admin
+          if (user.role != selectedRole && !user.role.isAdmin) {
+             updatedRole = selectedRole;
+             updatedApproval = (selectedRole != UserRole.technician && selectedRole != UserRole.admin);
+             needsUpdate = true;
+          }
+        }
+
 
         final oauthName = currentSupabaseUser?.userMetadata?['full_name'] ?? 
                          currentSupabaseUser?.userMetadata?['name'];
@@ -311,16 +348,58 @@ class UserNotifier extends StateNotifier<UserState> {
         }
 
         // Optimization: Only write to database if data actually changed
-        final changesDetected = updatedName != user.name || updatedPic != user.profilePic;
+        final changesDetected = updatedName != user.name || updatedPic != user.profilePic || updatedRole != user.role || updatedApproval != user.isApproved;
+        final didChangeToDriver = updatedRole == UserRole.driver && user.role != UserRole.driver;
+        final didChangeToAdmin = updatedRole == UserRole.admin && user.role != UserRole.admin;
+
         if (kDebugMode) {
           debugPrint('UserNotifier: Sync check - needsUpdate=$needsUpdate, changesDetected=$changesDetected, isDemoId=$isDemoId');
         }
         if (needsUpdate && changesDetected && !isDemoId) {
-          user = user.copyWith(name: updatedName, profilePic: updatedPic);
+          user = user.copyWith(name: updatedName, profilePic: updatedPic, role: updatedRole, isApproved: updatedApproval);
           if (kDebugMode) {
             debugPrint('UserNotifier: Saving updated profile to database: ${user.toMap()}');
           }
           await _userRepository.saveUser(user);
+          
+          // Register driver profile if changed to driver
+          if (didChangeToDriver) {
+             try {
+               await _ref.read(driverRepositoryProvider).registerDriver(
+                 uid: uid,
+                 name: user.name,
+                 phone: user.phone,
+                 vehicleModel: 'Pending Update',
+                 chassisNumber: 'Pending Update',
+                 licenseNumber: 'Pending Update',
+               );
+             } catch (e) {
+               if (kDebugMode) debugPrint('UserNotifier: Failed to register driver profile: $e');
+             }
+          }
+
+          if (didChangeToAdmin) {
+             try {
+                final admins = await sb.Supabase.instance.client
+                   .from('profiles')
+                   .select('id')
+                   .inFilter('role', ['super_admin', 'founder_admin']);
+                   
+                final notifications = admins.map((admin) => {
+                   'user_id': admin['id'],
+                   'title': 'New Core Team Request',
+                   'message': '${user!.name} has requested to join the Core Team. Awaiting your approval.',
+                   'type': 'system',
+                }).toList();
+                
+                if (notifications.isNotEmpty) {
+                   await sb.Supabase.instance.client.from('user_notifications').insert(notifications);
+                }
+             } catch (e) {
+                if (kDebugMode) debugPrint('UserNotifier: Failed to send admin notifications: $e');
+             }
+          }
+
           if (kDebugMode) {
             debugPrint('UserNotifier: Save profile successful.');
           }
@@ -375,7 +454,7 @@ class UserNotifier extends StateNotifier<UserState> {
           phone: isDemoId ? '9876543210' : (currentSupabaseUser?.phone ?? ''),
           email: isDemoId ? 'demo@roadrobos.com' : currentSupabaseUser?.email,
           role: selectedRole,
-          isApproved: selectedRole != UserRole.technician,
+          isApproved: (selectedRole != UserRole.technician && selectedRole != UserRole.admin),
           profilePic: isDemoId ? '' : (oauthPic ?? ''),
         );
         
@@ -405,6 +484,28 @@ class UserNotifier extends StateNotifier<UserState> {
                 debugPrint('UserNotifier: Failed to register driver profile: $e');
               }
             }
+          }
+          
+          if (selectedRole == UserRole.admin) {
+             try {
+                final admins = await sb.Supabase.instance.client
+                   .from('profiles')
+                   .select('id')
+                   .inFilter('role', ['super_admin', 'founder_admin']);
+                   
+                final notifications = admins.map((admin) => {
+                   'user_id': admin['id'],
+                   'title': 'New Core Team Request',
+                   'message': '${newUser.name} has requested to join the Core Team. Awaiting your approval.',
+                   'type': 'system',
+                }).toList();
+                
+                if (notifications.isNotEmpty) {
+                   await sb.Supabase.instance.client.from('user_notifications').insert(notifications);
+                }
+             } catch (e) {
+                if (kDebugMode) debugPrint('UserNotifier: Failed to send admin notifications: $e');
+             }
           }
         }
         

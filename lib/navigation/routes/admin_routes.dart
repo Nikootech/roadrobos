@@ -13,6 +13,7 @@ import '../../features/admin/manage_offers_screen.dart';
 import '../../features/admin/customer_database_screen.dart';
 import '../../features/admin/driver_database_screen.dart';
 import '../../features/admin/technician_database_screen.dart';
+import '../../features/admin/employee_detail_screen.dart';
 import '../../features/admin/export_reports_screen.dart';
 import '../../features/admin/manage_reminders_screen.dart';
 import '../../features/admin/approval_center_screen.dart';
@@ -93,6 +94,16 @@ final List<RouteBase> adminRoutes = [
       child: const AdminManagementScreen(),
       state: state,
     ),
+  ),
+  GoRoute(
+    path: '/admin-management-details',
+    pageBuilder: (context, state) {
+      final employee = state.extra as Map<String, dynamic>;
+      return AppTransitions.slideRight(
+        child: EmployeeDetailScreen(employee: employee),
+        state: state,
+      );
+    },
   ),
   GoRoute(
     path: '/admin-feedback-analytics',

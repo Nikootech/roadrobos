@@ -151,6 +151,21 @@ class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen> {
                       ),
                     ).animate(delay: 400.ms).fadeIn(duration: 500.ms).slideX(begin: 0.1, end: 0),
 
+                    const SizedBox(height: 18),
+
+                    _buildRoleCard(
+                      role: 'admin',
+                      title: 'Core Team',
+                      description: 'Internal staff, area managers, and administrators.',
+                      icon: Iconsax.briefcase,
+                      activeColor: const Color(0xFF6366F1),
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFE0E7FF), Color(0xFFC7D2FE)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ).animate(delay: 500.ms).fadeIn(duration: 500.ms).slideX(begin: 0.1, end: 0),
+
                     const SizedBox(height: 40),
                   ],
                 ),
@@ -168,11 +183,13 @@ class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen> {
                         ? AppColors.primaryBlue
                         : (_selectedRole == 'driver'
                             ? AppColors.accentOrange
-                            : AppColors.successGreen))
+                            : (_selectedRole == 'technician'
+                                ? AppColors.successGreen
+                                : const Color(0xFF6366F1))))
                     : const Color(0xFFCBD5E1),
                 borderRadius: 24,
               ),
-            ).animate(delay: 500.ms).fadeIn(duration: 500.ms),
+            ).animate(delay: 600.ms).fadeIn(duration: 500.ms),
           ],
         ),
       ),

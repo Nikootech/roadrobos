@@ -229,6 +229,8 @@ extension UserRoleExtension on UserRole {
     UserRole.financeManager,
     UserRole.supportManager,
     UserRole.marketingAdmin,
+    UserRole.auditor,
+    UserRole.analyst,
   ].contains(this);
 
   bool get isFieldStaff => [
