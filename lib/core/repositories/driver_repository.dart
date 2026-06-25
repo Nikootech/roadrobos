@@ -45,6 +45,28 @@ class DriverRepository {
     }
   }
 
+  /// Get online drivers matching a vehicle type
+  Future<List<DriverModel>> getOnlineDrivers(String vehicleTypeId) async {
+    try {
+      final response = await _supabase.from('drivers').select().eq('is_online', true);
+      final List<DriverModel> allOnline = response.map((data) => DriverModel.fromMap(data, data['id'].toString())).toList();
+      
+      return allOnline.where((d) {
+        final model = d.vehicleModel.toLowerCase();
+        if (vehicleTypeId.contains('auto')) {
+          return model.contains('auto') || model.contains('rickshaw') || model.contains('bajaj');
+        } else if (vehicleTypeId.contains('bike')) {
+          return model.contains('bike') || model.contains('splendor') || model.contains('motor') || model.contains('honda');
+        } else if (vehicleTypeId.contains('cab') || vehicleTypeId.contains('car')) {
+          return model.contains('car') || model.contains('swift') || model.contains('sedan') || model.contains('suv');
+        }
+        return true;
+      }).toList();
+    } catch (e) {
+      return [];
+    }
+  }
+
   /// Stream of pending ride requests
   Stream<List<RideBooking>> watchPendingRides() {
     return _supabase

@@ -168,11 +168,22 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
                           ],
                         ),
                         child: ElevatedButton(
-                          onPressed: () {
+                          onPressed: () async {
                             if (_selectedRide != null) {
                               ref.read(taxiProvider.notifier).selectOption(_selectedRide!);
-                              ref.read(taxiProvider.notifier).startSearching();
-                              context.push('/taxi/tracking');
+                              final success = await ref.read(taxiProvider.notifier).startSearching();
+                              if (success) {
+                                if (context.mounted) await context.push('/taxi/tracking');
+                              } else {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('No ${_selectedRide!.title} drivers are currently available online. Please select another category.'),
+                                      backgroundColor: AppColors.dangerRed,
+                                    ),
+                                  );
+                                }
+                              }
                             }
                           },
                           style: ElevatedButton.styleFrom(

@@ -268,11 +268,26 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
     }
   }
 
-  Future<void> bookRide() async {
+  Future<bool> bookRide() async {
     state = state.copyWith(status: RideStatus.booked);
     
     try {
       final user = ref.read(userProvider);
+      
+      // Check for available drivers based on selected option
+      final selectedVehicle = state.selectedOption?.id ?? 'auto';
+      final onlineDrivers = await ref.read(driverRepositoryProvider).getOnlineDrivers(selectedVehicle);
+      
+      if (onlineDrivers.isEmpty) {
+        // No drivers found, reset status and return false
+        state = state.copyWith(status: RideStatus.idle);
+        return false;
+      }
+      
+      // If we reach here, we have at least one valid driver.
+      // We can pick the closest one or assign them randomly for now.
+      final assignedDriver = onlineDrivers.first;
+
       final random = Random();
       final generatedOtp = (1000 + random.nextInt(9000)).toString(); // 4 digit OTP
 
@@ -315,32 +330,21 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
             }
           });
 
-      // ── Dispatch Simulation ──
-      // If no backend is running to auto-assign a driver, we simulate a 4-second search.
-      Future.delayed(const Duration(seconds: 4), () {
+      // Assign the real driver (simulating the driver accepting the ride)
+      Future.delayed(const Duration(seconds: 4), () async {
         if (state.status == RideStatus.booked) {
-          // Simulate backend assigning a driver
-          final mockAssignedRide = RideBooking(
-            id: bookingId,
-            customerId: user.user?.id ?? 'demo',
-            driverId: 'mock_driver_999',
-            pickupAddress: state.pickupAddress ?? '',
-            destinationAddress: state.dropoffAddress ?? '',
-            pickupLat: state.pickupLocation!.latitude,
-            pickupLng: state.pickupLocation!.longitude,
-            destLat: state.dropoffLocation!.latitude,
-            destLng: state.dropoffLocation!.longitude,
-            fare: state.selectedOption?.price ?? 0.0,
-            status: 'assigned',
-            otp: generatedOtp,
-            createdAt: DateTime.now(),
-          );
-          _onDriverAssigned(mockAssignedRide);
+          try {
+            await ref.read(driverRepositoryProvider).acceptRide(bookingId, assignedDriver.id);
+          } catch (e) {
+            debugPrint('Driver could not accept ride: $e');
+          }
         }
       });
+      return true;
     } catch (e) {
       debugPrint('Error booking ride: $e');
       state = state.copyWith(status: RideStatus.idle);
+      return false;
     }
   }
 
@@ -474,9 +478,9 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
     reset();
   }
 
-  void startSearching() {
+  Future<bool> startSearching() async {
     state = state.copyWith(status: RideStatus.booked);
-    bookRide();
+    return await bookRide();
   }
 
 
