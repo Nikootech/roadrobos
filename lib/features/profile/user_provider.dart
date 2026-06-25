@@ -150,7 +150,15 @@ class UserNotifier extends StateNotifier<UserState> {
     
     _profileSubscription?.cancel();
     _profileSubscription = _userRepository.getUserStream(uid).listen((updatedUser) async {
-      if (updatedUser != null && !state.isLoading) {
+      if (updatedUser == null) {
+        if (kDebugMode) {
+          debugPrint('UserNotifier: Profile deleted from database. Logging out.');
+        }
+        await logout();
+        return;
+      }
+
+      if (!state.isLoading) {
         final isValid = await _checkDeviceSession(updatedUser);
         if (!isValid) return;
 
@@ -161,7 +169,9 @@ class UserNotifier extends StateNotifier<UserState> {
             updatedUser.phone != state.user?.phone ||
             updatedUser.email != state.user?.email ||
             !listEquals(updatedUser.savedLocations, state.user?.savedLocations) ||
-            updatedUser.currentDeviceId != state.user?.currentDeviceId) {
+            updatedUser.currentDeviceId != state.user?.currentDeviceId ||
+            updatedUser.isApproved != state.user?.isApproved ||
+            updatedUser.role != state.user?.role) {
           state = state.copyWith(user: updatedUser);
           debugPrint('Real-time Profile Update Received: ${updatedUser.name}');
         }
@@ -265,16 +275,7 @@ class UserNotifier extends StateNotifier<UserState> {
            user = dbUser;
         }
 
-        // --- ADMIN BOOTSTRAP OVERRIDE ---
-        // Force these specific emails to their correct roles regardless of DB triggers
-        if (user.email == 'sudandpineee@gmail.com' && user.role != UserRole.superAdmin) {
-          user = user.copyWith(role: UserRole.superAdmin, isApproved: true);
-          await _userRepository.saveUser(user);
-        } else if (user.email == 'sudane2efymservices@gmail.com' && user.role != UserRole.driver) {
-          user = user.copyWith(role: UserRole.driver, isApproved: true);
-          await _userRepository.saveUser(user);
-        }
-        // --------------------------------
+
         
         if (kDebugMode) {
           debugPrint('UserNotifier: getUser returned user=${user.name} (id=${user.id}, role=${user.role})');
