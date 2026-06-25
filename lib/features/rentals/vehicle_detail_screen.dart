@@ -27,6 +27,19 @@ class _RentalVehicleDetailScreenState extends ConsumerState<RentalVehicleDetailS
     super.dispose();
   }
 
+  List<Map<String, dynamic>> get _defaultAddressSuggestions {
+    return [
+      {'name': 'Current Location', 'address': 'Your current location', 'lat': 12.9716, 'lng': 77.5946},
+      {'name': 'Old Airport Road', 'address': 'Old Airport Road, Kodihalli, Bengaluru', 'lat': 12.9610, 'lng': 77.6487},
+      {'name': 'MG Road Metro Station', 'address': 'Mahatma Gandhi Road, Bengaluru', 'lat': 12.9756, 'lng': 77.6068},
+      {'name': 'Indiranagar Double Road', 'address': 'Indiranagar, Stage 2, Bengaluru', 'lat': 12.9719, 'lng': 77.6412},
+      {'name': 'Koramangala 4th Block', 'address': 'Koramangala, St. John\'s Hospital Road, Bengaluru', 'lat': 12.9352, 'lng': 77.6245},
+      {'name': 'Whitefield Railway Station', 'address': 'Kadugodi, Bengaluru', 'lat': 12.9698, 'lng': 77.7499},
+      {'name': 'Majestic Bus Station', 'address': 'Kempegowda Bus Station, Majestic, Bengaluru', 'lat': 12.9779, 'lng': 77.5724},
+      {'name': 'Electronic City Phase 1', 'address': 'Hosur Road, Bengaluru', 'lat': 12.8497, 'lng': 77.6749},
+    ];
+  }
+
   void _showLocationSearchSheet({required bool isPickup}) {
     final searchController = TextEditingController();
     final osmService = OSMMapsService();
@@ -40,6 +53,10 @@ class _RentalVehicleDetailScreenState extends ConsumerState<RentalVehicleDetailS
       backgroundColor: Colors.transparent,
       builder: (sheetCtx) => StatefulBuilder(
         builder: (ctx, setSheetState) {
+          final displayList = results.isEmpty && searchController.text.isEmpty
+              ? _defaultAddressSuggestions
+              : results;
+
           return Container(
             height: MediaQuery.of(context).size.height * 0.75,
             decoration: const BoxDecoration(
@@ -116,10 +133,26 @@ class _RentalVehicleDetailScreenState extends ConsumerState<RentalVehicleDetailS
                   ),
                 ),
                 const SizedBox(height: 8),
+                if (displayList.isNotEmpty && searchController.text.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.only(left: 20, top: 12, bottom: 4),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'SUGGESTIONS',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textSecondary,
+                          letterSpacing: 1.1,
+                        ),
+                      ),
+                    ),
+                  ),
                 const Divider(height: 1),
                 // Results
                 Expanded(
-                  child: results.isEmpty
+                  child: displayList.isEmpty && !isSearching
                       ? Center(
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
@@ -127,7 +160,7 @@ class _RentalVehicleDetailScreenState extends ConsumerState<RentalVehicleDetailS
                               Icon(Iconsax.location, size: 48, color: Colors.grey.shade300),
                               const SizedBox(height: 12),
                               Text(
-                                'Search for a location above',
+                                'No locations found',
                                 style: TextStyle(color: Colors.grey.shade400, fontSize: 14),
                               ),
                             ],
@@ -135,10 +168,10 @@ class _RentalVehicleDetailScreenState extends ConsumerState<RentalVehicleDetailS
                         )
                       : ListView.separated(
                           padding: EdgeInsets.zero,
-                          itemCount: results.length,
+                          itemCount: displayList.length,
                           separatorBuilder: (_, __) => const Divider(height: 1, indent: 60),
                           itemBuilder: (context, index) {
-                            final loc = results[index];
+                            final loc = displayList[index];
                             return ListTile(
                               leading: Container(
                                 padding: const EdgeInsets.all(8),
