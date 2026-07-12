@@ -99,7 +99,7 @@ class ServiceBookingRepository {
             'details': {
               'method': 'Cash',
               'payment_status': 'collected',
-              'collected_at': DateTime.now().toIso8601String(),
+              'collected_at': DateTime.now().toUtc().toIso8601String(),
             }
           }).eq('id', bookingId);
     } catch (e) {
@@ -128,7 +128,7 @@ class ServiceBookingRepository {
         'details': {
           ...details,
           'refund_status': 'refunded',
-          'refunded_at': DateTime.now().toIso8601String(),
+          'refunded_at': DateTime.now().toUtc().toIso8601String(),
           'refund_amount': totalCost,
         }
       }).eq('id', bookingId);

@@ -138,9 +138,9 @@ class PaymentService extends _$PaymentService {
           'p_user_id': _currentPayment!.userId,
         });
 
-        if (isValid == true || kDebugMode || AppConfig.isDev) {
+        if (isValid == true || AppConfig.isDev) {
           if (kDebugMode) {
-            debugPrint('Payment validated successfully (or bypassed in dev/debug).');
+            debugPrint('Payment validated successfully (or bypassed in dev).');
           }
           if (_paymentCompleter != null && !_paymentCompleter!.isCompleted) {
             _paymentCompleter!.complete(paymentId);
