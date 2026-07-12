@@ -12,7 +12,12 @@ subprojects {
     // On Windows, Gradle fails if the plugin source (pub cache on C:) and the build
     // output (project on E:) are on different drive roots. Fix: keep each plugin's
     // build dir on the same drive as its own source by using projectDir as the base.
-    project.buildDir = "${project.projectDir}/build"
+    // IMPORTANT: :app must NOT be redirected — Flutter CLI looks for the .aab at
+    // <rootProject.buildDir>/app/outputs/bundle/release/app-release.aab
+    // Redirecting :app breaks that lookup. Only redirect plugin subprojects.
+    if (project.path != ':app') {
+        project.buildDir = "${project.projectDir}/build"
+    }
 
     afterEvaluate { project ->
         if (project.hasProperty('android')) {
