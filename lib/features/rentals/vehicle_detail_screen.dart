@@ -327,6 +327,13 @@ class _RentalVehicleDetailScreenState
     final pickupLocation = ref.watch(rentalPickupLocationProvider);
     final dropoffLocation = ref.watch(rentalDropoffLocationProvider);
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? AppColors.bgDarkDeep : Colors.white;
+    final cardColor = isDark ? AppColors.bgDarkSurface : Colors.white;
+    final textColor = isDark ? AppColors.textOnDark : AppColors.textPrimary;
+    final textSecondaryColor =
+        isDark ? AppColors.textOnDarkMuted : AppColors.textSecondary;
+
     // Default placeholder vehicle if none selected
     final displayVehicle = vehicle ??
         {
@@ -381,18 +388,18 @@ class _RentalVehicleDetailScreenState
           ];
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: bgColor,
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
             expandedHeight: 300,
             pinned: true,
-            backgroundColor: Colors.white,
+            backgroundColor: bgColor,
             leading: IconButton(
-              icon: const CircleAvatar(
-                  backgroundColor: Colors.white,
+              icon: CircleAvatar(
+                  backgroundColor: cardColor,
                   child: Icon(Icons.arrow_back_ios_new_rounded,
-                      size: 18, color: AppColors.textPrimary)),
+                      size: 18, color: textColor)),
               onPressed: () => context.pop(),
             ),
             actions: [
@@ -402,12 +409,12 @@ class _RentalVehicleDetailScreenState
 
                 return IconButton(
                   icon: CircleAvatar(
-                    backgroundColor: Colors.white,
+                    backgroundColor: cardColor,
                     child: Icon(isFav ? Iconsax.heart5 : Iconsax.heart,
                         size: 20,
                         color: isFav
                             ? AppColors.dangerRed
-                            : AppColors.textPrimary),
+                            : textColor),
                   ),
                   onPressed: () {
                     ref
@@ -444,7 +451,7 @@ class _RentalVehicleDetailScreenState
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: cardColor,
                         borderRadius: BorderRadius.circular(30),
                         boxShadow: [
                           BoxShadow(
@@ -454,17 +461,17 @@ class _RentalVehicleDetailScreenState
                           ),
                         ],
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Iconsax.verify5, color: Colors.blue, size: 20),
-                          SizedBox(width: 8),
+                          const Icon(Iconsax.verify5, color: Colors.blue, size: 20),
+                          const SizedBox(width: 8),
                           Text(
                             'PREMIUM FLEET',
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w900,
-                              color: AppColors.textPrimary,
+                              color: textColor,
                               letterSpacing: 1.2,
                             ),
                           ),
@@ -490,8 +497,10 @@ class _RentalVehicleDetailScreenState
                     children: [
                       Expanded(
                           child: Text(displayVehicle['name'],
-                              style: const TextStyle(
-                                  fontSize: 24, fontWeight: FontWeight.w800))),
+                              style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w800,
+                                  color: textColor))),
                       Text(displayVehicle['price'] ?? '₹159/hr',
                           style: const TextStyle(
                               fontSize: 18,
@@ -505,8 +514,8 @@ class _RentalVehicleDetailScreenState
                       const Icon(Iconsax.star1, color: Colors.amber, size: 16),
                       const SizedBox(width: 4),
                       Text('${displayVehicle['rating']} (124 reviews)',
-                          style: const TextStyle(
-                              color: AppColors.textSecondary, fontSize: 13)),
+                          style: TextStyle(
+                              color: textSecondaryColor, fontSize: 13)),
                     ],
                   ).animate().fadeIn(delay: 200.ms),
                   const SizedBox(height: 24),
@@ -519,9 +528,11 @@ class _RentalVehicleDetailScreenState
                     ],
                   ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.1, end: 0),
                   const SizedBox(height: 32),
-                  const Text('Features',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  Text('Features',
+                      style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: textColor)),
                   const SizedBox(height: 12),
                   Wrap(
                     spacing: 8,
@@ -531,8 +542,11 @@ class _RentalVehicleDetailScreenState
                         .entries
                         .map((entry) => Chip(
                               label: Text(entry.value,
-                                  style: const TextStyle(fontSize: 12)),
-                              backgroundColor: AppColors.bgLightGrey,
+                                  style: TextStyle(
+                                      fontSize: 12, color: textColor)),
+                              backgroundColor: isDark
+                                  ? AppColors.bgDarkSurface
+                                  : AppColors.bgLightGrey,
                               side: BorderSide.none,
                             )
                                 .animate()
@@ -543,19 +557,22 @@ class _RentalVehicleDetailScreenState
                   const SizedBox(height: 32),
 
                   // ── Pickup & Drop-off Location Section ─────────────────────
-                  const Text('Pickup & Drop-off',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  Text('Pickup & Drop-off',
+                      style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: textColor)),
                   const SizedBox(height: 4),
-                  const Text(
+                  Text(
                     'Select where you want to pick up and return the vehicle',
-                    style:
-                        TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                    style: TextStyle(color: textSecondaryColor, fontSize: 12),
                   ),
                   const SizedBox(height: 12),
                   Container(
                     decoration: BoxDecoration(
-                      color: AppColors.bgLightGrey,
+                      color: isDark
+                          ? AppColors.bgDarkSurface
+                          : AppColors.bgLightGrey,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
                           color: AppColors.border.withValues(alpha: 0.5)),
@@ -592,9 +609,11 @@ class _RentalVehicleDetailScreenState
                   const SizedBox(height: 32),
 
                   if (isEV) ...[
-                    const Text('Eco-Friendly Advantage',
+                    Text('Eco-Friendly Advantage',
                         style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold)),
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: textColor)),
                     const SizedBox(height: 12),
                     Container(
                       padding: const EdgeInsets.all(16),
@@ -617,27 +636,33 @@ class _RentalVehicleDetailScreenState
                     ).animate().fadeIn(delay: 500.ms),
                     const SizedBox(height: 32),
                   ],
-                  const Text('Description',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  Text('Description',
+                      style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: textColor)),
                   const SizedBox(height: 12),
                   Text(
                     description,
-                    style: const TextStyle(
-                        color: AppColors.textSecondary,
+                    style: TextStyle(
+                        color: textSecondaryColor,
                         fontSize: 14,
                         height: 1.5),
                   ).animate().fadeIn(delay: 600.ms),
                   const SizedBox(height: 32),
-                  const Text('Pickup Location',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  Text('Pickup Location',
+                      style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: textColor)),
                   const SizedBox(height: 12),
                   if (isEV) ...[
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: AppColors.bgLightGrey,
+                        color: isDark
+                            ? AppColors.bgDarkSurface
+                            : AppColors.bgLightGrey,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: AppColors.border),
                       ),
@@ -654,7 +679,7 @@ class _RentalVehicleDetailScreenState
                                 color: AppColors.primaryBlue),
                           ),
                           const SizedBox(width: 16),
-                          const Expanded(
+                          Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -662,12 +687,12 @@ class _RentalVehicleDetailScreenState
                                     style: TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 16,
-                                        color: AppColors.textPrimary)),
-                                SizedBox(height: 4),
+                                        color: textColor)),
+                                const SizedBox(height: 4),
                                 Text(
                                     'View exact location and get directions on Google Maps.',
                                     style: TextStyle(
-                                        color: AppColors.textSecondary,
+                                        color: textSecondaryColor,
                                         fontSize: 13,
                                         height: 1.4)),
                               ],
@@ -715,7 +740,7 @@ class _RentalVehicleDetailScreenState
       bottomNavigationBar: Container(
         padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isDark ? AppColors.bgDarkDeep : Colors.white,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           boxShadow: [
             BoxShadow(
@@ -731,14 +756,14 @@ class _RentalVehicleDetailScreenState
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Total Price',
+                  Text('Total Price',
                       style: TextStyle(
-                          color: AppColors.textSecondary, fontSize: 12)),
+                          color: textSecondaryColor, fontSize: 12)),
                   Text(displayVehicle['price'] ?? '₹159/hr',
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary)),
+                          color: textColor)),
                 ],
               ),
               const SizedBox(width: 24),
@@ -850,6 +875,11 @@ class _RentalVehicleDetailScreenState
     required VoidCallback onTap,
   }) {
     final bool hasValue = value != null && value.isNotEmpty;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? AppColors.textOnDark : AppColors.textPrimary;
+    final textSecondaryColor =
+        isDark ? AppColors.textOnDarkMuted : AppColors.textSecondary;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -874,10 +904,10 @@ class _RentalVehicleDetailScreenState
                   children: [
                     Text(
                       label,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textSecondary,
+                        color: textSecondaryColor,
                         letterSpacing: 0.3,
                       ),
                     ),
@@ -889,7 +919,7 @@ class _RentalVehicleDetailScreenState
                         fontWeight:
                             hasValue ? FontWeight.w700 : FontWeight.w500,
                         color: hasValue
-                            ? AppColors.textPrimary
+                            ? textColor
                             : AppColors.textMuted,
                       ),
                       maxLines: 1,
@@ -899,8 +929,8 @@ class _RentalVehicleDetailScreenState
                       const SizedBox(height: 1),
                       Text(
                         address,
-                        style: const TextStyle(
-                            fontSize: 11, color: AppColors.textSecondary),
+                        style: TextStyle(
+                            fontSize: 11, color: textSecondaryColor),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -923,19 +953,24 @@ class _RentalVehicleDetailScreenState
   }
 
   Widget _buildSpecCard(IconData icon, String val) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? AppColors.textOnDark : AppColors.textPrimary;
+
     return Container(
       width: 100,
       padding: const EdgeInsets.symmetric(vertical: 16),
       decoration: BoxDecoration(
-          color: AppColors.bgLightGrey,
+          color: isDark ? AppColors.bgDarkSurface : AppColors.bgLightGrey,
           borderRadius: BorderRadius.circular(16)),
       child: Column(
         children: [
           Icon(icon, color: AppColors.primaryBlue, size: 24),
           const SizedBox(height: 8),
           Text(val,
-              style:
-                  const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+              style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: textColor)),
         ],
       ),
     ).animate().fadeIn().scale();
