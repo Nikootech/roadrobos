@@ -199,14 +199,11 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget>
     if (!widget.isTracking) {
       if (taxiState.status != RideStatus.selectingPickup) {
         markers.add(
-          Marker(
+          _buildLabeledLocationMarker(
             point: taxiState.pickupLocation ?? mapState.userLocation,
-            width: 60,
-            height: 60,
-            child: _buildLocationPin(
-                isPickup: true,
-                point: taxiState.pickupLocation ?? mapState.userLocation,
-                label: 'Pickup Point'),
+            isPickup: true,
+            defaultLabel: 'Pickup Point',
+            address: taxiState.pickupAddress,
           ),
         );
       }
@@ -214,14 +211,12 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget>
       if (taxiState.dropoffLocation != null &&
           taxiState.status != RideStatus.selectingDrop) {
         markers.add(
-          Marker(
+          _buildLabeledLocationMarker(
             point: taxiState.dropoffLocation!,
-            width: 60,
-            height: 60,
-            child: _buildLocationPin(
-                isPickup: false,
-                point: taxiState.dropoffLocation!,
-                label: 'Drop-off Point'),
+            isPickup: false,
+            defaultLabel: 'Drop-off Point',
+            address: taxiState.dropoffAddress,
+            distanceKm: taxiState.distance,
           ),
         );
       }
@@ -229,28 +224,23 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget>
       if (widget.pickupLocation != null &&
           taxiState.status != RideStatus.headingToDropoff) {
         markers.add(
-          Marker(
+          _buildLabeledLocationMarker(
             point: widget.pickupLocation!,
-            width: 40,
-            height: 40,
-            child: _buildLocationPin(
-                isPickup: true,
-                point: widget.pickupLocation!,
-                label: 'Pickup Point'),
+            isPickup: true,
+            defaultLabel: 'Pickup Point',
+            address: taxiState.pickupAddress,
           ),
         );
       }
 
       if (taxiState.dropoffLocation != null) {
         markers.add(
-          Marker(
+          _buildLabeledLocationMarker(
             point: taxiState.dropoffLocation!,
-            width: 50,
-            height: 50,
-            child: _buildLocationPin(
-                isPickup: false,
-                point: taxiState.dropoffLocation!,
-                label: 'Drop-off Point'),
+            isPickup: false,
+            defaultLabel: 'Drop-off Point',
+            address: taxiState.dropoffAddress,
+            distanceKm: taxiState.distance,
           ),
         );
       }
@@ -287,6 +277,95 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget>
           ),
         );
       }
+    }
+
+    // Route Midpoint Duration Badge
+    if (!widget.isTracking && _routePoints.isNotEmpty && taxiState.distance > 0 && taxiState.status == RideStatus.vehicleSelection) {
+      final middleIndex = _routePoints.length ~/ 2;
+      final midPoint = _routePoints[middleIndex];
+      final durationMins = (taxiState.distance * 2.5).round().clamp(2, 120);
+      
+      markers.add(
+        Marker(
+          point: midPoint,
+          width: 120,
+          height: 45,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: AppColors.primaryNavy,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: Colors.white, width: 2),
+              boxShadow: [
+                BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.25),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4))
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.schedule, color: Colors.white, size: 16),
+                const SizedBox(width: 6),
+                Text(
+                  '$durationMins min',
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Live Tracking ETA Badge
+    if (widget.isTracking && _routePoints.isNotEmpty && taxiState.eta != null && taxiState.eta != 'Arrived') {
+      final middleIndex = _routePoints.length ~/ 2;
+      final midPoint = _routePoints[middleIndex];
+      
+      markers.add(
+        Marker(
+          point: midPoint,
+          width: 150,
+          height: 45,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.green.shade700,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: Colors.white, width: 2),
+              boxShadow: [
+                BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.25),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4))
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.flash_on, color: Colors.white, size: 16),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    taxiState.eta!.split(' • ').last, // Extracts just the "10 mins" part
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
     }
 
     return Container(
@@ -511,6 +590,68 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget>
           ),
         ],
       ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack).fadeIn(),
+    );
+  }
+
+  Marker _buildLabeledLocationMarker({
+    required LatLng point,
+    required bool isPickup,
+    required String defaultLabel,
+    String? address,
+    double? distanceKm,
+  }) {
+    final label = address != null ? address.split(',').first : defaultLabel;
+
+    String labelText = label;
+    if (!isPickup && distanceKm != null && distanceKm > 0) {
+      final durationMins = (distanceKm * 2.5).round().clamp(2, 120);
+      labelText = '$label ($durationMins mins)';
+    }
+
+    return Marker(
+      point: point,
+      width: 180,
+      height: 75,
+      alignment: Alignment.bottomCenter,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: isPickup ? Colors.green.shade700 : AppColors.primaryNavy,
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.15),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                )
+              ],
+            ),
+            child: Text(
+              labelText,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
+          SizedBox(
+            width: 40,
+            height: 40,
+            child: _buildLocationPin(
+              isPickup: isPickup,
+              point: point,
+              label: defaultLabel,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
