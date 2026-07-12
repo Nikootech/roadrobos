@@ -494,8 +494,19 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
                   _triggerHaptic();
                   if (state.status == RideStatus.vehicleSelection) {
                     setState(() => _isBooking = true);
-                    await notifier.bookRide();
-                    if (mounted) setState(() => _isBooking = false);
+                    final success = await notifier.bookRide();
+                    if (mounted) {
+                      setState(() => _isBooking = false);
+                      if (!success) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          content: Text('No drivers available nearby. Please try again.'),
+                          behavior: SnackBarBehavior.floating,
+                        ));
+                      }
+                    }
+                  } else if (state.pickupLocation != null &&
+                      state.dropoffLocation != null) {
+                    notifier.updateStatus(RideStatus.vehicleSelection);
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                         content: Text('Please select both locations')));

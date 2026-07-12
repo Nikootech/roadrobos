@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
@@ -317,6 +318,9 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
   bool verifyOtp(String enteredOtp) {
     if (enteredOtp == state.otp) {
       state = state.copyWith(isOtpVerified: true);
+      if (state.driverId != null && state.driverId!.startsWith('mock_')) {
+        startTrip();
+      }
       return true;
     }
     return false;
@@ -325,7 +329,43 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
   void startTrip() {
     if (state.isOtpVerified) {
       state = state.copyWith(status: RideStatus.headingToDropoff);
-      // Wait for backend updates for live tracking
+      
+      if (state.driverId != null && state.driverId!.startsWith('mock_')) {
+        // Start simulated movement to destination
+        final startPos = state.pickupLocation!;
+        int steps = 0;
+        const totalSteps = 10;
+        Timer.periodic(const Duration(seconds: 2), (timer) {
+          if (!mounted || state.status != RideStatus.headingToDropoff) {
+            timer.cancel();
+            return;
+          }
+
+          steps++;
+          final double fraction = steps / totalSteps;
+          final lat = startPos.latitude +
+              (state.dropoffLocation!.latitude - startPos.latitude) * fraction;
+          final lng = startPos.longitude +
+              (state.dropoffLocation!.longitude - startPos.longitude) * fraction;
+
+          final currentPos = LatLng(lat, lng);
+          const distanceCalc = Distance();
+          final double meters = distanceCalc.as(
+              LengthUnit.Meter, currentPos, state.dropoffLocation!);
+          final double distanceKm = meters / 1000.0;
+          final int etaMins = (meters / 333).ceil().clamp(1, 120);
+
+          state = state.copyWith(
+            roadroboLocation: currentPos,
+            eta: '${distanceKm.toStringAsFixed(1)} km • $etaMins mins',
+          );
+
+          if (steps >= totalSteps) {
+            timer.cancel();
+            completeRide();
+          }
+        });
+      }
     }
   }
 
@@ -341,12 +381,6 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
           .read(driverRepositoryProvider)
           .getOnlineDrivers(selectedVehicle);
 
-      if (onlineDrivers.isEmpty) {
-        // No drivers found, reset status and return false
-        state = state.copyWith(status: RideStatus.idle);
-        return false;
-      }
-
       // Filter by radius (5 km = 5000 meters) and sort closest first
       const double maxRadiusMeters = 5000;
       const distanceCalc = Distance();
@@ -360,21 +394,6 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
         );
         return distance <= maxRadiusMeters;
       }).toList();
-
-      if (nearbyDrivers.isEmpty) {
-        // No drivers within the search radius
-        state = state.copyWith(status: RideStatus.idle);
-        return false;
-      }
-
-      // Sort closest driver first
-      nearbyDrivers.sort((a, b) {
-        final distA = distanceCalc.as(
-            LengthUnit.Meter, state.pickupLocation!, a.currentPosition!);
-        final distB = distanceCalc.as(
-            LengthUnit.Meter, state.pickupLocation!, b.currentPosition!);
-        return distA.compareTo(distB);
-      });
 
       final random = Random();
       final generatedOtp =
@@ -401,6 +420,38 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
       state = state.copyWith(
           rideId: bookingId, otp: generatedOtp, isOtpVerified: false);
 
+      if (nearbyDrivers.isEmpty) {
+        if (kDebugMode) {
+          debugPrint(
+              'No real online/nearby drivers found. Running in simulated driver mode for local testing...');
+          // After 2 seconds, simulate driver acceptance
+          Future.delayed(const Duration(seconds: 2), () {
+            if (state.status == RideStatus.booked) {
+              final mockRide = booking.copyWith(
+                id: bookingId,
+                driverId: 'mock_driver_${selectedVehicle}_123',
+                status: 'accepted',
+              );
+              _onDriverAssigned(mockRide);
+            }
+          });
+          return true;
+        } else {
+          // In production, keep status as vehicleSelection instead of resetting to idle
+          state = state.copyWith(status: RideStatus.vehicleSelection);
+          return false;
+        }
+      }
+
+      // Sort closest driver first
+      nearbyDrivers.sort((a, b) {
+        final distA = distanceCalc.as(
+            LengthUnit.Meter, state.pickupLocation!, a.currentPosition!);
+        final distB = distanceCalc.as(
+            LengthUnit.Meter, state.pickupLocation!, b.currentPosition!);
+        return distA.compareTo(distB);
+      });
+
       unawaited(_rideSubscription?.cancel());
       _rideSubscription = ref
           .read(rideBookingRepositoryProvider)
@@ -416,7 +467,8 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
           }
 
           if (updatedRide.status == 'arrived') {
-            state = state.copyWith(status: RideStatus.atPickup, eta: 'Arrived');
+            state =
+                state.copyWith(status: RideStatus.atPickup, eta: 'Arrived');
           } else if (updatedRide.status == 'started') {
             state = state.copyWith(status: RideStatus.headingToDropoff);
           } else if (updatedRide.status == 'completed') {
@@ -447,7 +499,7 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
       return true;
     } catch (e) {
       debugPrint('Error booking ride: $e');
-      state = state.copyWith(status: RideStatus.idle);
+      state = state.copyWith(status: RideStatus.vehicleSelection);
       return false;
     }
   }
@@ -456,33 +508,77 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
     _searchTimeoutTimer?.cancel();
     state = state.copyWith(
       status: RideStatus.tracking,
-      roadroboName: 'Driver Assigned',
+      roadroboName: ride.driverId!.startsWith('mock_')
+          ? 'Simulated Rider'
+          : 'Driver Assigned',
       driverId: ride.driverId,
     );
 
     _driverLocationSubscription?.cancel();
-    _driverLocationSubscription = ref
-        .read(driverRepositoryProvider)
-        .watchDriver(ride.driverId!)
-        .listen((driver) {
-      if (driver != null && driver.currentPosition != null) {
-        final targetLocation = state.status == RideStatus.headingToDropoff
-            ? state.dropoffLocation!
-            : state.pickupLocation!;
+    if (ride.driverId!.startsWith('mock_')) {
+      // Simulate driver location updates locally
+      final startPos = LatLng(
+        state.pickupLocation!.latitude + 0.015,
+        state.pickupLocation!.longitude - 0.015,
+      );
+      state = state.copyWith(roadroboLocation: startPos);
 
+      int steps = 0;
+      const totalSteps = 10;
+      Timer.periodic(const Duration(seconds: 2), (timer) {
+        if (!mounted || state.status != RideStatus.tracking) {
+          timer.cancel();
+          return;
+        }
+
+        steps++;
+        final double fraction = steps / totalSteps;
+        final lat = startPos.latitude +
+            (state.pickupLocation!.latitude - startPos.latitude) * fraction;
+        final lng = startPos.longitude +
+            (state.pickupLocation!.longitude - startPos.longitude) * fraction;
+
+        final currentPos = LatLng(lat, lng);
         const distanceCalc = Distance();
         final double meters = distanceCalc.as(
-            LengthUnit.Meter, driver.currentPosition!, targetLocation);
-
+            LengthUnit.Meter, currentPos, state.pickupLocation!);
         final double distanceKm = meters / 1000.0;
         final int etaMins = (meters / 333).ceil().clamp(1, 120);
 
         state = state.copyWith(
-          roadroboLocation: driver.currentPosition,
+          roadroboLocation: currentPos,
           eta: '${distanceKm.toStringAsFixed(1)} km • $etaMins mins',
         );
-      }
-    });
+
+        if (steps >= totalSteps) {
+          timer.cancel();
+          arriveAtPickup();
+        }
+      });
+    } else {
+      _driverLocationSubscription = ref
+          .read(driverRepositoryProvider)
+          .watchDriver(ride.driverId!)
+          .listen((driver) {
+        if (driver != null && driver.currentPosition != null) {
+          final targetLocation = state.status == RideStatus.headingToDropoff
+              ? state.dropoffLocation!
+              : state.pickupLocation!;
+
+          const distanceCalc = Distance();
+          final double meters = distanceCalc.as(
+              LengthUnit.Meter, driver.currentPosition!, targetLocation);
+
+          final double distanceKm = meters / 1000.0;
+          final int etaMins = (meters / 333).ceil().clamp(1, 120);
+
+          state = state.copyWith(
+            roadroboLocation: driver.currentPosition,
+            eta: '${distanceKm.toStringAsFixed(1)} km • $etaMins mins',
+          );
+        }
+      });
+    }
   }
 
   void completeRide() {
