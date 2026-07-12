@@ -222,49 +222,39 @@ class PaymentService extends _$PaymentService {
         },
       );
 
-      if (response.status != 200) {
-        throw Exception('Failed to create order on server: ${response.data}');
-      }
-
-      orderId = response.data['order_id'] as String?;
-      if (orderId == null || orderId.isEmpty) {
-        throw Exception('Order ID returned from server was null or empty');
+      if (response.status == 200) {
+        orderId = response.data['order_id'] as String?;
+      } else {
+        debugPrint('Failed to create order on server: ${response.data}');
       }
     } catch (e) {
-      debugPrint('Error generating Razorpay Order ID: $e');
+      debugPrint(
+          'Error generating Razorpay Order ID (will attempt direct checkout): $e');
+    }
 
-      // Fallback: If in debug mode or dev config, and function is missing, key is placeholder, or request failed,
-      // we can simulate a successful payment flow to allow development/testing to proceed.
-      const apiKey = AppConfig.razorpayKey;
-      final isPlaceholder =
-          apiKey.isEmpty || apiKey == 'rzp_test_placeholderKey';
+    // Check if key is placeholder
+    final isPlaceholder =
+        apiKey.isEmpty || apiKey == 'rzp_test_placeholderKey';
 
-      if (kDebugMode || isPlaceholder) {
-        debugPrint(
-            'Falling back to Simulated Payment Flow for local development/testing due to error: $e');
-
-        // Simulate background payment success event after a short delay
-        Future.delayed(const Duration(milliseconds: 800), () {
-          _handlePaymentSuccess(PaymentSuccessResponse(
-            'sim_pay_${DateTime.now().millisecondsSinceEpoch}',
-            'sim_order_${DateTime.now().millisecondsSinceEpoch}',
-            'simulated_signature',
-            const {},
-          ));
-        });
-        return _paymentCompleter!.future;
-      }
-
-      if (!_paymentCompleter!.isCompleted) {
-        _paymentCompleter!.completeError('Order generation failed: $e');
-      }
+    if (isPlaceholder) {
+      debugPrint(
+          'Falling back to Simulated Payment Flow because no valid Razorpay Key is configured.');
+      // Simulate background payment success event after a short delay
+      Future.delayed(const Duration(milliseconds: 800), () {
+        _handlePaymentSuccess(PaymentSuccessResponse(
+          'sim_pay_${DateTime.now().millisecondsSinceEpoch}',
+          'sim_order_${DateTime.now().millisecondsSinceEpoch}',
+          'simulated_signature',
+          const {},
+        ));
+      });
       return _paymentCompleter!.future;
     }
 
     final options = {
       'key': apiKey,
       'amount': amountInPaise,
-      'order_id': orderId,
+      if (orderId != null && orderId.isNotEmpty) 'order_id': orderId,
       'name': 'RoadRobos Services',
       'description': details.description,
       'prefill': {
