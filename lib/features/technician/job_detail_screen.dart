@@ -286,31 +286,59 @@ class _JobDetailScreenState extends ConsumerState<JobDetailScreen> {
   }
 
   Widget _buildActionButtons(String status) {
+    if (status == 'refunded') {
+      return const Center(
+        child: Text('Job Cancelled & Refunded',
+            style: TextStyle(
+                color: Colors.red,
+                fontSize: 18,
+                fontWeight: FontWeight.bold)),
+      );
+    }
+
     if (status == 'pending' || status == 'assigned') {
-      return SizedBox(
-        width: double.infinity,
-        child: ElevatedButton(
-          onPressed: () => _updateStatus('on_my_way'),
-          child: const Text('Mark as On My Way'),
-        ),
+      return Column(
+        children: [
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () => _updateStatus('on_my_way'),
+              child: const Text('Mark as On My Way'),
+            ),
+          ),
+          const SizedBox(height: 8),
+          _buildRefundButton(),
+        ],
       );
     } else if (status == 'on_my_way') {
-      return SizedBox(
-        width: double.infinity,
-        child: ElevatedButton(
-          onPressed: () => _updateStatus('arrived'),
-          child: const Text('Mark as Arrived'),
-        ),
+      return Column(
+        children: [
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () => _updateStatus('arrived'),
+              child: const Text('Mark as Arrived'),
+            ),
+          ),
+          const SizedBox(height: 8),
+          _buildRefundButton(),
+        ],
       );
     } else if (status == 'arrived' || status == 'in_progress') {
-      return SizedBox(
-        width: double.infinity,
-        child: ElevatedButton(
-          onPressed: () => _updateStatus('completed'),
-          style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green, foregroundColor: Colors.white),
-          child: const Text('Complete Job'),
-        ),
+      return Column(
+        children: [
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () => _updateStatus('completed'),
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green, foregroundColor: Colors.white),
+              child: const Text('Complete Job'),
+            ),
+          ),
+          const SizedBox(height: 8),
+          _buildRefundButton(),
+        ],
       );
     } else if (status == 'completed') {
       return const Center(
@@ -322,5 +350,75 @@ class _JobDetailScreenState extends ConsumerState<JobDetailScreen> {
       );
     }
     return const SizedBox.shrink();
+  }
+
+  Widget _buildRefundButton() {
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        icon: const Icon(Icons.cancel_presentation_rounded),
+        label: const Text('No Show / Cancel (Refund)', style: TextStyle(fontWeight: FontWeight.bold)),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: Colors.red,
+          side: const BorderSide(color: Colors.red),
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+        onPressed: () => _confirmRefund(),
+      ),
+    );
+  }
+
+  void _confirmRefund() {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Confirm Cancel & Refund'),
+        content: const Text(
+          'Are you sure you want to mark this booking as Cancelled/No-Show? '
+          'This will automatically refund the payment amount to the customer\'s account balance.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            onPressed: () async {
+              Navigator.pop(dialogContext); // close confirm dialog
+              
+              final messenger = ScaffoldMessenger.of(context);
+              final navigator = Navigator.of(context);
+              unawaited(showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (_) => const Center(child: CircularProgressIndicator()),
+              ));
+
+              try {
+                await ref.read(serviceBookingRepositoryProvider).refundBooking(widget.bookingId);
+                if (mounted) {
+                  navigator.pop(); // close loader
+                  messenger.showSnackBar(const SnackBar(
+                    content: Text('Booking cancelled and refund processed successfully!'),
+                    backgroundColor: Colors.green,
+                  ));
+                }
+              } catch (e) {
+                if (mounted) {
+                  navigator.pop(); // close loader
+                  messenger.showSnackBar(SnackBar(
+                    content: Text('Failed to process refund: $e'),
+                    backgroundColor: Colors.red,
+                  ));
+                }
+              }
+            },
+            child: const Text('Confirm Refund'),
+          ),
+        ],
+      ),
+    );
   }
 }

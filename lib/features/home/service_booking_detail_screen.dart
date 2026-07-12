@@ -549,6 +549,7 @@ class ServiceBookingDetailScreen extends ConsumerWidget {
       case 'confirmed':
         return AppColors.accentIndigo;
       case 'cancelled':
+      case 'refunded':
         return AppColors.dangerRed;
       default:
         return AppColors.accentOrange; // pending

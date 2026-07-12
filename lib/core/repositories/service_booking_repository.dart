@@ -106,4 +106,59 @@ class ServiceBookingRepository {
       throw Exception('Failed to collect cash payment: $e');
     }
   }
+
+  Future<void> refundBooking(String bookingId) async {
+    try {
+      final bookingResponse = await _supabase
+          .from('service_bookings')
+          .select()
+          .eq('id', bookingId)
+          .maybeSingle();
+
+      if (bookingResponse == null) throw Exception('Booking not found');
+
+      final customerId = bookingResponse['customer_id'];
+      final double totalCost = double.tryParse(bookingResponse['total_cost']?.toString() ?? '0.0') ?? 0.0;
+      final status = bookingResponse['status']?.toString();
+      final Map<dynamic, dynamic> details = bookingResponse['details'] is Map ? bookingResponse['details'] as Map : {};
+      final method = details['method']?.toString() ?? 'Online';
+
+      await _supabase.from('service_bookings').update({
+        'status': 'refunded',
+        'details': {
+          ...details,
+          'refund_status': 'refunded',
+          'refunded_at': DateTime.now().toIso8601String(),
+          'refund_amount': totalCost,
+        }
+      }).eq('id', bookingId);
+
+      if (status == 'paid' || method == 'Online') {
+        final profileResponse = await _supabase
+            .from('profiles')
+            .select('points')
+            .eq('id', customerId)
+            .maybeSingle();
+
+        if (profileResponse != null) {
+          final int currentPoints = int.tryParse(profileResponse['points']?.toString() ?? '0') ?? 0;
+          final refundPoints = totalCost.toInt();
+          await _supabase.from('profiles').update({
+            'points': currentPoints + refundPoints,
+          }).eq('id', customerId);
+
+          await _supabase.from('user_notifications').insert({
+            'user_id': customerId,
+            'title': '💰 Booking Refund Credited',
+            'description': 'Your refund of ₹$totalCost has been credited as $refundPoints Loyalty Points to your account due to No-Show / Service cancellation.',
+            'type': 'REFUND',
+            'is_read': false,
+            'created_at': DateTime.now().toUtc().toIso8601String(),
+          });
+        }
+      }
+    } catch (e) {
+      throw Exception('Failed to refund booking: $e');
+    }
+  }
 }

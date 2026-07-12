@@ -221,7 +221,11 @@ class ServiceHistoryScreen extends ConsumerWidget {
     Color fg;
     String label;
 
-    if (isPaid) {
+    if (status == 'refunded') {
+      bg = Colors.red.shade50;
+      fg = Colors.red.shade700;
+      label = 'Refunded';
+    } else if (isPaid) {
       if (method == 'Online' || method == 'Razorpay') {
         bg = Colors.blue.shade50;
         fg = Colors.blue.shade700;
