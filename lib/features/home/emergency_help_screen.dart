@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -5,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/theme/app_colors.dart';
 import '../profile/user_provider.dart';
 import '../profile/sos_provider.dart';
@@ -22,6 +25,8 @@ class _EmergencyHelpScreenState extends ConsumerState<EmergencyHelpScreen> {
   bool _isLoadingLocation = false;
   String _locationLine1 = '12th Main, Indiranagar';
   String _locationLine2 = 'Bengaluru, KA 560038';
+  int _sosTapCount = 0;
+  DateTime? _lastSosTap;
 
   @override
   void initState() {
@@ -61,13 +66,81 @@ class _EmergencyHelpScreenState extends ConsumerState<EmergencyHelpScreen> {
   void _triggerSos() async {
     final messenger = ScaffoldMessenger.of(context);
     await HapticFeedback.heavyImpact();
+
+    final now = DateTime.now();
+    if (_lastSosTap == null || now.difference(_lastSosTap!) > const Duration(seconds: 3)) {
+      _sosTapCount = 1;
+    } else {
+      _sosTapCount++;
+    }
+    _lastSosTap = now;
+
+    if (_sosTapCount >= 5) {
+      _sosTapCount = 0; // reset
+      if (!mounted) return;
+      final navigator = Navigator.of(context);
+      
+      unawaited(showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const Center(child: CircularProgressIndicator(color: AppColors.dangerRed)),
+      ));
+
+      try {
+        final user = ref.read(userProvider).user;
+        final userId = user?.id ?? 'demo';
+        
+        final position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+        final supabase = Supabase.instance.client;
+        final userResponse = await supabase.from('profiles').select().eq('id', userId).maybeSingle();
+        final customerName = userResponse?['name'] ?? 'Unknown User';
+        final customerPhone = userResponse?['phone'] ?? 'N/A';
+        final customerEmail = userResponse?['email'] ?? 'N/A';
+        
+        final msg = '🚨 *EMERGENCY SOS ALERT (ROAD ROBOS)* 🚨\n\n'
+            '*Customer Details:*\n'
+            '• Name: $customerName\n'
+            '• Phone: $customerPhone\n'
+            '• Email: $customerEmail\n\n'
+            '*Coordinates:*\n'
+            '• Latitude: ${position.latitude}\n'
+            '• Longitude: ${position.longitude}\n\n'
+            '*Location Link:*\n'
+            'https://maps.google.com/?q=${position.latitude},${position.longitude}';
+            
+        final encodedMsg = Uri.encodeComponent(msg);
+        final waUrl = 'https://wa.me/919844991225?text=$encodedMsg';
+        final Uri waUri = Uri.parse(waUrl);
+
+        if (mounted) {
+          navigator.pop(); // close loader
+        }
+
+        if (await canLaunchUrl(waUri)) {
+          await launchUrl(waUri, mode: LaunchMode.externalApplication);
+        } else {
+          messenger.showSnackBar(
+            const SnackBar(content: Text('Could not launch WhatsApp. please check if WhatsApp is installed.')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          navigator.pop(); // close loader
+        }
+        messenger.showSnackBar(
+          SnackBar(content: Text('Failed to gather emergency data: $e')),
+        );
+      }
+      return;
+    }
+
     setState(() {
       _isSosTriggered = !_isSosTriggered;
     });
     if (_isSosTriggered) {
       messenger.showSnackBar(
-        const SnackBar(
-          content: Text('SOS Signal Sent! Local authorities and RSA notified.'),
+        SnackBar(
+          content: Text('SOS Signal Sent! Tap ${5 - _sosTapCount} more times rapidly to launch WhatsApp emergency dispatch.'),
           backgroundColor: AppColors.dangerRed,
           behavior: SnackBarBehavior.floating,
         ),

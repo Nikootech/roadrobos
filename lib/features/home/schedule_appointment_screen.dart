@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/repositories/service_booking_repository.dart';
 import '../../core/repositories/transaction_repository.dart';
 import '../../core/models/service_booking.dart';
@@ -28,6 +29,7 @@ class _ScheduleAppointmentScreenState
   DateTime _selectedDate = DateTime.now().add(const Duration(days: 1));
   String _selectedTime = '';
   String _paymentMethod = 'Online';
+  String _serviceLocation = 'Doorstep';
   @override
   void initState() {
     super.initState();
@@ -125,6 +127,108 @@ class _ScheduleAppointmentScreenState
                         ),
                       );
                     }).toList(),
+                  ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1, end: 0),
+                  const SizedBox(height: 32),
+                  const Text('Select Service Location',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() => _serviceLocation = 'Doorstep');
+                            HapticFeedback.selectionClick();
+                          },
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            decoration: BoxDecoration(
+                              color: _serviceLocation == 'Doorstep'
+                                  ? AppColors.primaryBlue.withValues(alpha: 0.08)
+                                  : Colors.grey.shade50,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: _serviceLocation == 'Doorstep'
+                                    ? AppColors.primaryBlue
+                                    : Colors.grey.shade200,
+                                width: _serviceLocation == 'Doorstep' ? 2 : 1,
+                              ),
+                            ),
+                            child: Column(
+                              children: [
+                                Icon(
+                                  Icons.home_work_rounded,
+                                  color: _serviceLocation == 'Doorstep'
+                                      ? AppColors.primaryBlue
+                                      : Colors.grey,
+                                  size: 24,
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  'Doorstep Service',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: _serviceLocation == 'Doorstep'
+                                        ? AppColors.primaryBlue
+                                        : AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() => _serviceLocation = 'Service Center');
+                            HapticFeedback.selectionClick();
+                          },
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            decoration: BoxDecoration(
+                              color: _serviceLocation == 'Service Center'
+                                  ? AppColors.primaryBlue.withValues(alpha: 0.08)
+                                  : Colors.grey.shade50,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: _serviceLocation == 'Service Center'
+                                    ? AppColors.primaryBlue
+                                    : Colors.grey.shade200,
+                                width: _serviceLocation == 'Service Center' ? 2 : 1,
+                              ),
+                            ),
+                            child: Column(
+                              children: [
+                                Icon(
+                                  Icons.store_rounded,
+                                  color: _serviceLocation == 'Service Center'
+                                      ? AppColors.primaryBlue
+                                      : Colors.grey,
+                                  size: 24,
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  'Service Center',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: _serviceLocation == 'Service Center'
+                                        ? AppColors.primaryBlue
+                                        : AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1, end: 0),
                   const SizedBox(height: 32),
                   const Text('Payment Method',
@@ -317,10 +421,39 @@ class _ScheduleAppointmentScreenState
                               details: {
                                 'method': _paymentMethod,
                                 'payment_id': paymentId,
+                                'service_location': _serviceLocation,
                               },
                               status: _paymentMethod == 'Online' ? 'paid' : 'confirmed',
                               createdAt: DateTime.now(),
                             ));
+
+                        // Dispatch Notification to Help Desk and Admin users for Doorstep Service bookings
+                        if (_serviceLocation == 'Doorstep') {
+                          try {
+                            final supabase = Supabase.instance.client;
+                            final managersResponse = await supabase
+                                .from('profiles')
+                                .select('id')
+                                .or('role.eq.admin,role.eq.management');
+
+                            final customerName = userData?.name ?? 'Unknown User';
+                            final customerPhone = userData?.phone ?? 'N/A';
+
+                            for (final m in managersResponse) {
+                              final managerId = m['id'].toString();
+                              await supabase.from('user_notifications').insert({
+                                'user_id': managerId,
+                                'title': '🚗 New Doorstep Service Booking',
+                                'description': 'Customer $customerName ($customerPhone) booked doorstep wash for ${booking.packageName} on $dateStr at $_selectedTime.',
+                                'type': 'DOORSTEP_SERVICE',
+                                'is_read': false,
+                                'created_at': DateTime.now().toUtc().toIso8601String(),
+                              });
+                            }
+                          } catch (e) {
+                            debugPrint('Error dispatching doorstep notifications: $e');
+                          }
+                        }
 
                         if (!context.mounted) return;
                         ScaffoldMessenger.of(context)
