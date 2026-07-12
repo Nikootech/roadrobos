@@ -729,9 +729,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           actionsAsync.when(
             data: (actions) {
               if (actions.isEmpty) return const SizedBox.shrink();
+
+              // Sort actions by: taxi, rental, service, insurance
+              final sortedActions = List<QuickAction>.from(actions);
+              final order = ['taxi', 'rental', 'service', 'insurance'];
+              sortedActions.sort((a, b) {
+                final labelA = a.label.toLowerCase();
+                final labelB = b.label.toLowerCase();
+
+                int indexA = order.indexWhere((o) => labelA.contains(o));
+                int indexB = order.indexWhere((o) => labelB.contains(o));
+
+                if (indexA == -1) indexA = 999;
+                if (indexB == -1) indexB = 999;
+
+                return indexA.compareTo(indexB);
+              });
+
               return Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: actions
+                children: sortedActions
                     .map((action) => _buildQuickActionItem(action))
                     .toList(),
               );
