@@ -1,35 +1,80 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:geolocator/geolocator.dart';
 import '../../core/theme/app_colors.dart';
-// import '../../shared/widgets/glass_card.dart';
+import '../profile/user_provider.dart';
+import '../profile/sos_provider.dart';
 
-class EmergencyHelpScreen extends StatefulWidget {
+class EmergencyHelpScreen extends ConsumerStatefulWidget {
   const EmergencyHelpScreen({super.key});
 
   @override
-  State<EmergencyHelpScreen> createState() => _EmergencyHelpScreenState();
+  ConsumerState<EmergencyHelpScreen> createState() => _EmergencyHelpScreenState();
 }
 
-class _EmergencyHelpScreenState extends State<EmergencyHelpScreen> {
+class _EmergencyHelpScreenState extends ConsumerState<EmergencyHelpScreen> {
   String _currentEmergency = 'None';
   bool _isSosTriggered = false;
+  bool _isLoadingLocation = false;
+  String _locationLine1 = '12th Main, Indiranagar';
+  String _locationLine2 = 'Bengaluru, KA 560038';
 
-  void _triggerSos() {
-    HapticFeedback.heavyImpact();
+  @override
+  void initState() {
+    super.initState();
+    _fetchLocation();
+  }
+
+  Future<void> _fetchLocation() async {
+    if (mounted) {
+      setState(() {
+        _isLoadingLocation = true;
+      });
+    }
+    try {
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 5),
+      );
+      if (mounted) {
+        setState(() {
+          _locationLine1 = 'GPS: ${position.latitude.toStringAsFixed(5)}, ${position.longitude.toStringAsFixed(5)}';
+          _locationLine2 = 'Indiranagar, Bengaluru (GPS Active)';
+          _isLoadingLocation = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _locationLine1 = '12th Main, Indiranagar';
+          _locationLine2 = 'Bengaluru, KA 560038 (Location Timeout)';
+          _isLoadingLocation = false;
+        });
+      }
+    }
+  }
+
+  void _triggerSos() async {
+    final messenger = ScaffoldMessenger.of(context);
+    await HapticFeedback.heavyImpact();
     setState(() {
       _isSosTriggered = !_isSosTriggered;
     });
     if (_isSosTriggered) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         const SnackBar(
           content: Text('SOS Signal Sent! Local authorities and RSA notified.'),
           backgroundColor: AppColors.dangerRed,
           behavior: SnackBarBehavior.floating,
         ),
       );
+      final user = ref.read(userProvider).user;
+      final userId = user?.id ?? 'demo';
+      await ref.read(sosProvider.notifier).triggerEmergency(userId);
     }
   }
 
@@ -216,29 +261,41 @@ class _EmergencyHelpScreenState extends State<EmergencyHelpScreen> {
                               color: AppColors.dangerRed, size: 24),
                         ),
                         const SizedBox(width: 16),
-                        const Expanded(
+                        Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('12th Main, Indiranagar',
-                                  style: TextStyle(
+                              Text(_locationLine1,
+                                  style: const TextStyle(
                                       fontWeight: FontWeight.w800,
                                       fontSize: 15,
                                       color: AppColors.textPrimary)),
-                              Text('Bengaluru, KA 560038',
-                                  style: TextStyle(
+                              Text(_locationLine2,
+                                  style: const TextStyle(
                                       color: AppColors.textSecondary,
                                       fontSize: 13,
                                       fontWeight: FontWeight.w500)),
                             ],
                           ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: const BoxDecoration(
-                              color: Colors.white, shape: BoxShape.circle),
-                          child: const Icon(Iconsax.refresh,
-                              size: 18, color: AppColors.primaryBlue),
+                        GestureDetector(
+                          onTap: _isLoadingLocation ? null : _fetchLocation,
+                          child: Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: const BoxDecoration(
+                                color: Colors.white, shape: BoxShape.circle),
+                            child: _isLoadingLocation
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: AppColors.primaryBlue,
+                                    ),
+                                  )
+                                : const Icon(Iconsax.refresh,
+                                    size: 18, color: AppColors.primaryBlue),
+                          ),
                         ),
                       ],
                     ),

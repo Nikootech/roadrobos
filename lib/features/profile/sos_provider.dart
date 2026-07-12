@@ -29,15 +29,26 @@ class SosNotifier extends StateNotifier<List<SosContact>> {
   Future<void> triggerEmergency(String userId) async {
     try {
       final position = await Geolocator.getCurrentPosition();
-
       final supabase = Supabase.instance.client;
+
+      // Fetch user profile details
+      final userResponse = await supabase.from('profiles').select().eq('id', userId).maybeSingle();
+      final customerName = userResponse?['name'] ?? 'Unknown User';
+      final customerPhone = userResponse?['phone'] ?? 'N/A';
+      final customerEmail = userResponse?['email'] ?? 'N/A';
+
+      final message = 'SOS EMERGENCY: Roadside Help needed for $customerName. Contact: $customerPhone. Email: $customerEmail. Coordinates: [${position.latitude}, ${position.longitude}]';
 
       // Log to Supabase for Admin Dashboard
       final alertData = {
         'user_id': userId,
+        'message': message,
         'location': {
           'lat': position.latitude,
           'lng': position.longitude,
+          'customer_name': customerName,
+          'customer_phone': customerPhone,
+          'customer_email': customerEmail,
         },
         'contacts_notified':
             state.map((c) => '${c.name} (${c.phone})').toList(),
@@ -53,6 +64,24 @@ class SosNotifier extends StateNotifier<List<SosContact>> {
         'type': 'ROADSIDE_EMERGENCY',
         'is_acknowledged': false,
       });
+
+      // Notify Help Desk Manager (All Admins / Management users)
+      final List<dynamic> managersResponse = await supabase
+          .from('profiles')
+          .select('id')
+          .or('role.eq.admin,role.eq.management');
+
+      for (final m in managersResponse) {
+        final managerId = m['id'].toString();
+        await supabase.from('user_notifications').insert({
+          'user_id': managerId,
+          'title': '🚨 ROADSIDE EMERGENCY SOS',
+          'description': 'Customer $customerName ($customerPhone) triggered SOS. Location: Lat ${position.latitude}, Lng ${position.longitude}',
+          'type': 'EMERGENCY_ALERT',
+          'is_read': false,
+          'created_at': DateTime.now().utcIso,
+        });
+      }
 
       // Notify Emergency Contacts via SMS Intent
       if (state.isNotEmpty) {
