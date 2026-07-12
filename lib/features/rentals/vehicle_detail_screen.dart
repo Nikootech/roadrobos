@@ -135,11 +135,13 @@ class _RentalVehicleDetailScreenState
                         controller: searchController,
                         autofocus: true,
                         style: const TextStyle(
-                            fontSize: 15, fontWeight: FontWeight.w600),
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary),
                         decoration: InputDecoration(
                           hintText: 'Search for a location...',
                           hintStyle: const TextStyle(
-                              color: AppColors.textMuted,
+                              color: AppColors.textSecondary,
                               fontWeight: FontWeight.normal),
                           prefixIcon: Icon(
                             isPickup
@@ -147,7 +149,7 @@ class _RentalVehicleDetailScreenState
                                 : Icons.location_on_rounded,
                             color: isPickup
                                 ? AppColors.successGreen
-                                : AppColors.accentOrange,
+                                : AppColors.brandGreen,
                             size: 20,
                           ),
                           suffixIcon: isSearching
@@ -250,7 +252,9 @@ class _RentalVehicleDetailScreenState
                               title: Text(
                                 loc['name'] ?? '',
                                 style: const TextStyle(
-                                    fontSize: 14, fontWeight: FontWeight.w700),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.textPrimary),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),

@@ -8,13 +8,89 @@ class OSMMapsService {
   static const String _nominatimUrl = 'https://nominatim.openstreetmap.org';
   static const String _osrmUrl = 'https://router.project-osrm.org';
 
+  static final List<Map<String, dynamic>> _bengaluruLocations = [
+    {
+      'name': 'Babusapalya',
+      'address': 'Babusapalya, Horamavu, Bengaluru, Karnataka, 560043',
+      'lat': 13.0235,
+      'lng': 77.6582,
+      'type': 'result',
+    },
+    {
+      'name': 'Horamavu',
+      'address': 'Horamavu, Bengaluru, Karnataka, 560043',
+      'lat': 13.0273,
+      'lng': 77.6602,
+      'type': 'result',
+    },
+    {
+      'name': 'Kalyan Nagar',
+      'address': 'Kalyan Nagar, Bengaluru, Karnataka, 560043',
+      'lat': 13.0221,
+      'lng': 77.6403,
+      'type': 'result',
+    },
+    {
+      'name': 'Hebbal',
+      'address': 'Hebbal, Bengaluru, Karnataka, 560024',
+      'lat': 13.0354,
+      'lng': 77.5988,
+      'type': 'result',
+    },
+    {
+      'name': 'HSR Layout',
+      'address': 'HSR Layout, Bengaluru, Karnataka, 560102',
+      'lat': 12.9128,
+      'lng': 77.6388,
+      'type': 'result',
+    },
+    {
+      'name': 'Indiranagar',
+      'address': 'Indiranagar, Bengaluru, Karnataka, 560038',
+      'lat': 12.9719,
+      'lng': 77.6412,
+      'type': 'result',
+    },
+    {
+      'name': 'Koramangala',
+      'address': 'Koramangala, Bengaluru, Karnataka, 560095',
+      'lat': 12.9352,
+      'lng': 77.6245,
+      'type': 'result',
+    },
+    {
+      'name': 'MG Road Metro Station',
+      'address': 'Mahatma Gandhi Road, Bengaluru, Karnataka, 560001',
+      'lat': 12.9756,
+      'lng': 77.6068,
+      'type': 'result',
+    },
+    {
+      'name': 'Whitefield',
+      'address': 'Whitefield, Bengaluru, Karnataka, 560066',
+      'lat': 12.9698,
+      'lng': 77.7499,
+      'type': 'result',
+    },
+  ];
+
   /// Search for addresses using Nominatim
   Future<List<Map<String, dynamic>>> searchAddress(String query) async {
     if (query.length < 3) return [];
 
+    final localResults = _bengaluruLocations.where((loc) {
+      final q = query.toLowerCase();
+      final name = loc['name'].toString().toLowerCase();
+      final address = loc['address'].toString().toLowerCase();
+      return name.contains(q) || address.contains(q);
+    }).toList();
+
     try {
-      final headers =
-          kIsWeb ? null : <String, String>{'User-Agent': 'RoadRobos_App_v1.0'};
+      final headers = kIsWeb
+          ? null
+          : <String, String>{
+              'User-Agent': 'RoadRobosMobileApp/1.0.0 (contact@roadrobos.com)'
+            };
       final response = await http.get(
         Uri.parse(
             '$_nominatimUrl/search?q=${Uri.encodeComponent(query)}&format=json&addressdetails=1&limit=5&countrycodes=in'),
@@ -23,7 +99,7 @@ class OSMMapsService {
 
       if (response.statusCode == 200) {
         final List data = json.decode(response.body);
-        return data.map((item) {
+        final apiResults = data.map((item) {
           return {
             'name': item['display_name'].toString().split(',')[0],
             'address': item['display_name'],
@@ -32,11 +108,22 @@ class OSMMapsService {
             'type': 'result',
           };
         }).toList();
+
+        // Combine, removing duplicates by name
+        final combined = [...localResults];
+        for (var apiLoc in apiResults) {
+          if (!combined.any((l) =>
+              l['name'].toString().toLowerCase() ==
+              apiLoc['name'].toString().toLowerCase())) {
+            combined.add(apiLoc);
+          }
+        }
+        return combined;
       }
     } catch (e) {
       debugPrint('Nominatim Search Error: $e');
     }
-    return [];
+    return localResults;
   }
 
   /// Get routing polyline between two points using OSRM
