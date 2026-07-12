@@ -135,6 +135,22 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
               setState(() {
                 _showSuggestions = false;
               });
+
+              final taxiState = ref.read(taxiProvider);
+              if (taxiState.pickupLocation != null &&
+                  taxiState.dropoffLocation != null) {
+                ref
+                    .read(taxiProvider.notifier)
+                    .updateStatus(RideStatus.vehicleSelection);
+                _sheetController.animateTo(0.45,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOut);
+              } else {
+                ref.read(taxiProvider.notifier).updateStatus(RideStatus.idle);
+                _sheetController.animateTo(0.35,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOut);
+              }
             }
           });
         }
@@ -161,6 +177,22 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
               setState(() {
                 _showSuggestions = false;
               });
+
+              final taxiState = ref.read(taxiProvider);
+              if (taxiState.pickupLocation != null &&
+                  taxiState.dropoffLocation != null) {
+                ref
+                    .read(taxiProvider.notifier)
+                    .updateStatus(RideStatus.vehicleSelection);
+                _sheetController.animateTo(0.45,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOut);
+              } else {
+                ref.read(taxiProvider.notifier).updateStatus(RideStatus.idle);
+                _sheetController.animateTo(0.35,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOut);
+              }
             }
           });
         }
