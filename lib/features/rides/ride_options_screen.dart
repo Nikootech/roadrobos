@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -16,8 +17,8 @@ class RideOptionsScreen extends ConsumerStatefulWidget {
 
 class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
   RideOption? _selectedRide;
-
   String _paymentMethod = 'Cash'; // default
+  bool _isBooking = false;
 
   @override
   void initState() {
@@ -164,47 +165,168 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
                       ),
                     ),
 
-                    // Footer Settings (Cash / Coupons / Myself) - Image 3
+                    // Footer — Payment Method Selection
                     const Divider(height: 1),
                     Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          GestureDetector(
-                            onTap: () {
-                              setState(() => _paymentMethod = 'Cash');
-                              ref
-                                  .read(taxiProvider.notifier)
-                                  .setPaymentMethod('Cash');
-                            },
-                            child: _buildFooterOption(
-                              Icons.money,
-                              'Cash',
-                              isSelected: _paymentMethod == 'Cash',
+                          const Text(
+                            'Payment Method',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF6B7280),
                             ),
                           ),
-                          Container(
-                              width: 1, height: 20, color: Colors.grey[300]),
-                          GestureDetector(
-                            onTap: () {
-                              _showPromoCodeSheet(context);
-                            },
-                            child: _buildFooterOption(
-                                Icons.local_offer_outlined, 'Coupons'),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              // Cash on Drop button
+                              Expanded(
+                                child: GestureDetector(
+                                  onTap: () {
+                                    setState(() => _paymentMethod = 'Cash');
+                                    ref.read(taxiProvider.notifier).setPaymentMethod('Cash');
+                                    HapticFeedback.selectionClick();
+                                  },
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 200),
+                                    padding: const EdgeInsets.symmetric(vertical: 14),
+                                    decoration: BoxDecoration(
+                                      color: _paymentMethod == 'Cash'
+                                          ? Colors.orange.shade50
+                                          : Colors.grey.shade50,
+                                      borderRadius: BorderRadius.circular(16),
+                                      border: Border.all(
+                                        color: _paymentMethod == 'Cash'
+                                            ? Colors.orange.shade400
+                                            : Colors.grey.shade200,
+                                        width: _paymentMethod == 'Cash' ? 2 : 1,
+                                      ),
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        Icon(
+                                          Icons.money_rounded,
+                                          color: _paymentMethod == 'Cash'
+                                              ? Colors.orange.shade700
+                                              : Colors.grey,
+                                          size: 28,
+                                        ),
+                                        const SizedBox(height: 6),
+                                        Text(
+                                          'Cash on Drop',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w700,
+                                            color: _paymentMethod == 'Cash'
+                                                ? Colors.orange.shade700
+                                                : Colors.grey.shade600,
+                                          ),
+                                        ),
+                                        if (_paymentMethod == 'Cash')
+                                          Padding(
+                                            padding: const EdgeInsets.only(top: 4),
+                                            child: Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                              decoration: BoxDecoration(
+                                                color: Colors.orange.shade400,
+                                                borderRadius: BorderRadius.circular(10),
+                                              ),
+                                              child: const Text('Selected', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              // Pay Online (Razorpay) button
+                              Expanded(
+                                child: GestureDetector(
+                                  onTap: () {
+                                    setState(() => _paymentMethod = 'Online');
+                                    ref.read(taxiProvider.notifier).setPaymentMethod('Online');
+                                    HapticFeedback.selectionClick();
+                                  },
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 200),
+                                    padding: const EdgeInsets.symmetric(vertical: 14),
+                                    decoration: BoxDecoration(
+                                      color: _paymentMethod == 'Online'
+                                          ? AppColors.primaryBlue.withValues(alpha: 0.06)
+                                          : Colors.grey.shade50,
+                                      borderRadius: BorderRadius.circular(16),
+                                      border: Border.all(
+                                        color: _paymentMethod == 'Online'
+                                            ? AppColors.primaryBlue
+                                            : Colors.grey.shade200,
+                                        width: _paymentMethod == 'Online' ? 2 : 1,
+                                      ),
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        Icon(
+                                          Icons.payment_rounded,
+                                          color: _paymentMethod == 'Online'
+                                              ? AppColors.primaryBlue
+                                              : Colors.grey,
+                                          size: 28,
+                                        ),
+                                        const SizedBox(height: 6),
+                                        Text(
+                                          'Pay Online',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w700,
+                                            color: _paymentMethod == 'Online'
+                                                ? AppColors.primaryBlue
+                                                : Colors.grey.shade600,
+                                          ),
+                                        ),
+                                        Padding(
+                                          padding: const EdgeInsets.only(top: 4),
+                                          child: _paymentMethod == 'Online'
+                                            ? Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                                decoration: BoxDecoration(
+                                                  color: AppColors.primaryBlue,
+                                                  borderRadius: BorderRadius.circular(10),
+                                                ),
+                                                child: const Text('Selected', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                                              )
+                                            : Text('via Razorpay', style: TextStyle(color: Colors.grey.shade400, fontSize: 10, fontWeight: FontWeight.w600)),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                          Container(
-                              width: 1, height: 20, color: Colors.grey[300]),
+                          // Promo / coupons row
+                          const SizedBox(height: 8),
                           GestureDetector(
-                            onTap: () {
-                              setState(() => _paymentMethod = 'Myself');
-                              ref.read(taxiProvider.notifier).setPaymentMethod(
-                                  'Online'); // Store as Online in provider
-                            },
-                            child: _buildFooterOption(
-                              Icons.person_outline,
-                              'Myself',
-                              isSelected: _paymentMethod == 'Myself',
+                            onTap: () => _showPromoCodeSheet(context),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade50,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.grey.shade200),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.local_offer_outlined, size: 18, color: Color(0xFF6366F1)),
+                                  const SizedBox(width: 10),
+                                  const Text('Apply Promo Code', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                                  const Spacer(),
+                                  Icon(Icons.chevron_right_rounded, color: Colors.grey.shade400),
+                                ],
+                              ),
                             ),
                           ),
                         ],
@@ -227,31 +349,61 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
                           ],
                         ),
                         child: ElevatedButton(
-                          onPressed: () async {
-                            if (_selectedRide != null) {
-                              ref
-                                  .read(taxiProvider.notifier)
-                                  .selectOption(_selectedRide!);
-                              final success = await ref
-                                  .read(taxiProvider.notifier)
-                                  .startSearching();
-                              if (success) {
-                                if (context.mounted) {
-                                  await context.push('/taxi/tracking');
-                                }
-                              } else {
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                          'No ${_selectedRide!.title} drivers are currently available online. Please select another category.'),
-                                      backgroundColor: AppColors.dangerRed,
-                                    ),
-                                  );
-                                }
-                              }
-                            }
-                          },
+                          onPressed: _isBooking
+                              ? null
+                              : () async {
+                                  if (_selectedRide == null) return;
+                                  setState(() => _isBooking = true);
+                                  try {
+                                    ref.read(taxiProvider.notifier).selectOption(_selectedRide!);
+                                    final success = await ref
+                                        .read(taxiProvider.notifier)
+                                        .startSearching();
+                                    if (success) {
+                                      if (context.mounted) {
+                                        await context.push('/taxi/tracking');
+                                      }
+                                    } else {
+                                      if (context.mounted) {
+                                        unawaited(showDialog(
+                                          context: context,
+                                          builder: (ctx) => AlertDialog(
+                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                                            title: Row(children: [
+                                              const Icon(Icons.location_off_rounded, color: Colors.orange),
+                                              const SizedBox(width: 12),
+                                              const Expanded(child: Text('No Drivers Nearby', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18))),
+                                            ]),
+                                            content: const Text(
+                                              'All drivers in your area are currently offline. You can still book and wait — we\'ll keep searching for 10 minutes and notify you when a driver accepts.',
+                                              style: TextStyle(fontSize: 14, height: 1.6),
+                                            ),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () => Navigator.pop(ctx),
+                                                child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+                                              ),
+                                              ElevatedButton(
+                                                onPressed: () {
+                                                  Navigator.pop(ctx);
+                                                  context.push('/taxi/tracking');
+                                                },
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: AppColors.primaryBlue,
+                                                  foregroundColor: Colors.white,
+                                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                                ),
+                                                child: const Text('Book Anyway'),
+                                              ),
+                                            ],
+                                          ),
+                                        ));
+                                      }
+                                    }
+                                  } finally {
+                                    if (mounted) setState(() => _isBooking = false);
+                                  }
+                                },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primaryBlue,
                             foregroundColor: Colors.white,
@@ -260,16 +412,38 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
                                 borderRadius: BorderRadius.circular(32)),
                             elevation: 0,
                           ),
-                          child: Text(
-                            'Book ${_selectedRide?.title ?? 'Any'}',
-                            style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 0.5),
-                          ),
+                          child: _isBooking
+                              ? const SizedBox(
+                                  width: 22,
+                                  height: 22,
+                                  child: CircularProgressIndicator(
+                                      color: Colors.white, strokeWidth: 3),
+                                )
+                              : Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      _paymentMethod == 'Online'
+                                          ? Icons.payment_rounded
+                                          : Icons.money_rounded,
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      _paymentMethod == 'Online'
+                                          ? 'Pay & Book ${_selectedRide?.title ?? ''}'
+                                          : 'Book ${_selectedRide?.title ?? 'Any'}',
+                                      style: const TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w900,
+                                          letterSpacing: 0.5),
+                                    ),
+                                  ],
+                                ),
                         ),
                       ),
                     ),
+
                   ],
                 ),
               );
@@ -568,28 +742,6 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
     );
   }
 
-  Widget _buildFooterOption(IconData icon, String label,
-      {bool isSelected = false}) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon,
-            size: 20,
-            color: isSelected ? AppColors.primaryBlue : Colors.black87),
-        const SizedBox(width: 6),
-        Text(
-          label,
-          style: TextStyle(
-            fontWeight: FontWeight.w700,
-            fontSize: 14,
-            color: isSelected ? AppColors.primaryBlue : Colors.black87,
-          ),
-        ),
-        const SizedBox(width: 2),
-        const Icon(Icons.keyboard_arrow_down, size: 16, color: Colors.black54),
-      ],
-    );
-  }
 
   void _showPromoCodeSheet(BuildContext context) {
     showModalBottomSheet(

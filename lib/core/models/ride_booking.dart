@@ -16,6 +16,8 @@ class RideBooking {
   final String? otp;
   final DateTime createdAt;
   final DateTime? scheduledFor;
+  final String paymentMethod; // 'Cash' or 'Online'
+  final String? razorpayPaymentId; // set after online payment succeeds
 
   RideBooking({
     required this.id,
@@ -33,6 +35,8 @@ class RideBooking {
     this.otp,
     required this.createdAt,
     this.scheduledFor,
+    this.paymentMethod = 'Cash',
+    this.razorpayPaymentId,
   });
 
   factory RideBooking.fromMap(Map<String, dynamic> map, String documentId) {
@@ -50,6 +54,8 @@ class RideBooking {
       fare: (map['fare'] ?? 0.0).toDouble(),
       vehicleType: map['vehicle_type'],
       otp: map['otp']?.toString(),
+      paymentMethod: map['payment_method'] ?? 'Cash',
+      razorpayPaymentId: map['razorpay_payment_id'],
       createdAt: map['created_at'] != null
           ? DateTime.parse(map['created_at'])
           : DateTime.now(),
@@ -73,6 +79,8 @@ class RideBooking {
       'fare': fare,
       'vehicle_type': vehicleType,
       'otp': otp,
+      'payment_method': paymentMethod,
+      if (razorpayPaymentId != null) 'razorpay_payment_id': razorpayPaymentId,
       'created_at': createdAt.utcIso,
       if (scheduledFor != null) 'scheduled_for': scheduledFor!.utcIso,
     };

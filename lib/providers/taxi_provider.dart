@@ -1,5 +1,3 @@
-// IMPORTANT: All StreamSubscription fields must be cancelled in dispose/onDispose.
-
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
@@ -8,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../features/profile/user_provider.dart';
 import '../core/models/ride_booking.dart';
 import '../core/repositories/ride_booking_repository.dart';
@@ -24,7 +23,8 @@ enum RideStatus {
   tracking,
   atPickup,
   headingToDropoff,
-  completed
+  completed,
+  noDriversFound, // All drivers offline — user can schedule or cancel
 }
 
 class NearbyVehicle {
@@ -77,6 +77,8 @@ class TaxiState {
   final String? appliedPromoCode;
   final double tipAmount;
   final DateTime? scheduledFor;
+  final String? razorpayPaymentId; // stored after online payment
+  final bool refundInitiated;       // true after auto-refund triggered
 
   TaxiState({
     this.status = RideStatus.idle,
@@ -101,6 +103,8 @@ class TaxiState {
     this.appliedPromoCode,
     this.tipAmount = 0.0,
     this.scheduledFor,
+    this.razorpayPaymentId,
+    this.refundInitiated = false,
   });
 
   TaxiState copyWith({
@@ -126,6 +130,8 @@ class TaxiState {
     String? appliedPromoCode,
     double? tipAmount,
     DateTime? scheduledFor,
+    String? razorpayPaymentId,
+    bool? refundInitiated,
   }) {
     return TaxiState(
       status: status ?? this.status,
@@ -150,6 +156,8 @@ class TaxiState {
       appliedPromoCode: appliedPromoCode ?? this.appliedPromoCode,
       tipAmount: tipAmount ?? this.tipAmount,
       scheduledFor: scheduledFor ?? this.scheduledFor,
+      razorpayPaymentId: razorpayPaymentId ?? this.razorpayPaymentId,
+      refundInitiated: refundInitiated ?? this.refundInitiated,
     );
   }
 }
@@ -412,6 +420,7 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
         otp: generatedOtp,
         createdAt: DateTime.now(),
         scheduledFor: state.scheduledFor,
+        paymentMethod: state.paymentMethod, // pass selected method
       );
 
       final bookingId = await ref
@@ -449,8 +458,8 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
           });
           return true;
         } else {
-          // In production, keep status as vehicleSelection instead of resetting to idle
-          state = state.copyWith(status: RideStatus.vehicleSelection);
+          // In production: signal the UI so it can show the schedule-or-cancel dialog
+          state = state.copyWith(status: RideStatus.noDriversFound);
           return false;
         }
       }
@@ -495,13 +504,12 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
         }
       });
 
-      // 90-second search timeout
+      // 10-minute search timeout with auto-cancel and refund
       _searchTimeoutTimer?.cancel();
-      _searchTimeoutTimer = Timer(const Duration(seconds: 90), () {
+      _searchTimeoutTimer = Timer(const Duration(minutes: 10), () {
         if (state.status == RideStatus.booked) {
-          _cancelBookingOnBackend();
-          state = state.copyWith(status: RideStatus.idle);
-          debugPrint('TaxiProvider: Driver search timed out after 90s');
+          debugPrint('TaxiProvider: No driver accepted in 10 minutes — auto-cancelling');
+          _autoCancelAndRefund();
         }
       });
 
@@ -716,6 +724,44 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
     _cancelBookingOnBackend();
     _searchTimeoutTimer?.cancel();
     reset();
+  }
+
+  /// Called when user manually cancels or 10-min timer fires.
+  /// Cancels on backend and triggers auto-refund if payment was online.
+  Future<void> cancelAndRefund() async {
+    _searchTimeoutTimer?.cancel();
+    unawaited(_rideSubscription?.cancel());
+
+    final bookingId = state.rideId;
+    final wasOnline = state.paymentMethod == 'Online';
+    final payId = state.razorpayPaymentId;
+
+    await _cancelBookingOnBackend();
+
+    if (wasOnline && payId != null) {
+      // Trigger refund via Supabase Edge Function
+      try {
+        await Supabase.instance.client.functions.invoke(
+          'initiate_refund',
+          body: {
+            'payment_id': payId,
+            'booking_id': bookingId ?? '',
+            'reason': 'no_driver_found',
+          },
+        );
+        state = state.copyWith(refundInitiated: true);
+        debugPrint('Refund initiated for payment $payId');
+      } catch (e) {
+        debugPrint('Refund initiation failed: $e');
+      }
+    }
+
+    reset();
+  }
+
+  /// Auto-triggered after 10-minute timeout with no driver.
+  void _autoCancelAndRefund() {
+    cancelAndRefund();
   }
 
   Future<void> _cancelBookingOnBackend() async {
