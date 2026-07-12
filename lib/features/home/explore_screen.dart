@@ -431,6 +431,24 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
           accent: Color(0xFFB91C1C),
           gradient: [Color(0xFFFEF2F2), Color(0xFFFEE2E2)],
         );
+      case 'ac & climate':
+        return const _CategoryTheme(
+          primary: Color(0xFF14B8A6), // Teal
+          accent: Color(0xFF0F766E),
+          gradient: [Color(0xFFF0FDFA), Color(0xFFCCFBF1)],
+        );
+      case 'tyres & wheels':
+        return const _CategoryTheme(
+          primary: Color(0xFFF97316), // Orange
+          accent: Color(0xFFC2410C),
+          gradient: [Color(0xFFFFF7ED), Color(0xFFFFEDD5)],
+        );
+      case 'electrical':
+        return const _CategoryTheme(
+          primary: Color(0xFFD946EF), // Fuchsia
+          accent: Color(0xFFA21CAF),
+          gradient: [Color(0xFFFDF4FF), Color(0xFFFAE8FF)],
+        );
       default:
         return const _CategoryTheme(
           primary: Color(0xFF6366F1), // Indigo
