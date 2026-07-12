@@ -17,6 +17,8 @@ subprojects {
     // Redirecting :app breaks that lookup. Only redirect plugin subprojects.
     if (project.path != ':app') {
         project.buildDir = "${project.projectDir}/build"
+    } else {
+        project.buildDir = "${rootProject.buildDir}/${project.name}"
     }
 
     afterEvaluate { project ->
