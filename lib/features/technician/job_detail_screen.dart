@@ -26,7 +26,10 @@ class _JobDetailScreenState extends ConsumerState<JobDetailScreen> {
   }
 
   void _loadBooking() {
-    ref.read(serviceBookingRepositoryProvider).streamBookingStatus(widget.bookingId).listen(
+    ref
+        .read(serviceBookingRepositoryProvider)
+        .streamBookingStatus(widget.bookingId)
+        .listen(
       (booking) {
         if (mounted) {
           setState(() {
@@ -38,7 +41,8 @@ class _JobDetailScreenState extends ConsumerState<JobDetailScreen> {
       onError: (e) {
         if (mounted) {
           setState(() => _isLoading = false);
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error loading job: $e')));
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text('Error loading job: $e')));
         }
       },
     );
@@ -51,23 +55,30 @@ class _JobDetailScreenState extends ConsumerState<JobDetailScreen> {
       builder: (_) => const Center(child: CircularProgressIndicator()),
     ));
     try {
-      await ref.read(serviceBookingRepositoryProvider).updateServiceStatus(widget.bookingId, newStatus);
+      await ref
+          .read(serviceBookingRepositoryProvider)
+          .updateServiceStatus(widget.bookingId, newStatus);
       if (mounted) Navigator.pop(context); // close loader
     } catch (e) {
       if (mounted) {
         Navigator.pop(context); // close loader
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to update status: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to update status: $e')));
       }
     }
   }
 
   void _openMaps(String address) async {
     final query = Uri.encodeComponent(address);
-    final url = Uri.parse('https://www.google.com/maps/search/?api=1&query=$query');
+    final url =
+        Uri.parse('https://www.google.com/maps/search/?api=1&query=$query');
     if (await canLaunchUrl(url)) {
       await launchUrl(url);
     } else {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not open maps')));
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text('Could not open maps')));
+      }
     }
   }
 
@@ -117,13 +128,16 @@ class _JobDetailScreenState extends ConsumerState<JobDetailScreen> {
             const SizedBox(height: 16),
             Card(
               elevation: 2,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Location', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    const Text('Location',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
                     Text(b.address ?? 'No address provided'),
                     const SizedBox(height: 12),
@@ -154,7 +168,9 @@ class _JobDetailScreenState extends ConsumerState<JobDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            Text(title,
+                style:
+                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             const Divider(),
             ...children,
           ],
@@ -204,13 +220,18 @@ class _JobDetailScreenState extends ConsumerState<JobDetailScreen> {
         width: double.infinity,
         child: ElevatedButton(
           onPressed: () => _updateStatus('completed'),
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
+          style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green, foregroundColor: Colors.white),
           child: const Text('Complete Job'),
         ),
       );
     } else if (status == 'completed') {
       return const Center(
-        child: Text('Job Completed', style: TextStyle(color: Colors.green, fontSize: 18, fontWeight: FontWeight.bold)),
+        child: Text('Job Completed',
+            style: TextStyle(
+                color: Colors.green,
+                fontSize: 18,
+                fontWeight: FontWeight.bold)),
       );
     }
     return const SizedBox.shrink();

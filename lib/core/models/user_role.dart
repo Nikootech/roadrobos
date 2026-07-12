@@ -64,7 +64,7 @@ class AppUser {
   final String kycStatus;
   final String? currentDeviceId;
   final bool isApproved;
-  
+
   // Stats & Loyalty
   final int points;
   final int totalRides;
@@ -111,7 +111,8 @@ class AppUser {
       email: map['email'],
       role: _parseRole(map['role']),
       profilePic: map['profile_pic'] ?? map['avatar_url'],
-      createdAt: map['created_at'] != null ? DateTime.parse(map['created_at']) : null,
+      createdAt:
+          map['created_at'] != null ? DateTime.parse(map['created_at']) : null,
       points: map['points'] ?? 0,
       totalRides: map['total_rides'] ?? 0,
       emergencyContacts: List<String>.from(map['emergency_contacts'] ?? []),
@@ -123,18 +124,20 @@ class AppUser {
       kycStatus: map['kyc_status'] ?? 'not_started',
       currentDeviceId: map['current_device_id'],
       isApproved: map['is_approved'] ?? true,
-      notificationPreferences: Map<String, dynamic>.from(map['notification_preferences'] ?? {
-        'push': true,
-        'email': true,
-        'sms': false,
-        'whatsapp': true,
-        'rides': true,
-        'offers': true,
-        'maintenance': true,
-        'wallet': false,
-        'quiet': false,
-        'sound': true
-      }),
+      notificationPreferences:
+          Map<String, dynamic>.from(map['notification_preferences'] ??
+              {
+                'push': true,
+                'email': true,
+                'sms': false,
+                'whatsapp': true,
+                'rides': true,
+                'offers': true,
+                'maintenance': true,
+                'wallet': false,
+                'quiet': false,
+                'sound': true
+              }),
     );
   }
 
@@ -163,20 +166,30 @@ class AppUser {
 
   static String _roleToDb(UserRole role) {
     switch (role) {
-      case UserRole.superAdmin: return 'super_admin';
-      case UserRole.founderAdmin: return 'founder_admin';
-      case UserRole.opsHead: return 'ops_head';
-      case UserRole.cityManager: return 'city_manager';
-      case UserRole.areaManager: return 'area_manager';
-      case UserRole.financeManager: return 'finance_manager';
-      case UserRole.supportManager: return 'support_manager';
-      case UserRole.marketingAdmin: return 'marketing_admin';
-      default: return role.name;
+      case UserRole.superAdmin:
+        return 'super_admin';
+      case UserRole.founderAdmin:
+        return 'founder_admin';
+      case UserRole.opsHead:
+        return 'ops_head';
+      case UserRole.cityManager:
+        return 'city_manager';
+      case UserRole.areaManager:
+        return 'area_manager';
+      case UserRole.financeManager:
+        return 'finance_manager';
+      case UserRole.supportManager:
+        return 'support_manager';
+      case UserRole.marketingAdmin:
+        return 'marketing_admin';
+      default:
+        return role.name;
     }
   }
 
   factory AppUser.empty() {
-    return const AppUser(id: '', name: 'Guest User', phone: '', role: UserRole.customer);
+    return const AppUser(
+        id: '', name: 'Guest User', phone: '', role: UserRole.customer);
   }
 
   AppUser copyWith({
@@ -213,30 +226,31 @@ class AppUser {
       kycStatus: kycStatus ?? this.kycStatus,
       currentDeviceId: currentDeviceId ?? this.currentDeviceId,
       isApproved: isApproved ?? this.isApproved,
-      notificationPreferences: notificationPreferences ?? this.notificationPreferences,
+      notificationPreferences:
+          notificationPreferences ?? this.notificationPreferences,
     );
   }
 }
 
 extension UserRoleExtension on UserRole {
   bool get isAdmin => [
-    UserRole.admin,
-    UserRole.superAdmin,
-    UserRole.founderAdmin,
-    UserRole.opsHead,
-    UserRole.cityManager,
-    UserRole.areaManager,
-    UserRole.financeManager,
-    UserRole.supportManager,
-    UserRole.marketingAdmin,
-    UserRole.auditor,
-    UserRole.analyst,
-  ].contains(this);
+        UserRole.admin,
+        UserRole.superAdmin,
+        UserRole.founderAdmin,
+        UserRole.opsHead,
+        UserRole.cityManager,
+        UserRole.areaManager,
+        UserRole.financeManager,
+        UserRole.supportManager,
+        UserRole.marketingAdmin,
+        UserRole.auditor,
+        UserRole.analyst,
+      ].contains(this);
 
   bool get isFieldStaff => [
-    UserRole.driver,
-    UserRole.technician,
-  ].contains(this);
+        UserRole.driver,
+        UserRole.technician,
+      ].contains(this);
 
   bool get isEmployee => this != UserRole.customer && this != UserRole.driver;
 

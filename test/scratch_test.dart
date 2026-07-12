@@ -8,7 +8,8 @@ import 'package:roadrobos/core/repositories/wallet_repository.dart';
 
 class MockSupabaseClient extends Mock implements SupabaseClient {}
 
-class MockPostgrestFilterBuilder extends Mock implements PostgrestFilterBuilder<dynamic> {
+class MockPostgrestFilterBuilder extends Mock
+    implements PostgrestFilterBuilder<dynamic> {
   final FutureOr<dynamic> Function() handler;
 
   MockPostgrestFilterBuilder(this.handler);
@@ -19,7 +20,7 @@ class MockPostgrestFilterBuilder extends Mock implements PostgrestFilterBuilder<
     Function? onError,
   }) {
     final completer = Completer<R>();
-    
+
     Future.sync(() => handler()).then((result) {
       Future.sync(() => onValue(result)).then(
         (val) => completer.complete(val),
@@ -35,7 +36,7 @@ class MockPostgrestFilterBuilder extends Mock implements PostgrestFilterBuilder<
         completer.completeError(e, st);
       }
     });
-    
+
     return completer.future;
   }
 }

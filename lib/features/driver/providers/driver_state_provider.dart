@@ -13,12 +13,18 @@ enum VerificationStatus { pending, approved, rejected }
 final verificationProvider = StreamProvider<VerificationStatus>((ref) {
   final user = ref.watch(userProvider);
 
-  return ref.watch(driverRepositoryProvider).watchDriver(user.user?.id ?? 'demo').map((driver) {
+  return ref
+      .watch(driverRepositoryProvider)
+      .watchDriver(user.user?.id ?? 'demo')
+      .map((driver) {
     if (driver == null) return VerificationStatus.pending;
     switch (driver.approvalStatus) {
-      case DriverApprovalStatus.approved: return VerificationStatus.approved;
-      case DriverApprovalStatus.rejected: return VerificationStatus.rejected;
-      default: return VerificationStatus.pending;
+      case DriverApprovalStatus.approved:
+        return VerificationStatus.approved;
+      case DriverApprovalStatus.rejected:
+        return VerificationStatus.rejected;
+      default:
+        return VerificationStatus.pending;
     }
   });
 });
@@ -30,13 +36,16 @@ class VerificationActionNotifier extends StateNotifier<void> {
 
   Future<void> updateStatus(DriverApprovalStatus status) async {
     final user = ref.read(userProvider);
-    await ref.read(driverRepositoryProvider).updateDriver(user.user?.id ?? 'demo', {
+    await ref
+        .read(driverRepositoryProvider)
+        .updateDriver(user.user?.id ?? 'demo', {
       'approval_status': status.toString().split('.').last,
     });
   }
 }
 
-final verificationActionProvider = StateNotifierProvider<VerificationActionNotifier, void>((ref) {
+final verificationActionProvider =
+    StateNotifierProvider<VerificationActionNotifier, void>((ref) {
   return VerificationActionNotifier(ref);
 });
 
@@ -46,13 +55,19 @@ class DriverEarnings {
   final double bonusTarget;
   final double bonusAchieved;
 
-  DriverEarnings({required this.todayEarnings, required this.bonusTarget, required this.bonusAchieved});
+  DriverEarnings(
+      {required this.todayEarnings,
+      required this.bonusTarget,
+      required this.bonusAchieved});
 }
 
 final earningsProvider = StreamProvider<DriverEarnings>((ref) {
   final user = ref.watch(userProvider);
 
-  return ref.watch(driverRepositoryProvider).watchDriver(user.user?.id ?? 'demo').map((driver) {
+  return ref
+      .watch(driverRepositoryProvider)
+      .watchDriver(user.user?.id ?? 'demo')
+      .map((driver) {
     return DriverEarnings(
       todayEarnings: driver?.todayEarnings ?? 0.0,
       bonusTarget: 1050.0,
@@ -84,15 +99,17 @@ class RideRequest {
 
 final rideRequestsProvider = StreamProvider<List<RideRequest>>((ref) {
   return ref.watch(driverRepositoryProvider).watchPendingRides().map((rides) {
-    return rides.map((r) => RideRequest(
-      id: r.id,
-      riderName: 'Customer ${r.customerId.substring(0, 4)}',
-      distance: 'Calculating...', 
-      fare: r.fare,
-      rating: 4.8,
-      pickup: r.pickupAddress,
-      dropoff: r.destinationAddress,
-    )).toList();
+    return rides
+        .map((r) => RideRequest(
+              id: r.id,
+              riderName: 'Customer ${r.customerId.substring(0, 4)}',
+              distance: 'Calculating...',
+              fare: r.fare,
+              rating: 4.8,
+              pickup: r.pickupAddress,
+              dropoff: r.destinationAddress,
+            ))
+        .toList();
   });
 });
 
@@ -103,17 +120,20 @@ class RideRequestsActionNotifier extends StateNotifier<void> {
 
   Future<void> acceptRequest(String id) async {
     final user = ref.read(userProvider);
-    await ref.read(driverRepositoryProvider).acceptRide(id, user.user?.id ?? 'demo');
+    await ref
+        .read(driverRepositoryProvider)
+        .acceptRide(id, user.user?.id ?? 'demo');
   }
 
   Future<void> rejectRequest(String id) async {
     // In a real app, we might mark this ride as "skipped" for this driver in a subcollection
-    // For now, we just clear it from local UI if it were a local state, 
+    // For now, we just clear it from local UI if it were a local state,
     // but Since it's a StreamProvider, it will stay unless filtered.
   }
 }
 
-final rideRequestsActionProvider = StateNotifierProvider<RideRequestsActionNotifier, void>((ref) {
+final rideRequestsActionProvider =
+    StateNotifierProvider<RideRequestsActionNotifier, void>((ref) {
   return RideRequestsActionNotifier(ref);
 });
 
@@ -138,7 +158,8 @@ class MapStateNotifier extends StateNotifier<MapState> {
   final Ref ref;
   StreamSubscription? _driverSubscription;
 
-  MapStateNotifier(this.ref) : super(MapState(lat: 12.9716, lng: 77.5946, isOnline: false)) {
+  MapStateNotifier(this.ref)
+      : super(MapState(lat: 12.9716, lng: 77.5946, isOnline: false)) {
     _init();
   }
 
@@ -146,7 +167,10 @@ class MapStateNotifier extends StateNotifier<MapState> {
     final user = ref.read(userProvider);
     final driverId = user.user?.id ?? 'demo';
     _driverSubscription?.cancel();
-    _driverSubscription = ref.read(driverRepositoryProvider).watchDriver(driverId).listen((driver) {
+    _driverSubscription = ref
+        .read(driverRepositoryProvider)
+        .watchDriver(driverId)
+        .listen((driver) {
       if (driver != null && mounted) {
         state = state.copyWith(
           isOnline: driver.isOnline,
@@ -165,15 +189,19 @@ class MapStateNotifier extends StateNotifier<MapState> {
 
   Future<void> toggleOnline() async {
     final user = ref.read(userProvider);
-    
+
     final newStatus = !state.isOnline;
-    await ref.read(driverRepositoryProvider).updateOnlineStatus(user.user?.id ?? 'demo', newStatus);
-    
+    await ref
+        .read(driverRepositoryProvider)
+        .updateOnlineStatus(user.user?.id ?? 'demo', newStatus);
+
     if (newStatus) {
       // Sync FCM token when going online
       final token = await ref.read(notificationServiceProvider).getToken();
       if (token != null) {
-        await ref.read(driverRepositoryProvider).updateFcmToken(user.user?.id ?? 'demo', token);
+        await ref
+            .read(driverRepositoryProvider)
+            .updateFcmToken(user.user?.id ?? 'demo', token);
       }
     }
 
@@ -181,8 +209,8 @@ class MapStateNotifier extends StateNotifier<MapState> {
   }
 }
 
-final mapStateProvider = StateNotifierProvider<MapStateNotifier, MapState>((ref) {
+final mapStateProvider =
+    StateNotifierProvider<MapStateNotifier, MapState>((ref) {
   ref.watch(userProvider);
   return MapStateNotifier(ref);
 });
-

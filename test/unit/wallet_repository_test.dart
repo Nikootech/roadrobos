@@ -7,7 +7,8 @@ import 'package:roadrobos/core/repositories/wallet_repository.dart';
 // ── Mock Classes ─────────────────────────────────────────────────────────────
 class MockSupabaseClient extends Mock implements SupabaseClient {}
 
-class MockPostgrestFilterBuilder extends Mock implements PostgrestFilterBuilder<dynamic> {
+class MockPostgrestFilterBuilder extends Mock
+    implements PostgrestFilterBuilder<dynamic> {
   final FutureOr<dynamic> Function() handler;
 
   MockPostgrestFilterBuilder(this.handler);
@@ -37,7 +38,8 @@ class MockPostgrestFilterBuilder extends Mock implements PostgrestFilterBuilder<
   }
 }
 
-class MockPostgrestFilterBuilderList extends Mock implements PostgrestFilterBuilder<List<dynamic>> {
+class MockPostgrestFilterBuilderList extends Mock
+    implements PostgrestFilterBuilder<List<dynamic>> {
   final FutureOr<List<dynamic>> Function() handler;
 
   MockPostgrestFilterBuilderList(this.handler);
@@ -133,7 +135,9 @@ void main() {
           )).called(1);
     });
 
-    test('transferFunds throws exception when recipient phone lookup returns null', () async {
+    test(
+        'transferFunds throws exception when recipient phone lookup returns null',
+        () async {
       // 1. Mock lookupUserByPhone to return empty list
       final mockLookupBuilder = MockPostgrestFilterBuilderList(() => []);
 
@@ -146,11 +150,13 @@ void main() {
       await expectLater(
         walletRepository.transferFunds('sender_123', '9876543210', 50.0),
         throwsA(predicate((e) =>
-            e is Exception && e.toString().contains('User with this phone number not found.'))),
+            e is Exception &&
+            e.toString().contains('User with this phone number not found.'))),
       );
     });
 
-    test('transferFunds maps database exceptions to user friendly messages', () async {
+    test('transferFunds maps database exceptions to user friendly messages',
+        () async {
       // 1. Mock lookupUserByPhone
       final mockLookupBuilder = MockPostgrestFilterBuilderList(() {
         return [
@@ -183,7 +189,8 @@ void main() {
       await expectLater(
         walletRepository.transferFunds('sender_123', '9876543210', 50.0),
         throwsA(predicate((e) =>
-            e is Exception && e.toString().contains('Insufficient wallet balance.'))),
+            e is Exception &&
+            e.toString().contains('Insufficient wallet balance.'))),
       );
     });
   });

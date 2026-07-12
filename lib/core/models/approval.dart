@@ -49,23 +49,35 @@ enum ApprovalType {
 extension ApprovalTypeExtension on ApprovalType {
   String get dbValue {
     switch (this) {
-      case ApprovalType.refund: return 'refund';
-      case ApprovalType.pricing: return 'pricing';
-      case ApprovalType.partnerKyc: return 'partner_kyc';
-      case ApprovalType.payout: return 'payout';
-      case ApprovalType.vehicleAttachment: return 'vehicle_attachment';
-      case ApprovalType.other: return 'other';
+      case ApprovalType.refund:
+        return 'refund';
+      case ApprovalType.pricing:
+        return 'pricing';
+      case ApprovalType.partnerKyc:
+        return 'partner_kyc';
+      case ApprovalType.payout:
+        return 'payout';
+      case ApprovalType.vehicleAttachment:
+        return 'vehicle_attachment';
+      case ApprovalType.other:
+        return 'other';
     }
   }
 
   String get displayName {
     switch (this) {
-      case ApprovalType.refund: return 'Refund';
-      case ApprovalType.pricing: return 'Pricing';
-      case ApprovalType.partnerKyc: return 'KYC';
-      case ApprovalType.payout: return 'Wallet Withdrawal';
-      case ApprovalType.vehicleAttachment: return 'Vehicle';
-      case ApprovalType.other: return 'Other';
+      case ApprovalType.refund:
+        return 'Refund';
+      case ApprovalType.pricing:
+        return 'Pricing';
+      case ApprovalType.partnerKyc:
+        return 'KYC';
+      case ApprovalType.payout:
+        return 'Wallet Withdrawal';
+      case ApprovalType.vehicleAttachment:
+        return 'Vehicle';
+      case ApprovalType.other:
+        return 'Other';
     }
   }
 }
@@ -115,12 +127,18 @@ class ApprovalRequest {
 
   static ApprovalType _parseType(String type) {
     switch (type) {
-      case 'refund': return ApprovalType.refund;
-      case 'pricing': return ApprovalType.pricing;
-      case 'partner_kyc': return ApprovalType.partnerKyc;
-      case 'payout': return ApprovalType.payout;
-      case 'vehicle_attachment': return ApprovalType.vehicleAttachment;
-      default: return ApprovalType.other;
+      case 'refund':
+        return ApprovalType.refund;
+      case 'pricing':
+        return ApprovalType.pricing;
+      case 'partner_kyc':
+        return ApprovalType.partnerKyc;
+      case 'payout':
+        return ApprovalType.payout;
+      case 'vehicle_attachment':
+        return ApprovalType.vehicleAttachment;
+      default:
+        return ApprovalType.other;
     }
   }
 

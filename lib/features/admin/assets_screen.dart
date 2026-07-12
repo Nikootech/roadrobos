@@ -85,7 +85,8 @@ class _AssetsScreenState extends State<AssetsScreen> {
                   color: Color(0xFF10B981), // Match the green plus button
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.add_rounded, color: Colors.white, size: 24),
+                child: const Icon(Icons.add_rounded,
+                    color: Colors.white, size: 24),
               ),
             ),
           )
@@ -108,7 +109,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              
+
               // Search Bar
               Container(
                 height: 52,
@@ -119,7 +120,8 @@ class _AssetsScreenState extends State<AssetsScreen> {
                 child: Row(
                   children: [
                     const SizedBox(width: 16),
-                    const Icon(Icons.search_rounded, color: Color(0xFF6B7280), size: 22),
+                    const Icon(Icons.search_rounded,
+                        color: Color(0xFF6B7280), size: 22),
                     const SizedBox(width: 12),
                     Expanded(
                       child: TextField(
@@ -137,7 +139,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              
+
               // Filter Chips
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
@@ -153,17 +155,23 @@ class _AssetsScreenState extends State<AssetsScreen> {
                       },
                       child: Container(
                         margin: const EdgeInsets.only(right: 12),
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 10),
                         decoration: BoxDecoration(
-                          color: isSelected ? const Color(0xFFD1FAE5) : const Color(0xFFF3F4F6),
+                          color: isSelected
+                              ? const Color(0xFFD1FAE5)
+                              : const Color(0xFFF3F4F6),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           filter,
                           style: GoogleFonts.inter(
                             fontSize: 14,
-                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                            color: isSelected ? const Color(0xFF065F46) : const Color(0xFF1F2937),
+                            fontWeight:
+                                isSelected ? FontWeight.w600 : FontWeight.w500,
+                            color: isSelected
+                                ? const Color(0xFF065F46)
+                                : const Color(0xFF1F2937),
                           ),
                         ),
                       ),
@@ -172,17 +180,18 @@ class _AssetsScreenState extends State<AssetsScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              
+
               // Asset List
               Expanded(
                 child: ListView.separated(
                   physics: const BouncingScrollPhysics(),
                   itemCount: _mockAssets.length,
-                  separatorBuilder: (context, index) => const SizedBox(height: 16),
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: 16),
                   itemBuilder: (context, index) {
                     final asset = _mockAssets[index];
                     final statusColor = _getStatusColor(asset['status']);
-                    
+
                     return Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
@@ -213,7 +222,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                             ),
                           ),
                           const SizedBox(width: 16),
-                          
+
                           // Details Column
                           Expanded(
                             child: Column(
@@ -260,7 +269,7 @@ class _AssetsScreenState extends State<AssetsScreen> {
                               ],
                             ),
                           ),
-                          
+
                           // Right Chevron
                           const Icon(
                             Icons.chevron_right_rounded,

@@ -44,7 +44,9 @@ class _PartnerKycScreenState extends ConsumerState<PartnerKycScreen> {
       return;
     }
 
-    if (_aadharFront == null || _aadharBack == null || _drivingLicense == null) {
+    if (_aadharFront == null ||
+        _aadharBack == null ||
+        _drivingLicense == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please upload all required documents')),
       );
@@ -58,7 +60,7 @@ class _PartnerKycScreenState extends ConsumerState<PartnerKycScreen> {
       if (user == null) throw Exception('Not authenticated');
 
       final storage = ref.read(storageRepositoryProvider);
-      
+
       // Upload documents
       final aadharFrontUrl = await storage.uploadFile(
         bucket: 'kyc-documents',
@@ -80,7 +82,7 @@ class _PartnerKycScreenState extends ConsumerState<PartnerKycScreen> {
 
       // Save to DB
       final kycRepo = ref.read(kycRepositoryProvider);
-      
+
       await kycRepo.submitKyc(
         userId: user.id,
         documentType: 'aadhar_front',
@@ -121,7 +123,9 @@ class _PartnerKycScreenState extends ConsumerState<PartnerKycScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        title: const Text('Partner KYC', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
+        title: const Text('Partner KYC',
+            style: TextStyle(
+                color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -130,7 +134,10 @@ class _PartnerKycScreenState extends ConsumerState<PartnerKycScreen> {
           children: [
             const Text(
               'Document Verification',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+              style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary),
             ),
             const SizedBox(height: 8),
             const Text(
@@ -138,13 +145,14 @@ class _PartnerKycScreenState extends ConsumerState<PartnerKycScreen> {
               style: TextStyle(color: AppColors.textSecondary),
             ),
             const SizedBox(height: 32),
-            
-            _buildUploadCard('Aadhar Card (Front)', _aadharFront, () => _pickImage('aadhar_front')),
+            _buildUploadCard('Aadhar Card (Front)', _aadharFront,
+                () => _pickImage('aadhar_front')),
             const SizedBox(height: 16),
-            _buildUploadCard('Aadhar Card (Back)', _aadharBack, () => _pickImage('aadhar_back')),
+            _buildUploadCard('Aadhar Card (Back)', _aadharBack,
+                () => _pickImage('aadhar_back')),
             const SizedBox(height: 16),
-            _buildUploadCard('Driving License', _drivingLicense, () => _pickImage('dl')),
-            
+            _buildUploadCard(
+                'Driving License', _drivingLicense, () => _pickImage('dl')),
             const SizedBox(height: 48),
             CustomButton(
               label: 'SUBMIT FOR REVIEW',
@@ -166,7 +174,9 @@ class _PartnerKycScreenState extends ConsumerState<PartnerKycScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: file != null ? AppColors.brandGreen : AppColors.border, width: 2),
+          border: Border.all(
+              color: file != null ? AppColors.brandGreen : AppColors.border,
+              width: 2),
         ),
         child: Row(
           children: [
@@ -176,22 +186,37 @@ class _PartnerKycScreenState extends ConsumerState<PartnerKycScreen> {
               decoration: BoxDecoration(
                 color: AppColors.bgLightGrey,
                 borderRadius: BorderRadius.circular(12),
-                image: file != null ? DecorationImage(image: FileImage(file), fit: BoxFit.cover) : null,
+                image: file != null
+                    ? DecorationImage(image: FileImage(file), fit: BoxFit.cover)
+                    : null,
               ),
-              child: file == null ? const Icon(Icons.add_a_photo_rounded, color: AppColors.textMuted) : null,
+              child: file == null
+                  ? const Icon(Icons.add_a_photo_rounded,
+                      color: AppColors.textMuted)
+                  : null,
             ),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                  Text(title,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary)),
                   const SizedBox(height: 4),
-                  Text(file != null ? 'Image selected' : 'Tap to upload photo', style: TextStyle(fontSize: 12, color: file != null ? AppColors.brandGreen : AppColors.textSecondary)),
+                  Text(file != null ? 'Image selected' : 'Tap to upload photo',
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: file != null
+                              ? AppColors.brandGreen
+                              : AppColors.textSecondary)),
                 ],
               ),
             ),
-            if (file != null) const Icon(Icons.check_circle_rounded, color: AppColors.brandGreen),
+            if (file != null)
+              const Icon(Icons.check_circle_rounded,
+                  color: AppColors.brandGreen),
           ],
         ),
       ),

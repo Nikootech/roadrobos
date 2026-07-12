@@ -27,7 +27,8 @@ void main() {
   setUp(() {
     mockAuth = MockAuthService();
 
-    when(() => mockAuth.authStateChanges).thenAnswer((_) => const Stream.empty());
+    when(() => mockAuth.authStateChanges)
+        .thenAnswer((_) => const Stream.empty());
     when(() => mockAuth.restoredUser).thenReturn(null);
     when(() => mockAuth.currentUser).thenReturn(null);
   });
@@ -108,8 +109,7 @@ void main() {
       expect(find.text('Recent Transactions'), findsOneWidget);
     });
 
-    testWidgets('top-up screen renders correctly',
-        (WidgetTester tester) async {
+    testWidgets('top-up screen renders correctly', (WidgetTester tester) async {
       await pumpTestWidget(
         tester,
         child: const WalletTopupScreen(),
@@ -126,7 +126,9 @@ void main() {
   });
 }
 
-class FakeWalletTransactionsNotifier extends StateNotifier<WalletTransactionsState> implements WalletTransactionsNotifier {
+class FakeWalletTransactionsNotifier
+    extends StateNotifier<WalletTransactionsState>
+    implements WalletTransactionsNotifier {
   FakeWalletTransactionsNotifier(List<WalletTransaction> transactions)
       : super(WalletTransactionsState(
           transactions: transactions,

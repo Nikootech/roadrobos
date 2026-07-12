@@ -10,7 +10,8 @@ import '../../navigation/nav_helpers.dart';
 import '../profile/user_provider.dart';
 
 String _generateUniqueReferralCode(String? userId, String? name) {
-  final seedStr = (userId != null && userId.isNotEmpty) ? userId : (name ?? 'GUEST');
+  final seedStr =
+      (userId != null && userId.isNotEmpty) ? userId : (name ?? 'GUEST');
   int hash = 5381;
   for (int i = 0; i < seedStr.length; i++) {
     hash = ((hash << 5) + hash) + seedStr.codeUnitAt(i);
@@ -37,15 +38,17 @@ class ReferralScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(userProvider).user;
-    
+
     // Generate a secure 12-digit random code if user has no assigned code
     // or if the assigned code matches the legacy guessable format (like ROADROBO_SUDHAN)
     final rawCode = user?.referralCode ?? '';
-    final referralCode = (rawCode.isNotEmpty && !rawCode.startsWith('ROADROBO_')) 
-        ? rawCode 
-        : _generateUniqueReferralCode(user?.id, user?.name);
+    final referralCode =
+        (rawCode.isNotEmpty && !rawCode.startsWith('ROADROBO_'))
+            ? rawCode
+            : _generateUniqueReferralCode(user?.id, user?.name);
 
-    final shareMessage = 'Hey! Use my referral code $referralCode to get ₹500 discount on your first service with RoAd RoBo\'s. Download now: https://roadrobos.com/download';
+    final shareMessage =
+        'Hey! Use my referral code $referralCode to get ₹500 discount on your first service with RoAd RoBo\'s. Download now: https://roadrobos.com/download';
 
     return Scaffold(
       backgroundColor: AppColors.bgLightGrey,
@@ -53,12 +56,16 @@ class ReferralScreen extends ConsumerWidget {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: AppColors.textPrimary),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded,
+              size: 18, color: AppColors.textPrimary),
           onPressed: () => context.pop(),
         ),
         title: const Text(
           'Refer & Earn',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+          style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary),
         ),
       ),
       body: SingleChildScrollView(
@@ -74,13 +81,24 @@ class ReferralScreen extends ConsumerWidget {
               child: const Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.card_giftcard_rounded, size: 80, color: AppColors.primaryBlue),
+                  Icon(Icons.card_giftcard_rounded,
+                      size: 80, color: AppColors.primaryBlue),
                   SizedBox(height: 16),
-                  Text('Invite Friends & Earn', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                  Text('Invite Friends & Earn',
+                      style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary)),
                   SizedBox(height: 8),
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 40),
-                    child: Text('Get ₹500 in your wallet when your friend completes their first service or ride.', textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: AppColors.textSecondary, height: 1.5)),
+                    child: Text(
+                        'Get ₹500 in your wallet when your friend completes their first service or ride.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            fontSize: 14,
+                            color: AppColors.textSecondary,
+                            height: 1.5)),
                   ),
                 ],
               ),
@@ -91,14 +109,21 @@ class ReferralScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Your Referral Code', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                  const Text('Your Referral Code',
+                      style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary)),
                   const SizedBox(height: 12),
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 16),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.3), width: 2),
+                      border: Border.all(
+                          color: AppColors.primaryBlue.withValues(alpha: 0.3),
+                          width: 2),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Row(
@@ -106,20 +131,29 @@ class ReferralScreen extends ConsumerWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            referralCode, 
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, letterSpacing: 2, color: AppColors.primaryBlue),
+                            referralCode,
+                            style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 2,
+                                color: AppColors.primaryBlue),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         GestureDetector(
                           onTap: () {
-                            Clipboard.setData(ClipboardData(text: referralCode));
-                            NavHelpers.showSuccess(context, 'Referral code copied to clipboard!');
+                            Clipboard.setData(
+                                ClipboardData(text: referralCode));
+                            NavHelpers.showSuccess(
+                                context, 'Referral code copied to clipboard!');
                           },
                           child: Container(
                             padding: const EdgeInsets.all(8),
-                            decoration: const BoxDecoration(color: AppColors.bgLightGrey, shape: BoxShape.circle),
-                            child: const Icon(Icons.copy_rounded, size: 20, color: AppColors.textPrimary),
+                            decoration: const BoxDecoration(
+                                color: AppColors.bgLightGrey,
+                                shape: BoxShape.circle),
+                            child: const Icon(Icons.copy_rounded,
+                                size: 20, color: AppColors.textPrimary),
                           ),
                         )
                       ],
@@ -134,21 +168,30 @@ class ReferralScreen extends ConsumerWidget {
                   ).animate(delay: 300.ms).fadeIn().slideY(begin: 0.1, end: 0),
 
                   const SizedBox(height: 48),
-                  const Text('How it works', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                  const Text('How it works',
+                      style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary)),
                   const SizedBox(height: 24),
-                  _buildStep(1, 'Share your code', 'Invite friends using your unique referral code.'),
-                  _buildStep(2, 'Friend signs up', 'They register and complete their first transaction.'),
-                  _buildStep(3, 'You earn ₹500', 'Cashback is instantly credited to your wallet.', isLast: true),
+                  _buildStep(1, 'Share your code',
+                      'Invite friends using your unique referral code.'),
+                  _buildStep(2, 'Friend signs up',
+                      'They register and complete their first transaction.'),
+                  _buildStep(3, 'You earn ₹500',
+                      'Cashback is instantly credited to your wallet.',
+                      isLast: true),
 
                   const SizedBox(height: 40),
                   const Divider(),
                   const SizedBox(height: 24),
-                  
+
                   // Total Earned
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(colors: [AppColors.deepNavy, AppColors.primaryBlue]),
+                      gradient: const LinearGradient(
+                          colors: [AppColors.deepNavy, AppColors.primaryBlue]),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Row(
@@ -157,15 +200,28 @@ class ReferralScreen extends ConsumerWidget {
                         const Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Total Earned', style: TextStyle(fontSize: 14, color: Colors.white70)),
+                            Text('Total Earned',
+                                style: TextStyle(
+                                    fontSize: 14, color: Colors.white70)),
                             SizedBox(height: 4),
-                            Text('₹1,500', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: Colors.white)),
+                            Text('₹1,500',
+                                style: TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white)),
                           ],
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(20)),
-                          child: const Text('3 Friends Joined', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white)),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                              color: Colors.white24,
+                              borderRadius: BorderRadius.circular(20)),
+                          child: const Text('3 Friends Joined',
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white)),
                         )
                       ],
                     ),
@@ -179,7 +235,8 @@ class ReferralScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildStep(int number, String title, String subtitle, {bool isLast = false}) {
+  Widget _buildStep(int number, String title, String subtitle,
+      {bool isLast = false}) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -192,7 +249,12 @@ class ReferralScreen extends ConsumerWidget {
                 color: AppColors.primaryBlue.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: Center(child: Text('$number', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primaryBlue))),
+              child: Center(
+                  child: Text('$number',
+                      style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primaryBlue))),
             ),
             if (!isLast)
               Container(
@@ -207,9 +269,17 @@ class ReferralScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+              Text(title,
+                  style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary)),
               const SizedBox(height: 4),
-              Text(subtitle, style: const TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.4)),
+              Text(subtitle,
+                  style: const TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textSecondary,
+                      height: 1.4)),
               const SizedBox(height: 24),
             ],
           ),
@@ -218,4 +288,3 @@ class ReferralScreen extends ConsumerWidget {
     );
   }
 }
-

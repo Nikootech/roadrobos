@@ -50,7 +50,8 @@ class _CreateDeliveryScreenState extends ConsumerState<CreateDeliveryScreen> {
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+        if (permission == LocationPermission.denied ||
+            permission == LocationPermission.deniedForever) {
           _setMockPickupAddress();
           return;
         }
@@ -59,7 +60,7 @@ class _CreateDeliveryScreenState extends ConsumerState<CreateDeliveryScreen> {
       if (mounted) {
         _pickupCtrl.text = 'Detecting current location...';
       }
-      
+
       final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
         timeLimit: const Duration(seconds: 5),
@@ -71,9 +72,9 @@ class _CreateDeliveryScreenState extends ConsumerState<CreateDeliveryScreen> {
 
       if (address != null && mounted) {
         ref.read(deliveryOrderProvider.notifier).setPickup(
-          LatLng(position.latitude, position.longitude),
-          address,
-        );
+              LatLng(position.latitude, position.longitude),
+              address,
+            );
       } else {
         _setMockPickupAddress();
       }
@@ -85,11 +86,12 @@ class _CreateDeliveryScreenState extends ConsumerState<CreateDeliveryScreen> {
 
   void _setMockPickupAddress() {
     if (!mounted) return;
-    const defaultAddress = 'SEBCHRIS MOBILITY, Kalyan Nagar, Bengaluru, Karnataka 560043';
+    const defaultAddress =
+        'SEBCHRIS MOBILITY, Kalyan Nagar, Bengaluru, Karnataka 560043';
     ref.read(deliveryOrderProvider.notifier).setPickup(
-      const LatLng(13.0232, 77.6502),
-      defaultAddress,
-    );
+          const LatLng(13.0232, 77.6502),
+          defaultAddress,
+        );
   }
 
   @override
@@ -145,7 +147,8 @@ class _CreateDeliveryScreenState extends ConsumerState<CreateDeliveryScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // ── Addresses ──────────────────────────────────
-                    const _SectionHeader(title: 'Addresses', icon: Iconsax.location),
+                    const _SectionHeader(
+                        title: 'Addresses', icon: Iconsax.location),
                     const SizedBox(height: 12),
                     _AddressCard(
                       pickupCtrl: _pickupCtrl,
@@ -154,7 +157,8 @@ class _CreateDeliveryScreenState extends ConsumerState<CreateDeliveryScreen> {
                     const SizedBox(height: 24),
 
                     // ── Package Details ────────────────────────────
-                    const _SectionHeader(title: 'Package Details', icon: Iconsax.box),
+                    const _SectionHeader(
+                        title: 'Package Details', icon: Iconsax.box),
                     const SizedBox(height: 12),
                     _PackageDetailsCard(
                       descCtrl: _descCtrl,
@@ -216,16 +220,17 @@ class _CreateDeliveryScreenState extends ConsumerState<CreateDeliveryScreen> {
           final double top = constraints.biggest.height;
           final double statusBarHeight = MediaQuery.of(context).padding.top;
           final double collapsedHeight = kToolbarHeight + statusBarHeight;
-          
+
           final double titleOpacity;
           if (top <= collapsedHeight + 5) {
             titleOpacity = 1.0;
           } else if (top >= collapsedHeight + 25) {
             titleOpacity = 0.0;
           } else {
-            titleOpacity = (1.0 - ((top - (collapsedHeight + 5)) / 20.0)).clamp(0.0, 1.0);
+            titleOpacity =
+                (1.0 - ((top - (collapsedHeight + 5)) / 20.0)).clamp(0.0, 1.0);
           }
-              
+
           return FlexibleSpaceBar(
             background: Container(
               decoration: const BoxDecoration(
@@ -248,7 +253,8 @@ class _CreateDeliveryScreenState extends ConsumerState<CreateDeliveryScreen> {
                           color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(Iconsax.box, color: Colors.white, size: 22),
+                        child: const Icon(Iconsax.box,
+                            color: Colors.white, size: 22),
                       ),
                       const SizedBox(height: 12),
                       const Text(
@@ -454,7 +460,8 @@ class _PackageDetailsCard extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                       color: AppColors.textSecondary)),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(
                   color: const Color(0xFF6366F1).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
@@ -484,7 +491,8 @@ class _PackageDetailsCard extends StatelessWidget {
               min: 0.5,
               max: 50.0,
               divisions: 99,
-              onChanged: (v) => onWeightChanged(double.parse(v.toStringAsFixed(1))),
+              onChanged: (v) =>
+                  onWeightChanged(double.parse(v.toStringAsFixed(1))),
             ),
           ),
           const Row(
@@ -538,7 +546,10 @@ class _PriceEstimateCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text('Estimated Price',
-                    style: TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w700)),
+                    style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700)),
                 const SizedBox(height: 4),
                 Text(
                   '₹${price.toStringAsFixed(0)}',
@@ -551,7 +562,10 @@ class _PriceEstimateCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   'Base ₹50 + ₹${(5 * formState.weightKg).toStringAsFixed(0)} (weight) + ₹${(8 * formState.estimatedDistanceKm).toStringAsFixed(0)} (dist)',
-                  style: const TextStyle(color: Colors.white54, fontSize: 10, fontWeight: FontWeight.w600),
+                  style: const TextStyle(
+                      color: Colors.white54,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600),
                 ),
               ],
             ),

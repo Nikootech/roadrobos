@@ -15,7 +15,7 @@ class InAppChatScreen extends ConsumerStatefulWidget {
   final String peerName;
   final String chatRoomId;
   const InAppChatScreen({
-    super.key, 
+    super.key,
     this.peerName = 'Rajesh Kumar',
     this.chatRoomId = 'demo-room-1',
   });
@@ -29,24 +29,25 @@ class _InAppChatScreenState extends ConsumerState<InAppChatScreen> {
 
   void _sendMessage() {
     if (_messageController.text.trim().isEmpty) return;
-    
+
     final userId = ref.read(userProvider).user?.id ?? 'demo';
     ref.read(chatRepositoryProvider).sendMessage(ChatMessage(
-      id: '',
-      roomId: widget.chatRoomId,
-      senderId: userId,
-      receiverId: 'driver_id', 
-      message: _messageController.text.trim(),
-      timestamp: DateTime.now(),
-    ));
-    
+          id: '',
+          roomId: widget.chatRoomId,
+          senderId: userId,
+          receiverId: 'driver_id',
+          message: _messageController.text.trim(),
+          timestamp: DateTime.now(),
+        ));
+
     _messageController.clear();
   }
 
   @override
   Widget build(BuildContext context) {
     final userId = ref.watch(userProvider.select((s) => s.user?.id)) ?? 'demo';
-    final messagesAsync = ref.watch(chatMessagesProvider((widget.chatRoomId, userId)));
+    final messagesAsync =
+        ref.watch(chatMessagesProvider((widget.chatRoomId, userId)));
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -55,7 +56,8 @@ class _InAppChatScreenState extends ConsumerState<InAppChatScreen> {
         elevation: 1,
         shadowColor: Colors.black12,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: AppColors.textPrimary),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded,
+              size: 18, color: AppColors.textPrimary),
           onPressed: () => context.pop(),
         ),
         title: Row(
@@ -63,18 +65,26 @@ class _InAppChatScreenState extends ConsumerState<InAppChatScreen> {
             CircleAvatar(
               radius: 18,
               backgroundColor: AppColors.primaryBlue.withValues(alpha: 0.1),
-              child: const Icon(Icons.person, color: AppColors.primaryBlue, size: 20),
+              child: const Icon(Icons.person,
+                  color: AppColors.primaryBlue, size: 20),
             ),
             const SizedBox(width: 12),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(widget.peerName, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                Text(widget.peerName,
+                    style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary)),
                 const Row(
                   children: [
-                    CircleAvatar(radius: 3, backgroundColor: AppColors.successGreen),
+                    CircleAvatar(
+                        radius: 3, backgroundColor: AppColors.successGreen),
                     SizedBox(width: 4),
-                    Text('Online', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                    Text('Online',
+                        style: TextStyle(
+                            fontSize: 11, color: AppColors.textSecondary)),
                   ],
                 ),
               ],
@@ -82,19 +92,24 @@ class _InAppChatScreenState extends ConsumerState<InAppChatScreen> {
           ],
         ),
         actions: [
-          IconButton(icon: const Icon(Iconsax.call, color: AppColors.primaryBlue), onPressed: () async {
-            final Uri url = Uri(scheme: 'tel', path: '+18005550199');
-            try {
-              final success = await launchUrl(url);
-              if (!success && context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not launch dialer')));
-              }
-            } catch (e) {
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not launch dialer')));
-              }
-            }
-          }),        ],
+          IconButton(
+              icon: const Icon(Iconsax.call, color: AppColors.primaryBlue),
+              onPressed: () async {
+                final Uri url = Uri(scheme: 'tel', path: '+18005550199');
+                try {
+                  final success = await launchUrl(url);
+                  if (!success && context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text('Could not launch dialer')));
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text('Could not launch dialer')));
+                  }
+                }
+              }),
+        ],
       ),
       body: Column(
         children: [
@@ -107,18 +122,16 @@ class _InAppChatScreenState extends ConsumerState<InAppChatScreen> {
                 itemBuilder: (context, index) {
                   final msg = messages[index];
                   final isMe = msg.senderId == userId;
-                  return _buildChatBubble(
-                    msg.message, 
-                    isMe, 
-                    DateFormat('hh:mm a').format(msg.timestamp)
-                  );
+                  return _buildChatBubble(msg.message, isMe,
+                      DateFormat('hh:mm a').format(msg.timestamp));
                 },
               ),
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (err, _) => Center(child: Text('Error loading messages: $err')),
+              error: (err, _) =>
+                  Center(child: Text('Error loading messages: $err')),
             ),
           ),
-          
+
           // Quick Replies
           Container(
             height: 48,
@@ -133,7 +146,7 @@ class _InAppChatScreenState extends ConsumerState<InAppChatScreen> {
               ],
             ),
           ),
-          
+
           // Input Field
           Container(
             padding: const EdgeInsets.all(16),
@@ -156,7 +169,8 @@ class _InAppChatScreenState extends ConsumerState<InAppChatScreen> {
                       decoration: const InputDecoration(
                         hintText: 'Type a message...',
                         border: InputBorder.none,
-                        hintStyle: TextStyle(fontSize: 14, color: AppColors.textMuted),
+                        hintStyle:
+                            TextStyle(fontSize: 14, color: AppColors.textMuted),
                       ),
                       onSubmitted: (_) => _sendMessage(),
                     ),
@@ -167,8 +181,10 @@ class _InAppChatScreenState extends ConsumerState<InAppChatScreen> {
                   onTap: _sendMessage,
                   child: Container(
                     padding: const EdgeInsets.all(12),
-                    decoration: const BoxDecoration(color: AppColors.primaryBlue, shape: BoxShape.circle),
-                    child: const Icon(Iconsax.send_1, color: Colors.white, size: 20),
+                    decoration: const BoxDecoration(
+                        color: AppColors.primaryBlue, shape: BoxShape.circle),
+                    child: const Icon(Iconsax.send_1,
+                        color: Colors.white, size: 20),
                   ),
                 ),
               ],
@@ -184,7 +200,8 @@ class _InAppChatScreenState extends ConsumerState<InAppChatScreen> {
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
-        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.7),
+        constraints:
+            BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.7),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: isMe ? AppColors.primaryBlue : AppColors.bgLightGrey,
@@ -200,16 +217,24 @@ class _InAppChatScreenState extends ConsumerState<InAppChatScreen> {
           children: [
             Text(
               text,
-              style: TextStyle(color: isMe ? Colors.white : AppColors.textPrimary, fontSize: 13, height: 1.4),
+              style: TextStyle(
+                  color: isMe ? Colors.white : AppColors.textPrimary,
+                  fontSize: 13,
+                  height: 1.4),
             ),
             const SizedBox(height: 4),
             Text(
               time,
-              style: TextStyle(color: isMe ? Colors.white70 : AppColors.textMuted, fontSize: 10),
+              style: TextStyle(
+                  color: isMe ? Colors.white70 : AppColors.textMuted,
+                  fontSize: 10),
             ),
           ],
         ),
-      ).animate().fadeIn(duration: 300.ms).slideX(begin: isMe ? 0.1 : -0.1, end: 0),
+      )
+          .animate()
+          .fadeIn(duration: 300.ms)
+          .slideX(begin: isMe ? 0.1 : -0.1, end: 0),
     );
   }
 
@@ -217,24 +242,24 @@ class _InAppChatScreenState extends ConsumerState<InAppChatScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: ActionChip(
-        label: Text(text, style: const TextStyle(fontSize: 12, color: AppColors.textPrimary)),
+        label: Text(text,
+            style: const TextStyle(fontSize: 12, color: AppColors.textPrimary)),
         backgroundColor: Colors.white,
         side: const BorderSide(color: AppColors.border),
         onPressed: () {
           // Fix: Call the repository instead of modifying a non-existent local list
           final userId = ref.read(userProvider).user?.id ?? 'demo';
           ref.read(chatRepositoryProvider).sendMessage(ChatMessage(
-            id: '',
-            roomId: widget.chatRoomId,
-            senderId: userId,
-            receiverId: 'driver_id',
-            message: text,
-            timestamp: DateTime.now(),
-          ));
+                id: '',
+                roomId: widget.chatRoomId,
+                senderId: userId,
+                receiverId: 'driver_id',
+                message: text,
+                timestamp: DateTime.now(),
+              ));
           NavHelpers.showSuccess(context, 'Sent: $text');
         },
       ),
     );
   }
 }
-

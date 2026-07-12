@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 class DatabaseSeeder {
   static Future<void> seedDatabase() async {
     if (!kDebugMode) return;
-    debugPrint('[DatabaseSeeder] Skipped — Firestore seeder removed. Use Supabase SQL seeds instead.');
+    debugPrint(
+        '[DatabaseSeeder] Skipped — Firestore seeder removed. Use Supabase SQL seeds instead.');
   }
 }
-

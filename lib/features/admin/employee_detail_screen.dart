@@ -13,7 +13,8 @@ class EmployeeDetailScreen extends ConsumerStatefulWidget {
   const EmployeeDetailScreen({super.key, required this.employee});
 
   @override
-  ConsumerState<EmployeeDetailScreen> createState() => _EmployeeDetailScreenState();
+  ConsumerState<EmployeeDetailScreen> createState() =>
+      _EmployeeDetailScreenState();
 }
 
 class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen> {
@@ -38,7 +39,10 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen> {
 
   String _formatRole(String r) {
     if (r == 'admin') return 'Select specific role...';
-    return r.split('_').map((word) => word[0].toUpperCase() + word.substring(1)).join(' ');
+    return r
+        .split('_')
+        .map((word) => word[0].toUpperCase() + word.substring(1))
+        .join(' ');
   }
 
   @override
@@ -52,8 +56,11 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen> {
   }
 
   Future<void> _toggleApproval() async {
-    if (!_isApproved && _adminRoles.contains(_initialRole) && _selectedAdminRole == 'admin') {
-      NavHelpers.showError(context, 'Please select a specific role before approving.');
+    if (!_isApproved &&
+        _adminRoles.contains(_initialRole) &&
+        _selectedAdminRole == 'admin') {
+      NavHelpers.showError(
+          context, 'Please select a specific role before approving.');
       return;
     }
 
@@ -61,11 +68,15 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen> {
     try {
       final uid = widget.employee['id'] ?? '';
       String? roleToUpdate;
-      if (!_isApproved && _selectedAdminRole != null && _selectedAdminRole != 'admin') {
-         roleToUpdate = _selectedAdminRole;
+      if (!_isApproved &&
+          _selectedAdminRole != null &&
+          _selectedAdminRole != 'admin') {
+        roleToUpdate = _selectedAdminRole;
       }
-      
-      await ref.read(adminOpsRepositoryProvider).updateEmployeeApproval(uid, !_isApproved, role: roleToUpdate);
+
+      await ref
+          .read(adminOpsRepositoryProvider)
+          .updateEmployeeApproval(uid, !_isApproved, role: roleToUpdate);
       if (!mounted) return;
       setState(() {
         _isApproved = !_isApproved;
@@ -73,7 +84,9 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen> {
       });
       NavHelpers.showSuccess(
         context,
-        _isApproved ? 'Employee approved and activated!' : 'Employee access suspended!',
+        _isApproved
+            ? 'Employee approved and activated!'
+            : 'Employee access suspended!',
       );
     } catch (e) {
       if (mounted) {
@@ -90,8 +103,8 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen> {
     final String phone = widget.employee['phone'] ?? 'No phone';
     final String role = widget.employee['role'] ?? 'technician';
     final String profilePic = widget.employee['profile_pic'] ?? '';
-    final String createdAt = widget.employee['created_at'] != null 
-        ? widget.employee['created_at'].toString().split('T')[0] 
+    final String createdAt = widget.employee['created_at'] != null
+        ? widget.employee['created_at'].toString().split('T')[0]
         : 'Unknown Date';
 
     final displayName = role.toUpperCase().replaceAll('_', ' ');
@@ -103,12 +116,17 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen> {
         elevation: 1,
         shadowColor: Colors.black.withValues(alpha: 0.05),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: AppColors.textPrimary),
-          onPressed: () => context.pop(true), // returning true indicates potential refresh needed
+          icon: const Icon(Icons.arrow_back_ios_new_rounded,
+              size: 18, color: AppColors.textPrimary),
+          onPressed: () => context
+              .pop(true), // returning true indicates potential refresh needed
         ),
         title: Text(
           'User Details',
-          style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+          style: GoogleFonts.outfit(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary),
         ),
       ),
       body: SingleChildScrollView(
@@ -123,33 +141,50 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen> {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4)),
+                  BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4)),
                 ],
               ),
               child: Column(
                 children: [
                   CircleAvatar(
                     radius: 50,
-                    backgroundColor: AppColors.primaryBlue.withValues(alpha: 0.1),
-                    backgroundImage: profilePic.isNotEmpty && profilePic.startsWith('http') 
-                        ? NetworkImage(profilePic) 
-                        : null,
+                    backgroundColor:
+                        AppColors.primaryBlue.withValues(alpha: 0.1),
+                    backgroundImage:
+                        profilePic.isNotEmpty && profilePic.startsWith('http')
+                            ? NetworkImage(profilePic)
+                            : null,
                     child: profilePic.isEmpty || !profilePic.startsWith('http')
-                        ? Text(name.isNotEmpty ? name[0] : '?', style: const TextStyle(fontSize: 32, color: AppColors.primaryBlue, fontWeight: FontWeight.bold))
+                        ? Text(name.isNotEmpty ? name[0] : '?',
+                            style: const TextStyle(
+                                fontSize: 32,
+                                color: AppColors.primaryBlue,
+                                fontWeight: FontWeight.bold))
                         : null,
                   ),
                   const SizedBox(height: 16),
-                  Text(name, style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                  Text(name,
+                      style: GoogleFonts.outfit(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary)),
                   const SizedBox(height: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: AppColors.bgLightGrey,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
                       displayName,
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.primaryBlue),
+                      style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primaryBlue),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -159,22 +194,29 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen> {
                   const SizedBox(height: 16),
                   _buildDetailRow(Icons.phone_outlined, 'Phone', phone),
                   const SizedBox(height: 16),
-                  _buildDetailRow(Icons.calendar_today_outlined, 'Joined', createdAt),
+                  _buildDetailRow(
+                      Icons.calendar_today_outlined, 'Joined', createdAt),
                   const SizedBox(height: 16),
                   _buildDetailRow(
-                    _isApproved ? Icons.check_circle_outline : Icons.pending_actions,
+                    _isApproved
+                        ? Icons.check_circle_outline
+                        : Icons.pending_actions,
                     'Status',
                     _isApproved ? 'Active' : 'Pending Approval',
-                    valueColor: _isApproved ? AppColors.successGreen : AppColors.warningAmber,
+                    valueColor: _isApproved
+                        ? AppColors.successGreen
+                        : AppColors.warningAmber,
                   ),
-                  
                   if (_adminRoles.contains(_initialRole) && !_isApproved) ...[
                     const SizedBox(height: 16),
                     Row(
                       children: [
-                        const Icon(Icons.badge_outlined, size: 20, color: AppColors.textSecondary),
+                        const Icon(Icons.badge_outlined,
+                            size: 20, color: AppColors.textSecondary),
                         const SizedBox(width: 16),
-                        const Text('Assign Role', style: TextStyle(fontSize: 14, color: AppColors.textSecondary)),
+                        const Text('Assign Role',
+                            style: TextStyle(
+                                fontSize: 14, color: AppColors.textSecondary)),
                         const Spacer(),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -185,12 +227,18 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen> {
                           child: DropdownButtonHideUnderline(
                             child: DropdownButton<String>(
                               value: _selectedAdminRole,
-                              items: _adminRoles.map((r) => DropdownMenuItem(
-                                value: r,
-                                child: Text(_formatRole(r), style: const TextStyle(fontSize: 14)),
-                              )).toList(),
+                              items: _adminRoles
+                                  .map((r) => DropdownMenuItem(
+                                        value: r,
+                                        child: Text(_formatRole(r),
+                                            style:
+                                                const TextStyle(fontSize: 14)),
+                                      ))
+                                  .toList(),
                               onChanged: (val) {
-                                if (val != null) setState(() => _selectedAdminRole = val);
+                                if (val != null) {
+                                  setState(() => _selectedAdminRole = val);
+                                }
                               },
                             ),
                           ),
@@ -201,9 +249,9 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen> {
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 32),
-            
+
             // Action Buttons
             if (_isLoading)
               const CircularProgressIndicator(color: AppColors.primaryBlue)
@@ -220,7 +268,8 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen> {
                           backgroundColor: AppColors.dangerRed,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
                         ),
                       ),
                     )
@@ -234,7 +283,8 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen> {
                           backgroundColor: AppColors.successGreen,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
                         ),
                       ),
                     ),
@@ -246,12 +296,15 @@ class _EmployeeDetailScreenState extends ConsumerState<EmployeeDetailScreen> {
     );
   }
 
-  Widget _buildDetailRow(IconData icon, String label, String value, {Color? valueColor}) {
+  Widget _buildDetailRow(IconData icon, String label, String value,
+      {Color? valueColor}) {
     return Row(
       children: [
         Icon(icon, size: 20, color: AppColors.textSecondary),
         const SizedBox(width: 16),
-        Text(label, style: const TextStyle(fontSize: 14, color: AppColors.textSecondary)),
+        Text(label,
+            style:
+                const TextStyle(fontSize: 14, color: AppColors.textSecondary)),
         const Spacer(),
         Text(
           value,

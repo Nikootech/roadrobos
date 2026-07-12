@@ -5,7 +5,6 @@ import '../../../core/models/approval.dart';
 import '../../../core/repositories/approval_repository.dart';
 
 class ApprovalNotifier extends AsyncNotifier<List<ApprovalRequest>> {
-
   @override
   Future<List<ApprovalRequest>> build() async {
     final supabase = Supabase.instance.client;
@@ -33,7 +32,9 @@ class ApprovalNotifier extends AsyncNotifier<List<ApprovalRequest>> {
         .select()
         .order('created_at', ascending: false);
 
-    return (response as List).map((map) => ApprovalRequest.fromMap(map)).toList();
+    return (response as List)
+        .map((map) => ApprovalRequest.fromMap(map))
+        .toList();
   }
 
   Future<void> approve(String id) async {
@@ -54,6 +55,7 @@ class ApprovalNotifier extends AsyncNotifier<List<ApprovalRequest>> {
   }
 }
 
-final approvalProvider = AsyncNotifierProvider<ApprovalNotifier, List<ApprovalRequest>>(() {
+final approvalProvider =
+    AsyncNotifierProvider<ApprovalNotifier, List<ApprovalRequest>>(() {
   return ApprovalNotifier();
 });

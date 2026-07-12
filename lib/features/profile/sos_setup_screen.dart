@@ -34,18 +34,25 @@ class _SosSetupScreenState extends ConsumerState<SosSetupScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(controller: _nameController, decoration: const InputDecoration(labelText: 'Name')),
-            TextField(controller: _phoneController, decoration: const InputDecoration(labelText: 'Phone'), keyboardType: TextInputType.phone),
+            TextField(
+                controller: _nameController,
+                decoration: const InputDecoration(labelText: 'Name')),
+            TextField(
+                controller: _phoneController,
+                decoration: const InputDecoration(labelText: 'Phone'),
+                keyboardType: TextInputType.phone),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('CANCEL')),
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('CANCEL')),
           TextButton(
             onPressed: () {
-              if (_nameController.text.isNotEmpty && _phoneController.text.isNotEmpty) {
-                ref.read(sosProvider.notifier).addContact(
-                  SosContact(name: _nameController.text, phone: _phoneController.text)
-                );
+              if (_nameController.text.isNotEmpty &&
+                  _phoneController.text.isNotEmpty) {
+                ref.read(sosProvider.notifier).addContact(SosContact(
+                    name: _nameController.text, phone: _phoneController.text));
                 _nameController.clear();
                 _phoneController.clear();
                 Navigator.pop(context);
@@ -68,61 +75,76 @@ class _SosSetupScreenState extends ConsumerState<SosSetupScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: AppColors.textPrimary),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded,
+              size: 18, color: AppColors.textPrimary),
           onPressed: () => context.pop(),
         ),
-        title: const Text('Emergency SOS', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
+        title: const Text('Emergency SOS',
+            style: TextStyle(
+                color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
-             // SOS illustration placeholder
-             Container(
-               padding: const EdgeInsets.all(32),
-               decoration: BoxDecoration(color: AppColors.dangerRed.withValues(alpha: 0.05), shape: BoxShape.circle),
-               child: const Icon(Iconsax.shield_slash, size: 80, color: AppColors.dangerRed),
-             ).animate().shake(),
-             
-             const SizedBox(height: 32),
-             const Text('Stay Safe on Every Trip', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
-             const SizedBox(height: 12),
-             const Text('Add trusted contacts who can be notified instantly in case of an emergency.', textAlign: TextAlign.center, style: TextStyle(color: AppColors.textSecondary, height: 1.5)),
-             
-             const SizedBox(height: 40),
-             if (contacts.isEmpty)
-               Container(
-                 padding: const EdgeInsets.all(32),
-                 child: const Text('No contacts added yet', style: TextStyle(color: AppColors.textMuted)),
-               )
-             else
-               Container(
-                 padding: const EdgeInsets.all(16),
-                 decoration: BoxDecoration(color: AppColors.bgLightGrey, borderRadius: BorderRadius.circular(20)),
-                 child: ListView.separated(
-                   shrinkWrap: true,
-                   physics: const NeverScrollableScrollPhysics(),
-                   itemCount: contacts.length,
-                   separatorBuilder: (_, __) => const Divider(height: 32),
-                   itemBuilder: (context, index) => _buildContactTile(contacts[index], context),
-                 ),
-               ),
-             
-             const SizedBox(height: 32),
-             ElevatedButton.icon(
-                onPressed: () {
-                  HapticFeedback.lightImpact();
-                  _showAddContactDialog();
-                },
-               icon: const Icon(Iconsax.user_add, size: 20),
-               label: const Text('ADD TRUSTED CONTACT'),
-               style: ElevatedButton.styleFrom(
-                 backgroundColor: AppColors.primaryBlue,
-                 foregroundColor: Colors.white,
-                 minimumSize: const Size(double.infinity, 54),
-                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-               ),
-             ),
+            // SOS illustration placeholder
+            Container(
+              padding: const EdgeInsets.all(32),
+              decoration: BoxDecoration(
+                  color: AppColors.dangerRed.withValues(alpha: 0.05),
+                  shape: BoxShape.circle),
+              child: const Icon(Iconsax.shield_slash,
+                  size: 80, color: AppColors.dangerRed),
+            ).animate().shake(),
+
+            const SizedBox(height: 32),
+            const Text('Stay Safe on Every Trip',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
+            const SizedBox(height: 12),
+            const Text(
+                'Add trusted contacts who can be notified instantly in case of an emergency.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: AppColors.textSecondary, height: 1.5)),
+
+            const SizedBox(height: 40),
+            if (contacts.isEmpty)
+              Container(
+                padding: const EdgeInsets.all(32),
+                child: const Text('No contacts added yet',
+                    style: TextStyle(color: AppColors.textMuted)),
+              )
+            else
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                    color: AppColors.bgLightGrey,
+                    borderRadius: BorderRadius.circular(20)),
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: contacts.length,
+                  separatorBuilder: (_, __) => const Divider(height: 32),
+                  itemBuilder: (context, index) =>
+                      _buildContactTile(contacts[index], context),
+                ),
+              ),
+
+            const SizedBox(height: 32),
+            ElevatedButton.icon(
+              onPressed: () {
+                HapticFeedback.lightImpact();
+                _showAddContactDialog();
+              },
+              icon: const Icon(Iconsax.user_add, size: 20),
+              label: const Text('ADD TRUSTED CONTACT'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryBlue,
+                foregroundColor: Colors.white,
+                minimumSize: const Size(double.infinity, 54),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
+              ),
+            ),
           ],
         ),
       ),
@@ -132,25 +154,34 @@ class _SosSetupScreenState extends ConsumerState<SosSetupScreen> {
   Widget _buildContactTile(SosContact contact, BuildContext context) {
     return Row(
       children: [
-        const CircleAvatar(backgroundColor: Colors.white, child: Icon(Icons.person, color: AppColors.textSecondary, size: 20)),
+        const CircleAvatar(
+            backgroundColor: Colors.white,
+            child:
+                Icon(Icons.person, color: AppColors.textSecondary, size: 20)),
         const SizedBox(width: 16),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(contact.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-              Text(contact.phone, style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
+              Text(contact.name,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 14)),
+              Text(contact.phone,
+                  style: const TextStyle(
+                      color: AppColors.textMuted, fontSize: 12)),
             ],
           ),
         ),
         IconButton(
-          icon: const Icon(Icons.remove_circle_outline, color: AppColors.dangerRed, size: 20),
+          icon: const Icon(Icons.remove_circle_outline,
+              color: AppColors.dangerRed, size: 20),
           onPressed: () {
             HapticFeedback.selectionClick();
             NavHelpers.showConfirmDialog(
               context,
               title: 'Remove Contact',
-              message: 'Are you sure you want to remove ${contact.name} from your SOS list?',
+              message:
+                  'Are you sure you want to remove ${contact.name} from your SOS list?',
               onConfirm: () {
                 ref.read(sosProvider.notifier).removeContact(contact.phone);
                 NavHelpers.showSuccess(context, '${contact.name} removed.');
@@ -162,4 +193,3 @@ class _SosSetupScreenState extends ConsumerState<SosSetupScreen> {
     );
   }
 }
-

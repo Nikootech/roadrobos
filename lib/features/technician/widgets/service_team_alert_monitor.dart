@@ -87,17 +87,21 @@ class ServiceTeamAlertMonitor extends ConsumerWidget {
                   Expanded(
                     child: ElevatedButton.icon(
                       onPressed: () async {
-                        final url = 'https://www.google.com/maps/search/?api=1&query=$lat,$lng';
+                        final url =
+                            'https://www.google.com/maps/search/?api=1&query=$lat,$lng';
                         if (await canLaunchUrl(Uri.parse(url))) {
                           await launchUrl(Uri.parse(url));
                         }
                       },
-                      icon: const Icon(Iconsax.location, size: 18, color: AppColors.dangerRed),
-                      label: const Text('NAVIGATE NOW', style: TextStyle(fontWeight: FontWeight.w800)),
+                      icon: const Icon(Iconsax.location,
+                          size: 18, color: AppColors.dangerRed),
+                      label: const Text('NAVIGATE NOW',
+                          style: TextStyle(fontWeight: FontWeight.w800)),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,
                         foregroundColor: AppColors.dangerRed,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
                     ),
@@ -107,17 +111,21 @@ class ServiceTeamAlertMonitor extends ConsumerWidget {
                     onPressed: () {
                       supabase
                           .from('technician_emergency_broadcast')
-                          .update({'is_acknowledged': true})
-                          .eq('id', alertId);
+                          .update({'is_acknowledged': true}).eq('id', alertId);
                     },
-                    icon: const Icon(Iconsax.close_circle, color: Colors.white70),
+                    icon:
+                        const Icon(Iconsax.close_circle, color: Colors.white70),
                     tooltip: 'Dismiss Alert',
                   ),
                 ],
               ),
             ],
           ),
-        ).animate().slideY(begin: -1, end: 0).fadeIn().shimmer(duration: 2.seconds, color: Colors.white24);
+        )
+            .animate()
+            .slideY(begin: -1, end: 0)
+            .fadeIn()
+            .shimmer(duration: 2.seconds, color: Colors.white24);
       },
     );
   }
@@ -128,13 +136,16 @@ class _PulseIcon extends StatefulWidget {
   State<_PulseIcon> createState() => _PulseIconState();
 }
 
-class _PulseIconState extends State<_PulseIcon> with SingleTickerProviderStateMixin {
+class _PulseIconState extends State<_PulseIcon>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 600))..repeat(reverse: true);
+    _controller = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 600))
+      ..repeat(reverse: true);
   }
 
   @override
@@ -151,9 +162,12 @@ class _PulseIconState extends State<_PulseIcon> with SingleTickerProviderStateMi
         return Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.2 + (_controller.value * 0.2)),
+            color:
+                Colors.white.withValues(alpha: 0.2 + (_controller.value * 0.2)),
             shape: BoxShape.circle,
-            border: Border.all(color: Colors.white.withValues(alpha: _controller.value), width: 2),
+            border: Border.all(
+                color: Colors.white.withValues(alpha: _controller.value),
+                width: 2),
           ),
           child: const Icon(Iconsax.danger, color: Colors.white, size: 28),
         );

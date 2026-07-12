@@ -12,16 +12,25 @@ import '../../core/models/ride_booking.dart';
 import '../../core/models/service_booking.dart';
 import '../../core/models/rental_booking.dart';
 
-final userRidesProvider = FutureProvider.autoDispose.family<List<RideBooking>, String>((ref, userId) {
-  return ref.watch(rideBookingRepositoryProvider).getPagedCustomerRides(userId, limit: 50);
+final userRidesProvider =
+    FutureProvider.autoDispose.family<List<RideBooking>, String>((ref, userId) {
+  return ref
+      .watch(rideBookingRepositoryProvider)
+      .getPagedCustomerRides(userId, limit: 50);
 });
 
-final userServicesProvider = FutureProvider.autoDispose.family<List<ServiceBooking>, String>((ref, userId) {
-  return ref.watch(serviceBookingRepositoryProvider).getPagedCustomerServiceBookings(userId, limit: 50);
+final userServicesProvider = FutureProvider.autoDispose
+    .family<List<ServiceBooking>, String>((ref, userId) {
+  return ref
+      .watch(serviceBookingRepositoryProvider)
+      .getPagedCustomerServiceBookings(userId, limit: 50);
 });
 
-final userRentalsProvider = FutureProvider.autoDispose.family<List<RentalBooking>, String>((ref, userId) {
-  return ref.watch(rentalBookingRepositoryProvider).getPagedCustomerRentals(userId, limit: 50);
+final userRentalsProvider = FutureProvider.autoDispose
+    .family<List<RentalBooking>, String>((ref, userId) {
+  return ref
+      .watch(rentalBookingRepositoryProvider)
+      .getPagedCustomerRentals(userId, limit: 50);
 });
 
 /// Ride & Service History matching Figma Screen [21]: My Rides History
@@ -40,12 +49,16 @@ class RideHistoryScreen extends ConsumerWidget {
           backgroundColor: Colors.white,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: AppColors.textPrimary),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                size: 18, color: AppColors.textPrimary),
             onPressed: () => context.pop(),
           ),
           title: const Text(
             'History',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+            style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary),
           ),
           bottom: const TabBar(
             labelColor: AppColors.primaryBlue,
@@ -59,22 +72,22 @@ class RideHistoryScreen extends ConsumerWidget {
             ],
           ),
         ),
-        body: userId == null 
-          ? const Center(child: Text('Please login to view history'))
-          : TabBarView(
-              children: [
-                _buildRidesTab(ref, userId),
-                _buildServicesTab(ref, userId),
-                _buildRentalsTab(ref, userId),
-              ],
-            ),
+        body: userId == null
+            ? const Center(child: Text('Please login to view history'))
+            : TabBarView(
+                children: [
+                  _buildRidesTab(ref, userId),
+                  _buildServicesTab(ref, userId),
+                  _buildRentalsTab(ref, userId),
+                ],
+              ),
       ),
     );
   }
 
   Widget _buildRidesTab(WidgetRef ref, String userId) {
     final ridesAsync = ref.watch(userRidesProvider(userId));
-    
+
     return RefreshIndicator(
       onRefresh: () async => ref.refresh(userRidesProvider(userId).future),
       color: AppColors.primaryBlue,
@@ -91,7 +104,8 @@ class RideHistoryScreen extends ConsumerWidget {
               final ride = rides[index];
               return _buildHistoryCard(
                 type: ride.destinationAddress.split(',').first,
-                date: DateFormat('MMM dd, yyyy • hh:mm a').format(ride.createdAt),
+                date:
+                    DateFormat('MMM dd, yyyy • hh:mm a').format(ride.createdAt),
                 status: ride.status.toUpperCase(),
                 price: '₹${ride.fare}',
                 car: 'Personal Cab',
@@ -102,26 +116,39 @@ class RideHistoryScreen extends ConsumerWidget {
                           return OutlinedButton.icon(
                             onPressed: () async {
                               try {
-                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Receipt downloaded successfully.')));
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                        content: Text(
+                                            'Receipt downloaded successfully.')));
                               } catch (e) {
                                 if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to download receipt: $e')));
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                          content: Text(
+                                              'Failed to download receipt: $e')));
                                 }
                               }
                             },
                             icon: const Icon(Icons.download_rounded, size: 16),
-                            label: const Text('Receipt', style: TextStyle(fontSize: 12)),
+                            label: const Text('Receipt',
+                                style: TextStyle(fontSize: 12)),
                             style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
                               foregroundColor: AppColors.primaryBlue,
-                              side: const BorderSide(color: AppColors.primaryBlue),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              side: const BorderSide(
+                                  color: AppColors.primaryBlue),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8)),
                             ),
                           );
                         },
                       )
                     : null,
-              ).animate().fadeIn(delay: (100 * index).ms).slideX(begin: 0.1, end: 0);
+              )
+                  .animate()
+                  .fadeIn(delay: (100 * index).ms)
+                  .slideX(begin: 0.1, end: 0);
             },
           );
         },
@@ -154,7 +181,10 @@ class RideHistoryScreen extends ConsumerWidget {
                 car: service.vehicleName,
                 isSuccess: service.status.toLowerCase() == 'completed',
                 isService: true,
-              ).animate().fadeIn(delay: (100 * index).ms).slideX(begin: 0.1, end: 0);
+              )
+                  .animate()
+                  .fadeIn(delay: (100 * index).ms)
+                  .slideX(begin: 0.1, end: 0);
             },
           );
         },
@@ -185,9 +215,13 @@ class RideHistoryScreen extends ConsumerWidget {
                 status: rental.status.toUpperCase(),
                 price: '₹${rental.totalCost}',
                 car: rental.rentalType.toUpperCase(),
-                isSuccess: rental.status.toLowerCase() == 'completed' || rental.status.toLowerCase() == 'paid',
+                isSuccess: rental.status.toLowerCase() == 'completed' ||
+                    rental.status.toLowerCase() == 'paid',
                 isRental: true,
-              ).animate().fadeIn(delay: (100 * index).ms).slideX(begin: 0.1, end: 0);
+              )
+                  .animate()
+                  .fadeIn(delay: (100 * index).ms)
+                  .slideX(begin: 0.1, end: 0);
             },
           );
         },
@@ -200,9 +234,12 @@ class RideHistoryScreen extends ConsumerWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.history_rounded, size: 64, color: AppColors.textMuted.withValues(alpha: 0.2)),
+          Icon(Icons.history_rounded,
+              size: 64, color: AppColors.textMuted.withValues(alpha: 0.2)),
           const SizedBox(height: 16),
-          Text(message, style: const TextStyle(color: AppColors.textSecondary, fontSize: 14)),
+          Text(message,
+              style: const TextStyle(
+                  color: AppColors.textSecondary, fontSize: 14)),
         ],
       ),
     );
@@ -225,7 +262,10 @@ class RideHistoryScreen extends ConsumerWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4)),
         ],
       ),
       child: Column(
@@ -255,14 +295,24 @@ class RideHistoryScreen extends ConsumerWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(type, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                      Text(type,
+                          style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary)),
                       const SizedBox(height: 4),
-                      Text(date, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                      Text(date,
+                          style: const TextStyle(
+                              fontSize: 12, color: AppColors.textSecondary)),
                     ],
                   ),
                 ],
               ),
-              Text(price, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+              Text(price,
+                  style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary)),
             ],
           ),
           const SizedBox(height: 16),
@@ -273,15 +323,20 @@ class RideHistoryScreen extends ConsumerWidget {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.directions_car_rounded, size: 14, color: AppColors.textSecondary),
+                  const Icon(Icons.directions_car_rounded,
+                      size: 14, color: AppColors.textSecondary),
                   const SizedBox(width: 4),
-                  Text(car, style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                  Text(car,
+                      style: const TextStyle(
+                          fontSize: 13, color: AppColors.textSecondary)),
                 ],
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: isSuccess ? AppColors.successGreen.withValues(alpha: 0.1) : AppColors.dangerRed.withValues(alpha: 0.1),
+                  color: isSuccess
+                      ? AppColors.successGreen.withValues(alpha: 0.1)
+                      : AppColors.dangerRed.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
@@ -289,7 +344,9 @@ class RideHistoryScreen extends ConsumerWidget {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
-                    color: isSuccess ? AppColors.successGreen : AppColors.dangerRed,
+                    color: isSuccess
+                        ? AppColors.successGreen
+                        : AppColors.dangerRed,
                   ),
                 ),
               ),
@@ -307,4 +364,3 @@ class RideHistoryScreen extends ConsumerWidget {
     );
   }
 }
-

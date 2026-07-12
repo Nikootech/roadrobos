@@ -7,7 +7,8 @@ class NavItemData {
   final IconData icon;
   final IconData activeIcon;
   final String label;
-  const NavItemData({required this.icon, required this.activeIcon, required this.label});
+  const NavItemData(
+      {required this.icon, required this.activeIcon, required this.label});
 }
 
 /// Premium Unified Driver Bottom Navigation Bar — Sliding Indicator Edition
@@ -66,14 +67,15 @@ class CustomBottomNavBar extends StatelessWidget {
                           // The Filled Wallet (wallet5) is more lopsided than the Unfilled Wallet (wallet).
                           // We apply a 7px shift only when active to maintain perfect centering across states.
                           offset: Offset(
-                            item.label == 'Earnings' 
-                                ? (isActive ? 7.0 : 0.0) 
-                                : 0.0, 
-                            0.0
-                          ),
+                              item.label == 'Earnings'
+                                  ? (isActive ? 7.0 : 0.0)
+                                  : 0.0,
+                              0.0),
                           child: Icon(
                             isActive ? item.activeIcon : item.icon,
-                            color: isActive ? AppColors.primaryBlue : Colors.grey.withValues(alpha: 0.8),
+                            color: isActive
+                                ? AppColors.primaryBlue
+                                : Colors.grey.withValues(alpha: 0.8),
                             size: 24,
                           ),
                         ),
@@ -85,7 +87,8 @@ class CustomBottomNavBar extends StatelessWidget {
                       item.label,
                       style: TextStyle(
                         fontSize: 10.5,
-                        fontWeight: isActive ? FontWeight.w900 : FontWeight.w600,
+                        fontWeight:
+                            isActive ? FontWeight.w900 : FontWeight.w600,
                         color: isActive ? AppColors.primaryBlue : Colors.grey,
                         letterSpacing: 0.1,
                       ),

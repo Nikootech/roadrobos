@@ -59,8 +59,10 @@ class DriverRidesScreen extends StatelessWidget {
                 ),
                 labelColor: AppColors.deepNavy,
                 unselectedLabelColor: AppColors.textSecondary,
-                labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
-                unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
+                labelStyle:
+                    const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                unselectedLabelStyle:
+                    const TextStyle(fontWeight: FontWeight.w500, fontSize: 13),
                 dividerColor: Colors.transparent,
                 indicatorSize: TabBarIndicatorSize.tab,
                 tabs: const [
@@ -131,10 +133,18 @@ class DriverRidesScreen extends StatelessWidget {
         bottomNavigationBar: CustomBottomNavBar(
           currentIndex: 2,
           items: const [
-            NavItemData(icon: Iconsax.home, activeIcon: Iconsax.home5, label: 'Home'),
-            NavItemData(icon: Iconsax.wallet, activeIcon: Iconsax.wallet5, label: 'Earnings'),
-            NavItemData(icon: Iconsax.star, activeIcon: Iconsax.star5, label: 'Ratings'),
-            NavItemData(icon: Iconsax.user, activeIcon: Iconsax.user, label: 'Account'),
+            NavItemData(
+                icon: Iconsax.home, activeIcon: Iconsax.home5, label: 'Home'),
+            NavItemData(
+                icon: Iconsax.wallet,
+                activeIcon: Iconsax.wallet5,
+                label: 'Earnings'),
+            NavItemData(
+                icon: Iconsax.star,
+                activeIcon: Iconsax.star5,
+                label: 'Ratings'),
+            NavItemData(
+                icon: Iconsax.user, activeIcon: Iconsax.user, label: 'Account'),
           ],
           onTap: (index) {
             if (index == 0) context.pushReplacement('/driver-home');
@@ -193,7 +203,8 @@ class DriverRidesScreen extends StatelessWidget {
                         shape: BoxShape.circle,
                       ),
                       child: const Center(
-                        child: Icon(Iconsax.user, color: AppColors.primaryBlue, size: 20),
+                        child: Icon(Iconsax.user,
+                            color: AppColors.primaryBlue, size: 20),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -239,9 +250,14 @@ class DriverRidesScreen extends StatelessWidget {
                   children: [
                     Column(
                       children: [
-                        const Icon(Icons.circle, color: AppColors.primaryBlue, size: 8),
-                        Container(width: 1.5, height: 28, color: AppColors.border.withValues(alpha: 0.5)),
-                        const Icon(Icons.location_on_rounded, color: AppColors.dangerRed, size: 14),
+                        const Icon(Icons.circle,
+                            color: AppColors.primaryBlue, size: 8),
+                        Container(
+                            width: 1.5,
+                            height: 28,
+                            color: AppColors.border.withValues(alpha: 0.5)),
+                        const Icon(Icons.location_on_rounded,
+                            color: AppColors.dangerRed, size: 14),
                       ],
                     ),
                     const SizedBox(width: 20),
@@ -251,14 +267,22 @@ class DriverRidesScreen extends StatelessWidget {
                         children: [
                           Text(
                             pickup,
-                            style: const TextStyle(fontSize: 14, color: AppColors.textPrimary, fontWeight: FontWeight.w600, letterSpacing: -0.2),
+                            style: const TextStyle(
+                                fontSize: 14,
+                                color: AppColors.textPrimary,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: -0.2),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: 18),
                           Text(
                             drop,
-                            style: const TextStyle(fontSize: 14, color: AppColors.textPrimary, fontWeight: FontWeight.w600, letterSpacing: -0.2),
+                            style: const TextStyle(
+                                fontSize: 14,
+                                color: AppColors.textPrimary,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: -0.2),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -268,11 +292,13 @@ class DriverRidesScreen extends StatelessWidget {
                     Column(
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 6),
                           decoration: BoxDecoration(
                             color: statusColor.withValues(alpha: 0.08),
                             borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: statusColor.withValues(alpha: 0.1)),
+                            border: Border.all(
+                                color: statusColor.withValues(alpha: 0.1)),
                           ),
                           child: Text(
                             status,

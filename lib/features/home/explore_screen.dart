@@ -30,12 +30,18 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
 
   String getCategoryRoute(String label) {
     switch (label.toLowerCase()) {
-      case 'repair': return '/select-service';
-      case 'rentals': return '/rentals-selection';
-      case 'ev service': return '/select-service';
-      case 'water service': return '/water-service-booking';
-      case 'logistics': return '/delivery-logistics';
-      default: return '/select-service';
+      case 'repair':
+        return '/select-service';
+      case 'rentals':
+        return '/rentals-selection';
+      case 'ev service':
+        return '/select-service';
+      case 'water service':
+        return '/water-service-booking';
+      case 'logistics':
+        return '/delivery-logistics';
+      default:
+        return '/select-service';
     }
   }
 
@@ -78,18 +84,22 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                   child: Row(
                     children: [
                       const SizedBox(width: 16),
-                      const Icon(Iconsax.search_normal, size: 18, color: AppColors.textMuted),
+                      const Icon(Iconsax.search_normal,
+                          size: 18, color: AppColors.textMuted),
                       const SizedBox(width: 12),
                       Expanded(
                         child: TextField(
                           controller: _searchController,
-                          onChanged: (value) => setState(() => _searchQuery = value.toLowerCase()),
-                          style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
+                          onChanged: (value) => setState(
+                              () => _searchQuery = value.toLowerCase()),
+                          style: const TextStyle(
+                              fontSize: 14, color: AppColors.textPrimary),
                           decoration: const InputDecoration(
                             filled: true,
                             fillColor: Colors.transparent,
                             hintText: 'Search all services...',
-                            hintStyle: TextStyle(fontSize: 14, color: AppColors.textMuted),
+                            hintStyle: TextStyle(
+                                fontSize: 14, color: AppColors.textMuted),
                             border: InputBorder.none,
                             enabledBorder: InputBorder.none,
                             focusedBorder: InputBorder.none,
@@ -106,7 +116,8 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                           },
                           child: const Padding(
                             padding: EdgeInsets.all(8.0),
-                            child: Icon(Icons.close_rounded, size: 18, color: AppColors.textMuted),
+                            child: Icon(Icons.close_rounded,
+                                size: 18, color: AppColors.textMuted),
                           ),
                         ),
                       Container(
@@ -134,7 +145,9 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
                 child: Text(
-                  _searchQuery.isEmpty ? 'Service Categories' : 'Results for "$_searchQuery"',
+                  _searchQuery.isEmpty
+                      ? 'Service Categories'
+                      : 'Results for "$_searchQuery"',
                   style: GoogleFonts.outfit(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
@@ -149,7 +162,10 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
               data: (categories) {
                 final filtered = _searchQuery.isEmpty
                     ? categories
-                    : categories.where((c) => c.label.toLowerCase().contains(_searchQuery)).toList();
+                    : categories
+                        .where(
+                            (c) => c.label.toLowerCase().contains(_searchQuery))
+                        .toList();
 
                 if (filtered.isEmpty) {
                   return SliverToBoxAdapter(
@@ -158,11 +174,17 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                         padding: const EdgeInsets.all(60),
                         child: Column(
                           children: [
-                            Icon(Iconsax.search_status, size: 48, color: AppColors.textMuted.withValues(alpha: 0.5)),
+                            Icon(Iconsax.search_status,
+                                size: 48,
+                                color:
+                                    AppColors.textMuted.withValues(alpha: 0.5)),
                             const SizedBox(height: 16),
                             Text(
-                              _searchQuery.isEmpty ? 'No categories found' : 'No services match "$_searchQuery"',
-                              style: const TextStyle(color: AppColors.textSecondary, fontSize: 15),
+                              _searchQuery.isEmpty
+                                  ? 'No categories found'
+                                  : 'No services match "$_searchQuery"',
+                              style: const TextStyle(
+                                  color: AppColors.textSecondary, fontSize: 15),
                             ),
                           ],
                         ),
@@ -174,7 +196,8 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                 return SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   sliver: SliverGrid(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
                       mainAxisSpacing: 12,
                       crossAxisSpacing: 12,
@@ -190,22 +213,56 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                         return GestureDetector(
                           onTap: () {
                             if (route == '/bike-service-booking') {
-                              final bikes = ref.read(allVehiclesProvider).where((v) => v.type == 'Bike' || v.type == 'EV Bike').toList();
-                              if (bikes.isNotEmpty) ref.read(vehicleProvider.notifier).setVehicle(bikes.first);
+                              final bikes = ref
+                                  .read(allVehiclesProvider)
+                                  .where((v) =>
+                                      v.type == 'Bike' || v.type == 'EV Bike')
+                                  .toList();
+                              if (bikes.isNotEmpty) {
+                                ref
+                                    .read(vehicleProvider.notifier)
+                                    .setVehicle(bikes.first);
+                              }
                             } else if (route == '/car-service-booking') {
-                              final cars = ref.read(allVehiclesProvider).where((v) => v.type == 'Car').toList();
-                              if (cars.isNotEmpty) ref.read(vehicleProvider.notifier).setVehicle(cars.first);
+                              final cars = ref
+                                  .read(allVehiclesProvider)
+                                  .where((v) => v.type == 'Car')
+                                  .toList();
+                              if (cars.isNotEmpty) {
+                                ref
+                                    .read(vehicleProvider.notifier)
+                                    .setVehicle(cars.first);
+                              }
                             } else if (route == '/ev-bike-service-booking') {
-                              final evBikes = ref.read(allVehiclesProvider).where((v) => v.type == 'EV Bike').toList();
+                              final evBikes = ref
+                                  .read(allVehiclesProvider)
+                                  .where((v) => v.type == 'EV Bike')
+                                  .toList();
                               if (evBikes.isNotEmpty) {
-                                ref.read(vehicleProvider.notifier).setVehicle(evBikes.first);
+                                ref
+                                    .read(vehicleProvider.notifier)
+                                    .setVehicle(evBikes.first);
                               } else {
-                                final bikes = ref.read(allVehiclesProvider).where((v) => v.type == 'Bike').toList();
-                                if (bikes.isNotEmpty) ref.read(vehicleProvider.notifier).setVehicle(bikes.first);
+                                final bikes = ref
+                                    .read(allVehiclesProvider)
+                                    .where((v) => v.type == 'Bike')
+                                    .toList();
+                                if (bikes.isNotEmpty) {
+                                  ref
+                                      .read(vehicleProvider.notifier)
+                                      .setVehicle(bikes.first);
+                                }
                               }
                             } else if (route == '/water-service-booking') {
-                              final cars = ref.read(allVehiclesProvider).where((v) => v.type == 'Car').toList();
-                              if (cars.isNotEmpty) ref.read(vehicleProvider.notifier).setVehicle(cars.first);
+                              final cars = ref
+                                  .read(allVehiclesProvider)
+                                  .where((v) => v.type == 'Car')
+                                  .toList();
+                              if (cars.isNotEmpty) {
+                                ref
+                                    .read(vehicleProvider.notifier)
+                                    .setVehicle(cars.first);
+                              }
                             }
                             context.push(route);
                           },
@@ -217,7 +274,8 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                                 end: Alignment.bottomRight,
                               ),
                               borderRadius: BorderRadius.circular(24),
-                              border: Border.all(color: theme.primary.withValues(alpha: 0.12)),
+                              border: Border.all(
+                                  color: theme.primary.withValues(alpha: 0.12)),
                               boxShadow: [
                                 BoxShadow(
                                   color: theme.primary.withValues(alpha: 0.04),
@@ -232,18 +290,21 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Container(
                                       width: 44,
                                       height: 44,
                                       decoration: BoxDecoration(
-                                        color: Colors.white.withValues(alpha: 0.8),
+                                        color:
+                                            Colors.white.withValues(alpha: 0.8),
                                         borderRadius: BorderRadius.circular(14),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: theme.primary.withValues(alpha: 0.12),
+                                            color: theme.primary
+                                                .withValues(alpha: 0.12),
                                             blurRadius: 6,
                                             offset: const Offset(0, 2),
                                           ),
@@ -257,7 +318,8 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                                     ),
                                     Icon(
                                       Icons.arrow_forward_ios_rounded,
-                                      color: theme.primary.withValues(alpha: 0.4),
+                                      color:
+                                          theme.primary.withValues(alpha: 0.4),
                                       size: 14,
                                     ),
                                   ],
@@ -276,9 +338,11 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                                     ),
                                     const SizedBox(height: 6),
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 8, vertical: 4),
                                       decoration: BoxDecoration(
-                                        color: theme.primary.withValues(alpha: 0.08),
+                                        color: theme.primary
+                                            .withValues(alpha: 0.08),
                                         borderRadius: BorderRadius.circular(20),
                                       ),
                                       child: Text(
@@ -295,15 +359,29 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                               ],
                             ),
                           ),
-                        ).animate(delay: Duration(milliseconds: 100 * index)).fadeIn(duration: 400.ms).scale(begin: const Offset(0.95, 0.95), end: const Offset(1.0, 1.0), duration: 400.ms);
+                        )
+                            .animate(delay: Duration(milliseconds: 100 * index))
+                            .fadeIn(duration: 400.ms)
+                            .scale(
+                                begin: const Offset(0.95, 0.95),
+                                end: const Offset(1.0, 1.0),
+                                duration: 400.ms);
                       },
                       childCount: filtered.length,
                     ),
                   ),
                 );
               },
-              loading: () => const SliverToBoxAdapter(child: Center(child: Padding(padding: EdgeInsets.all(40), child: CircularProgressIndicator()))),
-              error: (err, stack) => SliverToBoxAdapter(child: Center(child: Padding(padding: const EdgeInsets.all(40), child: Text('Error: $err')))),
+              loading: () => const SliverToBoxAdapter(
+                  child: Center(
+                      child: Padding(
+                          padding: EdgeInsets.all(40),
+                          child: CircularProgressIndicator()))),
+              error: (err, stack) => SliverToBoxAdapter(
+                  child: Center(
+                      child: Padding(
+                          padding: const EdgeInsets.all(40),
+                          child: Text('Error: $err')))),
             ),
 
             const SliverToBoxAdapter(

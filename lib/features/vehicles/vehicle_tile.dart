@@ -109,10 +109,12 @@ class VehicleTile extends ConsumerWidget {
                                     vertical: 2,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: AppColors.brandGreen.withValues(alpha: 0.1),
+                                    color: AppColors.brandGreen
+                                        .withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(6),
                                     border: Border.all(
-                                      color: AppColors.brandGreen.withValues(alpha: 0.2),
+                                      color: AppColors.brandGreen
+                                          .withValues(alpha: 0.2),
                                     ),
                                   ),
                                   child: const Text(
@@ -162,7 +164,8 @@ class VehicleTile extends ConsumerWidget {
                             value: 'primary',
                             child: Row(
                               children: [
-                                Icon(Icons.star_rounded, size: 20, color: AppColors.accentAmber),
+                                Icon(Icons.star_rounded,
+                                    size: 20, color: AppColors.accentAmber),
                                 SizedBox(width: 8),
                                 Text('Set as primary'),
                               ],
@@ -172,7 +175,8 @@ class VehicleTile extends ConsumerWidget {
                           value: 'edit',
                           child: Row(
                             children: [
-                              Icon(Icons.edit_rounded, size: 20, color: AppColors.textSecondary),
+                              Icon(Icons.edit_rounded,
+                                  size: 20, color: AppColors.textSecondary),
                               SizedBox(width: 8),
                               Text('Edit'),
                             ],
@@ -182,9 +186,11 @@ class VehicleTile extends ConsumerWidget {
                           value: 'delete',
                           child: Row(
                             children: [
-                              Icon(Icons.delete_outline_rounded, size: 20, color: AppColors.dangerRed),
+                              Icon(Icons.delete_outline_rounded,
+                                  size: 20, color: AppColors.dangerRed),
                               SizedBox(width: 8),
-                              Text('Delete', style: TextStyle(color: AppColors.dangerRed)),
+                              Text('Delete',
+                                  style: TextStyle(color: AppColors.dangerRed)),
                             ],
                           ),
                         ),

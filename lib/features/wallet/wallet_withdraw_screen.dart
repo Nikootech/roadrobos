@@ -14,7 +14,8 @@ class WalletWithdrawScreen extends ConsumerStatefulWidget {
   const WalletWithdrawScreen({super.key});
 
   @override
-  ConsumerState<WalletWithdrawScreen> createState() => _WalletWithdrawScreenState();
+  ConsumerState<WalletWithdrawScreen> createState() =>
+      _WalletWithdrawScreenState();
 }
 
 class _WalletWithdrawScreenState extends ConsumerState<WalletWithdrawScreen> {
@@ -43,7 +44,8 @@ class _WalletWithdrawScreenState extends ConsumerState<WalletWithdrawScreen> {
 
     if (bankDetails.isEmpty || amount == null || amount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter valid bank details and amount')),
+        const SnackBar(
+            content: Text('Please enter valid bank details and amount')),
       );
       return;
     }
@@ -53,17 +55,23 @@ class _WalletWithdrawScreenState extends ConsumerState<WalletWithdrawScreen> {
 
     setState(() => _isLoading = true);
     try {
-      final success = await ref.read(walletRepositoryProvider).withdrawFunds(user.id, amount, bankDetails);
+      final success = await ref
+          .read(walletRepositoryProvider)
+          .withdrawFunds(user.id, amount, bankDetails);
       if (success) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Withdrawal request successful!'), backgroundColor: AppColors.successGreen),
+          const SnackBar(
+              content: Text('Withdrawal request successful!'),
+              backgroundColor: AppColors.successGreen),
         );
         context.pop();
       } else {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Insufficient funds'), backgroundColor: AppColors.dangerRed),
+          const SnackBar(
+              content: Text('Insufficient funds'),
+              backgroundColor: AppColors.dangerRed),
         );
       }
     } on InsufficientBalanceException catch (_) {
@@ -77,7 +85,8 @@ class _WalletWithdrawScreenState extends ConsumerState<WalletWithdrawScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString()), backgroundColor: AppColors.dangerRed),
+        SnackBar(
+            content: Text(e.toString()), backgroundColor: AppColors.dangerRed),
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -92,12 +101,14 @@ class _WalletWithdrawScreenState extends ConsumerState<WalletWithdrawScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textPrimary),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded,
+              color: AppColors.textPrimary),
           onPressed: () => context.pop(),
         ),
         title: Text(
           'Withdraw to Bank',
-          style: GoogleFonts.outfit(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+          style: GoogleFonts.outfit(
+              color: AppColors.textPrimary, fontWeight: FontWeight.bold),
         ),
       ),
       body: Padding(
@@ -105,7 +116,8 @@ class _WalletWithdrawScreenState extends ConsumerState<WalletWithdrawScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Bank Account / UPI ID', style: GoogleFonts.outfit(fontWeight: FontWeight.w600)),
+            Text('Bank Account / UPI ID',
+                style: GoogleFonts.outfit(fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
             TextField(
               controller: _bankDetailsController,
@@ -114,22 +126,30 @@ class _WalletWithdrawScreenState extends ConsumerState<WalletWithdrawScreen> {
                 hintText: 'e.g. name@upi or Account Number',
                 filled: true,
                 fillColor: Colors.white,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none),
               ),
             ),
             const SizedBox(height: 24),
-            Text('Amount (₹)', style: GoogleFonts.outfit(fontWeight: FontWeight.w600)),
+            Text('Amount (₹)',
+                style: GoogleFonts.outfit(fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
             TextField(
               controller: _amountController,
               style: const TextStyle(color: AppColors.textPrimary),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))],
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))
+              ],
               decoration: InputDecoration(
                 hintText: '0.00',
                 filled: true,
                 fillColor: Colors.white,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none),
               ),
             ),
             const Spacer(),
@@ -138,11 +158,20 @@ class _WalletWithdrawScreenState extends ConsumerState<WalletWithdrawScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryBlue,
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
               ),
               child: _isLoading
-                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                  : Text('Request Withdrawal', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                          color: Colors.white, strokeWidth: 2))
+                  : Text('Request Withdrawal',
+                      style: GoogleFonts.outfit(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white)),
             ),
             const SizedBox(height: 24),
           ],

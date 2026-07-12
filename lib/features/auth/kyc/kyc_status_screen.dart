@@ -28,10 +28,13 @@ class KycStatusScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.bgLightGrey,
       appBar: AppBar(
-        title: const Text('KYC Status', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
+        title: const Text('KYC Status',
+            style: TextStyle(
+                color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 0,
-        automaticallyImplyLeading: false, // Prevent going back to unauthorized routes
+        automaticallyImplyLeading:
+            false, // Prevent going back to unauthorized routes
         actions: [
           IconButton(
             icon: const Icon(Icons.logout, color: AppColors.textPrimary),
@@ -44,12 +47,13 @@ class KycStatusScreen extends ConsumerWidget {
       body: StreamBuilder<List<Map<String, dynamic>>>(
         stream: ref.read(kycRepositoryProvider).streamKycUpdates(userId),
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
+          if (snapshot.connectionState == ConnectionState.waiting &&
+              !snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
 
           final docs = snapshot.data ?? [];
-          
+
           if (docs.isEmpty) {
             return Center(
               child: Padding(
@@ -57,11 +61,17 @@ class KycStatusScreen extends ConsumerWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.assignment_ind_outlined, size: 80, color: AppColors.textMuted),
+                    const Icon(Icons.assignment_ind_outlined,
+                        size: 80, color: AppColors.textMuted),
                     const SizedBox(height: 16),
-                    const Text('No documents uploaded', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                    const Text('No documents uploaded',
+                        style: TextStyle(
+                            fontSize: 20, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
-                    const Text('Please upload your KYC documents to activate your driver account.', textAlign: TextAlign.center, style: TextStyle(color: AppColors.textSecondary)),
+                    const Text(
+                        'Please upload your KYC documents to activate your driver account.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: AppColors.textSecondary)),
                     const SizedBox(height: 32),
                     CustomButton(
                       label: 'START KYC',
@@ -73,7 +83,8 @@ class KycStatusScreen extends ConsumerWidget {
             );
           }
 
-          final allApproved = docs.length >= 4 && docs.every((doc) => doc['status'] == 'approved');
+          final allApproved = docs.length >= 4 &&
+              docs.every((doc) => doc['status'] == 'approved');
           final profileApproved = userState.user?.kycStatus == 'approved';
 
           return SingleChildScrollView(
@@ -91,15 +102,24 @@ class KycStatusScreen extends ConsumerWidget {
                     ),
                     child: const Row(
                       children: [
-                        Icon(Icons.check_circle, color: AppColors.brandGreen, size: 32),
+                        Icon(Icons.check_circle,
+                            color: AppColors.brandGreen, size: 32),
                         SizedBox(width: 16),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Verification Complete', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.brandGreen)),
+                              Text('Verification Complete',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                      color: AppColors.brandGreen)),
                               SizedBox(height: 4),
-                              Text('Your account has been fully verified. You can now access the dashboard.', style: TextStyle(fontSize: 13, color: AppColors.textPrimary)),
+                              Text(
+                                  'Your account has been fully verified. You can now access the dashboard.',
+                                  style: TextStyle(
+                                      fontSize: 13,
+                                      color: AppColors.textPrimary)),
                             ],
                           ),
                         ),
@@ -111,7 +131,10 @@ class KycStatusScreen extends ConsumerWidget {
                     label: 'ENTER DASHBOARD',
                     onPressed: () {
                       // Profile provider needs to be refreshed so router passes the guard
-                      ref.read(userProvider.notifier).fetchUserProfile(userId).then((_) {
+                      ref
+                          .read(userProvider.notifier)
+                          .fetchUserProfile(userId)
+                          .then((_) {
                         if (context.mounted) {
                           context.go('/driver-home');
                         }
@@ -120,13 +143,14 @@ class KycStatusScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 32),
                 ],
-
                 const Text(
                   'Uploaded Documents',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                  style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary),
                 ),
                 const SizedBox(height: 16),
-
                 ...docs.map((doc) => _buildStatusCard(context, doc)),
               ],
             ),
@@ -140,10 +164,10 @@ class KycStatusScreen extends ConsumerWidget {
     final status = doc['status'] as String? ?? 'pending';
     final type = doc['document_type'] as String? ?? 'Unknown';
     final rejectionReason = doc['rejection_reason'] as String?;
-    
+
     Color statusColor = AppColors.warningAmber;
     IconData statusIcon = Icons.hourglass_top;
-    
+
     if (status == 'approved') {
       statusColor = AppColors.brandGreen;
       statusIcon = Icons.check_circle;
@@ -174,7 +198,9 @@ class KycStatusScreen extends ConsumerWidget {
               Icon(statusIcon, color: statusColor),
               const SizedBox(width: 12),
               Expanded(
-                child: Text(readableType, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                child: Text(readableType,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 16)),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -184,7 +210,10 @@ class KycStatusScreen extends ConsumerWidget {
                 ),
                 child: Text(
                   status.toUpperCase(),
-                  style: TextStyle(color: statusColor, fontSize: 12, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                      color: statusColor,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold),
                 ),
               ),
             ],
@@ -196,14 +225,22 @@ class KycStatusScreen extends ConsumerWidget {
               decoration: BoxDecoration(
                 color: AppColors.errorRed.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppColors.errorRed.withValues(alpha: 0.2)),
+                border: Border.all(
+                    color: AppColors.errorRed.withValues(alpha: 0.2)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Rejection Reason:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.errorRed)),
+                  const Text('Rejection Reason:',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                          color: AppColors.errorRed)),
                   const SizedBox(height: 4),
-                  Text(rejectionReason ?? 'Document unclear or invalid. Please re-upload.', style: const TextStyle(fontSize: 13)),
+                  Text(
+                      rejectionReason ??
+                          'Document unclear or invalid. Please re-upload.',
+                      style: const TextStyle(fontSize: 13)),
                   const SizedBox(height: 12),
                   SizedBox(
                     width: double.infinity,

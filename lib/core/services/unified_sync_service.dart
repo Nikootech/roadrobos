@@ -37,7 +37,8 @@ class UnifiedSyncService {
   final SupabaseClient _supabase;
   final Mutex _mutex = Mutex();
 
-  UnifiedSyncService(AppDatabase db, this._ref, {SupabaseClient? supabaseClient})
+  UnifiedSyncService(AppDatabase db, this._ref,
+      {SupabaseClient? supabaseClient})
       : _db = db,
         _supabase = supabaseClient ?? Supabase.instance.client {
     _startConnectivityListener();
@@ -50,7 +51,9 @@ class UnifiedSyncService {
 
   void _startConnectivityListener() {
     // Listen to network changes and trigger sync
-    final subscription = Connectivity().onConnectivityChanged.listen((List<ConnectivityResult> results) {
+    final subscription = Connectivity()
+        .onConnectivityChanged
+        .listen((List<ConnectivityResult> results) {
       if (results.any((result) => result != ConnectivityResult.none)) {
         // ignore: unawaited_futures
         processQueue();
@@ -87,13 +90,13 @@ class UnifiedSyncService {
     }
 
     await db.into(db.syncQueue).insert(
-      SyncQueueCompanion.insert(
-        idempotencyKey: key,
-        entityType: entityType,
-        action: action,
-        payload: jsonEncode(payload),
-      ),
-    );
+          SyncQueueCompanion.insert(
+            idempotencyKey: key,
+            entityType: entityType,
+            action: action,
+            payload: jsonEncode(payload),
+          ),
+        );
 
     // Process queue asynchronously
     // ignore: unawaited_futures
@@ -112,13 +115,16 @@ class UnifiedSyncService {
     await _mutex.protect(() async {
       try {
         final pending = await (db.select(db.syncQueue)
-              ..where((t) => t.nextRetryAt.isNull() | t.nextRetryAt.isSmallerOrEqualValue(DateTime.now()))
+              ..where((t) =>
+                  t.nextRetryAt.isNull() |
+                  t.nextRetryAt.isSmallerOrEqualValue(DateTime.now()))
               ..orderBy([(t) => OrderingTerm(expression: t.createdAt)]))
             .get();
 
         if (pending.isEmpty) return;
 
-        debugPrint('UnifiedSyncService: Processing ${pending.length} pending actions...');
+        debugPrint(
+            'UnifiedSyncService: Processing ${pending.length} pending actions...');
 
         for (final task in pending) {
           try {
@@ -126,44 +132,54 @@ class UnifiedSyncService {
             await _dispatch(task, payload);
 
             // Success: delete record
-            await (db.delete(db.syncQueue)..where((t) => t.id.equals(task.id))).go();
-            debugPrint('UnifiedSyncService: Successfully processed and deleted task ${task.id}');
-            
+            await (db.delete(db.syncQueue)..where((t) => t.id.equals(task.id)))
+                .go();
+            debugPrint(
+                'UnifiedSyncService: Successfully processed and deleted task ${task.id}');
+
             // Show global success snackbar if applicable
             _showSuccessSnackbarForTask(task.entityType);
           } catch (e) {
-            debugPrint('UnifiedSyncService: Failed to process task ${task.id}: $e');
+            debugPrint(
+                'UnifiedSyncService: Failed to process task ${task.id}: $e');
             final newAttempts = task.attempts + 1;
 
             if (newAttempts >= 5) {
               // Move to dead letter queue
               await db.into(db.deadLetterQueue).insert(
-                DeadLetterQueueCompanion.insert(
-                  idempotencyKey: task.idempotencyKey,
-                  entityType: task.entityType,
-                  action: task.action,
-                  payload: task.payload,
-                  createdAt: task.createdAt,
-                  attempts: newAttempts,
-                  error: Value(e.toString()),
-                ),
-              );
+                    DeadLetterQueueCompanion.insert(
+                      idempotencyKey: task.idempotencyKey,
+                      entityType: task.entityType,
+                      action: task.action,
+                      payload: task.payload,
+                      createdAt: task.createdAt,
+                      attempts: newAttempts,
+                      error: Value(e.toString()),
+                    ),
+                  );
               // Delete from sync queue
-              await (db.delete(db.syncQueue)..where((t) => t.id.equals(task.id))).go();
-              debugPrint('UnifiedSyncService: Task ${task.id} exceeded max retries. Moved to Dead Letter Queue.');
+              await (db.delete(db.syncQueue)
+                    ..where((t) => t.id.equals(task.id)))
+                  .go();
+              debugPrint(
+                  'UnifiedSyncService: Task ${task.id} exceeded max retries. Moved to Dead Letter Queue.');
             } else {
               // Exponential backoff
               int backoffMinutes = math.pow(2, newAttempts).toInt();
               if (backoffMinutes > 32) backoffMinutes = 32;
-              final nextRetry = DateTime.now().add(Duration(minutes: backoffMinutes));
+              final nextRetry =
+                  DateTime.now().add(Duration(minutes: backoffMinutes));
 
-              await (db.update(db.syncQueue)..where((t) => t.id.equals(task.id))).write(
+              await (db.update(db.syncQueue)
+                    ..where((t) => t.id.equals(task.id)))
+                  .write(
                 SyncQueueCompanion(
                   attempts: Value(newAttempts),
                   nextRetryAt: Value(nextRetry),
                 ),
               );
-              debugPrint('UnifiedSyncService: Scheduled retry for task ${task.id} in $backoffMinutes minutes.');
+              debugPrint(
+                  'UnifiedSyncService: Scheduled retry for task ${task.id} in $backoffMinutes minutes.');
             }
           }
         }
@@ -174,7 +190,8 @@ class UnifiedSyncService {
   }
 
   /// Dispatcher pattern mapping actions by entityType
-  Future<void> _dispatch(SyncQueueData task, Map<String, dynamic> payload) async {
+  Future<void> _dispatch(
+      SyncQueueData task, Map<String, dynamic> payload) async {
     switch (task.entityType) {
       case 'technician_job':
         await _processTechnicianJob(task.action, payload);
@@ -218,15 +235,19 @@ class UnifiedSyncService {
     if (message != null) {
       final context = rootNavigatorKey.currentContext;
       if (context != null) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(message)));
       }
     }
   }
 
-  Future<void> _processTechnicianJob(String action, Map<String, dynamic> payload) async {
+  Future<void> _processTechnicianJob(
+      String action, Map<String, dynamic> payload) async {
     switch (action) {
       case 'update_job_status':
-        await _supabase.from('technician_jobs').update({'status': payload['status']}).eq('id', payload['jobId']);
+        await _supabase
+            .from('technician_jobs')
+            .update({'status': payload['status']}).eq('id', payload['jobId']);
         break;
       case 'update_vehicle_details':
         await _supabase.from('technician_jobs').update({
@@ -235,7 +256,8 @@ class UnifiedSyncService {
         }).eq('id', payload['jobId']);
         break;
       case 'update_job_progress':
-        await _supabase.from('technician_jobs').update({'progress': payload['progress']}).eq('id', payload['jobId']);
+        await _supabase.from('technician_jobs').update(
+            {'progress': payload['progress']}).eq('id', payload['jobId']);
         break;
       case 'toggle_checklist':
         await _supabase.from('technician_jobs').update({
@@ -253,7 +275,8 @@ class UnifiedSyncService {
     }
   }
 
-  Future<void> _processProfile(String action, Map<String, dynamic> payload) async {
+  Future<void> _processProfile(
+      String action, Map<String, dynamic> payload) async {
     switch (action) {
       case 'update_profile':
         final userRepo = _ref.read(userRepositoryProvider);
@@ -265,7 +288,8 @@ class UnifiedSyncService {
     }
   }
 
-  Future<void> _processRideBooking(String action, Map<String, dynamic> payload) async {
+  Future<void> _processRideBooking(
+      String action, Map<String, dynamic> payload) async {
     switch (action) {
       case 'book_ride':
         final rideRepo = _ref.read(rideBookingRepositoryProvider);
@@ -277,7 +301,8 @@ class UnifiedSyncService {
     }
   }
 
-  Future<void> _processServiceBooking(String action, Map<String, dynamic> payload) async {
+  Future<void> _processServiceBooking(
+      String action, Map<String, dynamic> payload) async {
     switch (action) {
       case 'create_service_booking':
         final serviceRepo = _ref.read(serviceBookingRepositoryProvider);
@@ -286,7 +311,8 @@ class UnifiedSyncService {
         break;
       case 'update_service_status':
         final serviceRepo = _ref.read(serviceBookingRepositoryProvider);
-        await serviceRepo.updateServiceStatus(payload['bookingId'], payload['status']);
+        await serviceRepo.updateServiceStatus(
+            payload['bookingId'], payload['status']);
         break;
       default:
         throw Exception('Unknown service_booking action: $action');
@@ -294,17 +320,24 @@ class UnifiedSyncService {
   }
 
   /// Handles offline rental booking sync.
-  Future<void> _processRentalBooking(String action, Map<String, dynamic> payload) async {
-    await _ref.read(rentalBookingRepositoryProvider).syncRentalBooking(action, payload);
+  Future<void> _processRentalBooking(
+      String action, Map<String, dynamic> payload) async {
+    await _ref
+        .read(rentalBookingRepositoryProvider)
+        .syncRentalBooking(action, payload);
   }
 
   /// Handles offline wallet transaction sync.
-  Future<void> _processWalletTransaction(String action, Map<String, dynamic> payload) async {
+  Future<void> _processWalletTransaction(
+      String action, Map<String, dynamic> payload) async {
     await _ref.read(walletRepositoryProvider).syncTransaction(action, payload);
   }
 
   /// Handles offline delivery order sync.
-  Future<void> _processDeliveryOrder(String action, Map<String, dynamic> payload) async {
-    await _ref.read(deliveryRepositoryProvider).syncDeliveryOrder(action, payload);
+  Future<void> _processDeliveryOrder(
+      String action, Map<String, dynamic> payload) async {
+    await _ref
+        .read(deliveryRepositoryProvider)
+        .syncDeliveryOrder(action, payload);
   }
 }

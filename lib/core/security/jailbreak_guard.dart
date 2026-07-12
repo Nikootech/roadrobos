@@ -23,7 +23,8 @@ class JailbreakGuard {
     try {
       _isCompromised = await FlutterJailbreakDetection.jailbroken;
     } catch (e, stack) {
-      debugPrint('Jailbreak detection failed, defaulting to false. Error: $e\n$stack');
+      debugPrint(
+          'Jailbreak detection failed, defaulting to false. Error: $e\n$stack');
       _isCompromised = false;
     }
     return _isCompromised;

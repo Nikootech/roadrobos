@@ -17,12 +17,16 @@ class FareBreakdownScreen extends StatelessWidget {
         leading: GestureDetector(
           onTap: () => context.pop(),
           child: const Center(
-            child: Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: AppColors.textPrimary),
+            child: Icon(Icons.arrow_back_ios_new_rounded,
+                size: 18, color: AppColors.textPrimary),
           ),
         ),
         title: const Text(
           'Fare Breakdown',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+          style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary),
         ),
       ),
       body: Padding(
@@ -35,7 +39,10 @@ class FareBreakdownScreen extends StatelessWidget {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 20, offset: const Offset(0, 10)),
+                  BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10)),
                 ],
               ),
               child: Column(
@@ -48,7 +55,8 @@ class FareBreakdownScreen extends StatelessWidget {
                   _buildFareRow('Total Amount', '₹219.75', isTotal: true),
                 ],
               ),
-            ).animate().fadeIn().scale(begin: const Offset(0.95, 0.95), end: const Offset(1.0, 1.0)),
+            ).animate().fadeIn().scale(
+                begin: const Offset(0.95, 0.95), end: const Offset(1.0, 1.0)),
             const Spacer(),
             Container(
               padding: const EdgeInsets.all(20),
@@ -64,8 +72,14 @@ class FareBreakdownScreen extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Payment Method', style: TextStyle(fontSize: 12, color: Colors.white70)),
-                        Text('RoAdRoBos Wallet', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white)),
+                        Text('Payment Method',
+                            style:
+                                TextStyle(fontSize: 12, color: Colors.white70)),
+                        Text('RoAdRoBos Wallet',
+                            style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white)),
                       ],
                     ),
                   ),
@@ -112,4 +126,3 @@ class FareBreakdownScreen extends StatelessWidget {
     );
   }
 }
-

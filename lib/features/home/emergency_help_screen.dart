@@ -41,12 +41,16 @@ class _EmergencyHelpScreenState extends State<EmergencyHelpScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: AppColors.textPrimary),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded,
+              size: 18, color: AppColors.textPrimary),
           onPressed: () => context.pop(),
         ),
         title: const Text(
           'Emergency Assistance',
-          style: TextStyle(color: AppColors.deepNavy, fontWeight: FontWeight.w900, fontSize: 18),
+          style: TextStyle(
+              color: AppColors.deepNavy,
+              fontWeight: FontWeight.w900,
+              fontSize: 18),
         ),
       ),
       body: SingleChildScrollView(
@@ -67,15 +71,20 @@ class _EmergencyHelpScreenState extends State<EmergencyHelpScreen> {
                 children: [
                   const Text(
                     'In Case of Emergency',
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppColors.deepNavy),
+                    style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.deepNavy),
                   ),
                   const SizedBox(height: 8),
                   const Text(
                     'Press the button below for immediate help',
-                    style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w500),
+                    style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w500),
                   ),
                   const SizedBox(height: 48),
-                  
+
                   // SOS Pulsing Button
                   GestureDetector(
                     onTap: _triggerSos,
@@ -90,14 +99,19 @@ class _EmergencyHelpScreenState extends State<EmergencyHelpScreen> {
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: AppColors.dangerRed.withValues(alpha: 0.1 - (i * 0.03)),
+                                color: AppColors.dangerRed
+                                    .withValues(alpha: 0.1 - (i * 0.03)),
                                 width: 2,
                               ),
                             ),
-                          ).animate(onPlay: (c) => c.repeat())
-                           .scale(begin: const Offset(1, 1), end: const Offset(1.2, 1.2), duration: (1000 + i * 200).ms)
-                           .fadeOut(),
-                        
+                          )
+                              .animate(onPlay: (c) => c.repeat())
+                              .scale(
+                                  begin: const Offset(1, 1),
+                                  end: const Offset(1.2, 1.2),
+                                  duration: (1000 + i * 200).ms)
+                              .fadeOut(),
+
                         Container(
                           width: 140,
                           height: 140,
@@ -110,7 +124,8 @@ class _EmergencyHelpScreenState extends State<EmergencyHelpScreen> {
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.dangerRed.withValues(alpha: 0.4),
+                                color:
+                                    AppColors.dangerRed.withValues(alpha: 0.4),
                                 blurRadius: 30,
                                 offset: const Offset(0, 10),
                               ),
@@ -119,15 +134,22 @@ class _EmergencyHelpScreenState extends State<EmergencyHelpScreen> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(Icons.flash_on_rounded, color: Colors.white, size: 32),
+                              const Icon(Icons.flash_on_rounded,
+                                  color: Colors.white, size: 32),
                               const SizedBox(height: 4),
                               Text(
                                 _isSosTriggered ? 'ACTIVE' : 'SOS',
-                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 24, letterSpacing: 1),
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 24,
+                                    letterSpacing: 1),
                               ),
                             ],
                           ),
-                        ).animate(target: _isSosTriggered ? 1 : 0).shimmer(duration: 1000.ms),
+                        )
+                            .animate(target: _isSosTriggered ? 1 : 0)
+                            .shimmer(duration: 1000.ms),
                       ],
                     ),
                   ),
@@ -140,9 +162,13 @@ class _EmergencyHelpScreenState extends State<EmergencyHelpScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Select Help Category', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.textPrimary)),
+                  const Text('Select Help Category',
+                      style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.textPrimary)),
                   const SizedBox(height: 20),
-                  
+
                   GridView.count(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
@@ -151,62 +177,88 @@ class _EmergencyHelpScreenState extends State<EmergencyHelpScreen> {
                     mainAxisSpacing: 16,
                     childAspectRatio: 1.3,
                     children: [
-                      _buildCategoryCard('Accident', Iconsax.danger, Colors.orange),
-                      _buildCategoryCard('Breakdown', Iconsax.setting_2, AppColors.primaryBlue),
-                      _buildCategoryCard('Medical', Icons.emergency_rounded, AppColors.dangerRed),
-                      _buildCategoryCard('Security', Iconsax.shield_security, Colors.green),
+                      _buildCategoryCard(
+                          'Accident', Iconsax.danger, Colors.orange),
+                      _buildCategoryCard('Breakdown', Iconsax.setting_2,
+                          AppColors.primaryBlue),
+                      _buildCategoryCard('Medical', Icons.emergency_rounded,
+                          AppColors.dangerRed),
+                      _buildCategoryCard(
+                          'Security', Iconsax.shield_security, Colors.green),
                     ],
                   ),
-                  
+
                   const SizedBox(height: 40),
-                  
+
                   // Live Location Card
-                  const Text('Current Location', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.textPrimary)),
+                  const Text('Current Location',
+                      style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.textPrimary)),
                   const SizedBox(height: 16),
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       color: AppColors.bgLightGrey,
                       borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+                      border: Border.all(
+                          color: AppColors.border.withValues(alpha: 0.5)),
                     ),
                     child: Row(
                       children: [
                         Container(
                           padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
-                          child: const Icon(Icons.location_on_rounded, color: AppColors.dangerRed, size: 24),
+                          decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16)),
+                          child: const Icon(Icons.location_on_rounded,
+                              color: AppColors.dangerRed, size: 24),
                         ),
                         const SizedBox(width: 16),
                         const Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('12th Main, Indiranagar', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: AppColors.textPrimary)),
-                              Text('Bengaluru, KA 560038', style: TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w500)),
+                              Text('12th Main, Indiranagar',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 15,
+                                      color: AppColors.textPrimary)),
+                              Text('Bengaluru, KA 560038',
+                                  style: TextStyle(
+                                      color: AppColors.textSecondary,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500)),
                             ],
                           ),
                         ),
                         Container(
                           padding: const EdgeInsets.all(10),
-                          decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                          child: const Icon(Iconsax.refresh, size: 18, color: AppColors.primaryBlue),
+                          decoration: const BoxDecoration(
+                              color: Colors.white, shape: BoxShape.circle),
+                          child: const Icon(Iconsax.refresh,
+                              size: 18, color: AppColors.primaryBlue),
                         ),
                       ],
                     ),
                   ),
 
                   const SizedBox(height: 40),
-                  
+
                   // Contact Buttons
                   Row(
                     children: [
                       Expanded(
-                        child: _buildContactButton('POLICE (100)', Icons.local_police_rounded, AppColors.deepNavy),
+                        child: _buildContactButton('POLICE (100)',
+                            Icons.local_police_rounded, AppColors.deepNavy),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
-                        child: _buildContactButton('AMBULANCE', Icons.medical_services_rounded, AppColors.dangerRed),
+                        child: _buildContactButton(
+                            'AMBULANCE',
+                            Icons.medical_services_rounded,
+                            AppColors.dangerRed),
                       ),
                     ],
                   ),
@@ -236,7 +288,10 @@ class _EmergencyHelpScreenState extends State<EmergencyHelpScreen> {
             width: 2,
           ),
           boxShadow: [
-            BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4)),
+            BoxShadow(
+                color: Colors.black.withValues(alpha: 0.02),
+                blurRadius: 10,
+                offset: const Offset(0, 4)),
           ],
         ),
         child: Column(
@@ -244,7 +299,11 @@ class _EmergencyHelpScreenState extends State<EmergencyHelpScreen> {
           children: [
             Icon(icon, color: color, size: 28),
             const SizedBox(height: 8),
-            Text(title, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: isSelected ? color : AppColors.textPrimary)),
+            Text(title,
+                style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                    color: isSelected ? color : AppColors.textPrimary)),
           ],
         ),
       ),
@@ -258,7 +317,10 @@ class _EmergencyHelpScreenState extends State<EmergencyHelpScreen> {
         color: color,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(color: color.withValues(alpha: 0.3), blurRadius: 15, offset: const Offset(0, 8)),
+          BoxShadow(
+              color: color.withValues(alpha: 0.3),
+              blurRadius: 15,
+              offset: const Offset(0, 8)),
         ],
       ),
       child: Row(
@@ -266,7 +328,12 @@ class _EmergencyHelpScreenState extends State<EmergencyHelpScreen> {
         children: [
           Icon(icon, color: Colors.white, size: 18),
           const SizedBox(width: 10),
-          Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 0.5)),
+          Text(label,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 13,
+                  letterSpacing: 0.5)),
         ],
       ),
     );

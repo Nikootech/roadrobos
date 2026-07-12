@@ -12,12 +12,10 @@ class CachedProfiles extends Table {
   TextColumn get id => text()();
   TextColumn get name => text()();
   // PII columns — encrypted before SQLite write, decrypted on read
-  TextColumn get email =>
-      text().nullable().map(
+  TextColumn get email => text().nullable().map(
         const NullAwareTypeConverter.wrap(EncryptedStringConverter()),
       )();
-  TextColumn get phone =>
-      text().map(const EncryptedStringConverter())();
+  TextColumn get phone => text().map(const EncryptedStringConverter())();
   TextColumn get role => text()();
   TextColumn get profilePic => text().nullable()();
   IntColumn get points => integer().withDefault(const Constant(0))();
@@ -29,12 +27,13 @@ class CachedProfiles extends Table {
 // 2. Sync Queue — with idempotency_key for offline deduplication (N5)
 class SyncQueue extends Table {
   IntColumn get id => integer().autoIncrement()();
-  TextColumn get idempotencyKey => text().unique()(); // UUID v4 — prevents duplicate mutations
-  TextColumn get entityType => text()(); // 'technician_job', 'profile', 'ride_booking', 'service_booking'
+  TextColumn get idempotencyKey =>
+      text().unique()(); // UUID v4 — prevents duplicate mutations
+  TextColumn get entityType =>
+      text()(); // 'technician_job', 'profile', 'ride_booking', 'service_booking'
   TextColumn get action => text()(); // e.g. 'update_job_status', 'send_message'
   TextColumn get payload => text()(); // JSON payload
-  DateTimeColumn get createdAt =>
-      dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   IntColumn get attempts => integer().withDefault(const Constant(0))();
   DateTimeColumn get nextRetryAt => dateTime().nullable()();
 }
@@ -134,8 +133,7 @@ class HttpResponseCache extends Table {
   HttpResponseCache,
 ])
 class AppDatabase extends _$AppDatabase {
-  AppDatabase([QueryExecutor? executor])
-      : super(executor ?? _openConnection());
+  AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   /// Returns a platform-appropriate executor.
   /// On web: uses WASM-backed SQLite via sqlite3.wasm + drift_worker.js.
@@ -155,26 +153,27 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 3; // bumped: dead letter queue + entityType/nextRetryAt
+  int get schemaVersion =>
+      3; // bumped: dead letter queue + entityType/nextRetryAt
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-    onCreate: (m) => m.createAll(),
-    onUpgrade: (m, from, to) async {
-      if (from < 3) {
-        // Recreate syncQueue to avoid SQLite ALTER TABLE limitations on UNIQUE/NOT NULL columns
-        try {
-          await m.drop(syncQueue);
-        } catch (_) {}
-        await m.createTable(syncQueue);
+        onCreate: (m) => m.createAll(),
+        onUpgrade: (m, from, to) async {
+          if (from < 3) {
+            // Recreate syncQueue to avoid SQLite ALTER TABLE limitations on UNIQUE/NOT NULL columns
+            try {
+              await m.drop(syncQueue);
+            } catch (_) {}
+            await m.createTable(syncQueue);
 
-        if (from < 2) {
-          await m.createTable(httpResponseCache);
-        }
-        await m.createTable(deadLetterQueue);
-      }
-    },
-  );
+            if (from < 2) {
+              await m.createTable(httpResponseCache);
+            }
+            await m.createTable(deadLetterQueue);
+          }
+        },
+      );
 
   // ── SyncQueue helpers ──────────────────────────────────────────────────────
 
@@ -206,8 +205,7 @@ class AppDatabase extends _$AppDatabase {
     if (row == null) return null;
     final age = DateTime.now().difference(row.cachedAt).inSeconds;
     if (age > row.ttlSeconds) {
-      await (delete(httpResponseCache)
-            ..where((t) => t.cacheKey.equals(key)))
+      await (delete(httpResponseCache)..where((t) => t.cacheKey.equals(key)))
           .go();
       return null;
     }

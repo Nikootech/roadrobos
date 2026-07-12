@@ -8,7 +8,6 @@ import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/extensions/datetime_extensions.dart';
 
-
 /// Audit Log Screen — paginated list from audit_logs table.
 ///
 /// Columns: timestamp, actor_name, action, entity_type, entity_id
@@ -59,9 +58,7 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
       final offset = _currentPage * _pageSize;
 
       // Build query
-      var query = supabase
-          .from('audit_logs')
-          .select();
+      var query = supabase.from('audit_logs').select();
 
       // Apply action type filter
       if (_selectedActionType != null && _selectedActionType != 'All') {
@@ -70,11 +67,9 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
 
       // Apply date range filter
       if (_selectedDateRange != null) {
-        query = query
-            .gte('created_at', _selectedDateRange!.start.utcIso)
-            .lte('created_at', _selectedDateRange!.end
-                .add(const Duration(days: 1))
-                .utcIso);
+        query = query.gte('created_at', _selectedDateRange!.start.utcIso).lte(
+            'created_at',
+            _selectedDateRange!.end.add(const Duration(days: 1)).utcIso);
       }
 
       // Apply sorting and pagination
@@ -83,9 +78,7 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
           .range(offset, offset + _pageSize - 1);
 
       // Get total count for pagination
-      var countQuery = supabase
-          .from('audit_logs')
-          .select('id');
+      var countQuery = supabase.from('audit_logs').select('id');
 
       if (_selectedActionType != null && _selectedActionType != 'All') {
         countQuery = countQuery.eq('action', _selectedActionType!);
@@ -94,9 +87,8 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
       if (_selectedDateRange != null) {
         countQuery = countQuery
             .gte('created_at', _selectedDateRange!.start.utcIso)
-            .lte('created_at', _selectedDateRange!.end
-                .add(const Duration(days: 1))
-                .utcIso);
+            .lte('created_at',
+                _selectedDateRange!.end.add(const Duration(days: 1)).utcIso);
       }
 
       final countResult = await countQuery.count(CountOption.exact);
@@ -229,15 +221,16 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
           Expanded(
             child: _isLoading
                 ? const Center(
-                    child: CircularProgressIndicator(
-                        color: AppColors.primaryBlue))
+                    child:
+                        CircularProgressIndicator(color: AppColors.primaryBlue))
                 : _logs.isEmpty
                     ? _buildEmptyState()
                     : _buildLogList(),
           ),
 
           // Pagination Controls
-          if (_totalCount > 0) _buildPaginationBar(maxPage, startRecord, endRecord),
+          if (_totalCount > 0)
+            _buildPaginationBar(maxPage, startRecord, endRecord),
         ],
       ),
     );
@@ -302,8 +295,7 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
           GestureDetector(
             onTap: _pickDateRange,
             child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
                 color: _selectedDateRange != null
                     ? AppColors.primaryBlue.withValues(alpha: 0.1)
@@ -467,14 +459,14 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child:
-                    _buildInfoChip('ID', entityId, Icons.tag_rounded),
+                child: _buildInfoChip('ID', entityId, Icons.tag_rounded),
               ),
             ],
           ),
         ],
       ),
-    ).animate(delay: Duration(milliseconds: 50 * index))
+    )
+        .animate(delay: Duration(milliseconds: 50 * index))
         .fadeIn()
         .slideX(begin: 0.05, end: 0);
   }
@@ -579,8 +571,7 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
     );
   }
 
-  Widget _buildPageButton(
-      {required IconData icon, VoidCallback? onTap}) {
+  Widget _buildPageButton({required IconData icon, VoidCallback? onTap}) {
     final isEnabled = onTap != null;
     return GestureDetector(
       onTap: onTap,
@@ -608,8 +599,7 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.history_rounded,
-              size: 80,
-              color: AppColors.textMuted.withValues(alpha: 0.2)),
+              size: 80, color: AppColors.textMuted.withValues(alpha: 0.2)),
           const SizedBox(height: 16),
           Text(
             'No audit logs found',

@@ -4,7 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import '../models/ride_booking.dart';
 
-final rideBookingRepositoryProvider = Provider((ref) => RideBookingRepository());
+final rideBookingRepositoryProvider =
+    Provider((ref) => RideBookingRepository());
 
 class RideBookingRepository {
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -16,7 +17,7 @@ class RideBookingRepository {
           .insert(booking.toMap())
           .select()
           .single();
-      
+
       final bookingId = response['id'].toString();
       unawaited(Sentry.addBreadcrumb(
         Breadcrumb(
@@ -35,7 +36,8 @@ class RideBookingRepository {
     }
   }
 
-  Future<List<RideBooking>> getPagedCustomerRides(String customerId, {int limit = 20, int offset = 0}) async {
+  Future<List<RideBooking>> getPagedCustomerRides(String customerId,
+      {int limit = 20, int offset = 0}) async {
     try {
       final response = await _supabase
           .from('ride_bookings')
@@ -43,8 +45,10 @@ class RideBookingRepository {
           .eq('customer_id', customerId)
           .order('created_at', ascending: false)
           .range(offset, offset + limit - 1);
-      
-      return response.map((map) => RideBooking.fromMap(map, map['id'].toString())).toList();
+
+      return response
+          .map((map) => RideBooking.fromMap(map, map['id'].toString()))
+          .toList();
     } catch (e) {
       throw Exception('Failed to fetch rides: $e');
     }
@@ -54,18 +58,17 @@ class RideBookingRepository {
     try {
       await _supabase
           .from('ride_bookings')
-          .update({'status': status})
-          .eq('id', bookingId);
+          .update({'status': status}).eq('id', bookingId);
     } catch (e) {
       throw Exception('Failed to update ride status: $e');
     }
   }
 
   Future<void> cancelBooking(String bookingId) async {
-    await _supabase
-        .from('ride_bookings')
-        .update({'status': 'cancelled', 'cancelled_at': DateTime.now().toIso8601String()})
-        .eq('id', bookingId);
+    await _supabase.from('ride_bookings').update({
+      'status': 'cancelled',
+      'cancelled_at': DateTime.now().toUtc().toIso8601String()
+    }).eq('id', bookingId);
   }
 
   /// Watch a specific booking for updates
@@ -74,8 +77,8 @@ class RideBookingRepository {
         .from('ride_bookings')
         .stream(primaryKey: ['id'])
         .eq('id', bookingId)
-        .map((list) => list.isNotEmpty 
-            ? RideBooking.fromMap(list.first, list.first['id'].toString()) 
+        .map((list) => list.isNotEmpty
+            ? RideBooking.fromMap(list.first, list.first['id'].toString())
             : null);
   }
 }

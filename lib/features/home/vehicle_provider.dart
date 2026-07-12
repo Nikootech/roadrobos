@@ -8,25 +8,27 @@ typedef Vehicle = UserVehicle;
 
 // Single selected vehicle state (for active UI interactions)
 class SelectedVehicleNotifier extends StateNotifier<Vehicle> {
-  SelectedVehicleNotifier() : super(Vehicle(
-    id: 'placeholder',
-    userId: 'placeholder',
-    name: 'Loading...',
-    plate: '... ...',
-    fuel: '-',
-    year: '-',
-    type: 'Car',
-  ));
+  SelectedVehicleNotifier()
+      : super(Vehicle(
+          id: 'placeholder',
+          userId: 'placeholder',
+          name: 'Loading...',
+          plate: '... ...',
+          fuel: '-',
+          year: '-',
+          type: 'Car',
+        ));
 
   void setVehicle(Vehicle vehicle) => state = vehicle;
 }
 
-final vehicleProvider = StateNotifierProvider<SelectedVehicleNotifier, Vehicle>((ref) => SelectedVehicleNotifier());
+final vehicleProvider = StateNotifierProvider<SelectedVehicleNotifier, Vehicle>(
+    (ref) => SelectedVehicleNotifier());
 
 class AllVehiclesNotifier extends StateNotifier<List<Vehicle>> {
   final Ref ref;
   StreamSubscription<List<Vehicle>>? _subscription;
-  
+
   AllVehiclesNotifier(this.ref) : super([]) {
     _init();
   }
@@ -44,7 +46,14 @@ class AllVehiclesNotifier extends StateNotifier<List<Vehicle>> {
     if (userId == null || userId.isEmpty || userId.startsWith('demo_')) {
       // Fallback dummy for unauthenticated demo state
       state = [
-        Vehicle(id: 'v1', userId: 'demo', name: 'Honda City', plate: 'MH 04 XY 4321', fuel: 'Petrol', year: 2022, type: 'Car')
+        Vehicle(
+            id: 'v1',
+            userId: 'demo',
+            name: 'Honda City',
+            plate: 'MH 04 XY 4321',
+            fuel: 'Petrol',
+            year: 2022,
+            type: 'Car')
       ];
       return;
     }
@@ -54,7 +63,8 @@ class AllVehiclesNotifier extends StateNotifier<List<Vehicle>> {
       _subscription = repo.getUserVehiclesStream(userId).listen(
         (vehicles) {
           state = vehicles;
-          if (vehicles.isNotEmpty && ref.read(vehicleProvider).id == 'placeholder') {
+          if (vehicles.isNotEmpty &&
+              ref.read(vehicleProvider).id == 'placeholder') {
             ref.read(vehicleProvider.notifier).setVehicle(vehicles.first);
           }
         },
@@ -82,6 +92,7 @@ class AllVehiclesNotifier extends StateNotifier<List<Vehicle>> {
   }
 }
 
-final allVehiclesProvider = StateNotifierProvider<AllVehiclesNotifier, List<Vehicle>>((ref) {
+final allVehiclesProvider =
+    StateNotifierProvider<AllVehiclesNotifier, List<Vehicle>>((ref) {
   return AllVehiclesNotifier(ref);
 });

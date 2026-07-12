@@ -33,12 +33,18 @@ class AsyncErrorHandler {
     } else {
       final msg = error.toString();
       if (msg.contains('SecurityException:')) {
-        return msg.replaceFirst('SecurityException: ', '').replaceFirst('SecurityException:', '');
+        return msg
+            .replaceFirst('SecurityException: ', '')
+            .replaceFirst('SecurityException:', '');
       }
       if (msg.contains('Exception:')) {
-        return msg.replaceFirst('Exception: ', '').replaceFirst('Exception:', '');
+        return msg
+            .replaceFirst('Exception: ', '')
+            .replaceFirst('Exception:', '');
       }
-      return msg.isNotEmpty ? msg : 'An unexpected error occurred. Please try again.';
+      return msg.isNotEmpty
+          ? msg
+          : 'An unexpected error occurred. Please try again.';
     }
   }
 }

@@ -43,12 +43,19 @@ class _CustomTextFieldState extends State<CustomTextField> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textStyleColor = isDark ? AppColors.textOnDark : AppColors.textPrimary;
-    final defaultFillColor = isDark ? AppColors.bgDarkCard : AppColors.bgLightCard;
-    final focusedFillColor = isDark ? AppColors.bgDarkSurface : AppColors.bgWhite;
-    final labelColor = isDark ? AppColors.textOnDarkMuted : AppColors.textSecondary;
-    final prefixIconColor = _isFocused ? AppColors.primaryBlue : (isDark ? AppColors.textOnDarkMuted : AppColors.textMuted);
-    final suffixIconColor = isDark ? AppColors.textOnDarkMuted : AppColors.textMuted;
+    final textStyleColor =
+        isDark ? AppColors.textOnDark : AppColors.textPrimary;
+    final defaultFillColor =
+        isDark ? AppColors.bgDarkCard : AppColors.bgLightCard;
+    final focusedFillColor =
+        isDark ? AppColors.bgDarkSurface : AppColors.bgWhite;
+    final labelColor =
+        isDark ? AppColors.textOnDarkMuted : AppColors.textSecondary;
+    final prefixIconColor = _isFocused
+        ? AppColors.primaryBlue
+        : (isDark ? AppColors.textOnDarkMuted : AppColors.textMuted);
+    final suffixIconColor =
+        isDark ? AppColors.textOnDarkMuted : AppColors.textMuted;
     final borderCol = isDark ? Colors.transparent : AppColors.border;
 
     return Column(

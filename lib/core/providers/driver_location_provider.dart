@@ -14,7 +14,8 @@ import '../../providers/taxi_provider.dart';
 ///
 /// Falls back to an empty list when the table is empty or unreachable,
 /// so the map still renders without crashing.
-final availableTaxiLocationsProvider = StreamProvider<List<NearbyVehicle>>((ref) {
+final availableTaxiLocationsProvider =
+    StreamProvider<List<NearbyVehicle>>((ref) {
   final supabase = Supabase.instance.client;
 
   // Use Supabase Realtime streaming — re-emits the full list on any change.
@@ -25,17 +26,14 @@ final availableTaxiLocationsProvider = StreamProvider<List<NearbyVehicle>>((ref)
       // Note: Supabase stream does not support multiple .eq() filters on different
       // columns directly — filter service_type client-side after receiving data.
       .map((rows) {
-        return rows
-            .where((row) => row['service_type'] == 'taxi')
-            .map((row) {
-              final lat = (row['lat'] as num?)?.toDouble() ?? 0.0;
-              final lng = (row['lng'] as num?)?.toDouble() ?? 0.0;
-              return NearbyVehicle(
-                position: LatLng(lat, lng),
-                type: 'car', // default vehicle icon for taxi drivers
-              );
-            })
-            .toList();
+        return rows.where((row) => row['service_type'] == 'taxi').map((row) {
+          final lat = (row['lat'] as num?)?.toDouble() ?? 0.0;
+          final lng = (row['lng'] as num?)?.toDouble() ?? 0.0;
+          return NearbyVehicle(
+            position: LatLng(lat, lng),
+            type: 'car', // default vehicle icon for taxi drivers
+          );
+        }).toList();
       });
 
   return stream;

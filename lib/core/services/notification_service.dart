@@ -21,7 +21,8 @@ abstract class INotificationService {
   void handleNotificationNavigation(RemoteMessage message);
   Future<String?> getToken();
   Future<void> syncTokenToBackend(String uid);
-  void showError(String title, {String? message, dynamic error, StackTrace? stackTrace});
+  void showError(String title,
+      {String? message, dynamic error, StackTrace? stackTrace});
 }
 
 // ── Riverpod provider ─────────────────────────────────────────────────────────
@@ -46,7 +47,8 @@ class NotificationService implements INotificationService {
   @override
   Future<void> initialize() async {
     if (Firebase.apps.isEmpty) {
-      debugPrint('NotificationService: Skipping init. Firebase not initialized.');
+      debugPrint(
+          'NotificationService: Skipping init. Firebase not initialized.');
       return;
     }
 
@@ -119,7 +121,8 @@ class NotificationService implements INotificationService {
       return true;
     } else {
       if (kDebugMode) {
-        debugPrint('User declined or has not accepted notification permissions');
+        debugPrint(
+            'User declined or has not accepted notification permissions');
       }
       return false;
     }
@@ -177,7 +180,7 @@ class NotificationService implements INotificationService {
       case 'new_login':
         context.push('/account-settings');
         break;
-        
+
       case 'chat_message':
         final roomId = id ?? 'default_room';
         context.push('/chat/$roomId');
@@ -322,14 +325,31 @@ class NotificationService implements INotificationService {
         'promotions_channel',
         'Promotions & Offers',
       );
-    } else if (['payment_failed', 'wallet_low_balance', 'kyc_approved', 'new_login'].contains(type)) {
+    } else if ([
+      'payment_failed',
+      'wallet_low_balance',
+      'kyc_approved',
+      'new_login'
+    ].contains(type)) {
       androidDetails = const AndroidNotificationDetails(
         'account_alerts_channel',
         'Account & Security',
         importance: Importance.high,
         priority: Priority.high,
       );
-    } else if (['order_update', 'booking_update', 'driver_allocated', 'driver_arrived', 'ride_started', 'ride_completed', 'driver_cancelled', 'rental_confirmed', 'rental_pickup_reminder', 'rental_return_warning', 'rental_completed'].contains(type)) {
+    } else if ([
+      'order_update',
+      'booking_update',
+      'driver_allocated',
+      'driver_arrived',
+      'ride_started',
+      'ride_completed',
+      'driver_cancelled',
+      'rental_confirmed',
+      'rental_pickup_reminder',
+      'rental_return_warning',
+      'rental_completed'
+    ].contains(type)) {
       androidDetails = const AndroidNotificationDetails(
         'rides_channel',
         'Rides & Rentals',

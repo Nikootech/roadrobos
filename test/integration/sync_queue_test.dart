@@ -171,7 +171,8 @@ void main() {
 
     // MockRef delegates provider reads to the ProviderContainer.
     mockRef = MockRef();
-    when(() => mockRef.read(userRepositoryProvider)).thenAnswer((_) => mockUserRepo);
+    when(() => mockRef.read(userRepositoryProvider))
+        .thenAnswer((_) => mockUserRepo);
     when(() => mockRef.read(rideBookingRepositoryProvider))
         .thenAnswer((_) => mockRideRepo);
     when(() => mockRef.read(serviceBookingRepositoryProvider))
@@ -313,7 +314,8 @@ void main() {
 
       final task = remaining.first;
       expect(task.attempts, equals(1),
-          reason: 'Attempt counter must be incremented to 1 after first failure');
+          reason:
+              'Attempt counter must be incremented to 1 after first failure');
       expect(task.nextRetryAt, isNotNull,
           reason: 'nextRetryAt must be scheduled after a failure');
 
@@ -339,21 +341,21 @@ void main() {
       // This avoids using enqueue() which fires an unawaited processQueue() that
       // races with our own db.update() and can overwrite the attempts column.
       await db.into(db.syncQueue).insert(
-        SyncQueueCompanion.insert(
-          idempotencyKey: idempotencyKey,
-          entityType: 'profile',
-          action: 'update_profile',
-          payload: jsonEncode({
-            'id': 'user-123',
-            'name': 'Sudhan Test',
-            'email': 'sudhan@test.com',
-            'phone': '+919876543210',
-            'role': 'customer',
-            'points': 100,
-          }),
-          attempts: const Value(4),
-        ),
-      );
+            SyncQueueCompanion.insert(
+              idempotencyKey: idempotencyKey,
+              entityType: 'profile',
+              action: 'update_profile',
+              payload: jsonEncode({
+                'id': 'user-123',
+                'name': 'Sudhan Test',
+                'email': 'sudhan@test.com',
+                'phone': '+919876543210',
+                'role': 'customer',
+                'points': 100,
+              }),
+              attempts: const Value(4),
+            ),
+          );
 
       // Process queue — this is attempt 5, which must trigger DLQ promotion
       await syncService.processQueue();

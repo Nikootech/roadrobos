@@ -72,17 +72,20 @@ void main() {
         // 2. Initialize SharedPreferences (Critical)
         try {
           AppDebugger.logStep('SharedPreferences', 'Initializing...');
-          prefs = await SharedPreferences.getInstance().timeout(const Duration(seconds: 3));
+          prefs = await SharedPreferences.getInstance()
+              .timeout(const Duration(seconds: 3));
           AppDebugger.logStep('SharedPreferences', 'SUCCESS');
         } catch (e) {
           criticalError = 'Failed to load SharedPreferences: $e';
-          AppDebugger.logStep('SharedPreferences', 'FAILED', error: e.toString());
+          AppDebugger.logStep('SharedPreferences', 'FAILED',
+              error: e.toString());
         }
 
         // 3. Initialize Jailbreak Guard (Non-critical)
         try {
           AppDebugger.logStep('Jailbreak Guard', 'Initializing...');
-          isCompromised = await JailbreakGuard.check().timeout(const Duration(seconds: 2));
+          isCompromised =
+              await JailbreakGuard.check().timeout(const Duration(seconds: 2));
           AppDebugger.logStep('Jailbreak Guard', 'SUCCESS');
         } catch (e) {
           AppDebugger.logStep('Jailbreak Guard', 'FAILED', error: e.toString());
@@ -95,7 +98,8 @@ void main() {
           (() async {
             try {
               AppDebugger.logStep('Firebase', 'Initializing...');
-              await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform)
+              await Firebase.initializeApp(
+                      options: DefaultFirebaseOptions.currentPlatform)
                   .timeout(const Duration(seconds: 4));
               AppDebugger.logStep('Firebase', 'SUCCESS');
             } catch (e) {
@@ -105,8 +109,10 @@ void main() {
           (() async {
             try {
               AppDebugger.logStep('Supabase', 'Initializing...');
-              if (AppConfig.supabaseUrl.isEmpty || AppConfig.supabaseAnonKey.isEmpty) {
-                throw ArgumentError('Supabase URL or Anon Key is empty. Check .dart_defines');
+              if (AppConfig.supabaseUrl.isEmpty ||
+                  AppConfig.supabaseAnonKey.isEmpty) {
+                throw ArgumentError(
+                    'Supabase URL or Anon Key is empty. Check .dart_defines');
               }
               await Supabase.initialize(
                 url: AppConfig.supabaseUrl,
@@ -121,7 +127,8 @@ void main() {
               try {
                 await Supabase.initialize(
                   url: 'https://placeholder.supabase.co',
-                  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsYWNlaG9sZGVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwNDc1NzMsImV4cCI6MjA5MTYyMzU3M30.VuJ13qv1rEyJyfdAvpCI_qUvPSQPcZqbluLWWo4loBM',
+                  anonKey:
+                      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsYWNlaG9sZGVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwNDc1NzMsImV4cCI6MjA5MTYyMzU3M30.VuJ13qv1rEyJyfdAvpCI_qUvPSQPcZqbluLWWo4loBM',
                   debug: kDebugMode,
                 );
               } catch (_) {}
@@ -130,10 +137,12 @@ void main() {
           (() async {
             try {
               AppDebugger.logStep('Encryption Key', 'Initializing...');
-              await ColumnEncryptionKey.prefetch().timeout(const Duration(seconds: 2));
+              await ColumnEncryptionKey.prefetch()
+                  .timeout(const Duration(seconds: 2));
               AppDebugger.logStep('Encryption Key', 'SUCCESS');
             } catch (e) {
-              AppDebugger.logStep('Encryption Key', 'FAILED', error: e.toString());
+              AppDebugger.logStep('Encryption Key', 'FAILED',
+                  error: e.toString());
             }
           })(),
         ]);
@@ -184,7 +193,8 @@ void main() {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         // Configure image cache bounds to prevent OOM errors (PERF-01)
         PaintingBinding.instance.imageCache.maximumSize = 100; // max 100 images
-        PaintingBinding.instance.imageCache.maximumSizeBytes = 50 * 1024 * 1024; // max 50 MB
+        PaintingBinding.instance.imageCache.maximumSizeBytes =
+            50 * 1024 * 1024; // max 50 MB
 
         // ① Sentry & Crashlytics error handlers
         FlutterError.onError = (FlutterErrorDetails details) {
@@ -204,8 +214,7 @@ void main() {
         PlatformDispatcher.instance.onError = (error, stack) {
           Sentry.captureException(error, stackTrace: stack);
           if (!kDebugMode && !kIsWeb) {
-            FirebaseCrashlytics.instance
-                .recordError(error, stack, fatal: true);
+            FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
           }
           return false;
         };
@@ -220,7 +229,9 @@ void main() {
         // Use the Riverpod-managed service via the container.
         unawaited(
           container.read(notificationServiceProvider).initialize().then((_) {
-            return container.read(notificationServiceProvider).requestNotificationPermission();
+            return container
+                .read(notificationServiceProvider)
+                .requestNotificationPermission();
           }).catchError((e) {
             if (kDebugMode) {
               debugPrint('NotificationService init error: $e');
@@ -231,7 +242,6 @@ void main() {
 
         // ④ Pricing configuration (non-blocking)
         unawaited(container.read(pricingConfigProvider.future));
-
       });
     },
     (error, stack) {
@@ -277,7 +287,8 @@ class RoadRobosApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: themeMode,  // Previously hardcoded ThemeMode.light — now Riverpod-driven
+      themeMode:
+          themeMode, // Previously hardcoded ThemeMode.light — now Riverpod-driven
       routerConfig: router,
       localizationsDelegates: const [
         AppLocalizations.delegate,
@@ -304,17 +315,15 @@ class RoadRobosApp extends ConsumerWidget {
         onCompletePayment: () async {
           final activeRental = ref.read(activeRentalProvider);
           if (activeRental == null) return;
-          final priceStr =
-              activeRental.vehicle['price']?.toString() ?? '150';
-          final hourly = double.tryParse(
-                  priceStr.replaceAll(RegExp(r'[^0-9.]'), '')) ??
-              150.0;
+          final priceStr = activeRental.vehicle['price']?.toString() ?? '150';
+          final hourly =
+              double.tryParse(priceStr.replaceAll(RegExp(r'[^0-9.]'), '')) ??
+                  150.0;
           final totalCost = hourly *
               (activeRental.duration.inHours > 0
                   ? activeRental.duration.inHours
                   : 1);
-          final paymentService =
-              ref.read(paymentServiceProvider.notifier);
+          final paymentService = ref.read(paymentServiceProvider.notifier);
           try {
             await ref.read(activeRentalProvider.notifier).completePayment(
                   totalCost: totalCost,

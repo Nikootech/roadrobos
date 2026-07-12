@@ -48,10 +48,17 @@ class ServiceBooking {
       status: map['status'] ?? 'pending',
       totalCost: (map['total_cost'] ?? 0.0).toDouble(),
       address: map['address'],
-      latitude: map['latitude'] != null ? (map['latitude'] as num).toDouble() : null,
-      longitude: map['longitude'] != null ? (map['longitude'] as num).toDouble() : null,
-      details: map['details'] is Map ? Map<String, dynamic>.from(map['details']) : {},
-      createdAt: map['created_at'] != null ? DateTime.parse(map['created_at']) : DateTime.now(),
+      latitude:
+          map['latitude'] != null ? (map['latitude'] as num).toDouble() : null,
+      longitude: map['longitude'] != null
+          ? (map['longitude'] as num).toDouble()
+          : null,
+      details: map['details'] is Map
+          ? Map<String, dynamic>.from(map['details'])
+          : {},
+      createdAt: map['created_at'] != null
+          ? DateTime.parse(map['created_at'])
+          : DateTime.now(),
     );
   }
 

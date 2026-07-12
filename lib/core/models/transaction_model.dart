@@ -1,4 +1,3 @@
-
 import '../extensions/datetime_extensions.dart';
 
 class AppTransaction {
@@ -53,19 +52,23 @@ class AppTransaction {
     return AppTransaction(
       id: docId,
       userId: map['user_id'] ?? map['userId'] ?? '',
-      razoprayPaymentId: map['razorpay_payment_id'] ?? map['razoprayPaymentId'] ?? '',
+      razoprayPaymentId:
+          map['razorpay_payment_id'] ?? map['razoprayPaymentId'] ?? '',
       razorpayOrderId: map['razorpay_order_id'] ?? map['razorpayOrderId'],
       razorpaySignature: map['razorpay_signature'] ?? map['razorpaySignature'],
       baseAmount: (map['base_amount'] ?? map['baseAmount'] ?? 0.0).toDouble(),
       gstAmount: (map['gst_amount'] ?? map['gstAmount'] ?? 0.0).toDouble(),
-      platformFee: (map['platform_fee'] ?? map['platformFee'] ?? 0.0).toDouble(),
-      handlingCharges: (map['handling_charges'] ?? map['handlingCharges'] ?? 0.0).toDouble(),
-      totalAmount: (map['total_amount'] ?? map['totalAmount'] ?? 0.0).toDouble(),
+      platformFee:
+          (map['platform_fee'] ?? map['platformFee'] ?? 0.0).toDouble(),
+      handlingCharges:
+          (map['handling_charges'] ?? map['handlingCharges'] ?? 0.0).toDouble(),
+      totalAmount:
+          (map['total_amount'] ?? map['totalAmount'] ?? 0.0).toDouble(),
       description: map['description'] ?? '',
-      timestamp: map['created_at'] != null 
-          ? DateTime.parse(map['created_at']) 
-          : map['timestamp'] != null 
-              ? DateTime.parse(map['timestamp']) 
+      timestamp: map['created_at'] != null
+          ? DateTime.parse(map['created_at'])
+          : map['timestamp'] != null
+              ? DateTime.parse(map['timestamp'])
               : DateTime.now(),
       status: map['status'] ?? 'SUCCESS',
     );

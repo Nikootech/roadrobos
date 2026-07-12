@@ -13,9 +13,11 @@ import 'package:roadrobos/core/security/jailbreak_guard.dart';
 
 // ── Mock classes ─────────────────────────────────────────────────────────────
 class MockSupabaseClient extends Mock implements SupabaseClient {}
+
 class MockFunctionsClient extends Mock implements FunctionsClient {}
 
-class MockPostgrestFilterBuilder extends Mock implements PostgrestFilterBuilder<dynamic> {
+class MockPostgrestFilterBuilder extends Mock
+    implements PostgrestFilterBuilder<dynamic> {
   final dynamic futureValue;
   final bool shouldThrow;
   final Object? exceptionToThrow;
@@ -43,7 +45,9 @@ class MockPostgrestFilterBuilder extends Mock implements PostgrestFilterBuilder<
 }
 
 class MockRazorpay extends Mock implements Razorpay {}
-class MockPaymentSuccessResponse extends Mock implements PaymentSuccessResponse {}
+
+class MockPaymentSuccessResponse extends Mock
+    implements PaymentSuccessResponse {}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -89,7 +93,8 @@ void main() {
   });
 
   group('PaymentService Verification Tests', () {
-    test('verify_payment RPC rejects simulated_signature in production config', () async {
+    test('verify_payment RPC rejects simulated_signature in production config',
+        () async {
       // 1. Force Production Config
       AppConfig.environment = Environment.prod;
 
@@ -105,10 +110,12 @@ void main() {
       initContainer();
       final paymentService = container.read(paymentServiceProvider.notifier);
       paymentService.mockSupabaseClient = mockSupabase;
-      paymentService.mockRazorpayInstance = mockRazorpay; // Bypasses simulation check
+      paymentService.mockRazorpayInstance =
+          mockRazorpay; // Bypasses simulation check
 
       // 4. Mock the Supabase RPC call structure to return false for simulated signature
-      final mockRpcFilterBuilder = MockPostgrestFilterBuilder(futureValue: false);
+      final mockRpcFilterBuilder =
+          MockPostgrestFilterBuilder(futureValue: false);
       when(() => mockSupabase.rpc(
             'verify_payment',
             params: any(named: 'params'),
@@ -129,7 +136,8 @@ void main() {
 
       // 6. Capture the success callback
       final successHandler = eventHandlers[Razorpay.EVENT_PAYMENT_SUCCESS];
-      expect(successHandler, isNotNull, reason: 'Razorpay success handler must be registered');
+      expect(successHandler, isNotNull,
+          reason: 'Razorpay success handler must be registered');
 
       final mockResponse = MockPaymentSuccessResponse();
       when(() => mockResponse.paymentId).thenReturn('sim_pay_123');
@@ -178,7 +186,8 @@ void main() {
       initContainer();
       final paymentService = container.read(paymentServiceProvider.notifier);
       paymentService.mockSupabaseClient = mockSupabase;
-      paymentService.mockRazorpayInstance = mockRazorpay; // Bypasses simulation check
+      paymentService.mockRazorpayInstance =
+          mockRazorpay; // Bypasses simulation check
 
       // 4. Calculate valid HMAC signature matching server side
       const rzpSecret = 'rzp_test_placeholderSecret';
@@ -192,7 +201,8 @@ void main() {
       final validSignature = hmac.convert(bytes).toString();
 
       // 5. Mock the Supabase RPC call structure to return true for valid signature
-      final mockRpcFilterBuilder = MockPostgrestFilterBuilder(futureValue: true);
+      final mockRpcFilterBuilder =
+          MockPostgrestFilterBuilder(futureValue: true);
       when(() => mockSupabase.rpc(
             'verify_payment',
             params: any(named: 'params'),

@@ -34,22 +34,25 @@ class RentalCompletionDialog extends StatelessWidget {
                   color: AppColors.primaryBlue.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Iconsax.timer_1, size: 40, color: AppColors.primaryBlue),
+                child: const Icon(Iconsax.timer_1,
+                    size: 40, color: AppColors.primaryBlue),
               ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack),
-              
               const SizedBox(height: 24),
               const Text(
                 'Rental Time Completed!',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppColors.textPrimary),
+                style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.textPrimary),
               ),
               const SizedBox(height: 12),
               Text(
                 'Your rental period for $vehicleName has ended. Would you like to complete the payment now or reschedule the drop-off time?',
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 14, color: AppColors.textSecondary, height: 1.5),
+                style: const TextStyle(
+                    fontSize: 14, color: AppColors.textSecondary, height: 1.5),
               ),
-              
               const SizedBox(height: 32),
               CustomButton(
                 label: 'COMPLETE PAYMENT',
@@ -67,7 +70,10 @@ class RentalCompletionDialog extends StatelessWidget {
               const SizedBox(height: 16),
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Dismiss', style: TextStyle(color: AppColors.textMuted, fontWeight: FontWeight.w500)),
+                child: const Text('Dismiss',
+                    style: TextStyle(
+                        color: AppColors.textMuted,
+                        fontWeight: FontWeight.w500)),
               ),
             ],
           ),

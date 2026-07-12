@@ -85,16 +85,20 @@ class TechnicianJob {
       date: model.date,
       time: model.time,
       progress: model.progress,
-      checklist: model.checklist.map((c) => ChecklistItem(
-        task: c.task,
-        category: c.category,
-        isDone: c.isDone,
-      )).toList(),
-      parts: model.parts.map((p) => SparePart(
-        name: p.name,
-        qty: p.qty,
-        isFound: p.isFound,
-      )).toList(),
+      checklist: model.checklist
+          .map((c) => ChecklistItem(
+                task: c.task,
+                category: c.category,
+                isDone: c.isDone,
+              ))
+          .toList(),
+      parts: model.parts
+          .map((p) => SparePart(
+                name: p.name,
+                qty: p.qty,
+                isFound: p.isFound,
+              ))
+          .toList(),
       status: model.status,
       price: model.price,
     );
@@ -183,14 +187,18 @@ class BookingNotifier extends StateNotifier<BookingState> {
   BookingNotifier() : super(BookingState());
 
   void setServiceType(String type) => state = state.copyWith(serviceType: type);
-  void setVehicle(String model, String plate) => state = state.copyWith(vehicleModel: model, vehiclePlate: plate);
-  void setPackage(String name, String price, List<String> items) => state = state.copyWith(packageName: name, price: price, packageItems: items);
-  void setSchedule(String date, String time) => state = state.copyWith(date: date, time: time);
-  
+  void setVehicle(String model, String plate) =>
+      state = state.copyWith(vehicleModel: model, vehiclePlate: plate);
+  void setPackage(String name, String price, List<String> items) => state =
+      state.copyWith(packageName: name, price: price, packageItems: items);
+  void setSchedule(String date, String time) =>
+      state = state.copyWith(date: date, time: time);
+
   void reset() => state = BookingState();
 }
 
-final bookingProvider = StateNotifierProvider<BookingNotifier, BookingState>((ref) => BookingNotifier());
+final bookingProvider = StateNotifierProvider<BookingNotifier, BookingState>(
+    (ref) => BookingNotifier());
 
 final selectedJobIdProvider = StateProvider<String?>((ref) => null);
 
@@ -199,7 +207,8 @@ final selectedJobProvider = Provider<TechnicianJob?>((ref) {
   final selectedId = ref.watch(selectedJobIdProvider);
   if (selectedId == null && jobs.isNotEmpty) return jobs.first;
   if (selectedId == null) return null;
-  return jobs.cast<TechnicianJob?>().firstWhere((j) => j?.id == selectedId, orElse: () => jobs.isNotEmpty ? jobs.first : null);
+  return jobs.cast<TechnicianJob?>().firstWhere((j) => j?.id == selectedId,
+      orElse: () => jobs.isNotEmpty ? jobs.first : null);
 });
 
 // ─── Firestore-Backed Technician Notifier ───
@@ -215,14 +224,13 @@ class TechnicianNotifier extends StateNotifier<List<TechnicianJob>> {
 
   void _listenToFirestore() {
     final repo = ref.read(technicianJobRepositoryProvider);
-    final stream = userId != null
-        ? repo.watchJobsForTech(userId!)
-        : repo.watchAllJobs();
+    final stream =
+        userId != null ? repo.watchJobsForTech(userId!) : repo.watchAllJobs();
 
     _subscription?.cancel();
     _subscription = stream.listen((firestoreJobs) {
       state = firestoreJobs.map((m) => TechnicianJob.fromFirestore(m)).toList();
-      
+
       // Auto-select first job if none selected
       if (state.isNotEmpty && ref.read(selectedJobIdProvider) == null) {
         ref.read(selectedJobIdProvider.notifier).state = state.first.id;
@@ -249,18 +257,23 @@ class TechnicianNotifier extends StateNotifier<List<TechnicianJob>> {
 
   void createJobFromBooking(BookingState booking) {
     final repo = ref.read(technicianJobRepositoryProvider);
-    
-    final checklist = booking.packageItems.isNotEmpty 
-      ? booking.packageItems.map((item) => FirestoreChecklistItem(task: item, category: 'Service Item')).toList()
-      : [
-          FirestoreChecklistItem(task: 'General Inspection', category: 'Initial'),
-          FirestoreChecklistItem(task: 'Service Execution', category: 'Main'),
-          FirestoreChecklistItem(task: 'Final Quality Check', category: 'Quality'),
-        ];
+
+    final checklist = booking.packageItems.isNotEmpty
+        ? booking.packageItems
+            .map((item) =>
+                FirestoreChecklistItem(task: item, category: 'Service Item'))
+            .toList()
+        : [
+            FirestoreChecklistItem(
+                task: 'General Inspection', category: 'Initial'),
+            FirestoreChecklistItem(task: 'Service Execution', category: 'Main'),
+            FirestoreChecklistItem(
+                task: 'Final Quality Check', category: 'Quality'),
+          ];
 
     final newJob = TechnicianJobModel(
       id: '', // Will be assigned by Firestore
-      estimatedCompletion: booking.time, 
+      estimatedCompletion: booking.time,
       vehicleModel: booking.vehicleModel,
       vehiclePlate: booking.vehiclePlate,
       serviceType: booking.serviceType,
@@ -273,7 +286,7 @@ class TechnicianNotifier extends StateNotifier<List<TechnicianJob>> {
       parts: [],
       assignedTechId: userId,
     );
-    
+
     repo.createJob(newJob);
     // State will auto-update via the Firestore stream listener
   }
@@ -290,8 +303,14 @@ class TechnicianNotifier extends StateNotifier<List<TechnicianJob>> {
       date: job.date,
       time: job.time,
       progress: job.progress,
-      checklist: job.checklist.map((c) => FirestoreChecklistItem(task: c.task, category: c.category, isDone: c.isDone)).toList(),
-      parts: job.parts.map((p) => FirestoreSparePart(name: p.name, qty: p.qty, isFound: p.isFound)).toList(),
+      checklist: job.checklist
+          .map((c) => FirestoreChecklistItem(
+              task: c.task, category: c.category, isDone: c.isDone))
+          .toList(),
+      parts: job.parts
+          .map((p) =>
+              FirestoreSparePart(name: p.name, qty: p.qty, isFound: p.isFound))
+          .toList(),
       status: job.status,
       price: job.price,
       assignedTechId: userId,
@@ -305,17 +324,22 @@ class TechnicianNotifier extends StateNotifier<List<TechnicianJob>> {
     repo.updateJobProgress(job.id, job.progress);
   }
 
-  Future<void> updateVehicleDetails(String jobId, String model, String plate) async {
+  Future<void> updateVehicleDetails(
+      String jobId, String model, String plate) async {
     final repo = ref.read(technicianJobRepositoryProvider);
     await repo.updateVehicleDetails(jobId, model, plate);
   }
 
   void acceptJob(String jobId) {
-    ref.read(technicianJobRepositoryProvider).updateJobStatus(jobId, 'ACCEPTED');
+    ref
+        .read(technicianJobRepositoryProvider)
+        .updateJobStatus(jobId, 'ACCEPTED');
   }
 
   void startJob(String jobId) {
-    ref.read(technicianJobRepositoryProvider).updateJobStatus(jobId, 'IN PROGRESS');
+    ref
+        .read(technicianJobRepositoryProvider)
+        .updateJobStatus(jobId, 'IN PROGRESS');
   }
 
   void finishJob(String jobId) {
@@ -324,9 +348,10 @@ class TechnicianNotifier extends StateNotifier<List<TechnicianJob>> {
 
   void addSparePart(String jobId, SparePart part) {
     ref.read(technicianJobRepositoryProvider).addSparePart(
-      jobId,
-      FirestoreSparePart(name: part.name, qty: part.qty, isFound: part.isFound),
-    );
+          jobId,
+          FirestoreSparePart(
+              name: part.name, qty: part.qty, isFound: part.isFound),
+        );
   }
 
   @override
@@ -336,7 +361,8 @@ class TechnicianNotifier extends StateNotifier<List<TechnicianJob>> {
   }
 }
 
-final technicianProvider = StateNotifierProvider<TechnicianNotifier, List<TechnicianJob>>((ref) {
+final technicianProvider =
+    StateNotifierProvider<TechnicianNotifier, List<TechnicianJob>>((ref) {
   final userState = ref.watch(userProvider);
   final userId = userState.user?.id;
   return TechnicianNotifier(ref, userId);

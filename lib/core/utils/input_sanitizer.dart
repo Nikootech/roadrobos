@@ -30,7 +30,8 @@ class InputSanitizer {
   /// text (names, notes, addresses) before insert/update.
   static String sanitizeText(String input, {int maxLength = 500}) {
     final cleaned = input
-        .replaceAll(RegExp(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]'), '') // control chars
+        .replaceAll(
+            RegExp(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]'), '') // control chars
         .replaceAll(RegExp(r'[<>"\x00]'), '') // HTML / SQL injection chars
         .trim();
     return cleaned.length > maxLength

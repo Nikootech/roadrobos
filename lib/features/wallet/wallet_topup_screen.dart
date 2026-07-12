@@ -25,7 +25,9 @@ class _WalletTopupScreenState extends ConsumerState<WalletTopupScreen> {
   void initState() {
     super.initState();
     _amountController = TextEditingController(
-      text: widget.initialAmount != null ? widget.initialAmount!.toStringAsFixed(0) : '100',
+      text: widget.initialAmount != null
+          ? widget.initialAmount!.toStringAsFixed(0)
+          : '100',
     );
   }
 
@@ -45,12 +47,16 @@ class _WalletTopupScreenState extends ConsumerState<WalletTopupScreen> {
         leading: GestureDetector(
           onTap: () => context.pop(),
           child: const Center(
-            child: Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: AppColors.textPrimary),
+            child: Icon(Icons.arrow_back_ios_new_rounded,
+                size: 18, color: AppColors.textPrimary),
           ),
         ),
         title: const Text(
           'Top Up Wallet',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+          style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary),
         ),
       ),
       body: SingleChildScrollView(
@@ -63,35 +69,51 @@ class _WalletTopupScreenState extends ConsumerState<WalletTopupScreen> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+                border:
+                    Border.all(color: AppColors.border.withValues(alpha: 0.5)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Select Amount Denomination', style: TextStyle(fontSize: 14, color: AppColors.textSecondary, fontWeight: FontWeight.w500)),
+                  const Text('Select Amount Denomination',
+                      style: TextStyle(
+                          fontSize: 14,
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w500)),
                   const SizedBox(height: 12),
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     physics: const BouncingScrollPhysics(),
                     child: Row(
                       children: _quickAmounts.map((amt) {
-                        final isSelected = _amountController.text == amt.toString();
+                        final isSelected =
+                            _amountController.text == amt.toString();
                         return Padding(
                           padding: const EdgeInsets.only(right: 8),
                           child: GestureDetector(
-                            onTap: () => setState(() => _amountController.text = amt.toString()),
+                            onTap: () => setState(
+                                () => _amountController.text = amt.toString()),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 10),
                               decoration: BoxDecoration(
-                                color: isSelected ? AppColors.primaryBlue.withValues(alpha: 0.1) : AppColors.bgLightGrey,
+                                color: isSelected
+                                    ? AppColors.primaryBlue
+                                        .withValues(alpha: 0.1)
+                                    : AppColors.bgLightGrey,
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: isSelected ? AppColors.primaryBlue : Colors.transparent),
+                                border: Border.all(
+                                    color: isSelected
+                                        ? AppColors.primaryBlue
+                                        : Colors.transparent),
                               ),
                               child: Text(
                                 '₹$amt',
                                 style: TextStyle(
                                   fontWeight: FontWeight.w600,
-                                  color: isSelected ? AppColors.primaryBlue : AppColors.textPrimary,
+                                  color: isSelected
+                                      ? AppColors.primaryBlue
+                                      : AppColors.textPrimary,
                                 ),
                               ),
                             ),
@@ -101,16 +123,26 @@ class _WalletTopupScreenState extends ConsumerState<WalletTopupScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  const Text('Or Enter Custom Amount', style: TextStyle(fontSize: 14, color: AppColors.textSecondary, fontWeight: FontWeight.w500)),
+                  const Text('Or Enter Custom Amount',
+                      style: TextStyle(
+                          fontSize: 14,
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w500)),
                   const SizedBox(height: 8),
                   TextField(
                     controller: _amountController,
                     keyboardType: TextInputType.number,
                     onChanged: (v) => setState(() {}),
-                    style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                    style: const TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary),
                     decoration: const InputDecoration(
                       prefixText: '₹ ',
-                      prefixStyle: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                      prefixStyle: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary),
                       border: InputBorder.none,
                       filled: false,
                     ),
@@ -119,10 +151,13 @@ class _WalletTopupScreenState extends ConsumerState<WalletTopupScreen> {
               ),
             ),
             const SizedBox(height: 48),
-            const Text('Select Payment Method', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            const Text('Select Payment Method',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
-            _buildPaymentMethodTile('UPI (PhonePe, GPay)', Iconsax.mobile, 'UPI'),
-            _buildPaymentMethodTile('Credit / Debit Card', Iconsax.card, 'CARD'),
+            _buildPaymentMethodTile(
+                'UPI (PhonePe, GPay)', Iconsax.mobile, 'UPI'),
+            _buildPaymentMethodTile(
+                'Credit / Debit Card', Iconsax.card, 'CARD'),
             _buildPaymentMethodTile('Net Banking', Iconsax.bank, 'NET_BANKING'),
             const SizedBox(height: 80),
             CustomButton(
@@ -135,18 +170,18 @@ class _WalletTopupScreenState extends ConsumerState<WalletTopupScreen> {
                 final userId = userData?.id ?? 'demo';
 
                 try {
-                  await ref.read(paymentServiceProvider.notifier).startPayment(
-                    PaymentDetails(
-                      bookingId: '00000000-0000-0000-0000-000000000000',
-                      bookingType: BookingType.wallet,
-                      totalCost: amount,
-                      userId: userId,
-                      contact: userData?.phone ?? '9876543210',
-                      email: userData?.email ?? 'customer@example.com',
-                      description: 'Wallet Top-up',
-                    )
-                  );
-                  
+                  await ref
+                      .read(paymentServiceProvider.notifier)
+                      .startPayment(PaymentDetails(
+                        bookingId: '00000000-0000-0000-0000-000000000000',
+                        bookingType: BookingType.wallet,
+                        totalCost: amount,
+                        userId: userId,
+                        contact: userData?.phone ?? '9876543210',
+                        email: userData?.email ?? 'customer@example.com',
+                        description: 'Wallet Top-up',
+                      ));
+
                   if (!context.mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                     content: Text('Wallet Top-up Successful!'),
@@ -177,26 +212,39 @@ class _WalletTopupScreenState extends ConsumerState<WalletTopupScreen> {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primaryBlue.withValues(alpha: 0.05) : AppColors.bgWhite,
+          color: isSelected
+              ? AppColors.primaryBlue.withValues(alpha: 0.05)
+              : AppColors.bgWhite,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: isSelected ? AppColors.primaryBlue : AppColors.border.withValues(alpha: 0.5)),
+          border: Border.all(
+              color: isSelected
+                  ? AppColors.primaryBlue
+                  : AppColors.border.withValues(alpha: 0.5)),
           boxShadow: [
-            if (isSelected) 
-              BoxShadow(color: AppColors.primaryBlue.withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, 4))
+            if (isSelected)
+              BoxShadow(
+                  color: AppColors.primaryBlue.withValues(alpha: 0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4))
           ],
         ),
         child: Row(
           children: [
-            Icon(icon, color: isSelected ? AppColors.primaryBlue : AppColors.textSecondary),
+            Icon(icon,
+                color: isSelected
+                    ? AppColors.primaryBlue
+                    : AppColors.textSecondary),
             const SizedBox(width: 16),
-            Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+            Text(title,
+                style:
+                    const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
             const Spacer(),
-            if (isSelected) const Icon(Icons.check_circle_rounded, color: AppColors.primaryBlue, size: 20),
+            if (isSelected)
+              const Icon(Icons.check_circle_rounded,
+                  color: AppColors.primaryBlue, size: 20),
           ],
         ),
       ),
     ).animate().fadeIn(delay: 100.ms);
   }
 }
-
-

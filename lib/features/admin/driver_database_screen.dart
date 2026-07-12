@@ -18,7 +18,8 @@ class AdminDriver {
   final double walletRequest;
   final List<DriverDocument> documents;
 
-  AdminDriver(this.id, this.name, this.joinDate, this.rating, this.rides, this.docsPending, this.walletRequest, this.documents);
+  AdminDriver(this.id, this.name, this.joinDate, this.rating, this.rides,
+      this.docsPending, this.walletRequest, this.documents);
 }
 
 class DriverDocument {
@@ -39,24 +40,38 @@ class AdminDriversNotifier extends Notifier<AsyncValue<List<AdminDriver>>> {
     try {
       final repo = ref.read(adminOpsRepositoryProvider);
       final drivers = await repo.getAllDrivers();
-      
+
       state = AsyncValue.data(drivers.map((map) {
         final id = map['id']?.toString().substring(0, 4).toUpperCase() ?? 'NEW';
         final name = map['name'] ?? 'Pro Driver';
-        final createdAt = map['created_at'] != null 
-            ? DateTime.parse(map['created_at']) 
+        final createdAt = map['created_at'] != null
+            ? DateTime.parse(map['created_at'])
             : DateTime.now();
-        
-        final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+        final months = [
+          'Jan',
+          'Feb',
+          'Mar',
+          'Apr',
+          'May',
+          'Jun',
+          'Jul',
+          'Aug',
+          'Sep',
+          'Oct',
+          'Nov',
+          'Dec'
+        ];
         final dateStr = '${months[createdAt.month - 1]} ${createdAt.year}';
 
         final docs = (map['kyc_documents'] as List?)?.map((d) {
-          return DriverDocument(
-            d['title'] ?? 'Document',
-            d['status'] ?? 'Pending',
-            d['uploaded_at']?.toString().split('T')[0] ?? 'Recently',
-          );
-        }).toList() ?? [];
+              return DriverDocument(
+                d['title'] ?? 'Document',
+                d['status'] ?? 'Pending',
+                d['uploaded_at']?.toString().split('T')[0] ?? 'Recently',
+              );
+            }).toList() ??
+            [];
 
         return AdminDriver(
           id,
@@ -76,7 +91,9 @@ class AdminDriversNotifier extends Notifier<AsyncValue<List<AdminDriver>>> {
 
   Future<void> approveDoc(String driverId, String docTitle) async {
     try {
-      await ref.read(adminOpsRepositoryProvider).updateDriverKycStatus(driverId, docTitle, 'Approved');
+      await ref
+          .read(adminOpsRepositoryProvider)
+          .updateDriverKycStatus(driverId, docTitle, 'Approved');
       _init(); // Refresh data
     } catch (e) {
       debugPrint('Error approving doc: $e');
@@ -85,7 +102,9 @@ class AdminDriversNotifier extends Notifier<AsyncValue<List<AdminDriver>>> {
 
   Future<void> approveWallet(String driverId) async {
     try {
-      await ref.read(adminOpsRepositoryProvider).approveWalletWithdrawal(driverId);
+      await ref
+          .read(adminOpsRepositoryProvider)
+          .approveWalletWithdrawal(driverId);
       _init(); // Refresh data
     } catch (e) {
       debugPrint('Error approving wallet: $e');
@@ -93,7 +112,9 @@ class AdminDriversNotifier extends Notifier<AsyncValue<List<AdminDriver>>> {
   }
 }
 
-final adminDriversProvider = NotifierProvider<AdminDriversNotifier, AsyncValue<List<AdminDriver>>>(() => AdminDriversNotifier());
+final adminDriversProvider =
+    NotifierProvider<AdminDriversNotifier, AsyncValue<List<AdminDriver>>>(
+        () => AdminDriversNotifier());
 final driverSearchProvider = StateProvider<String>((ref) => '');
 
 // --- SCREEN ---
@@ -111,12 +132,16 @@ class DriverDatabaseScreen extends ConsumerWidget {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: AppColors.textPrimary),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded,
+              size: 18, color: AppColors.textPrimary),
           onPressed: () => context.pop(),
         ),
         title: Text(
           'Driver Database',
-          style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+          style: GoogleFonts.outfit(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary),
         ),
       ),
       body: Column(
@@ -126,30 +151,43 @@ class DriverDatabaseScreen extends ConsumerWidget {
             padding: const EdgeInsets.all(16),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              decoration: BoxDecoration(color: AppColors.bgLightGrey, borderRadius: BorderRadius.circular(12)),
+              decoration: BoxDecoration(
+                  color: AppColors.bgLightGrey,
+                  borderRadius: BorderRadius.circular(12)),
               child: TextField(
-                onChanged: (val) => ref.read(driverSearchProvider.notifier).state = val,
+                onChanged: (val) =>
+                    ref.read(driverSearchProvider.notifier).state = val,
                 decoration: const InputDecoration(
-                  icon: Icon(Iconsax.search_normal, size: 20, color: AppColors.textSecondary),
+                  icon: Icon(Iconsax.search_normal,
+                      size: 20, color: AppColors.textSecondary),
                   hintText: 'Search by driver name or ID...',
                   border: InputBorder.none,
                 ),
               ),
             ),
           ),
-          
           Expanded(
             child: driversAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primaryBlue)),
-              error: (err, stack) => const Center(child: Text('Error loading data')),
+              loading: () => const Center(
+                  child:
+                      CircularProgressIndicator(color: AppColors.primaryBlue)),
+              error: (err, stack) =>
+                  const Center(child: Text('Error loading data')),
               data: (drivers) {
-                final filtered = drivers.where((d) => d.name.toLowerCase().contains(search.toLowerCase()) || d.id.toLowerCase().contains(search.toLowerCase())).toList();
+                final filtered = drivers
+                    .where((d) =>
+                        d.name.toLowerCase().contains(search.toLowerCase()) ||
+                        d.id.toLowerCase().contains(search.toLowerCase()))
+                    .toList();
                 return ListView.separated(
                   padding: const EdgeInsets.all(16),
                   itemCount: filtered.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 12),
                   itemBuilder: (context, index) {
-                    return _buildDriverCard(context, ref, filtered[index]).animate().fadeIn(delay: (index * 50).ms).slideY(begin: 0.1, end: 0);
+                    return _buildDriverCard(context, ref, filtered[index])
+                        .animate()
+                        .fadeIn(delay: (index * 50).ms)
+                        .slideY(begin: 0.1, end: 0);
                   },
                 );
               },
@@ -162,7 +200,17 @@ class DriverDatabaseScreen extends ConsumerWidget {
 
   Widget _buildDriverCard(BuildContext context, WidgetRef ref, AdminDriver d) {
     return Container(
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.1)), boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4))]),
+      decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border:
+              Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.1)),
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withValues(alpha: 0.02),
+                blurRadius: 10,
+                offset: const Offset(0, 4))
+          ]),
       child: Theme(
         data: ThemeData(dividerColor: Colors.transparent),
         child: ExpansionTile(
@@ -171,14 +219,23 @@ class DriverDatabaseScreen extends ConsumerWidget {
           collapsedIconColor: AppColors.textSecondary,
           title: Row(
             children: [
-              CircleAvatar(radius: 20, backgroundColor: AppColors.primaryBlue.withValues(alpha: 0.1), child: const Text('🚗', style: TextStyle(fontSize: 18))),
+              CircleAvatar(
+                  radius: 20,
+                  backgroundColor: AppColors.primaryBlue.withValues(alpha: 0.1),
+                  child: const Text('🚗', style: TextStyle(fontSize: 18))),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('${d.name} (${d.id})', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
-                    Text('Joined: ${d.joinDate} • ⭐ ${d.rating}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
+                    Text('${d.name} (${d.id})',
+                        style: GoogleFonts.outfit(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary)),
+                    Text('Joined: ${d.joinDate} • ⭐ ${d.rating}',
+                        style: const TextStyle(
+                            color: AppColors.textSecondary, fontSize: 11)),
                   ],
                 ),
               ),
@@ -191,12 +248,17 @@ class DriverDatabaseScreen extends ConsumerWidget {
               runSpacing: 8,
               children: [
                 _buildBadge('🚕', '${d.rides} Rides', AppColors.primaryBlue),
-                if (d.docsPending > 0) _buildBadge('🪪', '${d.docsPending} Docs Pending', AppColors.dangerRed),
-                if (d.walletRequest > 0) _buildBadge('💳', '₹${d.walletRequest.toInt()} Req', AppColors.warningAmber),
+                if (d.docsPending > 0)
+                  _buildBadge('🪪', '${d.docsPending} Docs Pending',
+                      AppColors.dangerRed),
+                if (d.walletRequest > 0)
+                  _buildBadge('💳', '₹${d.walletRequest.toInt()} Req',
+                      AppColors.warningAmber),
               ],
             ),
           ),
-          childrenPadding: const EdgeInsets.only(left: 16, right: 16, bottom: 20),
+          childrenPadding:
+              const EdgeInsets.only(left: 16, right: 16, bottom: 20),
           expandedCrossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Divider(),
@@ -204,28 +266,51 @@ class DriverDatabaseScreen extends ConsumerWidget {
 
             // Wallet Requests
             if (d.walletRequest > 0) ...[
-              Text('Wallet Withdrawal Request', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+              Text('Wallet Withdrawal Request',
+                  style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary)),
               const SizedBox(height: 12),
               Container(
                 padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(color: AppColors.warningAmber.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+                decoration: BoxDecoration(
+                    color: AppColors.warningAmber.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12)),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('₹${d.walletRequest.toInt()}', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: AppColors.warningAmber)),
-                        const Text('Requested today', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                        Text('₹${d.walletRequest.toInt()}',
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 16,
+                                color: AppColors.warningAmber)),
+                        const Text('Requested today',
+                            style: TextStyle(
+                                fontSize: 11, color: AppColors.textSecondary)),
                       ],
                     ),
                     ElevatedButton(
-                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.warningAmber, minimumSize: const Size(80, 32), padding: const EdgeInsets.symmetric(horizontal: 16)),
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.warningAmber,
+                          minimumSize: const Size(80, 32),
+                          padding: const EdgeInsets.symmetric(horizontal: 16)),
                       onPressed: () {
-                         ref.read(adminDriversProvider.notifier).approveWallet(d.id);
-                         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Wallet request approved automatically.')));
+                        ref
+                            .read(adminDriversProvider.notifier)
+                            .approveWallet(d.id);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text(
+                                    'Wallet request approved automatically.')));
                       },
-                      child: const Text('Approve', style: TextStyle(fontSize: 11, color: Colors.white, fontWeight: FontWeight.bold)),
+                      child: const Text('Approve',
+                          style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold)),
                     )
                   ],
                 ),
@@ -234,93 +319,138 @@ class DriverDatabaseScreen extends ConsumerWidget {
             ],
 
             // Documents Verification
-            Text('Document Verification', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+            Text('Document Verification',
+                style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
             const SizedBox(height: 12),
             if (d.documents.isEmpty)
-              const Text('No documents uploaded.', style: TextStyle(color: AppColors.textMuted))
+              const Text('No documents uploaded.',
+                  style: TextStyle(color: AppColors.textMuted))
             else
               ...d.documents.map((doc) => Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: InkWell(
-                  onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (ctx) => Dialog(
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        child: Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text('${d.name} - ${doc.title}', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-                              const SizedBox(height: 16),
-                              Container(
-                                height: 200,
-                                width: double.infinity,
-                                decoration: BoxDecoration(
-                                  color: AppColors.bgLightGrey,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: AppColors.border),
-                                ),
-                                child: const Center(
-                                  child: Icon(Iconsax.document_text_1, size: 48, color: AppColors.textSecondary),
-                                ),
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: InkWell(
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (ctx) => Dialog(
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16)),
+                            child: Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(16)),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text('${d.name} - ${doc.title}',
+                                      style: GoogleFonts.outfit(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.textPrimary)),
+                                  const SizedBox(height: 16),
+                                  Container(
+                                    height: 200,
+                                    width: double.infinity,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.bgLightGrey,
+                                      borderRadius: BorderRadius.circular(12),
+                                      border:
+                                          Border.all(color: AppColors.border),
+                                    ),
+                                    child: const Center(
+                                      child: Icon(Iconsax.document_text_1,
+                                          size: 48,
+                                          color: AppColors.textSecondary),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Align(
+                                    alignment: Alignment.centerRight,
+                                    child: TextButton(
+                                      onPressed: () => Navigator.pop(ctx),
+                                      child: const Text('Close'),
+                                    ),
+                                  )
+                                ],
                               ),
-                              const SizedBox(height: 16),
-                              Align(
-                                alignment: Alignment.centerRight,
-                                child: TextButton(
-                                  onPressed: () => Navigator.pop(ctx),
-                                  child: const Text('Close'),
-                                ),
-                              )
-                            ],
+                            ),
                           ),
+                        );
+                      },
+                      borderRadius: const BorderRadius.all(Radius.circular(12)),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.transparent),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: const BoxDecoration(
+                                    color: AppColors.bgLightGrey,
+                                    shape: BoxShape.circle),
+                                child: const Icon(Iconsax.document,
+                                    color: AppColors.textSecondary, size: 16)),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(doc.title,
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 13,
+                                          color: AppColors.textPrimary)),
+                                  Text('Uploaded: ${doc.date}',
+                                      style: const TextStyle(
+                                          fontSize: 11,
+                                          color: AppColors.textSecondary)),
+                                ],
+                              ),
+                            ),
+                            if (doc.status == 'Pending') ...[
+                              const Icon(Icons.visibility_rounded,
+                                  color: AppColors.primaryBlue, size: 20),
+                              const SizedBox(width: 12),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.dangerRed,
+                                    minimumSize: const Size(60, 28),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 10)),
+                                onPressed: () {
+                                  ref
+                                      .read(adminDriversProvider.notifier)
+                                      .approveDoc(d.id, doc.title);
+                                },
+                                child: const Text('Verify',
+                                    style: TextStyle(
+                                        fontSize: 10,
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold)),
+                              )
+                            ] else
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                    color: AppColors.successGreen
+                                        .withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(6)),
+                                child: const Text('Approved',
+                                    style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.successGreen)),
+                              )
+                          ],
                         ),
                       ),
-                    );
-                  },
-                  borderRadius: const BorderRadius.all(Radius.circular(12)),
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.transparent),
                     ),
-                    child: Row(
-                      children: [
-                        Container(padding: const EdgeInsets.all(8), decoration: const BoxDecoration(color: AppColors.bgLightGrey, shape: BoxShape.circle), child: const Icon(Iconsax.document, color: AppColors.textSecondary, size: 16)),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(doc.title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: AppColors.textPrimary)),
-                              Text('Uploaded: ${doc.date}', style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-                            ],
-                          ),
-                        ),
-                        if (doc.status == 'Pending') ...[
-                          const Icon(Icons.visibility_rounded, color: AppColors.primaryBlue, size: 20),
-                          const SizedBox(width: 12),
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(backgroundColor: AppColors.dangerRed, minimumSize: const Size(60, 28), padding: const EdgeInsets.symmetric(horizontal: 10)),
-                            onPressed: () {
-                              ref.read(adminDriversProvider.notifier).approveDoc(d.id, doc.title);
-                            },
-                            child: const Text('Verify', style: TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold)),
-                          )
-                        ] else
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(color: AppColors.successGreen.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
-                            child: const Text('Approved', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.successGreen)),
-                          )
-                      ],
-                    ),
-                  ),
-                ),
-              )),
+                  )),
           ],
         ),
       ),
@@ -330,13 +460,18 @@ class DriverDatabaseScreen extends ConsumerWidget {
   Widget _buildBadge(String emoji, String text, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: color.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(12), border: Border.all(color: color.withValues(alpha: 0.1))),
+      decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withValues(alpha: 0.1))),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(emoji, style: const TextStyle(fontSize: 12)),
           const SizedBox(width: 4),
-          Text(text, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: color)),
+          Text(text,
+              style: TextStyle(
+                  fontSize: 11, fontWeight: FontWeight.bold, color: color)),
         ],
       ),
     );

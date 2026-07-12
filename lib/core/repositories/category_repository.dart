@@ -5,7 +5,8 @@ import '../models/service_category.dart';
 import '../data/local_database.dart';
 import 'package:drift/drift.dart' as drift;
 
-final categoryRepositoryProvider = Provider((ref) => CategoryRepository(ref.watch(localDatabaseProvider)));
+final categoryRepositoryProvider =
+    Provider((ref) => CategoryRepository(ref.watch(localDatabaseProvider)));
 
 class CategoryRepository {
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -25,12 +26,14 @@ class CategoryRepository {
             debugPrint('Background category sync failed: $e');
             return <ServiceCategory>[];
           });
-          return localCategories.map((c) => ServiceCategory(
-            id: c.id,
-            icon: c.icon,
-            label: c.label,
-            count: c.count,
-          )).toList();
+          return localCategories
+              .map((c) => ServiceCategory(
+                    id: c.id,
+                    icon: c.icon,
+                    label: c.label,
+                    count: c.count,
+                  ))
+              .toList();
         }
       }
 
@@ -43,7 +46,9 @@ class CategoryRepository {
 
   Future<List<ServiceCategory>> _syncCategoriesFromRemote() async {
     final response = await _supabase.from('categories').select();
-    final categories = response.map((map) => ServiceCategory.fromMap(map, map['id'].toString())).toList();
+    final categories = response
+        .map((map) => ServiceCategory.fromMap(map, map['id'].toString()))
+        .toList();
 
     // Cache to Drift only on native platforms (ISSUE-04)
     if (!kIsWeb) {
@@ -51,14 +56,14 @@ class CategoryRepository {
         await _db.delete(_db.cachedCategories).go();
         for (final cat in categories) {
           await _db.into(_db.cachedCategories).insert(
-            CachedCategory(
-              id: cat.id,
-              icon: cat.icon,
-              label: cat.label,
-              count: cat.count,
-            ),
-            mode: drift.InsertMode.insertOrReplace,
-          );
+                CachedCategory(
+                  id: cat.id,
+                  icon: cat.icon,
+                  label: cat.label,
+                  count: cat.count,
+                ),
+                mode: drift.InsertMode.insertOrReplace,
+              );
         }
       });
     }

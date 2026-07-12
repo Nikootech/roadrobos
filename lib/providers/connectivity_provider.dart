@@ -3,7 +3,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 
 final connectivityProvider = StreamProvider<bool>((ref) async* {
   final connectivity = Connectivity();
-  
+
   // Emit initial state
   final initialResult = await connectivity.checkConnectivity();
   yield initialResult.contains(ConnectivityResult.none);

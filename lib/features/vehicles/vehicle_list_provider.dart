@@ -35,7 +35,7 @@ class VehicleListNotifier extends AsyncNotifier<List<UserVehicle>> {
       final userState = ref.read(userProvider);
       final userId = userState.user?.id;
       if (userId == null || userId.isEmpty) return;
-      
+
       final repository = ref.read(userVehicleRepositoryProvider);
       await repository.setPrimaryVehicle(userId, vehicleId);
       ref.invalidateSelf();
@@ -81,6 +81,7 @@ class VehicleListNotifier extends AsyncNotifier<List<UserVehicle>> {
   }
 }
 
-final vehicleListProvider = AsyncNotifierProvider<VehicleListNotifier, List<UserVehicle>>(() {
+final vehicleListProvider =
+    AsyncNotifierProvider<VehicleListNotifier, List<UserVehicle>>(() {
   return VehicleListNotifier();
 });

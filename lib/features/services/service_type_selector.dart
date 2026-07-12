@@ -44,7 +44,8 @@ class ServiceTypeSelectorScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildServiceCard(BuildContext context, {
+  Widget _buildServiceCard(
+    BuildContext context, {
     required String title,
     required IconData icon,
     required double basePrice,

@@ -111,17 +111,21 @@ class PaymentService extends _$PaymentService {
         0,
         (response?.paymentId?.length ?? 0).clamp(0, 8),
       );
-      debugPrint('Razorpay payment event received. ID prefix: $safeId...[REDACTED]');
+      debugPrint(
+          'Razorpay payment event received. ID prefix: $safeId...[REDACTED]');
     }
 
     if (_currentPayment != null) {
       try {
-        final paymentId = response?.paymentId ?? 'sim_pay_${DateTime.now().millisecondsSinceEpoch}';
+        final paymentId = response?.paymentId ??
+            'sim_pay_${DateTime.now().millisecondsSinceEpoch}';
         final signature = response?.signature ?? 'simulated_signature';
-        final orderId = response?.orderId ?? 'sim_order_${DateTime.now().millisecondsSinceEpoch}';
+        final orderId = response?.orderId ??
+            'sim_order_${DateTime.now().millisecondsSinceEpoch}';
 
         // All sensitive fields go directly to the server via TLS — not logged
-        final rpcName = AppConfig.isDev ? 'verify_payment_dev' : 'verify_payment';
+        final rpcName =
+            AppConfig.isDev ? 'verify_payment_dev' : 'verify_payment';
         final isValid = await _supabase.rpc(rpcName, params: {
           'p_order_id': orderId,
           'p_payment_id': paymentId,
@@ -133,13 +137,16 @@ class PaymentService extends _$PaymentService {
         });
 
         if (isValid == true) {
-          if (kDebugMode) debugPrint('Payment validated successfully by server.');
+          if (kDebugMode) {
+            debugPrint('Payment validated successfully by server.');
+          }
           if (_paymentCompleter != null && !_paymentCompleter!.isCompleted) {
             _paymentCompleter!.complete();
           }
         } else {
           if (_paymentCompleter != null && !_paymentCompleter!.isCompleted) {
-            _paymentCompleter!.completeError('Payment validation failed on server');
+            _paymentCompleter!
+                .completeError('Payment validation failed on server');
           }
         }
       } catch (e) {
@@ -150,7 +157,8 @@ class PaymentService extends _$PaymentService {
       }
     } else {
       if (_paymentCompleter != null && !_paymentCompleter!.isCompleted) {
-        _paymentCompleter!.completeError('Payment details lost during transaction');
+        _paymentCompleter!
+            .completeError('Payment details lost during transaction');
       }
     }
   }
@@ -176,7 +184,8 @@ class PaymentService extends _$PaymentService {
       if (context != null && context.mounted) {
         JailbreakGuard.showDisallowedDialog(context);
       }
-      throw const SecurityException('Operation blocked: device integrity compromised.');
+      throw const SecurityException(
+          'Operation blocked: device integrity compromised.');
     }
 
     _currentPayment = details;
@@ -212,26 +221,32 @@ class PaymentService extends _$PaymentService {
           'currency': 'INR',
         },
       );
-      
+
       if (response.status != 200) {
         throw Exception('Failed to create order on server: ${response.data}');
       }
-      
+
       orderId = response.data['order_id'] as String?;
       if (orderId == null || orderId.isEmpty) {
         throw Exception('Order ID returned from server was null or empty');
       }
     } catch (e) {
       debugPrint('Error generating Razorpay Order ID: $e');
-      
+
       // Fallback: If in debug mode or dev config, and function is missing or key is placeholder,
       // we can simulate a successful payment flow to allow development/testing to proceed.
       const apiKey = AppConfig.razorpayKey;
-      final isPlaceholder = apiKey.isEmpty || apiKey == 'rzp_test_placeholderKey';
-      
-      if (kDebugMode && (isPlaceholder || e.toString().contains('404') || e.toString().contains('NOT_FOUND') || e.toString().contains('FunctionException'))) {
-        debugPrint('Falling back to Simulated Payment Flow for local development/testing...');
-        
+      final isPlaceholder =
+          apiKey.isEmpty || apiKey == 'rzp_test_placeholderKey';
+
+      if (kDebugMode &&
+          (isPlaceholder ||
+              e.toString().contains('404') ||
+              e.toString().contains('NOT_FOUND') ||
+              e.toString().contains('FunctionException'))) {
+        debugPrint(
+            'Falling back to Simulated Payment Flow for local development/testing...');
+
         // Simulate background payment success event after a short delay
         Future.delayed(const Duration(milliseconds: 800), () {
           _handlePaymentSuccess(PaymentSuccessResponse(
@@ -260,9 +275,7 @@ class PaymentService extends _$PaymentService {
         'contact': details.contact,
         'email': details.email,
       },
-      'theme': {
-        'color': '#0EA5E9'
-      }
+      'theme': {'color': '#0EA5E9'}
     };
 
     try {

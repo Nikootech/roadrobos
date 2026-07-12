@@ -41,7 +41,7 @@ class AppNotification {
 class NotificationNotifier extends StateNotifier<List<AppNotification>> {
   final Ref ref;
   StreamSubscription? _subscription;
-  
+
   NotificationNotifier(this.ref) : super([]) {
     _listenToNotifications();
   }
@@ -57,17 +57,22 @@ class NotificationNotifier extends StateNotifier<List<AppNotification>> {
     if (user == null) return;
 
     _subscription?.cancel();
-    _subscription = ref.read(notificationRepositoryProvider).watchNotifications(user.id).listen((models) {
-      state = models.map((m) => AppNotification(
-        id: m.id,
-        title: m.title,
-        description: m.description,
-        timestamp: m.timestamp,
-        icon: _getIconForType(m.type),
-        isRead: m.isRead,
-        type: m.type,
-      )).toList();
-      
+    _subscription = ref
+        .read(notificationRepositoryProvider)
+        .watchNotifications(user.id)
+        .listen((models) {
+      state = models
+          .map((m) => AppNotification(
+                id: m.id,
+                title: m.title,
+                description: m.description,
+                timestamp: m.timestamp,
+                icon: _getIconForType(m.type),
+                isRead: m.isRead,
+                type: m.type,
+              ))
+          .toList();
+
       // Fallback if empty (keep welcome message for new users)
       if (state.isEmpty) {
         _addWelcomeNotification();
@@ -75,13 +80,13 @@ class NotificationNotifier extends StateNotifier<List<AppNotification>> {
     });
   }
 
-
   void _addWelcomeNotification() {
     state = [
       AppNotification(
         id: 'welcome',
         title: 'Welcome to RoAd RoBo\'s!',
-        description: 'Thank you for joining us. Book your first ride or service and get 20% off!',
+        description:
+            'Thank you for joining us. Book your first ride or service and get 20% off!',
         timestamp: DateTime.now(),
         icon: Icons.celebration_rounded,
       ),
@@ -90,11 +95,16 @@ class NotificationNotifier extends StateNotifier<List<AppNotification>> {
 
   IconData _getIconForType(String? type) {
     switch (type) {
-      case 'rental': return Icons.car_rental;
-      case 'service': return Icons.build;
-      case 'ride': return Icons.local_taxi;
-      case 'wallet': return Icons.account_balance_wallet;
-      default: return Icons.notifications_active;
+      case 'rental':
+        return Icons.car_rental;
+      case 'service':
+        return Icons.build;
+      case 'ride':
+        return Icons.local_taxi;
+      case 'wallet':
+        return Icons.account_balance_wallet;
+      default:
+        return Icons.notifications_active;
     }
   }
 
@@ -114,6 +124,7 @@ class NotificationNotifier extends StateNotifier<List<AppNotification>> {
   }
 }
 
-final notificationProvider = StateNotifierProvider<NotificationNotifier, List<AppNotification>>((ref) {
+final notificationProvider =
+    StateNotifierProvider<NotificationNotifier, List<AppNotification>>((ref) {
   return NotificationNotifier(ref);
 });

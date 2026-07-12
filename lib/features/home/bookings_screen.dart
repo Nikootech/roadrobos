@@ -32,7 +32,8 @@ class BookingsScreen extends ConsumerWidget {
         actions: [
           IconButton(
             onPressed: () => _showBookingFilterSheet(context),
-            icon: const Icon(Iconsax.filter, color: AppColors.textPrimary, size: 20),
+            icon: const Icon(Iconsax.filter,
+                color: AppColors.textPrimary, size: 20),
           ),
         ],
       ),
@@ -49,7 +50,10 @@ class BookingsScreen extends ConsumerWidget {
                   SizedBox(width: 8),
                   Text(
                     'Viewing offline data - Last updated 5 minutes ago',
-                    style: TextStyle(color: Colors.deepOrange, fontSize: 12, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        color: Colors.deepOrange,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -62,9 +66,12 @@ class BookingsScreen extends ConsumerWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Iconsax.calendar_remove, size: 80, color: AppColors.textMuted.withValues(alpha: 0.2)),
+                        Icon(Iconsax.calendar_remove,
+                            size: 80,
+                            color: AppColors.textMuted.withValues(alpha: 0.2)),
                         const SizedBox(height: 16),
-                        const Text('No bookings found', style: TextStyle(color: AppColors.textSecondary)),
+                        const Text('No bookings found',
+                            style: TextStyle(color: AppColors.textSecondary)),
                       ],
                     ),
                   );
@@ -81,9 +88,11 @@ class BookingsScreen extends ConsumerWidget {
                     return GestureDetector(
                       onTap: () {
                         if (booking.type == BookingType.service) {
-                          context.push('/service-booking-detail', extra: booking.originalObject);
+                          context.push('/service-booking-detail',
+                              extra: booking.originalObject);
                         } else if (booking.type == BookingType.ride) {
-                          context.push('/live-tracking', extra: booking.originalObject);
+                          context.push('/live-tracking',
+                              extra: booking.originalObject);
                         } else if (booking.type == BookingType.rental) {
                           context.push('/rental-detail/${booking.id}');
                         }
@@ -167,7 +176,8 @@ class BookingsScreen extends ConsumerWidget {
                                 ),
                                 const SizedBox(height: 4),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 3),
                                   decoration: BoxDecoration(
                                     color: statusColor.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(6),
@@ -193,14 +203,17 @@ class BookingsScreen extends ConsumerWidget {
                   },
                 );
               },
-              loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primaryBlue)),
-              error: (err, stack) => Center(child: Text('Error loading bookings: $err')),
+              loading: () => const Center(
+                  child:
+                      CircularProgressIndicator(color: AppColors.primaryBlue)),
+              error: (err, stack) =>
+                  Center(child: Text('Error loading bookings: $err')),
             ),
           ),
         ],
       ),
-  );
-}
+    );
+  }
 
   void _showBookingFilterSheet(BuildContext context) {
     showModalBottomSheet(
@@ -218,10 +231,17 @@ class BookingsScreen extends ConsumerWidget {
           children: [
             const Text(
               'Filter Bookings',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.deepNavy),
+              style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.deepNavy),
             ),
             const SizedBox(height: 24),
-            const Text('Status', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: AppColors.textSecondary)),
+            const Text('Status',
+                style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                    color: AppColors.textSecondary)),
             const SizedBox(height: 12),
             Wrap(
               spacing: 8,
@@ -233,7 +253,11 @@ class BookingsScreen extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 24),
-            const Text('Service Type', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: AppColors.textSecondary)),
+            const Text('Service Type',
+                style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                    color: AppColors.textSecondary)),
             const SizedBox(height: 12),
             Wrap(
               spacing: 8,
@@ -251,10 +275,13 @@ class BookingsScreen extends ConsumerWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryBlue,
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16)),
                   elevation: 0,
                 ),
-                child: const Text('Apply Filters', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                child: const Text('Apply Filters',
+                    style: TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.bold)),
               ),
             ),
             const SizedBox(height: 16),
@@ -310,4 +337,3 @@ class BookingsScreen extends ConsumerWidget {
     }
   }
 }
-

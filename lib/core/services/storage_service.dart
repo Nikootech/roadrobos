@@ -11,7 +11,8 @@ class StorageService {
   /// Uploads an image to Supabase Storage and returns the public URL
   Future<String?> uploadImage(File file, String path) async {
     try {
-      final fileName = '${DateTime.now().millisecondsSinceEpoch}_${file.path.split('/').last}';
+      final fileName =
+          '${DateTime.now().millisecondsSinceEpoch}_${file.path.split('/').last}';
       final fullPath = '$path/$fileName';
 
       await _client.storage.from(_bucketName).upload(
@@ -30,10 +31,11 @@ class StorageService {
   Future<String?> uploadAvatar(File imageFile, String userId) async {
     try {
       final tempDir = await getTemporaryDirectory();
-      final tempPath = '${tempDir.path}/avatar_${DateTime.now().millisecondsSinceEpoch}.jpg';
-      
+      final tempPath =
+          '${tempDir.path}/avatar_${DateTime.now().millisecondsSinceEpoch}.jpg';
+
       final result = await FlutterImageCompress.compressAndGetFile(
-        imageFile.absolute.path, 
+        imageFile.absolute.path,
         tempPath,
         quality: 80,
         minWidth: 800,

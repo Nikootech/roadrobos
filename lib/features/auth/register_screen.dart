@@ -40,7 +40,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   Future<void> _loadSelectedRole() async {
-    final savedRoleName = await ref.read(localStorageServiceProvider).getSelectedRole();
+    final savedRoleName =
+        await ref.read(localStorageServiceProvider).getSelectedRole();
     if (savedRoleName != null) {
       final role = UserRole.values.firstWhere(
         (e) => e.name == savedRoleName,
@@ -67,9 +68,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       setState(() => _isLoading = true);
       try {
         final response = await ref.read(authServiceProvider).signUpWithEmail(
-          _emailController.text.trim(),
-          _passwordController.text.trim(),
-        );
+              _emailController.text.trim(),
+              _passwordController.text.trim(),
+            );
 
         final user = response.user;
         if (user != null) {
@@ -87,16 +88,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
           // 3. If Driver, create driver record for auto-approval
           if (_selectedRole == UserRole.driver) {
-             await ref.read(driverRepositoryProvider).registerDriver(
-               uid: user.id,
-               name: _nameController.text.trim(),
-               phone: _phoneController.text.trim(),
-               vehicleModel: 'Pending Update',
-               chassisNumber: 'Pending Update',
-               licenseNumber: 'Pending Update',
-             );
+            await ref.read(driverRepositoryProvider).registerDriver(
+                  uid: user.id,
+                  name: _nameController.text.trim(),
+                  phone: _phoneController.text.trim(),
+                  vehicleModel: 'Pending Update',
+                  chassisNumber: 'Pending Update',
+                  licenseNumber: 'Pending Update',
+                );
           }
-          
+
           if (!mounted) return;
           NavHelpers.showSuccess(context, 'Account created successfully!');
         }
@@ -118,7 +119,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             children: [
               // Top bar
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Row(
                   children: [
                     GestureDetector(
@@ -129,16 +131,22 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: AppColors.bgWhite,
-                          border: Border.all(color: AppColors.brandGreen.withValues(alpha: 0.2)),
+                          border: Border.all(
+                              color:
+                                  AppColors.brandGreen.withValues(alpha: 0.2)),
                         ),
-                        child: const Icon(Icons.arrow_back_ios_new_rounded, size: 16, color: AppColors.brandGreen),
+                        child: const Icon(Icons.arrow_back_ios_new_rounded,
+                            size: 16, color: AppColors.brandGreen),
                       ),
                     ),
                     const Expanded(
                       child: Text(
                         'Create Account',
                         textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                        style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary),
                       ),
                     ),
                     const SizedBox(width: 42),
@@ -156,12 +164,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   children: [
                     const Text(
                       AppStrings.createAccount,
-                      style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
+                      style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       AppStrings.registerSubtitle,
-                      style: TextStyle(fontSize: 15, color: AppColors.textSecondary.withValues(alpha: 0.8)),
+                      style: TextStyle(
+                          fontSize: 15,
+                          color:
+                              AppColors.textSecondary.withValues(alpha: 0.8)),
                     ),
                   ],
                 ),
@@ -187,11 +201,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           child: DropdownButton<UserRole>(
                             value: _selectedRole,
                             isExpanded: true,
-                            icon: const Icon(Iconsax.arrow_down_1, color: AppColors.textSecondary),
+                            icon: const Icon(Iconsax.arrow_down_1,
+                                color: AppColors.textSecondary),
                             items: const [
-                              DropdownMenuItem(value: UserRole.customer, child: Text('I am a Customer')),
-                              DropdownMenuItem(value: UserRole.driver, child: Text('I am a Rider/Driver')),
-                              DropdownMenuItem(value: UserRole.technician, child: Text('I am a Technician')),
+                              DropdownMenuItem(
+                                  value: UserRole.customer,
+                                  child: Text('I am a Customer')),
+                              DropdownMenuItem(
+                                  value: UserRole.driver,
+                                  child: Text('I am a Rider/Driver')),
+                              DropdownMenuItem(
+                                  value: UserRole.technician,
+                                  child: Text('I am a Technician')),
                             ],
                             onChanged: (UserRole? value) {
                               if (value != null) {
@@ -207,7 +228,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         hint: 'Enter your full name',
                         prefixIcon: Iconsax.user,
                         controller: _nameController,
-                        validator: (value) => value == null || value.isEmpty ? 'Required' : null,
+                        validator: (value) =>
+                            value == null || value.isEmpty ? 'Required' : null,
                       ),
                       const SizedBox(height: 16),
                       CustomTextField(
@@ -216,7 +238,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         prefixIcon: Iconsax.sms,
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
-                        validator: (value) => value == null || !value.contains('@') ? 'Invalid email' : null,
+                        validator: (value) =>
+                            value == null || !value.contains('@')
+                                ? 'Invalid email'
+                                : null,
                       ),
                       const SizedBox(height: 16),
                       CustomTextField(
@@ -225,7 +250,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         prefixIcon: Iconsax.call,
                         controller: _phoneController,
                         keyboardType: TextInputType.phone,
-                        validator: (value) => value == null || value.length != 10 ? 'Invalid phone' : null,
+                        validator: (value) =>
+                            value == null || value.length != 10
+                                ? 'Invalid phone'
+                                : null,
                       ),
                       const SizedBox(height: 16),
                       CustomTextField(
@@ -234,7 +262,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         prefixIcon: Iconsax.lock,
                         isPassword: true,
                         controller: _passwordController,
-                        validator: (value) => value == null || value.length < 6 ? 'Too short' : null,
+                        validator: (value) => value == null || value.length < 6
+                            ? 'Too short'
+                            : null,
                       ),
                       const SizedBox(height: 16),
                       CustomTextField(
@@ -243,47 +273,61 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         prefixIcon: Iconsax.lock,
                         isPassword: true,
                         controller: _confirmPasswordController,
-                        validator: (value) => value != _passwordController.text ? 'Not match' : null,
+                        validator: (value) => value != _passwordController.text
+                            ? 'Not match'
+                            : null,
                       ),
-
                       const SizedBox(height: 28),
-
                       CustomButton(
                         label: AppStrings.signUp,
                         onPressed: _handleRegister,
                         isLoading: _isLoading,
                         backgroundColor: AppColors.brandGreen,
                       ),
-
                       const SizedBox(height: 24),
-
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Text(AppStrings.alreadyHaveAccount, style: TextStyle(fontSize: 14, color: AppColors.textSecondary)),
+                          const Text(AppStrings.alreadyHaveAccount,
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  color: AppColors.textSecondary)),
                           GestureDetector(
                             onTap: () => context.go('/auth/login'),
-                            child: const Text(' Sign In', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.brandGreen)),
+                            child: const Text(' Sign In',
+                                style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.brandGreen)),
                           ),
                         ],
                       ),
-
                       const SizedBox(height: 32),
-
                       if (AppConfig.showDebugFeatures) ...[
-                        const Text('Quick Demo Access', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
+                        const Text('Quick Demo Access',
+                            style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textSecondary)),
                         const SizedBox(height: 16),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            _buildDemoButton(context, 'Customer', Iconsax.user, AppColors.brandGreen, '/main/home'),
-                            _buildDemoButton(context, 'Driver', Iconsax.car, AppColors.accentOrange, '/driver-home'),
-                            _buildDemoButton(context, 'Tech', Iconsax.setting_2, AppColors.brandGreenMid, '/tech-dashboard'),
-                            _buildDemoButton(context, 'Admin', Iconsax.shield_tick, AppColors.deepNavy, '/admin-home'),
+                            _buildDemoButton(context, 'Customer', Iconsax.user,
+                                AppColors.brandGreen, '/main/home'),
+                            _buildDemoButton(context, 'Driver', Iconsax.car,
+                                AppColors.accentOrange, '/driver-home'),
+                            _buildDemoButton(context, 'Tech', Iconsax.setting_2,
+                                AppColors.brandGreenMid, '/tech-dashboard'),
+                            _buildDemoButton(
+                                context,
+                                'Admin',
+                                Iconsax.shield_tick,
+                                AppColors.deepNavy,
+                                '/admin-home'),
                           ],
                         ),
                       ],
-
                       const SizedBox(height: 48),
                     ],
                   ),
@@ -296,18 +340,22 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     );
   }
 
-  Widget _buildDemoButton(BuildContext context, String label, IconData icon, Color color, String route) {
+  Widget _buildDemoButton(BuildContext context, String label, IconData icon,
+      Color color, String route) {
     return GestureDetector(
       onTap: () => context.go(route),
       child: Column(
         children: [
           Container(
             padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
+            decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
             child: Icon(icon, color: color, size: 24),
           ),
           const SizedBox(height: 4),
-          Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: color)),
+          Text(label,
+              style: TextStyle(
+                  fontSize: 11, fontWeight: FontWeight.bold, color: color)),
         ],
       ),
     );

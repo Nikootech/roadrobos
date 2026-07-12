@@ -3,7 +3,7 @@ class AppAssets {
 
   // ── Production APK Assets ──
   static const String logo = 'assets/images/logo.png';
-  
+
   // Vehicles
   static const String baleno = 'assets/icons/baleno.png';
   static const String creta = 'assets/icons/creta.png';
@@ -35,5 +35,6 @@ class AppAssets {
   static const String zeeoneevaewhite = 'assets/rentals/zeeoneevaewhite1.jpg';
   static const String zeeoneevaeblack = 'assets/rentals/zeeoneevaeblack1.jpg';
   static const String hondaactiva = 'assets/rentals/hondaactiva1.png';
-  static const String royalenfieldclassic = 'assets/rentals/royalenfieldclassic1.png';
+  static const String royalenfieldclassic =
+      'assets/rentals/royalenfieldclassic1.png';
 }

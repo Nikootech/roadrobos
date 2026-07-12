@@ -12,10 +12,11 @@ class SosContact {
 }
 
 class SosNotifier extends StateNotifier<List<SosContact>> {
-  SosNotifier() : super([
-    SosContact(name: 'Mom', phone: '+91 98765 43210'),
-    SosContact(name: 'Brother', phone: '+91 87654 32109'),
-  ]);
+  SosNotifier()
+      : super([
+          SosContact(name: 'Mom', phone: '+91 98765 43210'),
+          SosContact(name: 'Brother', phone: '+91 87654 32109'),
+        ]);
 
   void addContact(SosContact contact) {
     state = [...state, contact];
@@ -28,9 +29,9 @@ class SosNotifier extends StateNotifier<List<SosContact>> {
   Future<void> triggerEmergency(String userId) async {
     try {
       final position = await Geolocator.getCurrentPosition();
-      
+
       final supabase = Supabase.instance.client;
-      
+
       // Log to Supabase for Admin Dashboard
       final alertData = {
         'user_id': userId,
@@ -38,7 +39,8 @@ class SosNotifier extends StateNotifier<List<SosContact>> {
           'lat': position.latitude,
           'lng': position.longitude,
         },
-        'contacts_notified': state.map((c) => '${c.name} (${c.phone})').toList(),
+        'contacts_notified':
+            state.map((c) => '${c.name} (${c.phone})').toList(),
         'status': 'pending',
         'created_at': DateTime.now().utcIso,
       };
@@ -54,9 +56,11 @@ class SosNotifier extends StateNotifier<List<SosContact>> {
 
       // Notify Emergency Contacts via SMS Intent
       if (state.isNotEmpty) {
-        final googleMapsUrl = 'https://www.google.com/maps/search/?api=1&query=${position.latitude},${position.longitude}';
-        final message = 'EMERGENCY ALERT: I am in trouble! My live location: $googleMapsUrl';
-        
+        final googleMapsUrl =
+            'https://www.google.com/maps/search/?api=1&query=${position.latitude},${position.longitude}';
+        final message =
+            'EMERGENCY ALERT: I am in trouble! My live location: $googleMapsUrl';
+
         // Android/iOS SMS scheme
         final Uri smsUri = Uri(
           scheme: 'sms',

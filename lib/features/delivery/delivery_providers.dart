@@ -86,32 +86,38 @@ class DeliveryOrderNotifier extends StateNotifier<DeliveryFormState> {
   DeliveryOrderNotifier(this.ref) : super(const DeliveryFormState());
 
   void setPickup(LatLng? location, String address) {
-    state = state.copyWith(pickupLocation: location, pickupAddress: address, clearError: true);
+    state = state.copyWith(
+        pickupLocation: location, pickupAddress: address, clearError: true);
     _calculateDistance();
   }
 
   void setDropoff(LatLng? location, String address) {
-    state = state.copyWith(dropoffLocation: location, dropoffAddress: address, clearError: true);
+    state = state.copyWith(
+        dropoffLocation: location, dropoffAddress: address, clearError: true);
     _calculateDistance();
   }
 
   void _calculateDistance() {
     if (state.pickupLocation != null && state.dropoffLocation != null) {
       const distanceCalc = Distance();
-      final double meters = distanceCalc.as(LengthUnit.Meter, state.pickupLocation!, state.dropoffLocation!);
+      final double meters = distanceCalc.as(
+          LengthUnit.Meter, state.pickupLocation!, state.dropoffLocation!);
       final distanceKm = meters / 1000.0;
       state = state.copyWith(estimatedDistanceKm: distanceKm);
     }
   }
+
   void setDescription(String desc) =>
       state = state.copyWith(packageDescription: desc, clearError: true);
   void setWeight(double kg) => state = state.copyWith(weightKg: kg);
-  void setDistance(double km) => state = state.copyWith(estimatedDistanceKm: km);
+  void setDistance(double km) =>
+      state = state.copyWith(estimatedDistanceKm: km);
 
   Future<DeliveryOrder?> submitOrder() async {
     final s = state;
     if (s.pickupAddress.isEmpty || s.dropoffAddress.isEmpty) {
-      state = state.copyWith(error: 'Please fill pickup and dropoff addresses.');
+      state =
+          state.copyWith(error: 'Please fill pickup and dropoff addresses.');
       return null;
     }
     if (s.packageDescription.isEmpty) {
@@ -134,7 +140,8 @@ class DeliveryOrderNotifier extends StateNotifier<DeliveryFormState> {
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
-      final created = await ref.read(deliveryRepositoryProvider).createOrder(order);
+      final created =
+          await ref.read(deliveryRepositoryProvider).createOrder(order);
       state = state.copyWith(isSubmitting: false, createdOrder: created);
       return created;
     } catch (e) {

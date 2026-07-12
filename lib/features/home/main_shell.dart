@@ -23,10 +23,22 @@ class _MainShellState extends State<MainShell> {
   ];
 
   static const List<NavItemData> _customerNavItems = [
-    NavItemData(icon: Icons.home_outlined, activeIcon: Icons.home_rounded, label: 'Home'),
-    NavItemData(icon: Icons.calendar_today_outlined, activeIcon: Icons.calendar_today_rounded, label: 'Bookings'),
-    NavItemData(icon: Icons.explore_outlined, activeIcon: Icons.explore_rounded, label: 'Explore'),
-    NavItemData(icon: Icons.person_outline_rounded, activeIcon: Icons.person_rounded, label: 'Profile'),
+    NavItemData(
+        icon: Icons.home_outlined,
+        activeIcon: Icons.home_rounded,
+        label: 'Home'),
+    NavItemData(
+        icon: Icons.calendar_today_outlined,
+        activeIcon: Icons.calendar_today_rounded,
+        label: 'Bookings'),
+    NavItemData(
+        icon: Icons.explore_outlined,
+        activeIcon: Icons.explore_rounded,
+        label: 'Explore'),
+    NavItemData(
+        icon: Icons.person_outline_rounded,
+        activeIcon: Icons.person_rounded,
+        label: 'Profile'),
   ];
 
   @override

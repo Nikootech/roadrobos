@@ -11,7 +11,7 @@ import '../../shared/widgets/custom_button.dart';
 /// Now dynamicized to handle real ApprovalRequest data.
 class KycApprovalScreen extends ConsumerWidget {
   final ApprovalRequest request;
-  
+
   const KycApprovalScreen({super.key, required this.request});
 
   @override
@@ -29,10 +29,15 @@ class KycApprovalScreen extends ConsumerWidget {
         elevation: 1,
         shadowColor: Colors.black.withValues(alpha: 0.05),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: AppColors.textPrimary),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded,
+              size: 18, color: AppColors.textPrimary),
           onPressed: () => context.pop(),
         ),
-        title: const Text('KYC Approval', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+        title: const Text('KYC Approval',
+            style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary)),
       ),
       body: CustomScrollView(
         slivers: [
@@ -45,25 +50,42 @@ class KycApprovalScreen extends ConsumerWidget {
                   // Applicant Info
                   Container(
                     padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                    decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16)),
                     child: Row(
                       children: [
                         Container(
                           width: 60,
                           height: 60,
-                          decoration: BoxDecoration(color: AppColors.primaryBlue.withValues(alpha: 0.1), shape: BoxShape.circle),
-                          child: const Icon(Icons.person, color: AppColors.primaryBlue, size: 30),
+                          decoration: BoxDecoration(
+                              color:
+                                  AppColors.primaryBlue.withValues(alpha: 0.1),
+                              shape: BoxShape.circle),
+                          child: const Icon(Icons.person,
+                              color: AppColors.primaryBlue, size: 30),
                         ),
                         const SizedBox(width: 16),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(applicantName, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                              Text(applicantName,
+                                  style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.textPrimary)),
                               const SizedBox(height: 4),
-                              Text('$applicantRole Application • ID: $applicantId', style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                              Text(
+                                  '$applicantRole Application • ID: $applicantId',
+                                  style: const TextStyle(
+                                      fontSize: 13,
+                                      color: AppColors.textSecondary)),
                               const SizedBox(height: 4),
-                              Text('Applied: $submittedAt', style: const TextStyle(fontSize: 12, color: AppColors.primaryBlue)),
+                              Text('Applied: $submittedAt',
+                                  style: const TextStyle(
+                                      fontSize: 12,
+                                      color: AppColors.primaryBlue)),
                             ],
                           ),
                         )
@@ -72,32 +94,55 @@ class KycApprovalScreen extends ConsumerWidget {
                   ).animate().fadeIn().slideY(begin: 0.1, end: 0),
 
                   const SizedBox(height: 24),
-                  const Text('Documents Submitted', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                  const Text('Documents Submitted',
+                      style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary)),
                   const SizedBox(height: 16),
                 ],
               ),
             ),
           ),
-          
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 if (payload.containsKey('document_url'))
-                  _buildDocCard('Main Document', 'Manual Review Required', false, Icons.badge_outlined, context, payload['document_url']),
-                
+                  _buildDocCard(
+                      'Main Document',
+                      'Manual Review Required',
+                      false,
+                      Icons.badge_outlined,
+                      context,
+                      payload['document_url']),
                 if (payload.containsKey('license_front'))
-                  _buildDocCard('Driving License (Front)', 'Verified by AI', true, Icons.badge_outlined, context, payload['license_front']),
-                
+                  _buildDocCard(
+                      'Driving License (Front)',
+                      'Verified by AI',
+                      true,
+                      Icons.badge_outlined,
+                      context,
+                      payload['license_front']),
                 if (payload.containsKey('license_back'))
-                  _buildDocCard('Driving License (Back)', 'Verified by AI', true, Icons.badge_outlined, context, payload['license_back']),
-                
+                  _buildDocCard(
+                      'Driving License (Back)',
+                      'Verified by AI',
+                      true,
+                      Icons.badge_outlined,
+                      context,
+                      payload['license_back']),
                 if (payload.containsKey('rc_document'))
-                  _buildDocCard('Vehicle RC Print', 'Pending review', false, Icons.description_outlined, context, payload['rc_document']),
+                  _buildDocCard(
+                      'Vehicle RC Print',
+                      'Pending review',
+                      false,
+                      Icons.description_outlined,
+                      context,
+                      payload['rc_document']),
               ]),
             ),
           ),
-
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
       ),
@@ -105,7 +150,10 @@ class KycApprovalScreen extends ConsumerWidget {
         padding: const EdgeInsets.all(20),
         decoration: const BoxDecoration(
           color: Colors.white,
-          boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, -5))],
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black12, blurRadius: 10, offset: Offset(0, -5))
+          ],
         ),
         child: Row(
           children: [
@@ -136,23 +184,38 @@ class KycApprovalScreen extends ConsumerWidget {
   }
 
   String _getMonth(int month) {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
+    ];
     return months[month - 1];
   }
 
   void _handleApproval(BuildContext context, WidgetRef ref) async {
     try {
       await ref.read(approvalRepositoryProvider).updateApprovalStatus(
-        id: request.id,
-        status: ApprovalStatus.approved,
-      );
+            id: request.id,
+            status: ApprovalStatus.approved,
+          );
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('KYC Approved. User is now LIVE!')));
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('KYC Approved. User is now LIVE!')));
         context.pop();
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
   }
@@ -163,18 +226,22 @@ class KycApprovalScreen extends ConsumerWidget {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: const Text('Rejection Reason', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Rejection Reason',
+            style: TextStyle(fontWeight: FontWeight.bold)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Please specify why this KYC application is being rejected.', style: TextStyle(fontSize: 14, color: AppColors.textSecondary)),
+            const Text(
+                'Please specify why this KYC application is being rejected.',
+                style: TextStyle(fontSize: 14, color: AppColors.textSecondary)),
             const SizedBox(height: 16),
             TextField(
               controller: reasonController,
               maxLines: 3,
               decoration: InputDecoration(
                 hintText: 'e.g. Blurred document, Expired ID...',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 filled: true,
                 fillColor: AppColors.bgLightGrey,
               ),
@@ -182,27 +249,33 @@ class KycApprovalScreen extends ConsumerWidget {
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () async {
               try {
                 await ref.read(approvalRepositoryProvider).updateApprovalStatus(
-                  id: request.id,
-                  status: ApprovalStatus.rejected,
-                  reason: reasonController.text,
-                );
+                      id: request.id,
+                      status: ApprovalStatus.rejected,
+                      reason: reasonController.text,
+                    );
                 if (context.mounted) {
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Application rejected.')));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Application rejected.')));
                   context.pop();
                 }
               } catch (e) {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+                  ScaffoldMessenger.of(context)
+                      .showSnackBar(SnackBar(content: Text('Error: $e')));
                 }
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.dangerRed, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.dangerRed,
+                foregroundColor: Colors.white),
             child: const Text('Confirm Reject'),
           ),
         ],
@@ -222,24 +295,39 @@ class KycApprovalScreen extends ConsumerWidget {
             AppBar(
               backgroundColor: Colors.transparent,
               elevation: 0,
-              title: Text(title, style: const TextStyle(color: AppColors.textPrimary, fontSize: 16)),
-              leading: IconButton(icon: const Icon(Icons.close, color: AppColors.textPrimary), onPressed: () => Navigator.pop(context)),
+              title: Text(title,
+                  style: const TextStyle(
+                      color: AppColors.textPrimary, fontSize: 16)),
+              leading: IconButton(
+                  icon: const Icon(Icons.close, color: AppColors.textPrimary),
+                  onPressed: () => Navigator.pop(context)),
             ),
             Container(
               height: MediaQuery.of(context).size.height * 0.6,
               width: double.infinity,
               margin: const EdgeInsets.all(16),
-              decoration: BoxDecoration(color: AppColors.bgLightGrey, borderRadius: BorderRadius.circular(16)),
+              decoration: BoxDecoration(
+                  color: AppColors.bgLightGrey,
+                  borderRadius: BorderRadius.circular(16)),
               child: url != null && url.startsWith('http')
                   ? ClipRRect(
                       borderRadius: BorderRadius.circular(16),
-                      child: Image.network(url, fit: BoxFit.contain, errorBuilder: (c, e, s) => const Center(child: Icon(Icons.broken_image, size: 80, color: AppColors.textMuted))),
+                      child: Image.network(url,
+                          fit: BoxFit.contain,
+                          errorBuilder: (c, e, s) => const Center(
+                              child: Icon(Icons.broken_image,
+                                  size: 80, color: AppColors.textMuted))),
                     )
-                  : const Center(child: Icon(Icons.image_outlined, size: 80, color: AppColors.textMuted)),
+                  : const Center(
+                      child: Icon(Icons.image_outlined,
+                          size: 80, color: AppColors.textMuted)),
             ),
             const Padding(
               padding: EdgeInsets.all(16.0),
-              child: Text('Document provided for verification', style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.w600)),
+              child: Text('Document provided for verification',
+                  style: TextStyle(
+                      color: AppColors.primaryBlue,
+                      fontWeight: FontWeight.w600)),
             ),
           ],
         ),
@@ -247,34 +335,62 @@ class KycApprovalScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildDocCard(String title, String status, bool isValid, IconData icon, BuildContext context, String? url) {
+  Widget _buildDocCard(String title, String status, bool isValid, IconData icon,
+      BuildContext context, String? url) {
     return Container(
       padding: const EdgeInsets.all(16),
       margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border)),
+      decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.border)),
       child: Column(
         children: [
           Row(
             children: [
-              Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: AppColors.bgLightGrey, borderRadius: BorderRadius.circular(10)), child: Icon(icon, color: AppColors.textSecondary)),
+              Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                      color: AppColors.bgLightGrey,
+                      borderRadius: BorderRadius.circular(10)),
+                  child: Icon(icon, color: AppColors.textSecondary)),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                    Text(title,
+                        style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary)),
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        Icon(isValid ? Icons.check_circle_rounded : Icons.pending_rounded, size: 14, color: isValid ? AppColors.successGreen : AppColors.warningAmber),
+                        Icon(
+                            isValid
+                                ? Icons.check_circle_rounded
+                                : Icons.pending_rounded,
+                            size: 14,
+                            color: isValid
+                                ? AppColors.successGreen
+                                : AppColors.warningAmber),
                         const SizedBox(width: 4),
-                        Text(status, style: TextStyle(fontSize: 12, color: isValid ? AppColors.successGreen : AppColors.warningAmber)),
+                        Text(status,
+                            style: TextStyle(
+                                fontSize: 12,
+                                color: isValid
+                                    ? AppColors.successGreen
+                                    : AppColors.warningAmber)),
                       ],
                     )
                   ],
                 ),
               ),
-              IconButton(icon: const Icon(Icons.remove_red_eye_outlined, color: AppColors.primaryBlue), onPressed: () => _showDocumentPreview(context, title, url))
+              IconButton(
+                  icon: const Icon(Icons.remove_red_eye_outlined,
+                      color: AppColors.primaryBlue),
+                  onPressed: () => _showDocumentPreview(context, title, url))
             ],
           ),
           if (url != null && url.startsWith('http')) ...[
@@ -288,7 +404,8 @@ class KycApprovalScreen extends ConsumerWidget {
                   color: AppColors.bgLightGrey,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: AppColors.border),
-                  image: DecorationImage(image: NetworkImage(url), fit: BoxFit.cover),
+                  image: DecorationImage(
+                      image: NetworkImage(url), fit: BoxFit.cover),
                 ),
               ),
             )
@@ -298,5 +415,3 @@ class KycApprovalScreen extends ConsumerWidget {
     ).animate().fadeIn().slideY(begin: 0.1, end: 0);
   }
 }
-
-

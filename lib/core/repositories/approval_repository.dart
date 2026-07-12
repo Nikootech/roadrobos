@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/approval.dart';
 import '../extensions/datetime_extensions.dart';
 
-
 final approvalRepositoryProvider = Provider<ApprovalRepository>((ref) {
   return ApprovalRepository();
 });
@@ -17,7 +16,8 @@ class ApprovalRepository {
         .stream(primaryKey: ['id'])
         .eq('status', 'pending')
         .order('created_at')
-        .map((data) => data.map((map) => ApprovalRequest.fromMap(map)).toList());
+        .map(
+            (data) => data.map((map) => ApprovalRequest.fromMap(map)).toList());
   }
 
   Future<void> createApprovalRequest({

@@ -7,9 +7,11 @@ import 'package:roadrobos/core/services/rbac_service.dart';
 
 // ── Mock Classes ─────────────────────────────────────────────────────────────
 class MockSupabaseClient extends Mock implements SupabaseClient {}
+
 class MockSupabaseQueryBuilder extends Mock implements SupabaseQueryBuilder {}
 
-class MockPostgrestFilterBuilder extends Mock implements PostgrestFilterBuilder<List<Map<String, dynamic>>> {
+class MockPostgrestFilterBuilder extends Mock
+    implements PostgrestFilterBuilder<List<Map<String, dynamic>>> {
   final FutureOr<List<Map<String, dynamic>>> Function() handler;
 
   MockPostgrestFilterBuilder(this.handler);
@@ -39,7 +41,8 @@ class MockPostgrestFilterBuilder extends Mock implements PostgrestFilterBuilder<
   }
 }
 
-class MockPostgrestFilterBuilderRpc extends Mock implements PostgrestFilterBuilder<dynamic> {
+class MockPostgrestFilterBuilderRpc extends Mock
+    implements PostgrestFilterBuilder<dynamic> {
   final FutureOr<dynamic> Function() handler;
 
   MockPostgrestFilterBuilderRpc(this.handler);
@@ -81,17 +84,26 @@ void main() {
     mockSupabase = MockSupabaseClient();
     mockQueryBuilder = MockSupabaseQueryBuilder();
     rbacService = RbacService(mockSupabase);
-    
+
     when(() => mockSupabase.from(any())).thenAnswer((_) => mockQueryBuilder);
   });
 
   group('RbacService Unit Tests', () {
-    test('fetchUserPermissions parses RPC response and caches permissions', () async {
+    test('fetchUserPermissions parses RPC response and caches permissions',
+        () async {
       // 1. Mock the get_user_permissions RPC call
       final mockRpcBuilder = MockPostgrestFilterBuilderRpc(() {
         return [
-          {'permission_name': 'read_chats', 'resource': 'chats', 'action': 'read'},
-          {'permission_name': 'write_chats', 'resource': 'chats', 'action': 'write'},
+          {
+            'permission_name': 'read_chats',
+            'resource': 'chats',
+            'action': 'read'
+          },
+          {
+            'permission_name': 'write_chats',
+            'resource': 'chats',
+            'action': 'write'
+          },
         ];
       });
 
@@ -109,8 +121,10 @@ void main() {
         ];
       });
 
-      when(() => mockQueryBuilder.select(any())).thenAnswer((_) => mockSelectBuilder);
-      when(() => mockSelectBuilder.eq(any(), any())).thenAnswer((_) => mockSelectBuilder);
+      when(() => mockQueryBuilder.select(any()))
+          .thenAnswer((_) => mockSelectBuilder);
+      when(() => mockSelectBuilder.eq(any(), any()))
+          .thenAnswer((_) => mockSelectBuilder);
 
       // 3. Fetch permissions
       final perms = await rbacService.fetchUserPermissions('user_123');
@@ -127,7 +141,8 @@ void main() {
       expect(cached, contains('read_chats'));
     });
 
-    test('fetchUserPermissions injects shorthand role permissions for admin', () async {
+    test('fetchUserPermissions injects shorthand role permissions for admin',
+        () async {
       // 1. Mock empty RPC response
       final mockRpcBuilder = MockPostgrestFilterBuilderRpc(() => []);
 
@@ -145,8 +160,10 @@ void main() {
         ];
       });
 
-      when(() => mockQueryBuilder.select(any())).thenAnswer((_) => mockSelectBuilder);
-      when(() => mockSelectBuilder.eq(any(), any())).thenAnswer((_) => mockSelectBuilder);
+      when(() => mockQueryBuilder.select(any()))
+          .thenAnswer((_) => mockSelectBuilder);
+      when(() => mockSelectBuilder.eq(any(), any()))
+          .thenAnswer((_) => mockSelectBuilder);
 
       // 3. Fetch permissions
       final perms = await rbacService.fetchUserPermissions('user_123');

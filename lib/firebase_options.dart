@@ -52,7 +52,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '542549978836',
     projectId: 'roadrobos-prod',
     authDomain: 'roadrobos-prod.firebaseapp.com',
-    databaseURL: 'https://roadrobos-prod-default-rtdb.asia-southeast1.firebasedatabase.app',
+    databaseURL:
+        'https://roadrobos-prod-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'roadrobos-prod.firebasestorage.app',
     measurementId: 'G-6PTKD5RFMY',
   );
@@ -62,7 +63,8 @@ class DefaultFirebaseOptions {
     appId: '1:542549978836:android:01511e6fb66b5612571541',
     messagingSenderId: '542549978836',
     projectId: 'roadrobos-prod',
-    databaseURL: 'https://roadrobos-prod-default-rtdb.asia-southeast1.firebasedatabase.app',
+    databaseURL:
+        'https://roadrobos-prod-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'roadrobos-prod.firebasestorage.app',
   );
 
@@ -71,9 +73,11 @@ class DefaultFirebaseOptions {
     appId: '1:542549978836:ios:ef1b27c690f4f5ca571541',
     messagingSenderId: '542549978836',
     projectId: 'roadrobos-prod',
-    databaseURL: 'https://roadrobos-prod-default-rtdb.asia-southeast1.firebasedatabase.app',
+    databaseURL:
+        'https://roadrobos-prod-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'roadrobos-prod.firebasestorage.app',
-    iosClientId: '542549978836-4hemooorhcc62v77kgqaltivaagr1iih.apps.googleusercontent.com',
+    iosClientId:
+        '542549978836-4hemooorhcc62v77kgqaltivaagr1iih.apps.googleusercontent.com',
     iosBundleId: 'com.roadrobos.roadrobos',
   );
 }

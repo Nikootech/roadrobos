@@ -12,10 +12,12 @@ class EVBikeServiceBookingScreen extends ConsumerStatefulWidget {
   const EVBikeServiceBookingScreen({super.key});
 
   @override
-  ConsumerState<EVBikeServiceBookingScreen> createState() => _EVBikeServiceBookingScreenState();
+  ConsumerState<EVBikeServiceBookingScreen> createState() =>
+      _EVBikeServiceBookingScreenState();
 }
 
-class _EVBikeServiceBookingScreenState extends ConsumerState<EVBikeServiceBookingScreen> {
+class _EVBikeServiceBookingScreenState
+    extends ConsumerState<EVBikeServiceBookingScreen> {
   int _selectedPackageIndex = -1;
 
   final List<Map<String, dynamic>> _packages = [
@@ -23,7 +25,12 @@ class _EVBikeServiceBookingScreenState extends ConsumerState<EVBikeServiceBookin
       'name': 'EV Basic Care',
       'price': '₹799',
       'subtitle': 'Essential battery & safety check',
-      'items': ['Battery Health Check', 'Brake Inspection', 'Tyre Pressure Adjust', 'General Cleanup'],
+      'items': [
+        'Battery Health Check',
+        'Brake Inspection',
+        'Tyre Pressure Adjust',
+        'General Cleanup'
+      ],
       'color': const Color(0xFF06B6D4), // Cyan for EV feel
       'isPremium': false,
     },
@@ -31,7 +38,12 @@ class _EVBikeServiceBookingScreenState extends ConsumerState<EVBikeServiceBookin
       'name': 'EV Pro Service',
       'price': '₹1,599',
       'subtitle': 'Comprehensive motor & software care',
-      'items': ['Basic + Motor Diagnostic', 'Software Firmware Update', 'Chain/Belt Tensioning', 'Deep Wash'],
+      'items': [
+        'Basic + Motor Diagnostic',
+        'Software Firmware Update',
+        'Chain/Belt Tensioning',
+        'Deep Wash'
+      ],
       'color': const Color(0xFF3B82F6),
       'isPremium': true,
     },
@@ -39,7 +51,12 @@ class _EVBikeServiceBookingScreenState extends ConsumerState<EVBikeServiceBookin
       'name': 'EV Performance',
       'price': '₹2,499',
       'subtitle': 'Maximum efficiency & cell calibration',
-      'items': ['Pro + Battery Cell Balancing', 'High-Volt Cable Inspection', 'Full System Calibration', 'Premium Wax'],
+      'items': [
+        'Pro + Battery Cell Balancing',
+        'High-Volt Cable Inspection',
+        'Full System Calibration',
+        'Premium Wax'
+      ],
       'color': const Color(0xFF8B5CF6),
       'isPremium': true,
     },
@@ -55,12 +72,16 @@ class _EVBikeServiceBookingScreenState extends ConsumerState<EVBikeServiceBookin
         leading: GestureDetector(
           onTap: () => context.pop(),
           child: const Center(
-            child: Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: AppColors.textPrimary),
+            child: Icon(Icons.arrow_back_ios_new_rounded,
+                size: 18, color: AppColors.textPrimary),
           ),
         ),
         title: const Text(
           'EV Bike Service Packages',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+          style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary),
         ),
       ),
       body: Column(
@@ -90,13 +111,20 @@ class _EVBikeServiceBookingScreenState extends ConsumerState<EVBikeServiceBookin
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
             decoration: const BoxDecoration(
               color: Colors.white,
-              boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, -2))],
+              boxShadow: [
+                BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 10,
+                    offset: Offset(0, -2))
+              ],
             ),
             child: CustomButton(
               label: 'Proceed to Schedule',
-              onPressed: _selectedPackageIndex == -1 ? null : () {
-                context.push('/schedule-appointment');
-              },
+              onPressed: _selectedPackageIndex == -1
+                  ? null
+                  : () {
+                      context.push('/schedule-appointment');
+                    },
               backgroundColor: AppColors.primaryBlue,
             ),
           ),
@@ -105,17 +133,20 @@ class _EVBikeServiceBookingScreenState extends ConsumerState<EVBikeServiceBookin
     );
   }
 
-  Widget _buildPremiumPackageCard(int index, Map<String, dynamic> pkg, bool isSelected) {
+  Widget _buildPremiumPackageCard(
+      int index, Map<String, dynamic> pkg, bool isSelected) {
     return GestureDetector(
       onTap: () {
         setState(() => _selectedPackageIndex = index);
         final selectedVehicle = ref.read(vehicleProvider);
-        ref.read(bookingProvider.notifier).setVehicle(selectedVehicle.name, selectedVehicle.plate);
+        ref
+            .read(bookingProvider.notifier)
+            .setVehicle(selectedVehicle.name, selectedVehicle.plate);
         ref.read(bookingProvider.notifier).setPackage(
-          pkg['name'] as String, 
-          pkg['price'] as String,
-          List<String>.from(pkg['items'] as List),
-        );
+              pkg['name'] as String,
+              pkg['price'] as String,
+              List<String>.from(pkg['items'] as List),
+            );
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 20),
@@ -123,7 +154,9 @@ class _EVBikeServiceBookingScreenState extends ConsumerState<EVBikeServiceBookin
           color: Colors.white,
           borderRadius: BorderRadius.circular(32),
           border: Border.all(
-            color: isSelected ? AppColors.primaryBlue : Colors.grey.withValues(alpha: 0.1),
+            color: isSelected
+                ? AppColors.primaryBlue
+                : Colors.grey.withValues(alpha: 0.1),
             width: isSelected ? 2 : 1,
           ),
           boxShadow: [
@@ -141,7 +174,8 @@ class _EVBikeServiceBookingScreenState extends ConsumerState<EVBikeServiceBookin
                 top: 0,
                 right: 0,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
                     color: (pkg['color'] as Color).withValues(alpha: 0.8),
                     borderRadius: const BorderRadius.only(
@@ -219,7 +253,8 @@ class _EVBikeServiceBookingScreenState extends ConsumerState<EVBikeServiceBookin
                               shape: BoxShape.circle,
                               color: Color(0xFFF1F5F9),
                             ),
-                            child: const Icon(Icons.check_circle_rounded, size: 20, color: Color(0xFF10B981)),
+                            child: const Icon(Icons.check_circle_rounded,
+                                size: 20, color: Color(0xFF10B981)),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -266,9 +301,11 @@ class _EVBikeServiceBookingScreenState extends ConsumerState<EVBikeServiceBookin
           ],
         ),
       ),
-    ).animate(delay: Duration(milliseconds: 100 * index)).fadeIn().slideY(begin: 0.1, end: 0);
+    )
+        .animate(delay: Duration(milliseconds: 100 * index))
+        .fadeIn()
+        .slideY(begin: 0.1, end: 0);
   }
-
 
   Widget _buildStepIndicator() {
     return Container(

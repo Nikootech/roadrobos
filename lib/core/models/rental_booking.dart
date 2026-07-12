@@ -29,11 +29,15 @@ class RentalBooking {
       customerId: map['customer_id'] ?? '',
       vehicleName: map['vehicle_name'] ?? '',
       rentalType: map['rental_type'] ?? '',
-      startTime: map['start_time'] != null ? DateTime.parse(map['start_time']) : DateTime.now(),
+      startTime: map['start_time'] != null
+          ? DateTime.parse(map['start_time'])
+          : DateTime.now(),
       duration: map['duration'] ?? 1,
       status: map['status'] ?? 'active',
       totalCost: (map['total_cost'] ?? 0.0).toDouble(),
-      details: map['details'] is Map ? Map<String, dynamic>.from(map['details']) : {},
+      details: map['details'] is Map
+          ? Map<String, dynamic>.from(map['details'])
+          : {},
     );
   }
 

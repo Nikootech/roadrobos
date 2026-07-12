@@ -9,7 +9,8 @@ class OfflineBanner extends ConsumerStatefulWidget {
   ConsumerState<OfflineBanner> createState() => _OfflineBannerState();
 }
 
-class _OfflineBannerState extends ConsumerState<OfflineBanner> with SingleTickerProviderStateMixin {
+class _OfflineBannerState extends ConsumerState<OfflineBanner>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<Offset> _offsetAnimation;
   bool _dismissed = false;
@@ -71,7 +72,8 @@ class _OfflineBannerState extends ConsumerState<OfflineBanner> with SingleTicker
                 elevation: 4,
                 color: Colors.red.shade600,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0, vertical: 8.0),
                   child: Row(
                     children: [
                       const Icon(Icons.wifi_off, color: Colors.white, size: 20),
@@ -83,7 +85,8 @@ class _OfflineBannerState extends ConsumerState<OfflineBanner> with SingleTicker
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.close, color: Colors.white, size: 20),
+                        icon: const Icon(Icons.close,
+                            color: Colors.white, size: 20),
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
                         onPressed: () {

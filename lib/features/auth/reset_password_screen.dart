@@ -14,7 +14,8 @@ class ResetPasswordScreen extends ConsumerStatefulWidget {
   const ResetPasswordScreen({super.key});
 
   @override
-  ConsumerState<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
+  ConsumerState<ResetPasswordScreen> createState() =>
+      _ResetPasswordScreenState();
 }
 
 class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
@@ -34,8 +35,10 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
     if (_formKey.currentState?.validate() ?? false) {
       setState(() => _isLoading = true);
       try {
-        await ref.read(authServiceProvider).updatePassword(_passwordController.text.trim());
-        
+        await ref
+            .read(authServiceProvider)
+            .updatePassword(_passwordController.text.trim());
+
         if (!mounted) return;
         setState(() => _isLoading = false);
 
@@ -51,7 +54,10 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(32),
                 boxShadow: const [
-                  BoxShadow(color: Colors.black12, blurRadius: 24, offset: Offset(0, 12)),
+                  BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 24,
+                      offset: Offset(0, 12)),
                 ],
               ),
               child: Column(
@@ -69,7 +75,10 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                       color: AppColors.successGreen,
                       size: 44,
                     ),
-                  ).animate().scale(delay: 200.ms, duration: 400.ms, curve: Curves.easeOutBack),
+                  ).animate().scale(
+                      delay: 200.ms,
+                      duration: 400.ms,
+                      curve: Curves.easeOutBack),
                   const SizedBox(height: 24),
                   Text(
                     'Password Reset Success!',
@@ -99,14 +108,17 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                         foregroundColor: Colors.white,
                         elevation: 0,
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16)),
                       ),
                       onPressed: () {
                         // Clear the recovery state, which triggers GoRouter redirect
-                        ref.read(passwordRecoveryProvider.notifier).state = false;
+                        ref.read(passwordRecoveryProvider.notifier).state =
+                            false;
                         Navigator.of(dialogContext).pop();
                       },
-                      child: const Text('Go to Dashboard', style: TextStyle(fontWeight: FontWeight.bold)),
+                      child: const Text('Go to Dashboard',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ],
@@ -140,7 +152,10 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                       child: Text(
                         'Set New Password',
                         textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                        style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary),
                       ),
                     ),
                   ],
@@ -165,17 +180,25 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                         size: 48,
                         color: AppColors.brandGreen,
                       ),
-                    ).animate().scale(duration: 500.ms, curve: Curves.easeOutBack),
+                    )
+                        .animate()
+                        .scale(duration: 500.ms, curve: Curves.easeOutBack),
                     const SizedBox(height: 24),
                     Text(
                       'Secure Your Account',
-                      style: GoogleFonts.outfit(fontSize: 28, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
+                      style: GoogleFonts.outfit(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'Choose a new strong password below to regain full access.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 14, color: AppColors.textSecondary.withValues(alpha: 0.8), height: 1.4),
+                      style: TextStyle(
+                          fontSize: 14,
+                          color: AppColors.textSecondary.withValues(alpha: 0.8),
+                          height: 1.4),
                     ),
                   ],
                 ),
@@ -197,8 +220,12 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                         isPassword: true,
                         controller: _passwordController,
                         validator: (value) {
-                          if (value == null || value.isEmpty) return 'Password is required';
-                          if (value.length < 6) return 'Password must be at least 6 characters';
+                          if (value == null || value.isEmpty) {
+                            return 'Password is required';
+                          }
+                          if (value.length < 6) {
+                            return 'Password must be at least 6 characters';
+                          }
                           return null;
                         },
                       ),
@@ -210,8 +237,12 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                         isPassword: true,
                         controller: _confirmPasswordController,
                         validator: (value) {
-                          if (value == null || value.isEmpty) return 'Please confirm your password';
-                          if (value != _passwordController.text) return 'Passwords do not match';
+                          if (value == null || value.isEmpty) {
+                            return 'Please confirm your password';
+                          }
+                          if (value != _passwordController.text) {
+                            return 'Passwords do not match';
+                          }
                           return null;
                         },
                       ),

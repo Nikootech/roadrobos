@@ -17,7 +17,8 @@ class SOSButton extends StatefulWidget {
   State<SOSButton> createState() => _SOSButtonState();
 }
 
-class _SOSButtonState extends State<SOSButton> with SingleTickerProviderStateMixin {
+class _SOSButtonState extends State<SOSButton>
+    with SingleTickerProviderStateMixin {
   bool _isPressed = false;
 
   void _handleLongPress() {
@@ -61,21 +62,21 @@ class _SOSButtonState extends State<SOSButton> with SingleTickerProviderStateMix
               ),
             ),
           )
-          .animate(onPlay: (controller) => controller.repeat())
-          .shimmer(duration: 2.seconds, color: Colors.white24)
-          .scale(
-            begin: const Offset(1, 1),
-            end: const Offset(1.1, 1.1),
-            duration: 1.seconds,
-            curve: Curves.easeInOut,
-          )
-          .then()
-          .scale(
-            begin: const Offset(1.1, 1.1),
-            end: const Offset(1, 1),
-            duration: 1.seconds,
-            curve: Curves.easeInOut,
-          ),
+              .animate(onPlay: (controller) => controller.repeat())
+              .shimmer(duration: 2.seconds, color: Colors.white24)
+              .scale(
+                begin: const Offset(1, 1),
+                end: const Offset(1.1, 1.1),
+                duration: 1.seconds,
+                curve: Curves.easeInOut,
+              )
+              .then()
+              .scale(
+                begin: const Offset(1.1, 1.1),
+                end: const Offset(1, 1),
+                duration: 1.seconds,
+                curve: Curves.easeInOut,
+              ),
           const SizedBox(height: 8),
           Text(
             widget.label,
@@ -88,8 +89,11 @@ class _SOSButtonState extends State<SOSButton> with SingleTickerProviderStateMix
           ),
           if (_isPressed)
             const Text(
-               'HOLD TO TRIGGER',
-               style: TextStyle(fontSize: 10, color: AppColors.textSecondary, fontWeight: FontWeight.bold),
+              'HOLD TO TRIGGER',
+              style: TextStyle(
+                  fontSize: 10,
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.bold),
             ).animate().fadeIn(),
         ],
       ),

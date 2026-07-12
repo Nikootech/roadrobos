@@ -10,7 +10,8 @@ void main() {
       PricingService.handlingCharges = 10.0;
     });
 
-    test('calculateBill calculates breakdown correctly with default parameters', () {
+    test('calculateBill calculates breakdown correctly with default parameters',
+        () {
       const baseAmount = 100.0;
       final breakdown = PricingService.calculateBill(baseAmount);
 

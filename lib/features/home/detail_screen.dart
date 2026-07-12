@@ -69,9 +69,12 @@ class _DetailScreenState extends State<DetailScreen> {
                   Container(
                     margin: const EdgeInsets.only(right: 8),
                     child: TextButton(
-                      onPressed: () => NavHelpers.showSnackAction(context, 'Service details shared!', icon: Icons.share_rounded),
+                      onPressed: () => NavHelpers.showSnackAction(
+                          context, 'Service details shared!',
+                          icon: Icons.share_rounded),
                       style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 4),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(4),
                           side: const BorderSide(color: AppColors.border),
@@ -98,7 +101,8 @@ class _DetailScreenState extends State<DetailScreen> {
                   decoration: BoxDecoration(
                     color: AppColors.bgSkyLight,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.1)),
+                    border: Border.all(
+                        color: AppColors.primaryBlue.withValues(alpha: 0.1)),
                   ),
                   child: Row(
                     children: [
@@ -138,9 +142,11 @@ class _DetailScreenState extends State<DetailScreen> {
                             ),
                             const SizedBox(height: 8),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
-                                color: AppColors.warningAmber.withValues(alpha: 0.1),
+                                color: AppColors.warningAmber
+                                    .withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: const Text(
@@ -190,7 +196,8 @@ class _DetailScreenState extends State<DetailScreen> {
                             border: Border.all(
                               color: item.isChecked
                                   ? AppColors.successDark.withValues(alpha: 0.2)
-                                  : AppColors.warningAmber.withValues(alpha: 0.2),
+                                  : AppColors.warningAmber
+                                      .withValues(alpha: 0.2),
                             ),
                           ),
                           child: Row(
@@ -202,7 +209,8 @@ class _DetailScreenState extends State<DetailScreen> {
                                   shape: BoxShape.circle,
                                   color: item.isChecked
                                       ? AppColors.successDark
-                                      : AppColors.warningAmber.withValues(alpha: 0.2),
+                                      : AppColors.warningAmber
+                                          .withValues(alpha: 0.2),
                                 ),
                                 child: Icon(
                                   item.isChecked
@@ -238,7 +246,8 @@ class _DetailScreenState extends State<DetailScreen> {
                             ],
                           ),
                         )
-                            .animate(delay: Duration(milliseconds: 100 + index * 60))
+                            .animate(
+                                delay: Duration(milliseconds: 100 + index * 60))
                             .fadeIn(duration: 300.ms)
                             .slideX(begin: 0.03, end: 0);
                       }),
@@ -255,7 +264,8 @@ class _DetailScreenState extends State<DetailScreen> {
                   decoration: BoxDecoration(
                     color: AppColors.bgSkyLight,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.1)),
+                    border: Border.all(
+                        color: AppColors.primaryBlue.withValues(alpha: 0.1)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -306,9 +316,7 @@ class _DetailScreenState extends State<DetailScreen> {
                       ),
                     ],
                   ),
-                )
-                    .animate(delay: 600.ms)
-                    .fadeIn(duration: 400.ms),
+                ).animate(delay: 600.ms).fadeIn(duration: 400.ms),
               ),
 
               const SliverToBoxAdapter(child: SizedBox(height: 140)),
@@ -410,4 +418,3 @@ class _ChecklistItem {
 
   _ChecklistItem(this.name, this.isChecked, this.status);
 }
-

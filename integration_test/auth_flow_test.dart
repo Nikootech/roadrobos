@@ -26,7 +26,8 @@ void main() {
     mockAuth = MockAuthService();
 
     // Default stubs
-    when(() => mockAuth.authStateChanges).thenAnswer((_) => const Stream.empty());
+    when(() => mockAuth.authStateChanges)
+        .thenAnswer((_) => const Stream.empty());
     when(() => mockAuth.restoredUser).thenReturn(null);
     when(() => mockAuth.currentUser).thenReturn(null);
   });
@@ -35,8 +36,8 @@ void main() {
     testWidgets('login with email/password → assert customer redirect',
         (WidgetTester tester) async {
       // Arrange: Stub signInWithEmail to succeed
-      when(() => mockAuth.signInWithEmail(any(), any()))
-          .thenAnswer((_) async => throw UnimplementedError(
+      when(() => mockAuth.signInWithEmail(any(), any())).thenAnswer((_) async =>
+          throw UnimplementedError(
               'Mock: signInWithEmail called — auth state stream would fire'));
 
       await pumpTestWidget(
@@ -65,7 +66,8 @@ void main() {
 
     testWidgets('login screen renders all authentication options',
         (WidgetTester tester) async {
-      when(() => mockAuth.authStateChanges).thenAnswer((_) => const Stream.empty());
+      when(() => mockAuth.authStateChanges)
+          .thenAnswer((_) => const Stream.empty());
       when(() => mockAuth.restoredUser).thenReturn(null);
       when(() => mockAuth.currentUser).thenReturn(null);
 
@@ -102,8 +104,7 @@ void main() {
       expect(customerState.user!.role.isAdmin, false);
     });
 
-    testWidgets('logout clears user state',
-        (WidgetTester tester) async {
+    testWidgets('logout clears user state', (WidgetTester tester) async {
       when(() => mockAuth.signOut()).thenAnswer((_) async {});
 
       // Simulate logout by calling signOut on mock

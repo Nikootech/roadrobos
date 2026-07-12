@@ -14,22 +14,28 @@ class CreateJobCardScreen extends ConsumerStatefulWidget {
   const CreateJobCardScreen({super.key});
 
   @override
-  ConsumerState<CreateJobCardScreen> createState() => _CreateJobCardScreenState();
+  ConsumerState<CreateJobCardScreen> createState() =>
+      _CreateJobCardScreenState();
 }
 
 class _CreateJobCardScreenState extends ConsumerState<CreateJobCardScreen> {
   final TextEditingController _vehicleModelController = TextEditingController();
   final TextEditingController _regNoController = TextEditingController();
   final TextEditingController _mileageController = TextEditingController();
-  
+
   String? _selectedTechnician;
   DateTime _estimatedCompletion = DateTime.now().add(const Duration(hours: 4));
-  
+
   final List<Map<String, dynamic>> _scopeItems = [];
   final List<String> _photoPaths = [];
   final ImagePicker _picker = ImagePicker();
 
-  final List<String> _technicians = ['Arun Kumar', 'Suresh Raina', 'Vikram Singh', 'Manoj Bajpayee'];
+  final List<String> _technicians = [
+    'Arun Kumar',
+    'Suresh Raina',
+    'Vikram Singh',
+    'Manoj Bajpayee'
+  ];
 
   @override
   void dispose() {
@@ -42,7 +48,9 @@ class _CreateJobCardScreenState extends ConsumerState<CreateJobCardScreen> {
   Future<void> _generateJobCard() async {
     if (_selectedTechnician == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a technician'), backgroundColor: Colors.orange),
+        const SnackBar(
+            content: Text('Please select a technician'),
+            backgroundColor: Colors.orange),
       );
       return;
     }
@@ -50,28 +58,39 @@ class _CreateJobCardScreenState extends ConsumerState<CreateJobCardScreen> {
     try {
       // Use the new remote repository
       await ref.read(jobCardRepositoryProvider).createJobCard(
-        techId: _selectedTechnician!,
-        vehicleMake: 'Unknown',
-        vehicleModel: _vehicleModelController.text.isEmpty ? 'Unknown Model' : _vehicleModelController.text,
-        regNo: _regNoController.text.isEmpty ? 'Unknown Plate' : _regNoController.text,
-        notes: _scopeItems.map((e) => e['title']).join(', '),
-      );
+            techId: _selectedTechnician!,
+            vehicleMake: 'Unknown',
+            vehicleModel: _vehicleModelController.text.isEmpty
+                ? 'Unknown Model'
+                : _vehicleModelController.text,
+            regNo: _regNoController.text.isEmpty
+                ? 'Unknown Plate'
+                : _regNoController.text,
+            notes: _scopeItems.map((e) => e['title']).join(', '),
+          );
 
       // Legacy fallback for UI logic
       final newJob = TechnicianJob(
         id: 'JOB-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}',
         estimatedCompletion: DateFormat('hh:mm a').format(_estimatedCompletion),
-        vehicleModel: _vehicleModelController.text.isEmpty ? 'Unknown Model' : _vehicleModelController.text,
-        vehiclePlate: _regNoController.text.isEmpty ? 'Unknown Plate' : _regNoController.text,
+        vehicleModel: _vehicleModelController.text.isEmpty
+            ? 'Unknown Model'
+            : _vehicleModelController.text,
+        vehiclePlate: _regNoController.text.isEmpty
+            ? 'Unknown Plate'
+            : _regNoController.text,
         progress: 0.0,
-        checklist: _scopeItems.map((item) => ChecklistItem(task: item['title'] as String, category: 'Service')).toList(),
+        checklist: _scopeItems
+            .map((item) => ChecklistItem(
+                task: item['title'] as String, category: 'Service'))
+            .toList(),
         parts: [],
         status: 'CREATED',
       );
 
       ref.read(technicianProvider.notifier).createJob(newJob);
       ref.read(selectedJobIdProvider.notifier).state = newJob.id;
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -84,7 +103,9 @@ class _CreateJobCardScreenState extends ConsumerState<CreateJobCardScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to create job card: $e'), backgroundColor: Colors.red),
+          SnackBar(
+              content: Text('Failed to create job card: $e'),
+              backgroundColor: Colors.red),
         );
       }
     }
@@ -104,7 +125,8 @@ class _CreateJobCardScreenState extends ConsumerState<CreateJobCardScreen> {
       );
       if (time != null && mounted) {
         setState(() {
-          _estimatedCompletion = DateTime(picked.year, picked.month, picked.day, time.hour, time.minute);
+          _estimatedCompletion = DateTime(
+              picked.year, picked.month, picked.day, time.hour, time.minute);
         });
       }
     }
@@ -120,7 +142,9 @@ class _CreateJobCardScreenState extends ConsumerState<CreateJobCardScreen> {
       });
     });
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Added General Inspection to scope'), duration: Duration(seconds: 1)),
+      const SnackBar(
+          content: Text('Added General Inspection to scope'),
+          duration: Duration(seconds: 1)),
     );
   }
 
@@ -157,17 +181,23 @@ class _CreateJobCardScreenState extends ConsumerState<CreateJobCardScreen> {
               color: Colors.grey.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.close_rounded, color: Colors.grey, size: 18),
+            child:
+                const Icon(Icons.close_rounded, color: Colors.grey, size: 18),
           ),
         ),
-        title: Text(
-          'Create Job Card', 
-          style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)
-        ),
+        title: Text('Create Job Card',
+            style: GoogleFonts.outfit(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary)),
         actions: [
           TextButton(
             onPressed: _generateJobCard,
-            child: Text('Save', style: GoogleFonts.outfit(color: const Color(0xFF1A237E), fontSize: 16, fontWeight: FontWeight.bold)),
+            child: Text('Save',
+                style: GoogleFonts.outfit(
+                    color: const Color(0xFF1A237E),
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -185,55 +215,75 @@ class _CreateJobCardScreenState extends ConsumerState<CreateJobCardScreen> {
                     children: [
                       Row(
                         children: [
-                          const Icon(Iconsax.car, size: 18, color: AppColors.primaryNavy),
+                          const Icon(Iconsax.car,
+                              size: 18, color: AppColors.primaryNavy),
                           const SizedBox(width: 12),
-                          Text('Vehicle Details', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
+                          Text('Vehicle Details',
+                              style: GoogleFonts.outfit(
+                                  fontWeight: FontWeight.bold, fontSize: 16)),
                         ],
                       ),
                       const SizedBox(height: 16),
                       TextField(
                         controller: _vehicleModelController,
-                        style: const TextStyle(fontWeight: FontWeight.w500, color: AppColors.textPrimary),
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.textPrimary),
                         decoration: InputDecoration(
                           hintText: 'e.g. 2021 Hyundai Creta SX',
-                          hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 14),
+                          hintStyle: const TextStyle(
+                              color: AppColors.textMuted, fontSize: 14),
                           labelText: 'Vehicle Model',
-                          labelStyle: const TextStyle(color: AppColors.textSecondary),
-                          prefixIcon: const Icon(Iconsax.car5, color: AppColors.textTertiary, size: 20),
+                          labelStyle:
+                              const TextStyle(color: AppColors.textSecondary),
+                          prefixIcon: const Icon(Iconsax.car5,
+                              color: AppColors.textTertiary, size: 20),
                           filled: true,
                           fillColor: AppColors.bgLightAlt,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 16),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(16),
                             borderSide: BorderSide.none,
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(16),
-                            borderSide: const BorderSide(color: AppColors.primaryBlueLight, width: 2),
+                            borderSide: const BorderSide(
+                                color: AppColors.primaryBlueLight, width: 2),
                           ),
                         ),
                       ),
                       const SizedBox(height: 12),
                       TextField(
                         controller: _regNoController,
-                        style: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1, color: AppColors.textPrimary),
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1,
+                            color: AppColors.textPrimary),
                         textCapitalization: TextCapitalization.characters,
                         decoration: InputDecoration(
                           hintText: 'e.g. MH 12 AB 1234',
-                          hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 14, letterSpacing: 0),
+                          hintStyle: const TextStyle(
+                              color: AppColors.textMuted,
+                              fontSize: 14,
+                              letterSpacing: 0),
                           labelText: 'Registration Number',
-                          labelStyle: const TextStyle(color: AppColors.textSecondary, letterSpacing: 0),
-                          prefixIcon: const Icon(Iconsax.note_text4, color: AppColors.textTertiary, size: 20),
+                          labelStyle: const TextStyle(
+                              color: AppColors.textSecondary, letterSpacing: 0),
+                          prefixIcon: const Icon(Iconsax.note_text4,
+                              color: AppColors.textTertiary, size: 20),
                           filled: true,
                           fillColor: AppColors.bgLightAlt,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 16),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(16),
                             borderSide: BorderSide.none,
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(16),
-                            borderSide: const BorderSide(color: AppColors.primaryBlueLight, width: 2),
+                            borderSide: const BorderSide(
+                                color: AppColors.primaryBlueLight, width: 2),
                           ),
                         ),
                       ),
@@ -247,7 +297,9 @@ class _CreateJobCardScreenState extends ConsumerState<CreateJobCardScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Assign Technician', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                      const Text('Assign Technician',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 15)),
                       const SizedBox(height: 12),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -259,13 +311,17 @@ class _CreateJobCardScreenState extends ConsumerState<CreateJobCardScreen> {
                         child: DropdownButtonHideUnderline(
                           child: DropdownButton<String>(
                             value: _selectedTechnician,
-                            hint: const Text('Select a technician', style: TextStyle(color: Colors.grey, fontSize: 14)),
+                            hint: const Text('Select a technician',
+                                style: TextStyle(
+                                    color: Colors.grey, fontSize: 14)),
                             isExpanded: true,
-                            icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
+                            icon: const Icon(Icons.keyboard_arrow_down,
+                                color: Colors.grey),
                             items: _technicians.map((String tech) {
                               return DropdownMenuItem<String>(
                                 value: tech,
-                                child: Text(tech, style: const TextStyle(fontSize: 14)),
+                                child: Text(tech,
+                                    style: const TextStyle(fontSize: 14)),
                               );
                             }).toList(),
                             onChanged: (String? value) {
@@ -295,7 +351,10 @@ class _CreateJobCardScreenState extends ConsumerState<CreateJobCardScreen> {
                                 child: TextField(
                                   controller: _mileageController,
                                   keyboardType: TextInputType.number,
-                                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                                  style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.textPrimary),
                                   decoration: const InputDecoration(
                                     isDense: true,
                                     contentPadding: EdgeInsets.zero,
@@ -303,7 +362,8 @@ class _CreateJobCardScreenState extends ConsumerState<CreateJobCardScreen> {
                                   ),
                                 ),
                               ),
-                              const Text('km', style: TextStyle(color: Colors.grey)),
+                              const Text('km',
+                                  style: TextStyle(color: Colors.grey)),
                             ],
                           ),
                         ),
@@ -315,8 +375,12 @@ class _CreateJobCardScreenState extends ConsumerState<CreateJobCardScreen> {
                           child: _buildSmallCard(
                             title: 'Est. Completion',
                             child: Text(
-                              DateFormat('MMM dd, hh:mm a').format(_estimatedCompletion),
-                              style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF1A237E)),
+                              DateFormat('MMM dd, hh:mm a')
+                                  .format(_estimatedCompletion),
+                              style: GoogleFonts.outfit(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFF1A237E)),
                             ),
                           ),
                         ),
@@ -336,9 +400,12 @@ class _CreateJobCardScreenState extends ConsumerState<CreateJobCardScreen> {
                         padding: const EdgeInsets.all(16),
                         child: Row(
                           children: [
-                            const Icon(Iconsax.setting_2, size: 18, color: Color(0xFF1A237E)),
+                            const Icon(Iconsax.setting_2,
+                                size: 18, color: Color(0xFF1A237E)),
                             const SizedBox(width: 12),
-                            Text('Scope of Work', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
+                            Text('Scope of Work',
+                                style: GoogleFonts.outfit(
+                                    fontWeight: FontWeight.bold, fontSize: 16)),
                           ],
                         ),
                       ),
@@ -353,15 +420,21 @@ class _CreateJobCardScreenState extends ConsumerState<CreateJobCardScreen> {
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: const Color(0xFF5E81AC).withValues(alpha: 0.3)),
+                              border: Border.all(
+                                  color: const Color(0xFF5E81AC)
+                                      .withValues(alpha: 0.3)),
                             ),
                             child: Center(
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(Icons.add, color: Color(0xFF1A237E), size: 18),
+                                  const Icon(Icons.add,
+                                      color: Color(0xFF1A237E), size: 18),
                                   const SizedBox(width: 8),
-                                  Text('Add Service Item', style: GoogleFonts.outfit(color: const Color(0xFF1A237E), fontWeight: FontWeight.bold)),
+                                  Text('Add Service Item',
+                                      style: GoogleFonts.outfit(
+                                          color: const Color(0xFF1A237E),
+                                          fontWeight: FontWeight.bold)),
                                 ],
                               ),
                             ),
@@ -383,18 +456,28 @@ class _CreateJobCardScreenState extends ConsumerState<CreateJobCardScreen> {
                         children: [
                           Row(
                             children: [
-                              const Icon(Iconsax.camera, size: 18, color: Color(0xFF1A237E)),
+                              const Icon(Iconsax.camera,
+                                  size: 18, color: Color(0xFF1A237E)),
                               const SizedBox(width: 12),
-                              Text('Pre-Service Photos', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
+                              Text('Pre-Service Photos',
+                                  style: GoogleFonts.outfit(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16)),
                             ],
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
                               color: const Color(0xFFEEF2F6),
                               borderRadius: BorderRadius.circular(20),
                             ),
-                            child: Text('${_scopeItems.length > 2 ? 3 : 2} Added', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF4C566A))),
+                            child: Text(
+                                '${_scopeItems.length > 2 ? 3 : 2} Added',
+                                style: const TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF4C566A))),
                           ),
                         ],
                       ),
@@ -405,9 +488,7 @@ class _CreateJobCardScreenState extends ConsumerState<CreateJobCardScreen> {
                           scrollDirection: Axis.horizontal,
                           children: [
                             GestureDetector(
-                              onTap: _pickImage,
-                              child: _buildAddPhoto()
-                            ),
+                                onTap: _pickImage, child: _buildAddPhoto()),
                             const SizedBox(width: 12),
                             ..._photoPaths.map((path) => Padding(
                                   padding: const EdgeInsets.only(right: 12),
@@ -423,7 +504,7 @@ class _CreateJobCardScreenState extends ConsumerState<CreateJobCardScreen> {
               ],
             ),
           ),
-          
+
           // Fixed Bottom Button
           Positioned(
             bottom: 30,
@@ -434,15 +515,21 @@ class _CreateJobCardScreenState extends ConsumerState<CreateJobCardScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF1A237E),
                 padding: const EdgeInsets.symmetric(vertical: 18),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
                 elevation: 0,
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('Generate Job Card', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                  Text('Generate Job Card',
+                      style: GoogleFonts.outfit(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white)),
                   const SizedBox(width: 8),
-                  const Icon(Icons.arrow_forward, color: Colors.white, size: 18),
+                  const Icon(Icons.arrow_forward,
+                      color: Colors.white, size: 18),
                 ],
               ),
             ),
@@ -476,7 +563,11 @@ class _CreateJobCardScreenState extends ConsumerState<CreateJobCardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.black87)),
+          Text(title,
+              style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                  color: Colors.black87)),
           const SizedBox(height: 12),
           Container(
             width: double.infinity,
@@ -507,15 +598,19 @@ class _CreateJobCardScreenState extends ConsumerState<CreateJobCardScreen> {
               color: const Color(0xFFE8EAF6),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.confirmation_number_rounded, color: Color(0xFF1A237E), size: 18),
+            child: const Icon(Icons.confirmation_number_rounded,
+                color: Color(0xFF1A237E), size: 18),
           ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(item['title'] as String, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                Text('${item['price']} • ${item['duration']}', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                Text(item['title'] as String,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 14)),
+                Text('${item['price']} • ${item['duration']}',
+                    style: const TextStyle(color: Colors.grey, fontSize: 12)),
               ],
             ),
           ),
@@ -525,7 +620,8 @@ class _CreateJobCardScreenState extends ConsumerState<CreateJobCardScreen> {
                 _scopeItems.remove(item);
               });
             },
-            icon: Icon(Icons.remove_circle_outline, color: Colors.red.withValues(alpha: 0.5), size: 20),
+            icon: Icon(Icons.remove_circle_outline,
+                color: Colors.red.withValues(alpha: 0.5), size: 20),
           ),
         ],
       ),
@@ -544,7 +640,11 @@ class _CreateJobCardScreenState extends ConsumerState<CreateJobCardScreen> {
         children: [
           Icon(Iconsax.camera, color: Colors.grey),
           SizedBox(height: 8),
-          Text('ADD NEW', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
+          Text('ADD NEW',
+              style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey)),
         ],
       ),
     );

@@ -10,30 +10,38 @@ import 'vehicle_tile.dart';
 class VehicleListScreen extends ConsumerWidget {
   const VehicleListScreen({super.key});
 
-  Future<void> _confirmDelete(BuildContext context, WidgetRef ref, String vehicleId) async {
+  Future<void> _confirmDelete(
+      BuildContext context, WidgetRef ref, String vehicleId) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Text(
             'Delete Vehicle',
             style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
           ),
-          content: const Text('Are you sure you want to remove this vehicle? This action can be undone later.'),
+          content: const Text(
+              'Are you sure you want to remove this vehicle? This action can be undone later.'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('CANCEL', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.bold)),
+              child: const Text('CANCEL',
+                  style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.bold)),
             ),
             ElevatedButton(
               onPressed: () => Navigator.of(context).pop(true),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.dangerRed,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
               ),
-              child: const Text('DELETE', style: TextStyle(fontWeight: FontWeight.bold)),
+              child: const Text('DELETE',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
             ),
           ],
         );
@@ -113,7 +121,9 @@ class VehicleListScreen extends ConsumerWidget {
                           vehicle: vehicle,
                           onSetPrimary: () async {
                             try {
-                              await ref.read(vehicleListProvider.notifier).setPrimary(vehicle.id);
+                              await ref
+                                  .read(vehicleListProvider.notifier)
+                                  .setPrimary(vehicle.id);
                               if (context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
@@ -136,25 +146,30 @@ class VehicleListScreen extends ConsumerWidget {
                           onEdit: () {
                             context.push('/vehicles/add', extra: vehicle);
                           },
-                          onDelete: () => _confirmDelete(context, ref, vehicle.id),
+                          onDelete: () =>
+                              _confirmDelete(context, ref, vehicle.id),
                         );
                       },
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 24, vertical: 32),
                     child: ElevatedButton.icon(
                       onPressed: () => context.push('/vehicles/add'),
-                      icon: const Icon(Icons.add_circle_outline_rounded, size: 20),
+                      icon: const Icon(Icons.add_circle_outline_rounded,
+                          size: 20),
                       label: const Text(
                         'ADD NEW VEHICLE',
-                        style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, letterSpacing: 0.5),
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primaryBlue,
                         foregroundColor: Colors.white,
                         minimumSize: const Size(double.infinity, 56),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16)),
                         elevation: 0,
                       ),
                     ),
@@ -171,7 +186,8 @@ class VehicleListScreen extends ConsumerWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.error_outline_rounded, size: 48, color: AppColors.dangerRed),
+                    const Icon(Icons.error_outline_rounded,
+                        size: 48, color: AppColors.dangerRed),
                     const SizedBox(height: 16),
                     Text(
                       'Failed to load vehicles',
@@ -189,9 +205,12 @@ class VehicleListScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 24),
                     ElevatedButton(
-                      onPressed: () => ref.read(vehicleListProvider.notifier).refresh(),
-                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.brandGreen),
-                      child: const Text('RETRY', style: TextStyle(color: Colors.white)),
+                      onPressed: () =>
+                          ref.read(vehicleListProvider.notifier).refresh(),
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.brandGreen),
+                      child: const Text('RETRY',
+                          style: TextStyle(color: Colors.white)),
                     ),
                   ],
                 ),
@@ -229,7 +248,8 @@ class VehicleListScreen extends ConsumerWidget {
                       color: AppColors.primaryBlue,
                     ),
                   ),
-                ).animate().scale(delay: 200.ms, duration: 400.ms, curve: Curves.easeOutBack),
+                ).animate().scale(
+                    delay: 200.ms, duration: 400.ms, curve: Curves.easeOutBack),
                 const SizedBox(height: 32),
                 Text(
                   'Add Your First Vehicle',
@@ -255,13 +275,15 @@ class VehicleListScreen extends ConsumerWidget {
                   icon: const Icon(Icons.add_circle_outline_rounded, size: 20),
                   label: const Text(
                     'ADD YOUR FIRST VEHICLE',
-                    style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold, letterSpacing: 0.5),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryBlue,
                     foregroundColor: Colors.white,
                     minimumSize: const Size(double.infinity, 56),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
                     elevation: 0,
                   ),
                 ),

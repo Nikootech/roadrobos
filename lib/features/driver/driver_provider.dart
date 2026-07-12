@@ -2,7 +2,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 
 enum DriverApprovalStatus { none, pending, approved, rejected }
-enum DriverTripStatus { none, enroutePickup, arrived, otpVerify, started, completed }
+
+enum DriverTripStatus {
+  none,
+  enroutePickup,
+  arrived,
+  otpVerify,
+  started,
+  completed
+}
 
 class DriverTrip {
   final String id;
@@ -67,7 +75,8 @@ class DriverState {
     this.onlineTime = '4h 30m',
     this.totalRides = 8,
     this.acceptanceRate = '95%',
-    this.approvalStatus = DriverApprovalStatus.approved, // Defaulting to approved for existing demo
+    this.approvalStatus = DriverApprovalStatus
+        .approved, // Defaulting to approved for existing demo
     this.currentTrip,
     this.weeklyEarnings = 8450.0,
     this.weeklyRides = 42,
@@ -116,12 +125,14 @@ class DriverNotifier extends StateNotifier<DriverState> {
   }
 
   void acceptRide(DriverTrip trip) {
-    state = state.copyWith(currentTrip: trip.copyWith(status: DriverTripStatus.enroutePickup));
+    state = state.copyWith(
+        currentTrip: trip.copyWith(status: DriverTripStatus.enroutePickup));
   }
 
   void updateTripStatus(DriverTripStatus status) {
     if (state.currentTrip != null) {
-      state = state.copyWith(currentTrip: state.currentTrip!.copyWith(status: status));
+      state = state.copyWith(
+          currentTrip: state.currentTrip!.copyWith(status: status));
     }
   }
 
@@ -145,6 +156,7 @@ class DriverNotifier extends StateNotifier<DriverState> {
   }
 }
 
-final driverProvider = StateNotifierProvider<DriverNotifier, DriverState>((ref) {
+final driverProvider =
+    StateNotifierProvider<DriverNotifier, DriverState>((ref) {
   return DriverNotifier();
 });

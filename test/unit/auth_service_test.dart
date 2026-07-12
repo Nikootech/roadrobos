@@ -8,11 +8,15 @@ import 'package:roadrobos/core/security/auth_rate_limiter.dart';
 
 // ── Mock Classes ─────────────────────────────────────────────────────────────
 class MockSupabaseClient extends Mock implements SupabaseClient {}
+
 class MockSupabaseQueryBuilder extends Mock implements SupabaseQueryBuilder {}
+
 class MockGoTrueClient extends Mock implements GoTrueClient {}
+
 class MockUser extends Mock implements User {}
 
-class MockPostgrestFilterBuilder extends Mock implements PostgrestFilterBuilder<List<Map<String, dynamic>>> {
+class MockPostgrestFilterBuilder extends Mock
+    implements PostgrestFilterBuilder<List<Map<String, dynamic>>> {
   final FutureOr<List<Map<String, dynamic>>> Function() handler;
 
   MockPostgrestFilterBuilder(this.handler);
@@ -42,7 +46,8 @@ class MockPostgrestFilterBuilder extends Mock implements PostgrestFilterBuilder<
   }
 }
 
-class MockPostgrestFilterBuilderRpc extends Mock implements PostgrestFilterBuilder<dynamic> {
+class MockPostgrestFilterBuilderRpc extends Mock
+    implements PostgrestFilterBuilder<dynamic> {
   final FutureOr<dynamic> Function() handler;
 
   MockPostgrestFilterBuilderRpc(this.handler);
@@ -86,10 +91,10 @@ void main() {
     mockQueryBuilder = MockSupabaseQueryBuilder();
     mockAuth = MockGoTrueClient();
     authService = AuthService();
-    
+
     // Inject mock Supabase client
     authService.mockSupabaseClient = mockSupabase;
-    
+
     when(() => mockSupabase.auth).thenReturn(mockAuth);
     when(() => mockSupabase.from(any())).thenAnswer((_) => mockQueryBuilder);
   });
@@ -103,7 +108,8 @@ void main() {
       AuthRateLimiter.reset(email);
     });
 
-    test('signInWithEmail logs in successfully and resets rate limits', () async {
+    test('signInWithEmail logs in successfully and resets rate limits',
+        () async {
       final mockUser = MockUser();
       when(() => mockUser.id).thenReturn('user_123');
 
@@ -119,21 +125,27 @@ void main() {
 
       // Mock user_roles select to return empty list
       final mockSelectBuilder = MockPostgrestFilterBuilder(() => []);
-      when(() => mockQueryBuilder.select(any())).thenAnswer((_) => mockSelectBuilder);
-      when(() => mockSelectBuilder.eq(any(), any())).thenAnswer((_) => mockSelectBuilder);
+      when(() => mockQueryBuilder.select(any()))
+          .thenAnswer((_) => mockSelectBuilder);
+      when(() => mockSelectBuilder.eq(any(), any()))
+          .thenAnswer((_) => mockSelectBuilder);
 
       // Mock get_user_permissions RPC called inside RbacService after sign in
       final mockRpcBuilder = MockPostgrestFilterBuilderRpc(() => []);
-      when(() => mockSupabase.rpc<dynamic>('get_user_permissions', params: any(named: 'params')))
-          .thenAnswer((_) => mockRpcBuilder);
+      when(() => mockSupabase.rpc<dynamic>('get_user_permissions',
+          params: any(named: 'params'))).thenAnswer((_) => mockRpcBuilder);
 
       final response = await authService.signInWithEmail(email, password);
 
       expect(response.user?.id, equals('user_123'));
-      verify(() => mockAuth.signInWithPassword(email: email, password: password)).called(1);
+      verify(() =>
+              mockAuth.signInWithPassword(email: email, password: password))
+          .called(1);
     });
 
-    test('signInWithEmail triggers AuthRateLimiter blocking after too many attempts', () async {
+    test(
+        'signInWithEmail triggers AuthRateLimiter blocking after too many attempts',
+        () async {
       when(() => mockAuth.signInWithPassword(
             email: email,
             password: password,
@@ -152,7 +164,8 @@ void main() {
       await expectLater(
         authService.signInWithEmail(email, password),
         throwsA(predicate((e) =>
-            e is Exception && e.toString().contains('Too many login attempts'))),
+            e is Exception &&
+            e.toString().contains('Too many login attempts'))),
       );
     });
   });

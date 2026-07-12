@@ -16,7 +16,8 @@ class BookRideScreen extends ConsumerStatefulWidget {
 }
 
 class _BookRideScreenState extends ConsumerState<BookRideScreen> {
-  final DraggableScrollableController _sheetController = DraggableScrollableController();
+  final DraggableScrollableController _sheetController =
+      DraggableScrollableController();
 
   @override
   void initState() {
@@ -63,7 +64,8 @@ class _BookRideScreenState extends ConsumerState<BookRideScreen> {
               return Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(28)),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.1),
@@ -80,8 +82,11 @@ class _BookRideScreenState extends ConsumerState<BookRideScreen> {
                         children: [
                           Container(
                             margin: const EdgeInsets.only(top: 12, bottom: 8),
-                            width: 36, height: 4,
-                            decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
+                            width: 36,
+                            height: 4,
+                            decoration: BoxDecoration(
+                                color: Colors.grey[300],
+                                borderRadius: BorderRadius.circular(2)),
                           ),
                           _buildSearchTrigger(context),
                         ],
@@ -102,7 +107,8 @@ class _BookRideScreenState extends ConsumerState<BookRideScreen> {
   Widget _buildFloatingHeader(BuildContext context, TaxiState state) {
     return Positioned(
       top: MediaQuery.of(context).padding.top + 12,
-      left: 16, right: 16,
+      left: 16,
+      right: 16,
       child: Column(
         children: [
           Row(
@@ -111,43 +117,73 @@ class _BookRideScreenState extends ConsumerState<BookRideScreen> {
                 onTap: () => NavHelpers.pop(context),
                 child: Container(
                   padding: const EdgeInsets.all(12),
-                  decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 8)]),
-                  child: const Icon(Icons.arrow_back_rounded, size: 20, color: Colors.black87),
+                  decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(color: Colors.black12, blurRadius: 8)
+                      ]),
+                  child: const Icon(Icons.arrow_back_rounded,
+                      size: 20, color: Colors.black87),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 100),
           GestureDetector(
-            onTap: () => context.push('/taxi/search-location', extra: {'focusPickup': true}),
+            onTap: () => context
+                .push('/taxi/search-location', extra: {'focusPickup': true}),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(30),
-                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 15)],
+                boxShadow: [
+                  BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 15)
+                ],
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
-                    width: 8, height: 8,
+                    width: 8,
+                    height: 8,
                     decoration: const BoxDecoration(
                       color: Color(0xFF22C55E),
                       shape: BoxShape.circle,
                       boxShadow: [
-                        BoxShadow(color: Color(0x6622C55E), blurRadius: 8, spreadRadius: 2),
+                        BoxShadow(
+                            color: Color(0x6622C55E),
+                            blurRadius: 8,
+                            spreadRadius: 2),
                       ],
                     ),
-                  ).animate(onPlay: (controller) => controller.repeat(reverse: true))
-                   .scale(begin: const Offset(0.8, 0.8), end: const Offset(1.2, 1.2), duration: 1000.ms)
-                   .boxShadow(begin: const BoxShadow(color: Color(0x3322C55E), blurRadius: 4), end: const BoxShadow(color: Color(0x8822C55E), blurRadius: 12), duration: 1000.ms),
+                  )
+                      .animate(
+                          onPlay: (controller) =>
+                              controller.repeat(reverse: true))
+                      .scale(
+                          begin: const Offset(0.8, 0.8),
+                          end: const Offset(1.2, 1.2),
+                          duration: 1000.ms)
+                      .boxShadow(
+                          begin: const BoxShadow(
+                              color: Color(0x3322C55E), blurRadius: 4),
+                          end: const BoxShadow(
+                              color: Color(0x8822C55E), blurRadius: 12),
+                          duration: 1000.ms),
                   const SizedBox(width: 10),
                   Flexible(
                     child: Text(
                       state.pickupAddress ?? 'Detecting Location...',
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black87),
-                      maxLines: 1, overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
@@ -166,21 +202,27 @@ class _BookRideScreenState extends ConsumerState<BookRideScreen> {
         children: [
           Expanded(
             child: GestureDetector(
-              onTap: () => context.push('/taxi/search-location', extra: {'focusPickup': false}),
+              onTap: () => context
+                  .push('/taxi/search-location', extra: {'focusPickup': false}),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF3F4F6),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: const Row(
                   children: [
-                    Icon(Iconsax.search_normal, size: 20, color: Colors.black54),
+                    Icon(Iconsax.search_normal,
+                        size: 20, color: Colors.black54),
                     SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         'Where to?',
-                        style: TextStyle(fontSize: 15, color: Colors.black54, fontWeight: FontWeight.w500),
+                        style: TextStyle(
+                            fontSize: 15,
+                            color: Colors.black54,
+                            fontWeight: FontWeight.w500),
                       ),
                     ),
                   ],
@@ -197,9 +239,10 @@ class _BookRideScreenState extends ConsumerState<BookRideScreen> {
               );
               if (time != null && context.mounted) {
                 final now = DateTime.now();
-                DateTime scheduledTime = DateTime(now.year, now.month, now.day, time.hour, time.minute);
+                DateTime scheduledTime = DateTime(
+                    now.year, now.month, now.day, time.hour, time.minute);
                 if (scheduledTime.isBefore(now)) {
-                   scheduledTime = scheduledTime.add(const Duration(days: 1));
+                  scheduledTime = scheduledTime.add(const Duration(days: 1));
                 }
                 ref.read(taxiProvider.notifier).setScheduledTime(scheduledTime);
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -238,7 +281,11 @@ class _BookRideScreenState extends ConsumerState<BookRideScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Recent Locations', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF374151))),
+          const Text('Recent Locations',
+              style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF374151))),
           const SizedBox(height: 16),
           ...mockLocations.take(3).map((loc) => _buildRecommendedItem(loc)),
         ],
@@ -247,59 +294,68 @@ class _BookRideScreenState extends ConsumerState<BookRideScreen> {
   }
 
   Widget _buildRecommendedItem(Map<String, dynamic> loc) {
-     final String title = loc['name']!;
-     final String subtitle = loc['address']!;
-     final String distance = loc['distance']!;
+    final String title = loc['name']!;
+    final String subtitle = loc['address']!;
+    final String distance = loc['distance']!;
 
-     return Material(
-       color: Colors.transparent,
-       child: InkWell(
-         onTap: () async {
-           final lat = loc['lat'] as double;
-           final lng = loc['lng'] as double;
-           final latLng = LatLng(lat, lng);
-           
-           // Ensure pickup location is available
-           final currentState = ref.read(taxiProvider);
-           if (currentState.pickupLocation == null) {
-             ScaffoldMessenger.of(context).showSnackBar(
-               const SnackBar(
-                 content: Text('Please wait — fetching your current location...'),
-                 duration: Duration(seconds: 2),
-               ),
-             );
-             await ref.read(taxiProvider.notifier).initializeLocation();
-           }
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () async {
+          final lat = loc['lat'] as double;
+          final lng = loc['lng'] as double;
+          final latLng = LatLng(lat, lng);
 
-           ref.read(taxiProvider.notifier).setDropoff(latLng, title);
-           if (!mounted) return;
-           await context.push('/taxi/ride-options');
-         },
-         borderRadius: BorderRadius.circular(16),
-         child: Container(
-           padding: const EdgeInsets.all(16),
-           decoration: BoxDecoration(
-             color: const Color(0xFFF9FAFB),
-             borderRadius: BorderRadius.circular(16),
-           ),
-           child: Row(
-             children: [
-               const Icon(Iconsax.location, color: Colors.black45, size: 20),
-               const SizedBox(width: 16),
-               Expanded(
-                 child: Column(
-                   crossAxisAlignment: CrossAxisAlignment.start,
-                   children: [
-                     Text(title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
-                     Text(subtitle, style: const TextStyle(color: Colors.black45, fontSize: 11)),
-                   ],
-                 ),
-               ),
-               Text(distance, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11, color: Colors.black38)),
-             ],
-           ),
-         ),
-       ),
-     );
+          // Ensure pickup location is available
+          final currentState = ref.read(taxiProvider);
+          if (currentState.pickupLocation == null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content:
+                    Text('Please wait — fetching your current location...'),
+                duration: Duration(seconds: 2),
+              ),
+            );
+            await ref.read(taxiProvider.notifier).initializeLocation();
+          }
+
+          ref.read(taxiProvider.notifier).setDropoff(latLng, title);
+          if (!mounted) return;
+          await context.push('/taxi/ride-options');
+        },
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF9FAFB),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Row(
+            children: [
+              const Icon(Iconsax.location, color: Colors.black45, size: 20),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w800, fontSize: 14)),
+                    Text(subtitle,
+                        style: const TextStyle(
+                            color: Colors.black45, fontSize: 11)),
+                  ],
+                ),
+              ),
+              Text(distance,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 11,
+                      color: Colors.black38)),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

@@ -13,9 +13,11 @@ class OSMMapsService {
     if (query.length < 3) return [];
 
     try {
-      final headers = kIsWeb ? null : <String, String>{'User-Agent': 'RoadRobos_App_v1.0'};
+      final headers =
+          kIsWeb ? null : <String, String>{'User-Agent': 'RoadRobos_App_v1.0'};
       final response = await http.get(
-        Uri.parse('$_nominatimUrl/search?q=${Uri.encodeComponent(query)}&format=json&addressdetails=1&limit=5&countrycodes=in'),
+        Uri.parse(
+            '$_nominatimUrl/search?q=${Uri.encodeComponent(query)}&format=json&addressdetails=1&limit=5&countrycodes=in'),
         headers: headers,
       );
 
@@ -41,14 +43,17 @@ class OSMMapsService {
   Future<List<LatLng>> getRoute(LatLng start, LatLng end) async {
     try {
       final response = await http.get(
-        Uri.parse('$_osrmUrl/route/v1/driving/${start.longitude},${start.latitude};${end.longitude},${end.latitude}?overview=full&geometries=geojson'),
+        Uri.parse(
+            '$_osrmUrl/route/v1/driving/${start.longitude},${start.latitude};${end.longitude},${end.latitude}?overview=full&geometries=geojson'),
       );
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['routes'] != null && data['routes'].isNotEmpty) {
           final List coordinates = data['routes'][0]['geometry']['coordinates'];
-          return coordinates.map((coord) => LatLng(coord[1], coord[0])).toList();
+          return coordinates
+              .map((coord) => LatLng(coord[1], coord[0]))
+              .toList();
         }
       }
     } catch (e) {
@@ -61,9 +66,14 @@ class OSMMapsService {
   /// Reverse geocoding: Get address from coordinates
   Future<String?> getAddressFromCoords(LatLng point) async {
     try {
-      final headers = kIsWeb ? null : <String, String>{'User-Agent': 'RoadRobosApp/1.0 (contact@roadrobos.com)'};
+      final headers = kIsWeb
+          ? null
+          : <String, String>{
+              'User-Agent': 'RoadRobosApp/1.0 (contact@roadrobos.com)'
+            };
       final response = await http.get(
-        Uri.parse('$_nominatimUrl/reverse?lat=${point.latitude}&lon=${point.longitude}&format=json&zoom=18&addressdetails=1'),
+        Uri.parse(
+            '$_nominatimUrl/reverse?lat=${point.latitude}&lon=${point.longitude}&format=json&zoom=18&addressdetails=1'),
         headers: headers,
       );
 
@@ -87,14 +97,14 @@ class OSMMapsService {
   /// Calculate total distance of a route polyline in kilometers
   double calculateDistanceInKm(List<LatLng> points) {
     if (points.isEmpty || points.length == 1) return 0.0;
-    
+
     double totalDistance = 0.0;
     const distance = Distance();
-    
+
     for (int i = 0; i < points.length - 1; i++) {
       totalDistance += distance.as(LengthUnit.Meter, points[i], points[i + 1]);
     }
-    
+
     return totalDistance / 1000.0;
   }
 }

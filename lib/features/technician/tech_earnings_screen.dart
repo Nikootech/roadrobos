@@ -18,10 +18,18 @@ class _TechEarningsScreenState extends State<TechEarningsScreen> {
     HapticFeedback.lightImpact();
     setState(() => _bottomNavIndex = index);
     switch (index) {
-      case 0: context.go('/tech-dashboard'); break;
-      case 1: context.go('/tech-tasks'); break;
-      case 2: context.go('/tech-spare-parts'); break;
-      case 3: context.go('/tech-profile'); break;
+      case 0:
+        context.go('/tech-dashboard');
+        break;
+      case 1:
+        context.go('/tech-tasks');
+        break;
+      case 2:
+        context.go('/tech-spare-parts');
+        break;
+      case 3:
+        context.go('/tech-profile');
+        break;
     }
   }
 
@@ -35,12 +43,17 @@ class _TechEarningsScreenState extends State<TechEarningsScreen> {
         backgroundColor: primaryIndigo,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded,
+              size: 18, color: Colors.white),
           onPressed: () => context.pop(),
         ),
         title: const Text(
           'Service Earnings',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: -0.5),
+          style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+              color: Colors.white,
+              letterSpacing: -0.5),
         ),
         actions: [
           IconButton(
@@ -60,13 +73,24 @@ class _TechEarningsScreenState extends State<TechEarningsScreen> {
             padding: const EdgeInsets.fromLTRB(24, 8, 24, 40),
             decoration: const BoxDecoration(
               color: primaryIndigo,
-              borderRadius: BorderRadius.only(bottomLeft: Radius.circular(40), bottomRight: Radius.circular(40)),
+              borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(40),
+                  bottomRight: Radius.circular(40)),
             ),
             child: Column(
               children: [
-                const Text('NET EARNINGS', style: TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 1.5)),
+                const Text('NET EARNINGS',
+                    style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.5)),
                 const SizedBox(height: 12),
-                const Text('₹18,250.00', style: TextStyle(color: Colors.white, fontSize: 44, fontWeight: FontWeight.w900)),
+                const Text('₹18,250.00',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 44,
+                        fontWeight: FontWeight.w900)),
                 const SizedBox(height: 32),
                 Row(
                   children: [
@@ -81,7 +105,8 @@ class _TechEarningsScreenState extends State<TechEarningsScreen> {
                 GestureDetector(
                   onTap: () {
                     HapticFeedback.mediumImpact();
-                    context.push('/driver-bank-withdrawal'); // Generic withdrawal route
+                    context.push(
+                        '/driver-bank-withdrawal'); // Generic withdrawal route
                   },
                   child: Container(
                     width: double.infinity,
@@ -90,9 +115,18 @@ class _TechEarningsScreenState extends State<TechEarningsScreen> {
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(20),
-                      boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 20, offset: const Offset(0, 10))],
+                      boxShadow: [
+                        BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.2),
+                            blurRadius: 20,
+                            offset: const Offset(0, 10))
+                      ],
                     ),
-                    child: const Text('Cash Out Profits', style: TextStyle(color: primaryIndigo, fontWeight: FontWeight.w900, fontSize: 16)),
+                    child: const Text('Cash Out Profits',
+                        style: TextStyle(
+                            color: primaryIndigo,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 16)),
                   ),
                 ).animate().scale(delay: 400.ms),
               ],
@@ -107,25 +141,43 @@ class _TechEarningsScreenState extends State<TechEarningsScreen> {
                 const Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Payout History', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: primaryIndigo, letterSpacing: -0.5)),
+                    Text('Payout History',
+                        style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w900,
+                            color: primaryIndigo,
+                            letterSpacing: -0.5)),
                     Icon(Iconsax.filter, color: primaryIndigo, size: 20),
                   ],
                 ),
                 const SizedBox(height: 24),
-                _buildPayoutRow('Oct 16 - Oct 22', '₹6,450', 'Settled', Colors.green),
-                _buildPayoutRow('Oct 09 - Oct 15', '₹7,200', 'Settled', Colors.green),
-                _buildPayoutRow('Current Week', '₹4,600', 'In Review', Colors.orange),
-                
+                _buildPayoutRow(
+                    'Oct 16 - Oct 22', '₹6,450', 'Settled', Colors.green),
+                _buildPayoutRow(
+                    'Oct 09 - Oct 15', '₹7,200', 'Settled', Colors.green),
+                _buildPayoutRow(
+                    'Current Week', '₹4,600', 'In Review', Colors.orange),
                 const SizedBox(height: 40),
-                const Text('Job Performance', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: primaryIndigo, letterSpacing: -0.5)),
+                const Text('Job Performance',
+                    style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                        color: primaryIndigo,
+                        letterSpacing: -0.5)),
                 const SizedBox(height: 24),
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(28),
-                    border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
-                    boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 20, offset: const Offset(0, 10))],
+                    border:
+                        Border.all(color: Colors.black.withValues(alpha: 0.05)),
+                    boxShadow: [
+                      BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.02),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10))
+                    ],
                   ),
                   child: Column(
                     children: [
@@ -143,8 +195,11 @@ class _TechEarningsScreenState extends State<TechEarningsScreen> {
                         ],
                       ),
                       const SizedBox(height: 24),
-                      Text('Wednesday was your peak performance day!', 
-                        style: TextStyle(fontSize: 12, color: Colors.grey[600], fontWeight: FontWeight.w600)),
+                      Text('Wednesday was your peak performance day!',
+                          style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                              fontWeight: FontWeight.w600)),
                     ],
                   ),
                 ).animate(delay: 600.ms).fadeIn().slideY(begin: 0.1, end: 0),
@@ -163,7 +218,9 @@ class _TechEarningsScreenState extends State<TechEarningsScreen> {
       decoration: const BoxDecoration(
         color: Colors.white,
         border: Border(top: BorderSide(color: Color(0xFFF1F2F4))),
-        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, -2))],
+        boxShadow: [
+          BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, -2))
+        ],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -177,7 +234,8 @@ class _TechEarningsScreenState extends State<TechEarningsScreen> {
     );
   }
 
-  Widget _navItem(BuildContext context, IconData icon, String label, int index) {
+  Widget _navItem(
+      BuildContext context, IconData icon, String label, int index) {
     final isActive = _bottomNavIndex == index;
     const primaryIndigo = Color(0xFF1A237E);
     return GestureDetector(
@@ -195,10 +253,15 @@ class _TechEarningsScreenState extends State<TechEarningsScreen> {
                 color: isActive ? const Color(0xFFE8EAF6) : Colors.transparent,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, color: isActive ? primaryIndigo : Colors.grey, size: 24),
+              child: Icon(icon,
+                  color: isActive ? primaryIndigo : Colors.grey, size: 24),
             ),
             const SizedBox(height: 4),
-            Text(label, style: TextStyle(fontSize: 10, fontWeight: isActive ? FontWeight.bold : FontWeight.w500, color: isActive ? primaryIndigo : Colors.grey)),
+            Text(label,
+                style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+                    color: isActive ? primaryIndigo : Colors.grey)),
           ],
         ),
       ),
@@ -211,8 +274,17 @@ class _TechEarningsScreenState extends State<TechEarningsScreen> {
         children: [
           Icon(icon, color: Colors.white70, size: 22),
           const SizedBox(height: 8),
-          Text(value, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900)),
-          Text(label, style: const TextStyle(color: Colors.white54, fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 0.5)),
+          Text(value,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900)),
+          Text(label,
+              style: const TextStyle(
+                  color: Colors.white54,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.5)),
         ],
       ),
     );
@@ -222,7 +294,8 @@ class _TechEarningsScreenState extends State<TechEarningsScreen> {
     return Container(width: 1, height: 30, color: Colors.white12);
   }
 
-  Widget _buildPayoutRow(String date, String amount, String status, Color color) {
+  Widget _buildPayoutRow(
+      String date, String amount, String status, Color color) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -236,21 +309,36 @@ class _TechEarningsScreenState extends State<TechEarningsScreen> {
         children: [
           Row(
             children: [
-              Container(padding: const EdgeInsets.all(10), 
-                decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle), 
-                child: Icon(Iconsax.money_tick, color: color, size: 20)),
+              Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.1),
+                      shape: BoxShape.circle),
+                  child: Icon(Iconsax.money_tick, color: color, size: 20)),
               const SizedBox(width: 12),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(date, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFF1A237E))),
+                  Text(date,
+                      style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF1A237E))),
                   const SizedBox(height: 2),
-                  Text(status, style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w700)),
+                  Text(status,
+                      style: TextStyle(
+                          fontSize: 11,
+                          color: color,
+                          fontWeight: FontWeight.w700)),
                 ],
               ),
             ],
           ),
-          Text(amount, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: Color(0xFF1A237E))),
+          Text(amount,
+              style: const TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w900,
+                  color: Color(0xFF1A237E))),
         ],
       ),
     );
@@ -268,15 +356,22 @@ class _TechEarningsScreenState extends State<TechEarningsScreen> {
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: isMax 
-                ? [primaryIndigo, const Color(0xFF3949AB)]
-                : [primaryIndigo.withValues(alpha: 0.1), primaryIndigo.withValues(alpha: 0.05)],
+              colors: isMax
+                  ? [primaryIndigo, const Color(0xFF3949AB)]
+                  : [
+                      primaryIndigo.withValues(alpha: 0.1),
+                      primaryIndigo.withValues(alpha: 0.05)
+                    ],
             ),
             borderRadius: BorderRadius.circular(8),
           ),
         ),
         const SizedBox(height: 12),
-        Text(day, style: TextStyle(fontSize: 11, color: isMax ? primaryIndigo : Colors.grey, fontWeight: isMax ? FontWeight.w900 : FontWeight.w600)),
+        Text(day,
+            style: TextStyle(
+                fontSize: 11,
+                color: isMax ? primaryIndigo : Colors.grey,
+                fontWeight: isMax ? FontWeight.w900 : FontWeight.w600)),
       ],
     );
   }

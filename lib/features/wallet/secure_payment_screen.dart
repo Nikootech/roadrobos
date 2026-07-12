@@ -10,7 +10,8 @@ class SecurePaymentScreen extends ConsumerStatefulWidget {
   const SecurePaymentScreen({super.key});
 
   @override
-  ConsumerState<SecurePaymentScreen> createState() => _SecurePaymentScreenState();
+  ConsumerState<SecurePaymentScreen> createState() =>
+      _SecurePaymentScreenState();
 }
 
 class _SecurePaymentScreenState extends ConsumerState<SecurePaymentScreen> {
@@ -19,19 +20,19 @@ class _SecurePaymentScreenState extends ConsumerState<SecurePaymentScreen> {
 
   void _startPayment() async {
     setState(() => _isProcessing = true);
-    
+
     try {
-      await ref.read(paymentServiceProvider.notifier).startPayment(
-        PaymentDetails(
-          contact: '9999999999',
-          email: 'user@example.com',
-          description: 'Secure Payment',
-          bookingId: '00000000-0000-0000-0000-000000000000',
-          userId: '00000000-0000-0000-0000-000000000000',
-          bookingType: BookingType.service,
-          totalCost: 500,
-        )
-      );
+      await ref
+          .read(paymentServiceProvider.notifier)
+          .startPayment(PaymentDetails(
+            contact: '9999999999',
+            email: 'user@example.com',
+            description: 'Secure Payment',
+            bookingId: '00000000-0000-0000-0000-000000000000',
+            userId: '00000000-0000-0000-0000-000000000000',
+            bookingType: BookingType.service,
+            totalCost: 500,
+          ));
 
       if (mounted) {
         setState(() {
@@ -45,7 +46,8 @@ class _SecurePaymentScreenState extends ConsumerState<SecurePaymentScreen> {
     } catch (error) {
       if (mounted) {
         setState(() => _isProcessing = false);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Payment failed: $error')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Payment failed: $error')));
       }
     }
   }
@@ -58,7 +60,8 @@ class _SecurePaymentScreenState extends ConsumerState<SecurePaymentScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         automaticallyImplyLeading: !_isProcessing,
-        title: const Text('Secure Payment', style: TextStyle(color: AppColors.textPrimary)),
+        title: const Text('Secure Payment',
+            style: TextStyle(color: AppColors.textPrimary)),
       ),
       body: Center(
         child: Padding(
@@ -67,9 +70,12 @@ class _SecurePaymentScreenState extends ConsumerState<SecurePaymentScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               if (!_isProcessing && !_isSuccess) ...[
-                const Icon(Icons.shield_rounded, size: 80, color: AppColors.primaryBlue),
+                const Icon(Icons.shield_rounded,
+                    size: 80, color: AppColors.primaryBlue),
                 const SizedBox(height: 24),
-                const Text('Safe & Secure', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                const Text('Safe & Secure',
+                    style:
+                        TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 12),
                 const Text(
                   'Your payment is encrypted with industry-standard protocols.',
@@ -80,7 +86,10 @@ class _SecurePaymentScreenState extends ConsumerState<SecurePaymentScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                     Image.network('https://upload.wikimedia.org/wikipedia/commons/8/89/Razorpay_logo.png', width: 100, height: 40),
+                    Image.network(
+                        'https://upload.wikimedia.org/wikipedia/commons/8/89/Razorpay_logo.png',
+                        width: 100,
+                        height: 40),
                   ],
                 ),
                 const SizedBox(height: 48),
@@ -93,19 +102,28 @@ class _SecurePaymentScreenState extends ConsumerState<SecurePaymentScreen> {
                 const SizedBox(
                   width: 60,
                   height: 60,
-                  child: CircularProgressIndicator(strokeWidth: 6, color: AppColors.primaryBlue),
+                  child: CircularProgressIndicator(
+                      strokeWidth: 6, color: AppColors.primaryBlue),
                 ),
                 const SizedBox(height: 32),
-                const Text('Processing Payment...', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                const Text('Processing Payment...',
+                    style:
+                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
-                const Text('Please do not close the app or press back', style: TextStyle(color: AppColors.textSecondary)),
+                const Text('Please do not close the app or press back',
+                    style: TextStyle(color: AppColors.textSecondary)),
               ] else ...[
-                const Icon(Icons.check_circle_rounded, size: 80, color: AppColors.successGreen)
-                  .animate().scale(duration: 500.ms, curve: Curves.elasticOut),
+                const Icon(Icons.check_circle_rounded,
+                        size: 80, color: AppColors.successGreen)
+                    .animate()
+                    .scale(duration: 500.ms, curve: Curves.elasticOut),
                 const SizedBox(height: 24),
-                const Text('Payment Successful!', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                const Text('Payment Successful!',
+                    style:
+                        TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 12),
-                const Text('Thank you! Redirecting you back...', style: TextStyle(color: AppColors.textSecondary)),
+                const Text('Thank you! Redirecting you back...',
+                    style: TextStyle(color: AppColors.textSecondary)),
               ],
             ],
           ),

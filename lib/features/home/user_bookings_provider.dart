@@ -34,7 +34,8 @@ class UnifiedBookingItem {
   });
 }
 
-final userBookingsProvider = FutureProvider<List<UnifiedBookingItem>>((ref) async {
+final userBookingsProvider =
+    FutureProvider<List<UnifiedBookingItem>>((ref) async {
   final userState = ref.watch(userProvider);
   final user = userState.user;
   if (user == null || user.id.isEmpty) return [];
@@ -45,11 +46,11 @@ final userBookingsProvider = FutureProvider<List<UnifiedBookingItem>>((ref) asyn
     final serviceBookingsFuture = ref
         .read(serviceBookingRepositoryProvider)
         .getPagedCustomerServiceBookings(userId, limit: 50);
-        
+
     final rideBookingsFuture = ref
         .read(rideBookingRepositoryProvider)
         .getPagedCustomerRides(userId, limit: 50);
-        
+
     final rentalBookingsFuture = ref
         .read(rentalBookingRepositoryProvider)
         .getPagedCustomerRentals(userId, limit: 50);
@@ -73,7 +74,9 @@ final userBookingsProvider = FutureProvider<List<UnifiedBookingItem>>((ref) asyn
         title: sb.packageName.isNotEmpty ? sb.packageName : 'General Service',
         subtitle: '${sb.vehicleName} • ${sb.vehiclePlate}',
         status: sb.status,
-        date: sb.date.isNotEmpty ? sb.date : DateFormat('dd MMM yyyy').format(sb.createdAt),
+        date: sb.date.isNotEmpty
+            ? sb.date
+            : DateFormat('dd MMM yyyy').format(sb.createdAt),
         price: '₹${sb.totalCost.toStringAsFixed(0)}',
         type: BookingType.service,
         createdAt: sb.createdAt,
@@ -85,7 +88,9 @@ final userBookingsProvider = FutureProvider<List<UnifiedBookingItem>>((ref) asyn
     for (final rb in rideBookings) {
       items.add(UnifiedBookingItem(
         id: rb.id,
-        title: rb.vehicleType != null ? '${rb.vehicleType!.toUpperCase()} Ride' : 'Taxi Ride',
+        title: rb.vehicleType != null
+            ? '${rb.vehicleType!.toUpperCase()} Ride'
+            : 'Taxi Ride',
         subtitle: '${rb.pickupAddress} ➔ ${rb.destinationAddress}',
         status: rb.status,
         date: DateFormat('dd MMM yyyy').format(rb.createdAt),

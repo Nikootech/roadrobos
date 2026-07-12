@@ -20,7 +20,8 @@ class LocationSearchScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<LocationSearchScreen> createState() => _LocationSearchScreenState();
+  ConsumerState<LocationSearchScreen> createState() =>
+      _LocationSearchScreenState();
 }
 
 class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
@@ -28,7 +29,7 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
   late TextEditingController _dropoffController;
   late FocusNode _pickupFocusNode;
   late FocusNode _dropoffFocusNode;
-  
+
   final _osmService = OSMMapsService();
   List<Map<String, dynamic>> _searchResults = [];
   bool _isSearching = false;
@@ -57,25 +58,30 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
     super.initState();
     if (widget.isDelivery) {
       final deliveryState = ref.read(deliveryOrderProvider);
-      _pickupController = TextEditingController(text: deliveryState.pickupAddress);
-      _dropoffController = TextEditingController(text: deliveryState.dropoffAddress);
+      _pickupController =
+          TextEditingController(text: deliveryState.pickupAddress);
+      _dropoffController =
+          TextEditingController(text: deliveryState.dropoffAddress);
     } else {
       final taxiState = ref.read(taxiProvider);
-      _pickupController = TextEditingController(text: taxiState.pickupAddress ?? '');
-      _dropoffController = TextEditingController(text: taxiState.dropoffAddress ?? '');
-      
+      _pickupController =
+          TextEditingController(text: taxiState.pickupAddress ?? '');
+      _dropoffController =
+          TextEditingController(text: taxiState.dropoffAddress ?? '');
+
       // Auto-fetch location if empty
       if (taxiState.pickupLocation == null) {
-        Future.microtask(() => ref.read(taxiProvider.notifier).initializeLocation());
+        Future.microtask(
+            () => ref.read(taxiProvider.notifier).initializeLocation());
       }
     }
-    
+
     _pickupFocusNode = FocusNode();
     _dropoffFocusNode = FocusNode();
 
     _pickupController.addListener(_onSearchChanged);
     _dropoffController.addListener(_onSearchChanged);
-    
+
     _pickupFocusNode.addListener(() => setState(() {}));
     _dropoffFocusNode.addListener(() => setState(() {}));
 
@@ -90,8 +96,10 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
 
   void _onSearchChanged() {
     if (_debounce?.isActive ?? false) _debounce?.cancel();
-    
-    final query = _pickupFocusNode.hasFocus ? _pickupController.text : _dropoffController.text;
+
+    final query = _pickupFocusNode.hasFocus
+        ? _pickupController.text
+        : _dropoffController.text;
     if (query.length < 3) {
       setState(() {
         _searchResults = [];
@@ -127,12 +135,15 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
     // Listen to taxi state changes so current location text updates when fetched
     if (!widget.isDelivery) {
       final taxiState = ref.watch(taxiProvider);
-      if (!_pickupFocusNode.hasFocus && taxiState.pickupAddress != null && taxiState.pickupAddress != _pickupController.text) {
+      if (!_pickupFocusNode.hasFocus &&
+          taxiState.pickupAddress != null &&
+          taxiState.pickupAddress != _pickupController.text) {
         _pickupController.text = taxiState.pickupAddress!;
       }
     }
 
-    final displayList = _searchResults.isNotEmpty ? _searchResults : _recentLocations;
+    final displayList =
+        _searchResults.isNotEmpty ? _searchResults : _recentLocations;
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -171,7 +182,8 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
               height: MediaQuery.of(context).size.height * 0.65,
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(24)),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.1),
@@ -204,7 +216,8 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: Colors.green.shade600, width: 1.5),
+                        border: Border.all(
+                            color: Colors.green.shade600, width: 1.5),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.green.withValues(alpha: 0.1),
@@ -222,16 +235,16 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 _buildAddressInput(
-                                  controller: _pickupController, 
-                                  focusNode: _pickupFocusNode, 
-                                  hint: 'Current Location', 
+                                  controller: _pickupController,
+                                  focusNode: _pickupFocusNode,
+                                  hint: 'Current Location',
                                   isPickup: true,
                                 ),
                                 const Divider(height: 16),
                                 _buildAddressInput(
-                                  controller: _dropoffController, 
-                                  focusNode: _dropoffFocusNode, 
-                                  hint: 'Where to?', 
+                                  controller: _dropoffController,
+                                  focusNode: _dropoffFocusNode,
+                                  hint: 'Where to?',
                                   isPickup: false,
                                 ),
                               ],
@@ -243,16 +256,22 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
                   ),
 
                   const SizedBox(height: 24),
-                  
+
                   // Searching indicator
                   if (_isSearching)
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 20),
                       child: Row(
                         children: [
-                          SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+                          SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2)),
                           SizedBox(width: 12),
-                          Text('Searching...', style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black54)),
+                          Text('Searching...',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.black54)),
                         ],
                       ),
                     ),
@@ -262,7 +281,8 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
                     child: ListView.separated(
                       padding: const EdgeInsets.only(top: 8),
                       itemCount: displayList.length,
-                      separatorBuilder: (_, __) => const Divider(height: 1, indent: 56),
+                      separatorBuilder: (_, __) =>
+                          const Divider(height: 1, indent: 56),
                       itemBuilder: (context, index) {
                         return _buildLocationItem(displayList[index]);
                       },
@@ -277,19 +297,23 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
     );
   }
 
-  Widget _buildAddressInput({required TextEditingController controller, required FocusNode focusNode, required String hint, required bool isPickup}) {
+  Widget _buildAddressInput(
+      {required TextEditingController controller,
+      required FocusNode focusNode,
+      required String hint,
+      required bool isPickup}) {
     final bool isFocused = focusNode.hasFocus;
     return TextField(
       controller: controller,
       focusNode: focusNode,
       style: TextStyle(
-        fontSize: isFocused ? 18 : 16, 
-        fontWeight: isFocused ? FontWeight.w800 : FontWeight.w600, 
-        color: Colors.black87
-      ),
+          fontSize: isFocused ? 18 : 16,
+          fontWeight: isFocused ? FontWeight.w800 : FontWeight.w600,
+          color: Colors.black87),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(color: Colors.black38, fontSize: 18, fontWeight: FontWeight.bold),
+        hintStyle: const TextStyle(
+            color: Colors.black38, fontSize: 18, fontWeight: FontWeight.bold),
         border: InputBorder.none,
         isDense: true,
         contentPadding: EdgeInsets.zero,
@@ -315,24 +339,25 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
                   color: Colors.grey[100],
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.location_on_outlined, color: Colors.black87, size: 20),
+                child: const Icon(Icons.location_on_outlined,
+                    color: Colors.black87, size: 20),
               ),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      loc['name'] ?? '', 
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black87)
-                    ),
+                    Text(loc['name'] ?? '',
+                        style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87)),
                     const SizedBox(height: 4),
-                    Text(
-                      loc['address'] ?? '', 
-                      style: const TextStyle(fontSize: 13, color: Colors.black54), 
-                      maxLines: 1, 
-                      overflow: TextOverflow.ellipsis
-                    ),
+                    Text(loc['address'] ?? '',
+                        style: const TextStyle(
+                            fontSize: 13, color: Colors.black54),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis),
                   ],
                 ),
               ),
@@ -375,7 +400,7 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
   // To implement the "Plan Your Ride" card from Image 1
   void _showPlanRideCard() {
     final taxiState = ref.read(taxiProvider);
-    
+
     // We show a bottom sheet over the map
     showModalBottomSheet(
       context: context,
@@ -402,11 +427,13 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            const Text('Plan Your Ride', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
+            const Text('Plan Your Ride',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
             const SizedBox(height: 24),
-            
+
             // Locations
-            const Text('Pickup Location', style: TextStyle(fontSize: 12, color: Colors.black54)),
+            const Text('Pickup Location',
+                style: TextStyle(fontSize: 12, color: Colors.black54)),
             const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -416,14 +443,18 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.location_on_outlined, size: 20, color: Colors.grey),
+                  const Icon(Icons.location_on_outlined,
+                      size: 20, color: Colors.grey),
                   const SizedBox(width: 12),
-                  Text(taxiState.pickupAddress ?? 'Current Location', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                  Text(taxiState.pickupAddress ?? 'Current Location',
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.w600)),
                 ],
               ),
             ),
             const SizedBox(height: 16),
-            const Text('Destination', style: TextStyle(fontSize: 12, color: Colors.black54)),
+            const Text('Destination',
+                style: TextStyle(fontSize: 12, color: Colors.black54)),
             const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -433,13 +464,16 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.route_outlined, size: 20, color: Colors.grey),
+                  const Icon(Icons.route_outlined,
+                      size: 20, color: Colors.grey),
                   const SizedBox(width: 12),
-                  Text(taxiState.dropoffAddress ?? 'Destination', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                  Text(taxiState.dropoffAddress ?? 'Destination',
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.w600)),
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 24),
             // Fare and Distance
             Container(
@@ -454,32 +488,37 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Estimated Fare', style: TextStyle(fontSize: 12, color: Colors.black54)),
+                      const Text('Estimated Fare',
+                          style:
+                              TextStyle(fontSize: 12, color: Colors.black54)),
                       const SizedBox(height: 4),
-                      Consumer(
-                        builder: (context, r, _) {
-                          // Listen to provider to get updated distance/price calculation
-                          final state = r.watch(taxiProvider);
-                          final distance = state.distance;
-                          final minFare = (70 + (22 * distance)) * 0.8;
-                          final maxFare = (70 + (22 * distance)) * 1.2;
-                          return Text('₹ ${minFare.toStringAsFixed(0)} - ${maxFare.toStringAsFixed(0)}', 
-                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Colors.green.shade800));
-                        }
-                      ),
+                      Consumer(builder: (context, r, _) {
+                        // Listen to provider to get updated distance/price calculation
+                        final state = r.watch(taxiProvider);
+                        final distance = state.distance;
+                        final minFare = (70 + (22 * distance)) * 0.8;
+                        final maxFare = (70 + (22 * distance)) * 1.2;
+                        return Text(
+                            '₹ ${minFare.toStringAsFixed(0)} - ${maxFare.toStringAsFixed(0)}',
+                            style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.green.shade800));
+                      }),
                     ],
                   ),
-                  Consumer(
-                    builder: (context, r, _) {
-                      final state = r.watch(taxiProvider);
-                      return Text('${state.distance.toStringAsFixed(1)} km', 
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.black87));
-                    }
-                  ),
+                  Consumer(builder: (context, r, _) {
+                    final state = r.watch(taxiProvider);
+                    return Text('${state.distance.toStringAsFixed(1)} km',
+                        style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.black87));
+                  }),
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: () {
@@ -487,13 +526,19 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
                 context.push('/taxi/ride-options');
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF22C55E), // Green matching image 1
+                backgroundColor:
+                    const Color(0xFF22C55E), // Green matching image 1
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30)),
                 elevation: 0,
               ),
-              child: const Text('BOOK NOW', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, letterSpacing: 1.0)),
+              child: const Text('BOOK NOW',
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.0)),
             ),
             const SizedBox(height: 16),
           ],

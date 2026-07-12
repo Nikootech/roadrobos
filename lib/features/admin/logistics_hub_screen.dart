@@ -16,12 +16,16 @@ class LogisticsHubScreen extends StatelessWidget {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: AppColors.textPrimary),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded,
+              size: 18, color: AppColors.textPrimary),
           onPressed: () => context.pop(),
         ),
         title: Text(
           'Logistics Hub',
-          style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+          style: GoogleFonts.outfit(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary),
         ),
       ),
       body: SingleChildScrollView(
@@ -30,7 +34,9 @@ class LogisticsHubScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Fleet distribution
-            Text('Fleet Distribution', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w700)),
+            Text('Fleet Distribution',
+                style: GoogleFonts.outfit(
+                    fontSize: 18, fontWeight: FontWeight.w700)),
             const SizedBox(height: 16),
             Row(
               children: [
@@ -39,27 +45,38 @@ class LogisticsHubScreen extends StatelessWidget {
                 _buildFleetCard('4-Wheelers', '840', Icons.directions_car),
               ],
             ),
-            
+
             const SizedBox(height: 32),
-            Text('Zone Performance', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w700)),
+            Text('Zone Performance',
+                style: GoogleFonts.outfit(
+                    fontSize: 18, fontWeight: FontWeight.w700)),
             const SizedBox(height: 16),
-            _buildZoneCard('Zone A (Central)', '92% Utilization', 'High Demand'),
+            _buildZoneCard(
+                'Zone A (Central)', '92% Utilization', 'High Demand'),
             _buildZoneCard('Zone B (North)', '74% Utilization', 'Normal'),
             _buildZoneCard('Zone C (South)', '88% Utilization', 'High Demand'),
-            
+
             const SizedBox(height: 32),
-            Text('Hub Status', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w700)),
+            Text('Hub Status',
+                style: GoogleFonts.outfit(
+                    fontSize: 18, fontWeight: FontWeight.w700)),
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: AppColors.border)),
+              decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: AppColors.border)),
               child: Column(
                 children: [
-                  _buildHubDetailRow('Main Hub S-017', 'Online', AppColors.successGreen),
+                  _buildHubDetailRow(
+                      'Main Hub S-017', 'Online', AppColors.successGreen),
                   const Divider(height: 32),
-                  _buildHubDetailRow('Satellite Hub N-102', 'Online', AppColors.successGreen),
+                  _buildHubDetailRow(
+                      'Satellite Hub N-102', 'Online', AppColors.successGreen),
                   const Divider(height: 32),
-                  _buildHubDetailRow('Satellite Hub W-044', 'Maintenance', Colors.amber),
+                  _buildHubDetailRow(
+                      'Satellite Hub W-044', 'Maintenance', Colors.amber),
                 ],
               ),
             ),
@@ -78,8 +95,16 @@ class LogisticsHubScreen extends StatelessWidget {
           children: [
             Icon(icon, color: AppColors.primaryBlue, size: 28),
             const SizedBox(height: 16),
-            Text(count, style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
-            Text(label, style: GoogleFonts.inter(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w500)),
+            Text(count,
+                style: GoogleFonts.outfit(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary)),
+            Text(label,
+                style: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w500)),
           ],
         ),
       ),
@@ -90,7 +115,10 @@ class LogisticsHubScreen extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border)),
+      decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.border)),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -98,13 +126,26 @@ class LogisticsHubScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(zone, style: const TextStyle(fontWeight: FontWeight.bold)),
-              Text(stats, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+              Text(stats,
+                  style: const TextStyle(
+                      color: AppColors.textSecondary, fontSize: 12)),
             ],
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(color: (status == 'Normal' ? AppColors.primaryBlue : AppColors.dangerRed).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
-            child: Text(status, style: TextStyle(color: status == 'Normal' ? AppColors.primaryBlue : AppColors.dangerRed, fontSize: 10, fontWeight: FontWeight.bold)),
+            decoration: BoxDecoration(
+                color: (status == 'Normal'
+                        ? AppColors.primaryBlue
+                        : AppColors.dangerRed)
+                    .withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8)),
+            child: Text(status,
+                style: TextStyle(
+                    color: status == 'Normal'
+                        ? AppColors.primaryBlue
+                        : AppColors.dangerRed,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -118,9 +159,10 @@ class LogisticsHubScreen extends StatelessWidget {
         const SizedBox(width: 16),
         Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
         const Spacer(),
-        Text(status, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.bold)),
+        Text(status,
+            style: TextStyle(
+                color: color, fontSize: 12, fontWeight: FontWeight.bold)),
       ],
     );
   }
 }
-

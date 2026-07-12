@@ -20,7 +20,11 @@ class EarningsScreen extends StatelessWidget {
         automaticallyImplyLeading: false,
         title: const Text(
           'Earnings Overview',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: -0.5),
+          style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w900,
+              color: Colors.white,
+              letterSpacing: -0.5),
         ),
         actions: [
           IconButton(
@@ -40,13 +44,24 @@ class EarningsScreen extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(24, 8, 24, 40),
             decoration: const BoxDecoration(
               color: AppColors.deepNavy,
-              borderRadius: BorderRadius.only(bottomLeft: Radius.circular(40), bottomRight: Radius.circular(40)),
+              borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(40),
+                  bottomRight: Radius.circular(40)),
             ),
             child: Column(
               children: [
-                const Text('TOTAL BALANCE', style: TextStyle(color: Colors.white54, fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 1.5)),
+                const Text('TOTAL BALANCE',
+                    style: TextStyle(
+                        color: Colors.white54,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.5)),
                 const SizedBox(height: 12),
-                const Text('₹12,450.00', style: TextStyle(color: Colors.white, fontSize: 44, fontWeight: FontWeight.w900)),
+                const Text('₹12,450.00',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 44,
+                        fontWeight: FontWeight.w900)),
                 const SizedBox(height: 32),
                 Row(
                   children: [
@@ -70,9 +85,18 @@ class EarningsScreen extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(20),
-                      boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 20, offset: Offset(0, 10))],
+                      boxShadow: const [
+                        BoxShadow(
+                            color: Colors.black26,
+                            blurRadius: 20,
+                            offset: Offset(0, 10))
+                      ],
                     ),
-                    child: const Text('Cash Out to Bank', style: TextStyle(color: AppColors.deepNavy, fontWeight: FontWeight.w900, fontSize: 16)),
+                    child: const Text('Cash Out to Bank',
+                        style: TextStyle(
+                            color: AppColors.deepNavy,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 16)),
                   ),
                 ).animate().scale(delay: 400.ms),
               ],
@@ -87,26 +111,47 @@ class EarningsScreen extends StatelessWidget {
                 const Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Payout History', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: AppColors.textPrimary, letterSpacing: -0.5)),
-                    Icon(Iconsax.filter, color: AppColors.textPrimary, size: 20),
+                    Text('Payout History',
+                        style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w900,
+                            color: AppColors.textPrimary,
+                            letterSpacing: -0.5)),
+                    Icon(Iconsax.filter,
+                        color: AppColors.textPrimary, size: 20),
                   ],
                 ),
                 const SizedBox(height: 24),
-                _buildPremiumPayoutRow('Oct 16 - Oct 22', '₹12,450', 'Processing', AppColors.warningAmber),
-                _buildPremiumPayoutRow('Oct 09 - Oct 15', '₹14,200', 'Deposited', AppColors.successGreen),
-                _buildPremiumPayoutRow('Oct 02 - Oct 08', '₹11,800', 'Deposited', AppColors.successGreen),
-                
+                _buildPremiumPayoutRow('Oct 16 - Oct 22', '₹12,450',
+                    'Processing', AppColors.warningAmber),
+                _buildPremiumPayoutRow('Oct 09 - Oct 15', '₹14,200',
+                    'Deposited', AppColors.successGreen),
+                _buildPremiumPayoutRow('Oct 02 - Oct 08', '₹11,800',
+                    'Deposited', AppColors.successGreen),
+
                 const SizedBox(height: 48),
-                const Text('Weekly Performance', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: AppColors.textPrimary, letterSpacing: -0.5)),
+                const Text('Weekly Performance',
+                    style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.textPrimary,
+                        letterSpacing: -0.5)),
                 const SizedBox(height: 24),
                 // Premium Chart Area
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(28),
-                    border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
-                    boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 20, offset: const Offset(0, 10))],
+                    border: Border.all(
+                        color: AppColors.border.withValues(alpha: 0.5)),
+                    boxShadow: [
+                      BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.03),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10))
+                    ],
                   ),
                   child: Column(
                     children: [
@@ -128,14 +173,23 @@ class EarningsScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 24),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        decoration: BoxDecoration(color: AppColors.successGreen.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(12)),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                            color:
+                                AppColors.successGreen.withValues(alpha: 0.05),
+                            borderRadius: BorderRadius.circular(12)),
                         child: const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.trending_up_rounded, size: 16, color: AppColors.successGreen),
+                            Icon(Icons.trending_up_rounded,
+                                size: 16, color: AppColors.successGreen),
                             SizedBox(width: 10),
-                            Text('You earned 12% more than last week', style: TextStyle(fontSize: 12, color: AppColors.successGreen, fontWeight: FontWeight.w700)),
+                            Text('You earned 12% more than last week',
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    color: AppColors.successGreen,
+                                    fontWeight: FontWeight.w700)),
                           ],
                         ),
                       ),
@@ -150,10 +204,16 @@ class EarningsScreen extends StatelessWidget {
       bottomNavigationBar: CustomBottomNavBar(
         currentIndex: 1,
         items: const [
-          NavItemData(icon: Iconsax.home, activeIcon: Iconsax.home5, label: 'Home'),
-          NavItemData(icon: Iconsax.wallet, activeIcon: Iconsax.wallet5, label: 'Earnings'),
-          NavItemData(icon: Iconsax.star, activeIcon: Iconsax.star5, label: 'Ratings'),
-          NavItemData(icon: Iconsax.user, activeIcon: Iconsax.user, label: 'Account'),
+          NavItemData(
+              icon: Iconsax.home, activeIcon: Iconsax.home5, label: 'Home'),
+          NavItemData(
+              icon: Iconsax.wallet,
+              activeIcon: Iconsax.wallet5,
+              label: 'Earnings'),
+          NavItemData(
+              icon: Iconsax.star, activeIcon: Iconsax.star5, label: 'Ratings'),
+          NavItemData(
+              icon: Iconsax.user, activeIcon: Iconsax.user, label: 'Account'),
         ],
         onTap: (index) {
           if (index == 0) context.pushReplacement('/driver-home');
@@ -171,8 +231,17 @@ class EarningsScreen extends StatelessWidget {
         children: [
           Icon(icon, color: Colors.white, size: 24),
           const SizedBox(height: 8),
-          Text(value, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900)),
-          Text(label, style: const TextStyle(color: Colors.white54, fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 0.5)),
+          Text(value,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900)),
+          Text(label,
+              style: const TextStyle(
+                  color: Colors.white54,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.5)),
         ],
       ),
     );
@@ -182,33 +251,54 @@ class EarningsScreen extends StatelessWidget {
     return Container(width: 1, height: 30, color: Colors.white12);
   }
 
-  Widget _buildPremiumPayoutRow(String date, String amount, String status, Color color) {
+  Widget _buildPremiumPayoutRow(
+      String date, String amount, String status, Color color) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10)],
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10)
+        ],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
             children: [
-              Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle), child: Icon(Iconsax.empty_wallet_tick, color: color, size: 20)),
+              Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.1),
+                      shape: BoxShape.circle),
+                  child:
+                      Icon(Iconsax.empty_wallet_tick, color: color, size: 20)),
               const SizedBox(width: 12),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(date, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+                  Text(date,
+                      style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary)),
                   const SizedBox(height: 2),
-                  Text(status, style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w700)),
+                  Text(status,
+                      style: TextStyle(
+                          fontSize: 11,
+                          color: color,
+                          fontWeight: FontWeight.w700)),
                 ],
               ),
             ],
           ),
-          Text(amount, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: AppColors.deepNavy)),
+          Text(amount,
+              style: const TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.deepNavy)),
         ],
       ),
     ).animate().fadeIn().slideX(begin: 0.05, end: 0);
@@ -225,15 +315,25 @@ class EarningsScreen extends StatelessWidget {
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: isMax 
-                ? [AppColors.primaryBlue, AppColors.primaryBlue.withValues(alpha: 0.7)]
-                : [AppColors.primaryBlue.withValues(alpha: 0.2), AppColors.primaryBlue.withValues(alpha: 0.1)],
+              colors: isMax
+                  ? [
+                      AppColors.primaryBlue,
+                      AppColors.primaryBlue.withValues(alpha: 0.7)
+                    ]
+                  : [
+                      AppColors.primaryBlue.withValues(alpha: 0.2),
+                      AppColors.primaryBlue.withValues(alpha: 0.1)
+                    ],
             ),
             borderRadius: BorderRadius.circular(8),
           ),
         ),
         const SizedBox(height: 12),
-        Text(day, style: TextStyle(fontSize: 12, color: isMax ? AppColors.textPrimary : AppColors.textSecondary, fontWeight: isMax ? FontWeight.w900 : FontWeight.w600)),
+        Text(day,
+            style: TextStyle(
+                fontSize: 12,
+                color: isMax ? AppColors.textPrimary : AppColors.textSecondary,
+                fontWeight: isMax ? FontWeight.w900 : FontWeight.w600)),
       ],
     );
   }

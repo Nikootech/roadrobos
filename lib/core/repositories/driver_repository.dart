@@ -5,7 +5,6 @@ import '../models/driver_model.dart';
 import '../models/ride_booking.dart';
 import '../extensions/datetime_extensions.dart';
 
-
 final driverRepositoryProvider = Provider((ref) => DriverRepository());
 
 class DriverRepository {
@@ -17,7 +16,9 @@ class DriverRepository {
         .from('drivers')
         .stream(primaryKey: ['id'])
         .eq('id', uid)
-        .map((list) => list.isNotEmpty ? DriverModel.fromMap(list.first, list.first['id'].toString()) : null);
+        .map((list) => list.isNotEmpty
+            ? DriverModel.fromMap(list.first, list.first['id'].toString())
+            : null);
   }
 
   /// Toggle driver online/offline status
@@ -48,17 +49,29 @@ class DriverRepository {
   /// Get online drivers matching a vehicle type
   Future<List<DriverModel>> getOnlineDrivers(String vehicleTypeId) async {
     try {
-      final response = await _supabase.from('drivers').select().eq('is_online', true);
-      final List<DriverModel> allOnline = response.map((data) => DriverModel.fromMap(data, data['id'].toString())).toList();
-      
+      final response =
+          await _supabase.from('drivers').select().eq('is_online', true);
+      final List<DriverModel> allOnline = response
+          .map((data) => DriverModel.fromMap(data, data['id'].toString()))
+          .toList();
+
       return allOnline.where((d) {
         final model = d.vehicleModel.toLowerCase();
         if (vehicleTypeId.contains('auto')) {
-          return model.contains('auto') || model.contains('rickshaw') || model.contains('bajaj');
+          return model.contains('auto') ||
+              model.contains('rickshaw') ||
+              model.contains('bajaj');
         } else if (vehicleTypeId.contains('bike')) {
-          return model.contains('bike') || model.contains('splendor') || model.contains('motor') || model.contains('honda');
-        } else if (vehicleTypeId.contains('cab') || vehicleTypeId.contains('car')) {
-          return model.contains('car') || model.contains('swift') || model.contains('sedan') || model.contains('suv');
+          return model.contains('bike') ||
+              model.contains('splendor') ||
+              model.contains('motor') ||
+              model.contains('honda');
+        } else if (vehicleTypeId.contains('cab') ||
+            vehicleTypeId.contains('car')) {
+          return model.contains('car') ||
+              model.contains('swift') ||
+              model.contains('sedan') ||
+              model.contains('suv');
         }
         return true;
       }).toList();
@@ -76,8 +89,10 @@ class DriverRepository {
         .eq('status', 'searching')
         .order('created_at')
         .map((list) {
-      return list.map((map) => RideBooking.fromMap(map, map['id'].toString())).toList();
-    });
+          return list
+              .map((map) => RideBooking.fromMap(map, map['id'].toString()))
+              .toList();
+        });
   }
 
   /// Accept a ride request — atomically assigns driver and updates status
@@ -95,7 +110,7 @@ class DriverRepository {
           .eq('id', rideId)
           .eq('status', 'searching') // Only accept if still searching
           .select();
-      
+
       if (response.isEmpty) {
         throw Exception('Ride already taken by another driver');
       }
@@ -135,7 +150,8 @@ class DriverRepository {
     required String vehicleModel,
     required String chassisNumber,
     required String licenseNumber,
-    String approvalStatus = 'approved', // Auto-approve by default per new requirement
+    String approvalStatus =
+        'approved', // Auto-approve by default per new requirement
   }) async {
     try {
       await _supabase.from('drivers').upsert({

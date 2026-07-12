@@ -29,7 +29,8 @@ final homeOffersProvider = FutureProvider<List<BannerOffer>>((ref) async {
   return ref.watch(bannerOfferRepositoryProvider).getActiveBanners();
 });
 
-final homeCategoriesProvider = FutureProvider<List<ServiceCategory>>((ref) async {
+final homeCategoriesProvider =
+    FutureProvider<List<ServiceCategory>>((ref) async {
   ref.cacheFor(const Duration(minutes: 5));
   return ref.watch(categoryRepositoryProvider).getCategories();
 });
@@ -39,8 +40,13 @@ final quickActionsProvider = FutureProvider<List<QuickAction>>((ref) async {
   return ref.watch(quickActionRepositoryProvider).getQuickActions();
 });
 
-final recentServiceBookingsProvider = FutureProvider<List<ServiceBooking>>((ref) {
+final recentServiceBookingsProvider =
+    FutureProvider<List<ServiceBooking>>((ref) {
   final user = ref.watch(userProvider).user;
-  if (user == null || user.id.startsWith('demo') || user.id == 'demo') return Future.value([]);
-  return ref.watch(serviceBookingRepositoryProvider).getPagedCustomerServiceBookings(user.id, limit: 3);
+  if (user == null || user.id.startsWith('demo') || user.id == 'demo') {
+    return Future.value([]);
+  }
+  return ref
+      .watch(serviceBookingRepositoryProvider)
+      .getPagedCustomerServiceBookings(user.id, limit: 3);
 });

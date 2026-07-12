@@ -11,34 +11,52 @@ enum DeliveryStatus {
 
   static DeliveryStatus fromString(String s) {
     switch (s) {
-      case 'accepted':    return DeliveryStatus.accepted;
-      case 'picked_up':  return DeliveryStatus.pickedUp;
-      case 'in_transit': return DeliveryStatus.inTransit;
-      case 'delivered':  return DeliveryStatus.delivered;
-      case 'cancelled':  return DeliveryStatus.cancelled;
-      default:           return DeliveryStatus.pending;
+      case 'accepted':
+        return DeliveryStatus.accepted;
+      case 'picked_up':
+        return DeliveryStatus.pickedUp;
+      case 'in_transit':
+        return DeliveryStatus.inTransit;
+      case 'delivered':
+        return DeliveryStatus.delivered;
+      case 'cancelled':
+        return DeliveryStatus.cancelled;
+      default:
+        return DeliveryStatus.pending;
     }
   }
 
   String toDbString() {
     switch (this) {
-      case DeliveryStatus.pending:   return 'pending';
-      case DeliveryStatus.accepted:  return 'accepted';
-      case DeliveryStatus.pickedUp:  return 'picked_up';
-      case DeliveryStatus.inTransit: return 'in_transit';
-      case DeliveryStatus.delivered: return 'delivered';
-      case DeliveryStatus.cancelled: return 'cancelled';
+      case DeliveryStatus.pending:
+        return 'pending';
+      case DeliveryStatus.accepted:
+        return 'accepted';
+      case DeliveryStatus.pickedUp:
+        return 'picked_up';
+      case DeliveryStatus.inTransit:
+        return 'in_transit';
+      case DeliveryStatus.delivered:
+        return 'delivered';
+      case DeliveryStatus.cancelled:
+        return 'cancelled';
     }
   }
 
   String get label {
     switch (this) {
-      case DeliveryStatus.pending:   return 'Pending';
-      case DeliveryStatus.accepted:  return 'Accepted';
-      case DeliveryStatus.pickedUp:  return 'Picked Up';
-      case DeliveryStatus.inTransit: return 'In Transit';
-      case DeliveryStatus.delivered: return 'Delivered';
-      case DeliveryStatus.cancelled: return 'Cancelled';
+      case DeliveryStatus.pending:
+        return 'Pending';
+      case DeliveryStatus.accepted:
+        return 'Accepted';
+      case DeliveryStatus.pickedUp:
+        return 'Picked Up';
+      case DeliveryStatus.inTransit:
+        return 'In Transit';
+      case DeliveryStatus.delivered:
+        return 'Delivered';
+      case DeliveryStatus.cancelled:
+        return 'Cancelled';
     }
   }
 }

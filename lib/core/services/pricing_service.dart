@@ -41,10 +41,10 @@ class PricingService {
   static BillBreakdown calculateBill(double baseAmount) {
     // Basic fees before tax
     final taxableTotal = baseAmount + platformFee + handlingCharges;
-    
+
     // GST on the taxable total (Fare + Fees)
     final gstAmount = taxableTotal * gstRate;
-    
+
     // Final payable amount
     final totalPayable = taxableTotal + gstAmount;
 
@@ -87,13 +87,14 @@ final pricingConfigProvider = FutureProvider<void>((ref) async {
       }
     }
     if (kDebugMode) {
-      debugPrint('PricingService: Config updated. GST: ${PricingService.gstRate}, Platform: ${PricingService.platformFee}, Handling: ${PricingService.handlingCharges}');
+      debugPrint(
+          'PricingService: Config updated. GST: ${PricingService.gstRate}, Platform: ${PricingService.platformFee}, Handling: ${PricingService.handlingCharges}');
     }
   } catch (e) {
     // Falls back silently to default values
     if (kDebugMode) {
-      debugPrint('PricingService: Failed to fetch remote config, using defaults. Error: $e');
+      debugPrint(
+          'PricingService: Failed to fetch remote config, using defaults. Error: $e');
     }
   }
 });
-

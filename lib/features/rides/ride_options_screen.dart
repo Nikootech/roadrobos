@@ -27,7 +27,8 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
       final options = ref.read(taxiProvider).rideOptions;
       if (options.isNotEmpty && mounted) {
         setState(() {
-          _selectedRide = options.first; // use real first option with real price
+          _selectedRide =
+              options.first; // use real first option with real price
           ref.read(taxiProvider.notifier).selectOption(options.first);
         });
       }
@@ -81,22 +82,33 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
                       margin: const EdgeInsets.symmetric(vertical: 12),
                       width: 40,
                       height: 4,
-                      decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
+                      decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(2)),
                     ),
 
                     // Title and Distance (Image 3)
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 8),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('Suggested rides', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+                          const Text('Suggested rides',
+                              style: TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.w900)),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(20)),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                                color: Colors.black,
+                                borderRadius: BorderRadius.circular(20)),
                             child: Text(
                               '${taxiState.distance.toStringAsFixed(1)}km • ${taxiState.eta ?? '15 min'}',
-                              style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700),
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700),
                             ),
                           ),
                         ],
@@ -114,9 +126,14 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
                           final option = taxiState.rideOptions[index];
                           final isSelected = _selectedRide?.id == option.id;
                           final hasDiscount = taxiState.discountAmount > 0;
-                          final finalPrice = hasDiscount ? (option.price - taxiState.discountAmount).clamp(0.0, double.infinity) : option.price;
-                          final originalPriceStr = hasDiscount ? '₹${option.price.toStringAsFixed(0)}' : null;
-                          
+                          final finalPrice = hasDiscount
+                              ? (option.price - taxiState.discountAmount)
+                                  .clamp(0.0, double.infinity)
+                              : option.price;
+                          final originalPriceStr = hasDiscount
+                              ? '₹${option.price.toStringAsFixed(0)}'
+                              : null;
+
                           // Use user-provided icons with fallback
                           String seats = '4';
                           if (option.id.contains('bike')) {
@@ -137,7 +154,9 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
                             originalPriceStr: originalPriceStr,
                             onTap: () {
                               setState(() => _selectedRide = option);
-                              ref.read(taxiProvider.notifier).selectOption(option);
+                              ref
+                                  .read(taxiProvider.notifier)
+                                  .selectOption(option);
                               HapticFeedback.selectionClick();
                             },
                           );
@@ -155,7 +174,9 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
                           GestureDetector(
                             onTap: () {
                               setState(() => _paymentMethod = 'Cash');
-                              ref.read(taxiProvider.notifier).setPaymentMethod('Cash');
+                              ref
+                                  .read(taxiProvider.notifier)
+                                  .setPaymentMethod('Cash');
                             },
                             child: _buildFooterOption(
                               Icons.money,
@@ -163,18 +184,22 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
                               isSelected: _paymentMethod == 'Cash',
                             ),
                           ),
-                          Container(width: 1, height: 20, color: Colors.grey[300]),
+                          Container(
+                              width: 1, height: 20, color: Colors.grey[300]),
                           GestureDetector(
                             onTap: () {
                               _showPromoCodeSheet(context);
                             },
-                            child: _buildFooterOption(Icons.local_offer_outlined, 'Coupons'),
+                            child: _buildFooterOption(
+                                Icons.local_offer_outlined, 'Coupons'),
                           ),
-                          Container(width: 1, height: 20, color: Colors.grey[300]),
+                          Container(
+                              width: 1, height: 20, color: Colors.grey[300]),
                           GestureDetector(
                             onTap: () {
                               setState(() => _paymentMethod = 'Myself');
-                              ref.read(taxiProvider.notifier).setPaymentMethod('Online'); // Store as Online in provider
+                              ref.read(taxiProvider.notifier).setPaymentMethod(
+                                  'Online'); // Store as Online in provider
                             },
                             child: _buildFooterOption(
                               Icons.person_outline,
@@ -194,7 +219,8 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
                           borderRadius: BorderRadius.circular(32),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.primaryBlue.withValues(alpha: 0.3),
+                              color:
+                                  AppColors.primaryBlue.withValues(alpha: 0.3),
                               blurRadius: 12,
                               offset: const Offset(0, 4),
                             )
@@ -203,15 +229,22 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
                         child: ElevatedButton(
                           onPressed: () async {
                             if (_selectedRide != null) {
-                              ref.read(taxiProvider.notifier).selectOption(_selectedRide!);
-                              final success = await ref.read(taxiProvider.notifier).startSearching();
+                              ref
+                                  .read(taxiProvider.notifier)
+                                  .selectOption(_selectedRide!);
+                              final success = await ref
+                                  .read(taxiProvider.notifier)
+                                  .startSearching();
                               if (success) {
-                                if (context.mounted) await context.push('/taxi/tracking');
+                                if (context.mounted) {
+                                  await context.push('/taxi/tracking');
+                                }
                               } else {
                                 if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content: Text('No ${_selectedRide!.title} drivers are currently available online. Please select another category.'),
+                                      content: Text(
+                                          'No ${_selectedRide!.title} drivers are currently available online. Please select another category.'),
                                       backgroundColor: AppColors.dangerRed,
                                     ),
                                   );
@@ -223,12 +256,16 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
                             backgroundColor: AppColors.primaryBlue,
                             foregroundColor: Colors.white,
                             minimumSize: const Size(double.infinity, 56),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(32)),
                             elevation: 0,
                           ),
                           child: Text(
                             'Book ${_selectedRide?.title ?? 'Any'}',
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, letterSpacing: 0.5),
+                            style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0.5),
                           ),
                         ),
                       ),
@@ -263,7 +300,8 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
               const Spacer(),
               // Pickup Pill
               Flexible(
-                child: _buildAddressPill(context, state.pickupAddress ?? 'Pick-up'),
+                child: _buildAddressPill(
+                    context, state.pickupAddress ?? 'Pick-up'),
               ),
             ],
           ),
@@ -272,7 +310,9 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               Flexible(
-                child: _buildAddressPill(context, state.dropoffAddress ?? 'Destination', isPickup: false),
+                child: _buildAddressPill(
+                    context, state.dropoffAddress ?? 'Destination',
+                    isPickup: false),
               ),
             ],
           ),
@@ -281,7 +321,8 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
     );
   }
 
-  Widget _buildAddressPill(BuildContext context, String address, {bool isPickup = true}) {
+  Widget _buildAddressPill(BuildContext context, String address,
+      {bool isPickup = true}) {
     return GestureDetector(
       onTap: () {
         ref.read(taxiProvider.notifier).setFocus(isPickup);
@@ -306,12 +347,14 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
             Flexible(
               child: Text(
                 address,
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            const Icon(Icons.edit_location_alt_rounded, size: 16, color: AppColors.primaryBlue),
+            const Icon(Icons.edit_location_alt_rounded,
+                size: 16, color: AppColors.primaryBlue),
           ],
         ),
       ),
@@ -344,17 +387,12 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
   }
 
   Widget _buildVehicleSelectableItem(
-    String name, 
-    String price, 
-    String seats, 
-    String eta, 
-    String? imagePath, {
-    IconData? fallbackIcon,
-    String? badge, 
-    String? originalPriceStr,
-    bool isSelected = false, 
-    VoidCallback? onTap
-  }) {
+      String name, String price, String seats, String eta, String? imagePath,
+      {IconData? fallbackIcon,
+      String? badge,
+      String? originalPriceStr,
+      bool isSelected = false,
+      VoidCallback? onTap}) {
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -362,15 +400,24 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primaryBlue.withValues(alpha: 0.05) : Colors.white,
+          color: isSelected
+              ? AppColors.primaryBlue.withValues(alpha: 0.05)
+              : Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? AppColors.primaryBlue : Colors.black.withValues(alpha: 0.05),
+            color: isSelected
+                ? AppColors.primaryBlue
+                : Colors.black.withValues(alpha: 0.05),
             width: isSelected ? 2 : 1,
           ),
-          boxShadow: isSelected ? [
-            BoxShadow(color: AppColors.primaryBlue.withValues(alpha: 0.1), blurRadius: 15, offset: const Offset(0, 5))
-          ] : null,
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                      color: AppColors.primaryBlue.withValues(alpha: 0.1),
+                      blurRadius: 15,
+                      offset: const Offset(0, 5))
+                ]
+              : null,
         ),
         child: Row(
           children: [
@@ -382,15 +429,33 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
                   width: 60,
                   height: 60,
                   decoration: BoxDecoration(
-                    color: isSelected ? AppColors.primaryBlue.withValues(alpha: 0.1) : const Color(0xFFF3F4F6),
+                    color: isSelected
+                        ? AppColors.primaryBlue.withValues(alpha: 0.1)
+                        : const Color(0xFFF3F4F6),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Center(
-                    child: imagePath != null 
-                      ? (imagePath.startsWith('http') 
-                          ? Image.network(imagePath, width: 44, height: 44, errorBuilder: (_, __, ___) => Icon(fallbackIcon ?? Icons.local_taxi, size: 32, color: Colors.black45))
-                          : Image.asset(imagePath, width: 44, height: 44, errorBuilder: (_, __, ___) => Icon(fallbackIcon ?? Icons.local_taxi, size: 32, color: Colors.black45)))
-                      : Icon(fallbackIcon ?? Icons.local_taxi, size: 32, color: isSelected ? AppColors.primaryBlue : Colors.black45),
+                    child: imagePath != null
+                        ? (imagePath.startsWith('http')
+                            ? Image.network(imagePath,
+                                width: 44,
+                                height: 44,
+                                errorBuilder: (_, __, ___) => Icon(
+                                    fallbackIcon ?? Icons.local_taxi,
+                                    size: 32,
+                                    color: Colors.black45))
+                            : Image.asset(imagePath,
+                                width: 44,
+                                height: 44,
+                                errorBuilder: (_, __, ___) => Icon(
+                                    fallbackIcon ?? Icons.local_taxi,
+                                    size: 32,
+                                    color: Colors.black45)))
+                        : Icon(fallbackIcon ?? Icons.local_taxi,
+                            size: 32,
+                            color: isSelected
+                                ? AppColors.primaryBlue
+                                : Colors.black45),
                   ),
                 ),
                 if (badge != null)
@@ -398,15 +463,23 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
                     top: -8,
                     right: -8,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: badge == 'Quickest' ? AppColors.dangerRed : AppColors.primaryBlue,
+                        color: badge == 'Quickest'
+                            ? AppColors.dangerRed
+                            : AppColors.primaryBlue,
                         borderRadius: BorderRadius.circular(10),
-                        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
+                        boxShadow: const [
+                          BoxShadow(color: Colors.black12, blurRadius: 4)
+                        ],
                       ),
                       child: Text(
                         badge,
-                        style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w800),
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 9,
+                            fontWeight: FontWeight.w800),
                       ),
                     ),
                   ),
@@ -420,15 +493,22 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
                 children: [
                   Row(
                     children: [
-                      Text(name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
+                      Text(name,
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.w900)),
                       const SizedBox(width: 8),
                       Icon(Icons.person, size: 14, color: Colors.grey[400]),
                       const SizedBox(width: 2),
-                      Text(seats, style: TextStyle(color: Colors.grey[600], fontSize: 13, fontWeight: FontWeight.bold)),
+                      Text(seats,
+                          style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold)),
                       if (badge != null) ...[
                         const SizedBox(width: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
                             color: AppColors.primaryBlue.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(4),
@@ -446,7 +526,11 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Text(eta, style: TextStyle(color: Colors.grey[600], fontSize: 13, fontWeight: FontWeight.w500)),
+                  Text(eta,
+                      style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500)),
                 ],
               ),
             ),
@@ -469,22 +553,29 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w900,
-                    color: originalPriceStr != null ? Colors.green : Colors.black,
+                    color:
+                        originalPriceStr != null ? Colors.green : Colors.black,
                   ),
                 ),
               ],
             ),
           ],
         ),
-      ).animate(target: isSelected ? 1 : 0).shimmer(color: Colors.white24).scale(begin: const Offset(1, 1), end: const Offset(1.02, 1.02)),
+      )
+          .animate(target: isSelected ? 1 : 0)
+          .shimmer(color: Colors.white24)
+          .scale(begin: const Offset(1, 1), end: const Offset(1.02, 1.02)),
     );
   }
 
-  Widget _buildFooterOption(IconData icon, String label, {bool isSelected = false}) {
+  Widget _buildFooterOption(IconData icon, String label,
+      {bool isSelected = false}) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 20, color: isSelected ? AppColors.primaryBlue : Colors.black87),
+        Icon(icon,
+            size: 20,
+            color: isSelected ? AppColors.primaryBlue : Colors.black87),
         const SizedBox(width: 6),
         Text(
           label,

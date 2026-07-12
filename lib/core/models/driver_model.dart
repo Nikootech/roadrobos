@@ -1,7 +1,15 @@
 import 'package:latlong2/latlong.dart';
 
 enum DriverApprovalStatus { none, pending, approved, rejected }
-enum DriverTripStatus { none, enroutePickup, arrived, otpVerify, started, completed }
+
+enum DriverTripStatus {
+  none,
+  enroutePickup,
+  arrived,
+  otpVerify,
+  started,
+  completed
+}
 
 class DriverModel {
   final String id;
@@ -38,18 +46,23 @@ class DriverModel {
     return DriverModel(
       id: id,
       isOnline: map['is_online'] ?? map['isOnline'] ?? false,
-      todayEarnings: (map['today_earnings'] ?? map['todayEarnings'] ?? 0.0).toDouble(),
-      weeklyEarnings: (map['weekly_earnings'] ?? map['weeklyEarnings'] ?? 0.0).toDouble(),
+      todayEarnings:
+          (map['today_earnings'] ?? map['todayEarnings'] ?? 0.0).toDouble(),
+      weeklyEarnings:
+          (map['weekly_earnings'] ?? map['weeklyEarnings'] ?? 0.0).toDouble(),
       totalRides: map['total_rides'] ?? map['totalRides'] ?? 0,
       weeklyRides: map['weekly_rides'] ?? map['weeklyRides'] ?? 0,
       acceptanceRate: map['acceptance_rate'] ?? map['acceptanceRate'] ?? '100%',
       onlineTime: map['online_time'] ?? map['onlineTime'] ?? '0h 0m',
       approvalStatus: DriverApprovalStatus.values.firstWhere(
-        (e) => e.toString().split('.').last == (map['approval_status'] ?? map['approvalStatus']),
+        (e) =>
+            e.toString().split('.').last ==
+            (map['approval_status'] ?? map['approvalStatus']),
         orElse: () => DriverApprovalStatus.none,
       ),
-      currentPosition: map['lat'] != null && map['lng'] != null 
-          ? LatLng((map['lat'] as num).toDouble(), (map['lng'] as num).toDouble()) 
+      currentPosition: map['lat'] != null && map['lng'] != null
+          ? LatLng(
+              (map['lat'] as num).toDouble(), (map['lng'] as num).toDouble())
           : null,
       fcmToken: map['fcm_token'] ?? map['fcmToken'],
       vehicleModel: map['vehicle_model'] ?? map['vehicleModel'] ?? '',

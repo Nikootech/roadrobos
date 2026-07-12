@@ -30,7 +30,8 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
   DateTime? _insuranceExpiry;
   DateTime? _taxExpiry;
 
-  final List<int> _yearsList = List.generate(12, (index) => 2015 + index); // 2015 to 2026
+  final List<int> _yearsList =
+      List.generate(12, (index) => 2015 + index); // 2015 to 2026
 
   final List<Map<String, dynamic>> _types = [
     {'value': 'car', 'label': 'Car', 'icon': Icons.directions_car_rounded},
@@ -44,7 +45,8 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
     super.initState();
     _makeController = TextEditingController(text: widget.vehicle?.make ?? '');
     _modelController = TextEditingController(text: widget.vehicle?.model ?? '');
-    _plateController = TextEditingController(text: widget.vehicle?.plateNumber ?? '');
+    _plateController =
+        TextEditingController(text: widget.vehicle?.plateNumber ?? '');
     _selectedYear = widget.vehicle?.year ?? 2023;
     _selectedType = widget.vehicle?.vehicleType.toLowerCase() ?? 'car';
     _fcExpiry = widget.vehicle?.fcExpiry;
@@ -191,11 +193,14 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                                 });
                               },
                               child: Container(
-                                margin: const EdgeInsets.symmetric(horizontal: 4),
-                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                margin:
+                                    const EdgeInsets.symmetric(horizontal: 4),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 12),
                                 decoration: BoxDecoration(
                                   color: isSelected
-                                      ? AppColors.primaryBlue.withValues(alpha: 0.1)
+                                      ? AppColors.primaryBlue
+                                          .withValues(alpha: 0.1)
                                       : Colors.white,
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
@@ -277,22 +282,27 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                       const SizedBox(height: 8),
                       DropdownButtonFormField<int>(
                         initialValue: _selectedYear,
-                        icon: const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.textMuted),
+                        icon: const Icon(Icons.keyboard_arrow_down_rounded,
+                            color: AppColors.textMuted),
                         decoration: InputDecoration(
                           filled: true,
                           fillColor: AppColors.bgLightCard,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 16),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: AppColors.border),
+                            borderSide:
+                                const BorderSide(color: AppColors.border),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: AppColors.border),
+                            borderSide:
+                                const BorderSide(color: AppColors.border),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(color: AppColors.primaryBlue, width: 1.5),
+                            borderSide: const BorderSide(
+                                color: AppColors.primaryBlue, width: 1.5),
                           ),
                         ),
                         items: _yearsList.map((int year) {
@@ -342,7 +352,8 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                         hint: 'Select FC Expiry Date',
                         selectedDate: _fcExpiry,
                         prefixIcon: Icons.description_rounded,
-                        onDateSelected: (date) => setState(() => _fcExpiry = date),
+                        onDateSelected: (date) =>
+                            setState(() => _fcExpiry = date),
                       ),
                       const SizedBox(height: 20),
 
@@ -352,7 +363,8 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                         hint: 'Select Insurance Expiry Date',
                         selectedDate: _insuranceExpiry,
                         prefixIcon: Icons.shield_rounded,
-                        onDateSelected: (date) => setState(() => _insuranceExpiry = date),
+                        onDateSelected: (date) =>
+                            setState(() => _insuranceExpiry = date),
                       ),
                       const SizedBox(height: 20),
 
@@ -362,7 +374,8 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                         hint: 'Select Road Tax Expiry Date',
                         selectedDate: _taxExpiry,
                         prefixIcon: Icons.receipt_long_rounded,
-                        onDateSelected: (date) => setState(() => _taxExpiry = date),
+                        onDateSelected: (date) =>
+                            setState(() => _taxExpiry = date),
                       ),
                       const SizedBox(height: 40),
                     ],
@@ -400,7 +413,8 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                         width: 24,
                         child: CircularProgressIndicator(
                           strokeWidth: 2.5,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.white),
                         ),
                       )
                     : Text(
@@ -472,17 +486,21 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
           },
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: GoogleFonts.outfit(color: AppColors.textMuted, fontSize: 14),
+            hintStyle:
+                GoogleFonts.outfit(color: AppColors.textMuted, fontSize: 14),
             filled: true,
             fillColor: AppColors.bgLightCard,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             prefixIcon: Icon(prefixIcon, color: AppColors.textMuted, size: 20),
             suffixIcon: selectedDate != null
                 ? IconButton(
-                    icon: const Icon(Icons.clear_rounded, color: AppColors.textMuted, size: 18),
+                    icon: const Icon(Icons.clear_rounded,
+                        color: AppColors.textMuted, size: 18),
                     onPressed: () => onDateSelected(null),
                   )
-                : const Icon(Icons.calendar_today_rounded, color: AppColors.textMuted, size: 18),
+                : const Icon(Icons.calendar_today_rounded,
+                    color: AppColors.textMuted, size: 18),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: AppColors.border),
@@ -493,7 +511,8 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.primaryBlue, width: 1.5),
+              borderSide:
+                  const BorderSide(color: AppColors.primaryBlue, width: 1.5),
             ),
           ),
           style: GoogleFonts.outfit(

@@ -67,7 +67,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
         }
 
         if (!mounted) return;
-        debugPrint('SplashScreen: Not logged in → ${isFirstLaunch ? "/onboarding" : "/auth/role-selection"}');
+        debugPrint(
+            'SplashScreen: Not logged in → ${isFirstLaunch ? "/onboarding" : "/auth/role-selection"}');
         context.go(isFirstLaunch ? '/onboarding' : '/auth/role-selection');
         return;
       }
@@ -103,7 +104,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
         final cachedRoute = await cachedRouteFuture;
         if (cachedRoute != null && mounted && !_navigationHandled) {
           _navigationHandled = true;
-          debugPrint('SplashScreen: Profile loading → instant redirect via cache: $cachedRoute');
+          debugPrint(
+              'SplashScreen: Profile loading → instant redirect via cache: $cachedRoute');
           context.go(cachedRoute);
           return;
         }
@@ -122,7 +124,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   void _showSessionMismatchDialog() {
     if (_dialogShowing) return;
     _dialogShowing = true;
-    
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -143,7 +145,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.4 : 0.08),
+                color: Colors.black.withValues(
+                    alpha: Theme.of(context).brightness == Brightness.dark
+                        ? 0.4
+                        : 0.08),
                 blurRadius: 24,
                 offset: const Offset(0, 12),
               ),
@@ -221,9 +226,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
               const SizedBox(height: 12),
               OutlinedButton(
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: Theme.of(context).brightness == Brightness.dark
-                      ? Colors.white.withValues(alpha: 0.7)
-                      : AppColors.textSecondary,
+                  foregroundColor:
+                      Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white.withValues(alpha: 0.7)
+                          : AppColors.textSecondary,
                   side: BorderSide(
                     color: Theme.of(context).brightness == Brightness.dark
                         ? Colors.white.withValues(alpha: 0.15)
@@ -282,7 +288,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
               ),
             ),
           ).animate().fadeIn(duration: 800.ms),
-          
+
           Positioned(
             top: size.height * 0.05,
             left: -size.width * 0.2,
@@ -291,7 +297,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
               height: size.width * 0.45,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFFE0F2FE).withValues(alpha: 0.6), // Soft sky blue
+                color: const Color(0xFFE0F2FE)
+                    .withValues(alpha: 0.6), // Soft sky blue
               ),
             ),
           ).animate(delay: 200.ms).fadeIn(duration: 800.ms),
@@ -385,7 +392,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                     ),
                   ),
                 ),
-                if (AppDebugger.startupSteps.values.any((status) => status.startsWith('FAILED'))) ...[
+                if (AppDebugger.startupSteps.values
+                    .any((status) => status.startsWith('FAILED'))) ...[
                   const SizedBox(height: 12),
                   Text(
                     'Running in fallback mode (some services offline)',
@@ -397,13 +405,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                   ),
                 ],
               ],
-            )
-                .animate(delay: 800.ms)
-                .fadeIn(duration: 500.ms),
+            ).animate(delay: 800.ms).fadeIn(duration: 500.ms),
           ),
         ],
       ),
     );
   }
 }
-

@@ -32,12 +32,14 @@ class UserTrackingService {
         forceLocationManager: true,
         intervalDuration: const Duration(seconds: 4),
         foregroundNotificationConfig: const ForegroundNotificationConfig(
-          notificationText: 'App will continue to receive your location even when you aren\'t using it',
+          notificationText:
+              'App will continue to receive your location even when you aren\'t using it',
           notificationTitle: 'Location Tracking Active',
           enableWakeLock: true,
         ),
       );
-    } else if (defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.macOS) {
+    } else if (defaultTargetPlatform == TargetPlatform.iOS ||
+        defaultTargetPlatform == TargetPlatform.macOS) {
       locationSettings = AppleSettings(
         accuracy: LocationAccuracy.high,
         activityType: ActivityType.automotiveNavigation,

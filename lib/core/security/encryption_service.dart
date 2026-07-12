@@ -79,7 +79,9 @@ class EncryptionService {
   /// Decrypt a base64-encoded AES-256-GCM message.
   Future<String> decryptMessage(String encryptedBase64, SecretKey key) async {
     final bytes = base64.decode(encryptedBase64);
-    if (bytes.length < 12 + 16) throw const FormatException('Invalid ciphertext');
+    if (bytes.length < 12 + 16) {
+      throw const FormatException('Invalid ciphertext');
+    }
     final nonce = bytes.sublist(0, 12);
     final cipherText = bytes.sublist(12, bytes.length - 16);
     final mac = Mac(bytes.sublist(bytes.length - 16));

@@ -12,10 +12,12 @@ class WaterServiceBookingScreen extends ConsumerStatefulWidget {
   const WaterServiceBookingScreen({super.key});
 
   @override
-  ConsumerState<WaterServiceBookingScreen> createState() => _WaterServiceBookingScreenState();
+  ConsumerState<WaterServiceBookingScreen> createState() =>
+      _WaterServiceBookingScreenState();
 }
 
-class _WaterServiceBookingScreenState extends ConsumerState<WaterServiceBookingScreen> {
+class _WaterServiceBookingScreenState
+    extends ConsumerState<WaterServiceBookingScreen> {
   bool _isCarSelected = true;
   int _selectedPackageIndex = -1;
 
@@ -43,7 +45,12 @@ class _WaterServiceBookingScreenState extends ConsumerState<WaterServiceBookingS
       'name': 'Deep Cleaning',
       'price': '₹899',
       'subtitle': 'Interior and exterior detailing',
-      'items': ['Express Wash Items', 'Interior Vacuuming', 'Dashboard Polish', 'Glass Cleaning'],
+      'items': [
+        'Express Wash Items',
+        'Interior Vacuuming',
+        'Dashboard Polish',
+        'Glass Cleaning'
+      ],
       'color': const Color(0xFF0EA5E9),
       'isPremium': true,
     },
@@ -51,7 +58,12 @@ class _WaterServiceBookingScreenState extends ConsumerState<WaterServiceBookingS
       'name': 'Ceramic Wash',
       'price': '₹1,499',
       'subtitle': 'Premium protection & shine',
-      'items': ['Deep Cleaning Items', 'Ceramic Spray Wax', 'Engine Bay Cleaning', 'Upholstery Shampoo'],
+      'items': [
+        'Deep Cleaning Items',
+        'Ceramic Spray Wax',
+        'Engine Bay Cleaning',
+        'Upholstery Shampoo'
+      ],
       'color': const Color(0xFF0284C7),
       'isPremium': true,
     },
@@ -78,13 +90,19 @@ class _WaterServiceBookingScreenState extends ConsumerState<WaterServiceBookingS
       'name': 'Pro Detail',
       'price': '₹499',
       'subtitle': 'Showroom finish for your ride',
-      'items': ['Foam Bath Items', 'Teflon Coating', 'Engine Degreasing', 'Chrome Polish'],
+      'items': [
+        'Foam Bath Items',
+        'Teflon Coating',
+        'Engine Degreasing',
+        'Chrome Polish'
+      ],
       'color': const Color(0xFF0284C7),
       'isPremium': true,
     },
   ];
 
-  List<Map<String, dynamic>> get _currentPackages => _isCarSelected ? _carPackages : _bikePackages;
+  List<Map<String, dynamic>> get _currentPackages =>
+      _isCarSelected ? _carPackages : _bikePackages;
 
   @override
   Widget build(BuildContext context) {
@@ -96,12 +114,16 @@ class _WaterServiceBookingScreenState extends ConsumerState<WaterServiceBookingS
         leading: GestureDetector(
           onTap: () => context.pop(),
           child: const Center(
-            child: Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: Color(0xFF0F172A)),
+            child: Icon(Icons.arrow_back_ios_new_rounded,
+                size: 18, color: Color(0xFF0F172A)),
           ),
         ),
         title: const Text(
           'Water Service Packages',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Color(0xFF0F172A)),
+          style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF0F172A)),
         ),
       ),
       body: Column(
@@ -137,12 +159,19 @@ class _WaterServiceBookingScreenState extends ConsumerState<WaterServiceBookingS
             decoration: BoxDecoration(
               color: Colors.white,
               boxShadow: [
-                BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 20, offset: const Offset(0, -5)),
+                BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 20,
+                    offset: const Offset(0, -5)),
               ],
             ),
             child: CustomButton(
-              label: _selectedPackageIndex == -1 ? 'Select a Package' : 'Continue to Booking',
-              onPressed: _selectedPackageIndex == -1 ? null : () => context.push('/schedule-appointment'),
+              label: _selectedPackageIndex == -1
+                  ? 'Select a Package'
+                  : 'Continue to Booking',
+              onPressed: _selectedPackageIndex == -1
+                  ? null
+                  : () => context.push('/schedule-appointment'),
               backgroundColor: const Color(0xFF0EA5E9),
             ),
           ),
@@ -207,34 +236,46 @@ class _WaterServiceBookingScreenState extends ConsumerState<WaterServiceBookingS
       ),
       child: Row(
         children: [
-          _buildTypeButton('Car Wash', Icons.directions_car_rounded, _isCarSelected, () {
+          _buildTypeButton(
+              'Car Wash', Icons.directions_car_rounded, _isCarSelected, () {
             setState(() {
               _isCarSelected = true;
               _selectedPackageIndex = -1;
             });
             // Auto-select a Car from the fleet
-            final cars = ref.read(allVehiclesProvider).where((v) => v.type == 'Car').toList();
+            final cars = ref
+                .read(allVehiclesProvider)
+                .where((v) => v.type == 'Car')
+                .toList();
             if (cars.isNotEmpty) {
               ref.read(vehicleProvider.notifier).setVehicle(cars.first);
             }
           }),
-          _buildTypeButton('Bike Wash', Icons.pedal_bike_rounded, !_isCarSelected, () {
+          _buildTypeButton(
+              'Bike Wash', Icons.pedal_bike_rounded, !_isCarSelected, () {
             setState(() {
               _isCarSelected = false;
               _selectedPackageIndex = -1;
             });
             // Auto-select a Bike/EV Bike from the fleet
-            final bikes = ref.read(allVehiclesProvider).where((v) => v.type == 'Bike' || v.type == 'EV Bike').toList();
+            final bikes = ref
+                .read(allVehiclesProvider)
+                .where((v) => v.type == 'Bike' || v.type == 'EV Bike')
+                .toList();
             if (bikes.isNotEmpty) {
               ref.read(vehicleProvider.notifier).setVehicle(bikes.first);
             }
           }),
         ],
       ),
-    ).animate().fadeIn().scale(begin: const Offset(0.95, 0.95), end: const Offset(1, 1));
+    )
+        .animate()
+        .fadeIn()
+        .scale(begin: const Offset(0.95, 0.95), end: const Offset(1, 1));
   }
 
-  Widget _buildTypeButton(String label, IconData icon, bool isActive, VoidCallback onTap) {
+  Widget _buildTypeButton(
+      String label, IconData icon, bool isActive, VoidCallback onTap) {
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
@@ -261,7 +302,9 @@ class _WaterServiceBookingScreenState extends ConsumerState<WaterServiceBookingS
                 Icon(
                   icon,
                   size: 20,
-                  color: isActive ? const Color(0xFF0EA5E9) : const Color(0xFF64748B),
+                  color: isActive
+                      ? const Color(0xFF0EA5E9)
+                      : const Color(0xFF64748B),
                 ),
                 const SizedBox(width: 8),
                 Text(
@@ -269,7 +312,9 @@ class _WaterServiceBookingScreenState extends ConsumerState<WaterServiceBookingS
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-                    color: isActive ? const Color(0xFF0F172A) : const Color(0xFF64748B),
+                    color: isActive
+                        ? const Color(0xFF0F172A)
+                        : const Color(0xFF64748B),
                   ),
                 ),
               ],
@@ -280,28 +325,31 @@ class _WaterServiceBookingScreenState extends ConsumerState<WaterServiceBookingS
     );
   }
 
-
-  Widget _buildPackageCard(int index, Map<String, dynamic> pkg, bool isSelected) {
+  Widget _buildPackageCard(
+      int index, Map<String, dynamic> pkg, bool isSelected) {
     return GestureDetector(
       onTap: () {
         HapticFeedback.lightImpact();
         setState(() => _selectedPackageIndex = index);
-        
+
         final selectedVehicle = ref.read(vehicleProvider);
-        
-        ref.read(bookingProvider.notifier).setVehicle(selectedVehicle.name, selectedVehicle.plate);
+
+        ref
+            .read(bookingProvider.notifier)
+            .setVehicle(selectedVehicle.name, selectedVehicle.plate);
         ref.read(bookingProvider.notifier).setPackage(
-          pkg['name'] as String, 
-          pkg['price'] as String,
-          List<String>.from(pkg['items'] as List),
-        );
+              pkg['name'] as String,
+              pkg['price'] as String,
+              List<String>.from(pkg['items'] as List),
+            );
       },
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: isSelected ? const Color(0xFF0EA5E9) : const Color(0xFFE2E8F0),
+            color:
+                isSelected ? const Color(0xFF0EA5E9) : const Color(0xFFE2E8F0),
             width: isSelected ? 2 : 1,
           ),
           boxShadow: [
@@ -320,20 +368,25 @@ class _WaterServiceBookingScreenState extends ConsumerState<WaterServiceBookingS
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(24),
                     gradient: LinearGradient(
-                      colors: [const Color(0xFF0EA5E9).withValues(alpha: 0.02), Colors.transparent],
+                      colors: [
+                        const Color(0xFF0EA5E9).withValues(alpha: 0.02),
+                        Colors.transparent
+                      ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                   ),
-                ).animate(onPlay: (controller) => controller.repeat())
-                 .shimmer(duration: 2.seconds, color: Colors.blue.withValues(alpha: 0.05)),
+                ).animate(onPlay: (controller) => controller.repeat()).shimmer(
+                    duration: 2.seconds,
+                    color: Colors.blue.withValues(alpha: 0.05)),
               ),
             if (pkg['isPremium'] == true)
               Positioned(
                 top: 0,
                 right: 0,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: const BoxDecoration(
                     color: Color(0xFF0EA5E9),
                     borderRadius: BorderRadius.only(
@@ -366,7 +419,9 @@ class _WaterServiceBookingScreenState extends ConsumerState<WaterServiceBookingS
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: Icon(
-                          _isCarSelected ? Icons.local_car_wash_rounded : Icons.water_drop_rounded,
+                          _isCarSelected
+                              ? Icons.local_car_wash_rounded
+                              : Icons.water_drop_rounded,
                           color: pkg['color'],
                           size: 24,
                         ),
@@ -414,7 +469,8 @@ class _WaterServiceBookingScreenState extends ConsumerState<WaterServiceBookingS
                       padding: const EdgeInsets.only(bottom: 8),
                       child: Row(
                         children: [
-                          const Icon(Icons.check_circle_rounded, size: 16, color: Color(0xFF10B981)),
+                          const Icon(Icons.check_circle_rounded,
+                              size: 16, color: Color(0xFF10B981)),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
@@ -436,6 +492,9 @@ class _WaterServiceBookingScreenState extends ConsumerState<WaterServiceBookingS
           ],
         ),
       ),
-    ).animate(delay: Duration(milliseconds: 100 * index)).fadeIn().slideX(begin: 0.1, end: 0);
+    )
+        .animate(delay: Duration(milliseconds: 100 * index))
+        .fadeIn()
+        .slideX(begin: 0.1, end: 0);
   }
 }

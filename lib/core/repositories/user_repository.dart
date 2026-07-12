@@ -23,23 +23,23 @@ class UserRepository {
     // data that causes false device-mismatch logouts during the auth flow.
     if (!kIsWeb) {
       // 1. Check local cache first (mobile/desktop only)
-      final local = await (_db.select(_db.cachedProfiles)..where((t) => t.id.equals(uid))).getSingleOrNull();
+      final local = await (_db.select(_db.cachedProfiles)
+            ..where((t) => t.id.equals(uid)))
+          .getSingleOrNull();
       if (local != null) {
         debugPrint('UserRepository: Returning Cached Profile for $uid');
         // Background refresh
         // ignore: unawaited_futures
-        _fetchAndCache(uid).catchError((e) => debugPrint('Background Fetch Error: $e'));
+        _fetchAndCache(uid)
+            .catchError((e) => debugPrint('Background Fetch Error: $e'));
         return _fromCached(local);
       }
     }
 
     try {
-      final response = await _supabase
-          .from('profiles')
-          .select()
-          .eq('id', uid)
-          .maybeSingle();
-      
+      final response =
+          await _supabase.from('profiles').select().eq('id', uid).maybeSingle();
+
       if (response != null) {
         final user = AppUser.fromMap(response, uid);
         if (!kIsWeb) await _cacheUser(user);
@@ -52,22 +52,25 @@ class UserRepository {
   }
 
   Future<void> _fetchAndCache(String uid) async {
-    final response = await _supabase.from('profiles').select().eq('id', uid).maybeSingle();
+    final response =
+        await _supabase.from('profiles').select().eq('id', uid).maybeSingle();
     if (response != null) {
       await _cacheUser(AppUser.fromMap(response, uid));
     }
   }
 
   Future<void> _cacheUser(AppUser user) async {
-    await _db.into(_db.cachedProfiles).insertOnConflictUpdate(CachedProfilesCompanion.insert(
-      id: user.id,
-      name: user.name,
-      email: Value(user.email),
-      phone: user.phone,
-      role: user.role.name,
-      profilePic: Value(user.profilePic),
-      points: Value(user.points),
-    ));
+    await _db
+        .into(_db.cachedProfiles)
+        .insertOnConflictUpdate(CachedProfilesCompanion.insert(
+          id: user.id,
+          name: user.name,
+          email: Value(user.email),
+          phone: user.phone,
+          role: user.role.name,
+          profilePic: Value(user.profilePic),
+          points: Value(user.points),
+        ));
   }
 
   AppUser _fromCached(CachedProfile local) {
@@ -76,7 +79,8 @@ class UserRepository {
       name: local.name,
       email: local.email,
       phone: local.phone,
-      role: UserRole.values.firstWhere((e) => e.name == local.role, orElse: () => UserRole.customer),
+      role: UserRole.values.firstWhere((e) => e.name == local.role,
+          orElse: () => UserRole.customer),
       profilePic: local.profilePic,
       points: local.points,
     );
@@ -88,7 +92,8 @@ class UserRepository {
         .from('profiles')
         .stream(primaryKey: ['id'])
         .eq('id', uid)
-        .map((data) => data.isNotEmpty ? AppUser.fromMap(data.first, uid) : null);
+        .map((data) =>
+            data.isNotEmpty ? AppUser.fromMap(data.first, uid) : null);
   }
 
   /// Create or update user profile
@@ -99,10 +104,11 @@ class UserRepository {
     try {
       final userMap = user.toMap();
       debugPrint('UserRepository: Updating Profile [ID: ${user.id}]: $userMap');
-      
+
       try {
         // Explicit update is often safer for RLS 'update' policies than 'upsert'
-        final response = await _supabase.from('profiles')
+        final response = await _supabase
+            .from('profiles')
             .update(userMap)
             .eq('id', user.id)
             .select()
@@ -110,23 +116,23 @@ class UserRepository {
 
         if (response == null) {
           await _supabase.from('profiles').upsert(
-            userMap..addEntries([MapEntry('id', user.id)]),
-            onConflict: 'id',
-          );
+                userMap..addEntries([MapEntry('id', user.id)]),
+                onConflict: 'id',
+              );
         }
       } catch (e) {
-        if (e.toString().contains('400') || e.toString().contains('Bad Request')) {
-          debugPrint('UserRepository: 400 Bad Request with full payload. Trying safe payload.');
+        if (e.toString().contains('400') ||
+            e.toString().contains('Bad Request')) {
+          debugPrint(
+              'UserRepository: 400 Bad Request with full payload. Trying safe payload.');
           // If 400 Bad Request, it usually means a column doesn't exist (e.g. role, email)
           // Try updating only safe fields
           final safeMap = {
             'name': user.name,
             'phone': user.phone,
           };
-          
-          await _supabase.from('profiles')
-            .update(safeMap)
-            .eq('id', user.id);
+
+          await _supabase.from('profiles').update(safeMap).eq('id', user.id);
         } else {
           rethrow;
         }
@@ -150,10 +156,7 @@ class UserRepository {
   /// Update specific fields
   Future<void> updateField(String uid, String field, dynamic value) async {
     try {
-      await _supabase
-          .from('profiles')
-          .update({field: value})
-          .eq('id', uid);
+      await _supabase.from('profiles').update({field: value}).eq('id', uid);
     } catch (e) {
       debugPrint('Supabase Field Update Failure ($field): $e');
       rethrow;
@@ -161,20 +164,23 @@ class UserRepository {
   }
 
   /// Upload profile picture to Supabase Storage
-  Future<String> uploadProfilePicture(String uid, Uint8List fileBytes, String extension) async {
+  Future<String> uploadProfilePicture(
+      String uid, Uint8List fileBytes, String extension) async {
     try {
       final fileName = 'avatars/$uid.$extension';
-      
+
       // Upload to 'profiles' bucket
       // We use upsert: true to overwrite existing avatar for this user
       await _supabase.storage.from('profiles').uploadBinary(
-        fileName,
-        fileBytes,
-        fileOptions: const FileOptions(upsert: true, contentType: 'image/*'),
-      );
+            fileName,
+            fileBytes,
+            fileOptions:
+                const FileOptions(upsert: true, contentType: 'image/*'),
+          );
 
       // Get public URL with cache buster to ensure real-time UI updates
-      final publicUrl = _supabase.storage.from('profiles').getPublicUrl(fileName);
+      final publicUrl =
+          _supabase.storage.from('profiles').getPublicUrl(fileName);
       return '$publicUrl?t=${DateTime.now().millisecondsSinceEpoch}';
     } catch (e) {
       debugPrint('Supabase Storage Upload Failure: $e');

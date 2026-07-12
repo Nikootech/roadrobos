@@ -12,10 +12,17 @@ class TechProfileScreen extends ConsumerWidget {
   void _onBottomNavTap(BuildContext context, int index) {
     HapticFeedback.lightImpact();
     switch (index) {
-      case 0: context.go('/tech-dashboard'); break;
-      case 1: context.go('/tech-tasks'); break;
-      case 2: context.go('/tech-spare-parts'); break;
-      case 3: break; // Already here
+      case 0:
+        context.go('/tech-dashboard');
+        break;
+      case 1:
+        context.go('/tech-tasks');
+        break;
+      case 2:
+        context.go('/tech-spare-parts');
+        break;
+      case 3:
+        break; // Already here
     }
   }
 
@@ -25,7 +32,7 @@ class TechProfileScreen extends ConsumerWidget {
     final user = userState.user;
     final String name = user?.name ?? 'Guest Technician';
     final String userId = user?.id ?? '';
-    
+
     final ratingAsyncValue = ref.watch(partnerRatingProvider(userId));
     final ratingData = ratingAsyncValue.value;
     final String avgRatingStr = ratingData?['avg_score']?.toString() ?? '5.0';
@@ -33,12 +40,15 @@ class TechProfileScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.bgLightGrey,
       appBar: AppBar(
-        title: const Text('Technician Profile', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+        title: const Text('Technician Profile',
+            style: TextStyle(
+                fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
         backgroundColor: Colors.white,
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings_outlined, color: AppColors.textPrimary),
+            icon: const Icon(Icons.settings_outlined,
+                color: AppColors.textPrimary),
             onPressed: () => context.push('/account-settings'),
           ),
         ],
@@ -53,28 +63,43 @@ class TechProfileScreen extends ConsumerWidget {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(24),
-                boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10)],
+                boxShadow: const [
+                  BoxShadow(color: Colors.black12, blurRadius: 10)
+                ],
               ),
               child: Column(
                 children: [
-                   CircleAvatar(
+                  CircleAvatar(
                     radius: 50,
-                    backgroundColor: AppColors.primaryBlue.withValues(alpha: 0.1),
+                    backgroundColor:
+                        AppColors.primaryBlue.withValues(alpha: 0.1),
                     child: (user?.profilePic != null)
                         ? ClipRRect(
                             borderRadius: BorderRadius.circular(50),
-                            child: Image.network(user!.profilePic!, fit: BoxFit.cover),
+                            child: Image.network(user!.profilePic!,
+                                fit: BoxFit.cover),
                           )
-                        : const Icon(Icons.person_outline_rounded, size: 50, color: AppColors.primaryBlue),
+                        : const Icon(Icons.person_outline_rounded,
+                            size: 50, color: AppColors.primaryBlue),
                   ),
                   const SizedBox(height: 16),
-                  Text(name, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                  const Text('Senior Technician • ID: TECH-099', style: TextStyle(color: AppColors.textSecondary)),
+                  Text(name,
+                      style: const TextStyle(
+                          fontSize: 22, fontWeight: FontWeight.bold)),
+                  const Text('Senior Technician • ID: TECH-099',
+                      style: TextStyle(color: AppColors.textSecondary)),
                   const SizedBox(height: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    decoration: BoxDecoration(color: AppColors.successGreen.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
-                    child: const Text('ACTIVE', style: TextStyle(color: AppColors.successGreen, fontSize: 12, fontWeight: FontWeight.bold)),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    decoration: BoxDecoration(
+                        color: AppColors.successGreen.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8)),
+                    child: const Text('ACTIVE',
+                        style: TextStyle(
+                            color: AppColors.successGreen,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold)),
                   ),
                 ],
               ),
@@ -92,33 +117,43 @@ class TechProfileScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 24),
             // Menu
-            _buildMenuItem(Icons.menu_book_rounded, 'Service Manuals', 'Browse technical guides', () {
+            _buildMenuItem(Icons.menu_book_rounded, 'Service Manuals',
+                'Browse technical guides', () {
               HapticFeedback.lightImpact();
               showModalBottomSheet(
                 context: context,
-                shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+                shape: const RoundedRectangleBorder(
+                    borderRadius:
+                        BorderRadius.vertical(top: Radius.circular(24))),
                 backgroundColor: Colors.white,
                 builder: (modalContext) => Padding(
                   padding: const EdgeInsets.all(24),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text('Service Manuals', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.primaryBlue)),
+                      const Text('Service Manuals',
+                          style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primaryBlue)),
                       const SizedBox(height: 16),
                       ListTile(
-                        leading: const Icon(Icons.picture_as_pdf, color: Colors.red),
+                        leading:
+                            const Icon(Icons.picture_as_pdf, color: Colors.red),
                         title: const Text('Hyundai Creta 2021 Service Guide'),
                         trailing: const Icon(Icons.download_rounded),
                         onTap: () => Navigator.pop(modalContext),
                       ),
                       ListTile(
-                        leading: const Icon(Icons.picture_as_pdf, color: Colors.red),
+                        leading:
+                            const Icon(Icons.picture_as_pdf, color: Colors.red),
                         title: const Text('Honda City Electrical Diagram'),
                         trailing: const Icon(Icons.download_rounded),
                         onTap: () => Navigator.pop(modalContext),
                       ),
                       ListTile(
-                        leading: const Icon(Icons.picture_as_pdf, color: Colors.red),
+                        leading:
+                            const Icon(Icons.picture_as_pdf, color: Colors.red),
                         title: const Text('Tata Nexon Routine Maintenance'),
                         trailing: const Icon(Icons.download_rounded),
                         onTap: () => Navigator.pop(modalContext),
@@ -128,23 +163,27 @@ class TechProfileScreen extends ConsumerWidget {
                 ),
               );
             }),
-            _buildMenuItem(Icons.account_balance_wallet_outlined, 'Earnings', 'View your payouts & incentives', () {
+            _buildMenuItem(Icons.account_balance_wallet_outlined, 'Earnings',
+                'View your payouts & incentives', () {
               HapticFeedback.lightImpact();
               context.push('/tech-earnings');
             }),
-            _buildMenuItem(Icons.support_agent_rounded, 'Technical Support', 'Contact admin desk', () {
+            _buildMenuItem(Icons.support_agent_rounded, 'Technical Support',
+                'Contact admin desk', () {
               HapticFeedback.lightImpact();
               context.push('/chat');
             }),
-            _buildMenuItem(Icons.privacy_tip_outlined, 'Privacy Policy', 'Data usage and security', () {
+            _buildMenuItem(Icons.privacy_tip_outlined, 'Privacy Policy',
+                'Data usage and security', () {
               HapticFeedback.lightImpact();
               context.push('/privacy-policy');
             }),
-            _buildMenuItem(Icons.description_outlined, 'Terms of Service', 'Read our terms and conditions', () {
+            _buildMenuItem(Icons.description_outlined, 'Terms of Service',
+                'Read our terms and conditions', () {
               HapticFeedback.lightImpact();
               context.push('/terms-of-service');
             }),
-            
+
             const SizedBox(height: 32),
             SizedBox(
               width: double.infinity,
@@ -158,9 +197,11 @@ class TechProfileScreen extends ConsumerWidget {
                   foregroundColor: AppColors.dangerRed,
                   elevation: 0,
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16)),
                 ),
-                child: const Text('Sign Out', style: TextStyle(fontWeight: FontWeight.bold)),
+                child: const Text('Sign Out',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
               ),
             ),
           ],
@@ -174,26 +215,33 @@ class TechProfileScreen extends ConsumerWidget {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+        decoration: BoxDecoration(
+            color: Colors.white, borderRadius: BorderRadius.circular(16)),
         child: Column(
           children: [
             Icon(icon, color: AppColors.primaryBlue, size: 20),
             const SizedBox(height: 8),
-            Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            Text(label, style: const TextStyle(fontSize: 10, color: AppColors.textSecondary)),
+            Text(value,
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(label,
+                style: const TextStyle(
+                    fontSize: 10, color: AppColors.textSecondary)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildMenuItem(IconData icon, String title, String subtitle, VoidCallback onTap) {
+  Widget _buildMenuItem(
+      IconData icon, String title, String subtitle, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+        decoration: BoxDecoration(
+            color: Colors.white, borderRadius: BorderRadius.circular(16)),
         child: Row(
           children: [
             Icon(icon, color: AppColors.textPrimary, size: 22),
@@ -201,12 +249,16 @@ class TechProfileScreen extends ConsumerWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-                Text(subtitle, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                Text(title,
+                    style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(subtitle,
+                    style: const TextStyle(
+                        fontSize: 12, color: AppColors.textSecondary)),
               ],
             ),
             const Spacer(),
-            const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.textSecondary),
+            const Icon(Icons.arrow_forward_ios_rounded,
+                size: 14, color: AppColors.textSecondary),
           ],
         ),
       ),
@@ -219,7 +271,9 @@ class TechProfileScreen extends ConsumerWidget {
       decoration: const BoxDecoration(
         color: Colors.white,
         border: Border(top: BorderSide(color: Color(0xFFF1F2F4))),
-        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, -2))],
+        boxShadow: [
+          BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, -2))
+        ],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -233,7 +287,8 @@ class TechProfileScreen extends ConsumerWidget {
     );
   }
 
-  Widget _navItem(BuildContext context, IconData icon, String label, int index) {
+  Widget _navItem(
+      BuildContext context, IconData icon, String label, int index) {
     final isActive = index == 3;
     return GestureDetector(
       onTap: () => _onBottomNavTap(context, index),
@@ -243,17 +298,23 @@ class TechProfileScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-             AnimatedContainer(
+            AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               decoration: BoxDecoration(
                 color: isActive ? const Color(0xFFE8EAF6) : Colors.transparent,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, color: isActive ? const Color(0xFF1A237E) : Colors.grey, size: 24),
+              child: Icon(icon,
+                  color: isActive ? const Color(0xFF1A237E) : Colors.grey,
+                  size: 24),
             ),
             const SizedBox(height: 4),
-            Text(label, style: TextStyle(fontSize: 10, fontWeight: isActive ? FontWeight.bold : FontWeight.w500, color: isActive ? const Color(0xFF1A237E) : Colors.grey)),
+            Text(label,
+                style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+                    color: isActive ? const Color(0xFF1A237E) : Colors.grey)),
           ],
         ),
       ),

@@ -99,12 +99,10 @@ class AppDebugger {
         validate: (v) => v.startsWith('rzp_'));
 
     _check('MAPS_API_KEY',
-        desc: 'Google Maps / OSM key',
-        value: AppConfig.mapsApiKey);
+        desc: 'Google Maps / OSM key', value: AppConfig.mapsApiKey);
 
     _check('SENTRY_DSN',
-        desc: 'Sentry error reporting DSN',
-        value: AppConfig.sentryDsn);
+        desc: 'Sentry error reporting DSN', value: AppConfig.sentryDsn);
   }
 
   // ── 3. Runtime config validation ───────────────────────────────────────────
@@ -116,9 +114,11 @@ class AppDebugger {
 
     // Supabase URL check
     if (AppConfig.supabaseUrl.isEmpty) {
-      issues.add('❌ SUPABASE_URL is empty → app will crash on Supabase.initialize()');
+      issues.add(
+          '❌ SUPABASE_URL is empty → app will crash on Supabase.initialize()');
     } else if (!AppConfig.supabaseUrl.startsWith('https://')) {
-      issues.add('⚠️  SUPABASE_URL does not start with https:// — check .dart_defines');
+      issues.add(
+          '⚠️  SUPABASE_URL does not start with https:// — check .dart_defines');
     } else {
       debugPrint('  ✅ SUPABASE_URL looks valid');
     }
@@ -127,27 +127,33 @@ class AppDebugger {
     if (AppConfig.supabaseAnonKey.isEmpty) {
       issues.add('❌ SUPABASE_ANON_KEY is empty → all DB calls will return 401');
     } else {
-      debugPrint('  ✅ SUPABASE_ANON_KEY is set (${AppConfig.supabaseAnonKey.length} chars)');
+      debugPrint(
+          '  ✅ SUPABASE_ANON_KEY is set (${AppConfig.supabaseAnonKey.length} chars)');
     }
 
     // Razorpay
-    if (AppConfig.razorpayKey.isEmpty || AppConfig.razorpayKey == 'rzp_test_placeholderKey') {
-      debugPrint('  ⚠️  RAZORPAY_KEY_ID is placeholder → payment will run in simulation mode');
+    if (AppConfig.razorpayKey.isEmpty ||
+        AppConfig.razorpayKey == 'rzp_test_placeholderKey') {
+      debugPrint(
+          '  ⚠️  RAZORPAY_KEY_ID is placeholder → payment will run in simulation mode');
     } else {
       debugPrint('  ✅ RAZORPAY_KEY_ID is set');
     }
 
     // Google Sign-In web
     if (kIsWeb && AppConfig.googleClientId.isEmpty) {
-      issues.add('⚠️  GOOGLE_CLIENT_ID is empty on web → Google Sign-In will fail');
+      issues.add(
+          '⚠️  GOOGLE_CLIENT_ID is empty on web → Google Sign-In will fail');
     }
 
     // Supabase session check (runtime)
     try {
       final session = sb.Supabase.instance.client.auth.currentSession;
-      debugPrint('  ℹ️  Supabase current session: ${session == null ? "null (no session)" : "active (uid=${session.user.id.substring(0, 8)}...)"}');
+      debugPrint(
+          '  ℹ️  Supabase current session: ${session == null ? "null (no session)" : "active (uid=${session.user.id.substring(0, 8)}...)"}');
     } catch (e) {
-      issues.add('❌ Supabase.instance.client threw: $e  → Supabase.initialize() may not have been called yet');
+      issues.add(
+          '❌ Supabase.instance.client threw: $e  → Supabase.initialize() may not have been called yet');
     }
 
     // Vercel-specific issues
@@ -173,13 +179,19 @@ class AppDebugger {
     // Known web-only issue: Cross-Origin-Embedder-Policy (COEP) can block
     // SharedArrayBuffer needed by some WASM codecs. The vercel.json sets
     // COOP/COEP headers which can break third-party iframes (e.g. Razorpay modal).
-    debugPrint('  ℹ️  Running on web (Vercel deployment or flutter run -d chrome)');
-    debugPrint('  ⚠️  Razorpay payment modal is BLOCKED on web — use web payment link fallback');
-    debugPrint('  ⚠️  flutter_local_notifications is DISABLED on web — only FCM web push works');
+    debugPrint(
+        '  ℹ️  Running on web (Vercel deployment or flutter run -d chrome)');
+    debugPrint(
+        '  ⚠️  Razorpay payment modal is BLOCKED on web — use web payment link fallback');
+    debugPrint(
+        '  ⚠️  flutter_local_notifications is DISABLED on web — only FCM web push works');
     debugPrint('  ⚠️  flutter_jailbreak_detection is SKIPPED on web');
-    debugPrint('  ⚠️  sqlite3 / Drift DB is UNAVAILABLE on web — offline sync is disabled');
-    debugPrint('  ℹ️  COOP/COEP headers in vercel.json may block third-party iframes (chat widgets, payment UIs)');
-    debugPrint('  ℹ️  Google Sign-In uses OAuth redirect on web — /login-callback must be a registered redirect URI');
+    debugPrint(
+        '  ⚠️  sqlite3 / Drift DB is UNAVAILABLE on web — offline sync is disabled');
+    debugPrint(
+        '  ℹ️  COOP/COEP headers in vercel.json may block third-party iframes (chat widgets, payment UIs)');
+    debugPrint(
+        '  ℹ️  Google Sign-In uses OAuth redirect on web — /login-callback must be a registered redirect URI');
   }
 
   // ── 5. Auth/User state watcher — call from ConsumerWidget ─────────────────
@@ -192,7 +204,8 @@ class AppDebugger {
     debugPrint('  authState.isLoading : ${authState.isLoading}');
     debugPrint('  authState.hasValue  : ${authState.hasValue}');
     debugPrint('  authState.hasError  : ${authState.hasError}');
-    debugPrint('  authUser uid        : ${authState.value?.id?.substring(0, 8) ?? "null"}...');
+    debugPrint(
+        '  authUser uid        : ${authState.value?.id?.substring(0, 8) ?? "null"}...');
     debugPrint('  userState.isLoading : ${userState.isLoading}');
     debugPrint('  userState.isDemo    : ${userState.isDemo}');
     debugPrint('  userState.error     : ${userState.error}');
@@ -213,32 +226,42 @@ class AppDebugger {
         'id': 'ISSUE-01',
         'title': 'dart_defines mismatch (local vs Vercel)',
         'symptom': 'App works locally but Supabase connection fails on Vercel',
-        'cause': '.dart_defines file has values; Vercel uses ENV vars from Dashboard',
-        'fix': 'Set SUPABASE_URL, SUPABASE_ANON_KEY etc. in Vercel Dashboard → Settings → Environment Variables',
+        'cause':
+            '.dart_defines file has values; Vercel uses ENV vars from Dashboard',
+        'fix':
+            'Set SUPABASE_URL, SUPABASE_ANON_KEY etc. in Vercel Dashboard → Settings → Environment Variables',
       },
       // Issue 2
       {
         'id': 'ISSUE-02',
         'title': 'Razorpay modal blocked by COEP headers (Vercel)',
         'symptom': 'Payment modal does not open on web deploy',
-        'cause': 'vercel.json sets Cross-Origin-Embedder-Policy: require-corp which blocks Razorpay iframe',
-        'fix': 'Either remove COEP from vercel.json for payment routes, or use Razorpay Payment Link (hosted page) on web',
+        'cause':
+            'vercel.json sets Cross-Origin-Embedder-Policy: require-corp which blocks Razorpay iframe',
+        'fix':
+            'Either remove COEP from vercel.json for payment routes, or use Razorpay Payment Link (hosted page) on web',
       },
       // Issue 3
       {
         'id': 'ISSUE-03',
         'title': 'Google OAuth redirect URI not registered',
-        'symptom': 'Google Sign-In fails on Vercel with "redirect_uri_mismatch"',
-        'cause': 'The Vercel deployment URL is not added as an authorized redirect URI in Google Cloud Console',
-        'fix': 'Add https://<your-vercel-domain>/login-callback to Google Cloud Console → Credentials → OAuth → Authorized redirect URIs AND to Supabase → Auth → URL Configuration → Redirect URLs',
+        'symptom':
+            'Google Sign-In fails on Vercel with "redirect_uri_mismatch"',
+        'cause':
+            'The Vercel deployment URL is not added as an authorized redirect URI in Google Cloud Console',
+        'fix':
+            'Add https://<your-vercel-domain>/login-callback to Google Cloud Console → Credentials → OAuth → Authorized redirect URIs AND to Supabase → Auth → URL Configuration → Redirect URLs',
       },
       // Issue 4
       {
         'id': 'ISSUE-04',
         'title': 'Drift / SQLite unavailable on web',
-        'symptom': 'App crashes or throws "UnsupportedError: SQLite not available on web"',
-        'cause': 'sqlite3_flutter_libs and drift_flutter are native-only. Web build excludes them.',
-        'fix': 'Guard all drift DB access with `if (!kIsWeb)`. Web falls back to Supabase direct queries.',
+        'symptom':
+            'App crashes or throws "UnsupportedError: SQLite not available on web"',
+        'cause':
+            'sqlite3_flutter_libs and drift_flutter are native-only. Web build excludes them.',
+        'fix':
+            'Guard all drift DB access with `if (!kIsWeb)`. Web falls back to Supabase direct queries.',
       },
       // Issue 5
       {
@@ -246,63 +269,83 @@ class AppDebugger {
         'title': 'flutter_local_notifications crash on web',
         'symptom': 'Notification service throws MissingPluginException on web',
         'cause': 'flutter_local_notifications has no web implementation',
-        'fix': 'Already guarded with `if (!kIsWeb)` in notification_service.dart — ensure no new call sites bypass this guard',
+        'fix':
+            'Already guarded with `if (!kIsWeb)` in notification_service.dart — ensure no new call sites bypass this guard',
       },
       // Issue 6
       {
         'id': 'ISSUE-06',
         'title': 'FCM background handler registered on web',
-        'symptom': '"the `web` parameter needs to be set" warning in Flutter error handler',
-        'cause': 'FirebaseMessaging.onBackgroundMessage() is called on web where it is not supported',
-        'fix': 'Already guarded with `if (!kIsWeb)` in main.dart — confirmed fixed',
+        'symptom':
+            '"the `web` parameter needs to be set" warning in Flutter error handler',
+        'cause':
+            'FirebaseMessaging.onBackgroundMessage() is called on web where it is not supported',
+        'fix':
+            'Already guarded with `if (!kIsWeb)` in main.dart — confirmed fixed',
       },
       // Issue 7
       {
         'id': 'ISSUE-07',
         'title': 'ENV=prod in .dart_defines but debug-only features expected',
-        'symptom': 'AppConfig.showDebugFeatures returns false even in local dev',
-        'cause': '.dart_defines has ENV=prod which sets AppConfig.environment = prod',
-        'fix': 'Change ENV=dev in .dart_defines for local development. Only set ENV=prod in Vercel ENV vars.',
+        'symptom':
+            'AppConfig.showDebugFeatures returns false even in local dev',
+        'cause':
+            '.dart_defines has ENV=prod which sets AppConfig.environment = prod',
+        'fix':
+            'Change ENV=dev in .dart_defines for local development. Only set ENV=prod in Vercel ENV vars.',
       },
       // Issue 8
       {
         'id': 'ISSUE-08',
         'title': 'SENTRY_DSN is empty — errors not tracked in production',
-        'symptom': 'Sentry.captureException is called but no events appear in Sentry dashboard',
+        'symptom':
+            'Sentry.captureException is called but no events appear in Sentry dashboard',
         'cause': 'SENTRY_DSN is blank in .dart_defines and/or Vercel env vars',
-        'fix': 'Add your Sentry DSN to .dart_defines (local) and to Vercel → Environment Variables (production)',
+        'fix':
+            'Add your Sentry DSN to .dart_defines (local) and to Vercel → Environment Variables (production)',
       },
       // Issue 9
       {
         'id': 'ISSUE-09',
         'title': 'MAPS_API_KEY is empty — map tiles may fail',
-        'symptom': 'Map shows blank tiles or unauthorized errors in browser console',
+        'symptom':
+            'Map shows blank tiles or unauthorized errors in browser console',
         'cause': 'MAPS_API_KEY is not set in .dart_defines',
-        'fix': 'OSM (flutter_map) does not need an API key. If using Google Maps tiles, add the key.',
+        'fix':
+            'OSM (flutter_map) does not need an API key. If using Google Maps tiles, add the key.',
       },
       // Issue 10
       {
         'id': 'ISSUE-10',
-        'title': 'SentryFlutter.init() wraps runApp — errors before init are lost',
-        'symptom': 'Errors during Firebase/Supabase init are not captured by Sentry',
-        'cause': 'SentryFlutter.init() is called AFTER Firebase and Supabase initialize in main()',
-        'fix': 'This is by design (Sentry needs the DSN from dart-defines). Firebase/Supabase init errors are caught by runZonedGuarded.',
+        'title':
+            'SentryFlutter.init() wraps runApp — errors before init are lost',
+        'symptom':
+            'Errors during Firebase/Supabase init are not captured by Sentry',
+        'cause':
+            'SentryFlutter.init() is called AFTER Firebase and Supabase initialize in main()',
+        'fix':
+            'This is by design (Sentry needs the DSN from dart-defines). Firebase/Supabase init errors are caught by runZonedGuarded.',
       },
       // Issue 11
       {
         'id': 'ISSUE-11',
         'title': 'chat/:roomId route missing in customer_routes.dart',
-        'symptom': 'Notification tap for chat_message pushes /chat/<roomId> but no route matches → shows 404',
-        'cause': 'notification_service.dart pushes context.push("/chat/\$roomId") but customer_routes.dart only has /chat (no path param)',
-        'fix': 'Add GoRoute(path: "/chat/:roomId", ...) to customer_routes.dart OR change notification_service.dart to pass roomId via state.extra',
+        'symptom':
+            'Notification tap for chat_message pushes /chat/<roomId> but no route matches → shows 404',
+        'cause':
+            'notification_service.dart pushes context.push("/chat/\$roomId") but customer_routes.dart only has /chat (no path param)',
+        'fix':
+            'Add GoRoute(path: "/chat/:roomId", ...) to customer_routes.dart OR change notification_service.dart to pass roomId via state.extra',
       },
       // Issue 12
       {
         'id': 'ISSUE-12',
         'title': 'vercel-build.sh uses bash — Windows local test not supported',
         'symptom': 'Running vercel-build.sh locally on Windows fails (no bash)',
-        'cause': 'The script is a Unix shell script; Windows does not have bash by default',
-        'fix': 'Use WSL or Git Bash to test vercel-build.sh locally. Vercel Linux runners execute it correctly.',
+        'cause':
+            'The script is a Unix shell script; Windows does not have bash by default',
+        'fix':
+            'Use WSL or Git Bash to test vercel-build.sh locally. Vercel Linux runners execute it correctly.',
       },
     ];
 
@@ -337,7 +380,11 @@ class AppDebugger {
     bool Function(String)? validate,
   }) {
     final displayVal = redact
-        ? (value.length > 10 ? '${value.substring(0, 6)}...[REDACTED]' : value.isEmpty ? '<empty>' : '[SET]')
+        ? (value.length > 10
+            ? '${value.substring(0, 6)}...[REDACTED]'
+            : value.isEmpty
+                ? '<empty>'
+                : '[SET]')
         : (value.isEmpty ? '<empty>' : value);
 
     final ok = value.isNotEmpty && (validate == null || validate(value));

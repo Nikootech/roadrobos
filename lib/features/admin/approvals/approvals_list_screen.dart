@@ -10,10 +10,12 @@ class ApprovalsListScreen extends ConsumerStatefulWidget {
   const ApprovalsListScreen({super.key});
 
   @override
-  ConsumerState<ApprovalsListScreen> createState() => _ApprovalsListScreenState();
+  ConsumerState<ApprovalsListScreen> createState() =>
+      _ApprovalsListScreenState();
 }
 
-class _ApprovalsListScreenState extends ConsumerState<ApprovalsListScreen> with SingleTickerProviderStateMixin {
+class _ApprovalsListScreenState extends ConsumerState<ApprovalsListScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   ApprovalStatus? _statusFilter = ApprovalStatus.pending;
   DateTimeRange? _dateRange;
@@ -66,10 +68,12 @@ class _ApprovalsListScreenState extends ConsumerState<ApprovalsListScreen> with 
         elevation: 0,
         title: const Text(
           'Maker-Checker Approvals',
-          style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+          style: TextStyle(
+              color: AppColors.textPrimary, fontWeight: FontWeight.bold),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textPrimary, size: 20),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded,
+              color: AppColors.textPrimary, size: 20),
           onPressed: () => context.pop(),
         ),
         bottom: TabBar(
@@ -78,7 +82,8 @@ class _ApprovalsListScreenState extends ConsumerState<ApprovalsListScreen> with 
           unselectedLabelColor: AppColors.textSecondary,
           indicatorColor: AppColors.brandGreen,
           indicatorWeight: 3,
-          labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+          labelStyle:
+              const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
           tabs: const [
             Tab(text: 'KYC'),
             Tab(text: 'Refunds'),
@@ -101,7 +106,8 @@ class _ApprovalsListScreenState extends ConsumerState<ApprovalsListScreen> with 
                   children: [
                     _buildApprovalList(approvals, ApprovalType.partnerKyc),
                     _buildApprovalList(approvals, ApprovalType.refund),
-                    _buildApprovalList(approvals, ApprovalType.vehicleAttachment),
+                    _buildApprovalList(
+                        approvals, ApprovalType.vehicleAttachment),
                     _buildApprovalList(approvals, ApprovalType.payout),
                   ],
                 );
@@ -143,7 +149,8 @@ class _ApprovalsListScreenState extends ConsumerState<ApprovalsListScreen> with 
                       return DropdownMenuItem<ApprovalStatus?>(
                         value: status,
                         child: Text(
-                          status.name.substring(0, 1).toUpperCase() + status.name.substring(1),
+                          status.name.substring(0, 1).toUpperCase() +
+                              status.name.substring(1),
                         ),
                       );
                     }),
@@ -163,7 +170,9 @@ class _ApprovalsListScreenState extends ConsumerState<ApprovalsListScreen> with 
             onPressed: _selectDateRange,
             icon: Icon(
               Icons.date_range_rounded,
-              color: _dateRange != null ? AppColors.brandGreen : AppColors.textSecondary,
+              color: _dateRange != null
+                  ? AppColors.brandGreen
+                  : AppColors.textSecondary,
             ),
           ),
           if (_dateRange != null)
@@ -180,14 +189,16 @@ class _ApprovalsListScreenState extends ConsumerState<ApprovalsListScreen> with 
     );
   }
 
-  Widget _buildApprovalList(List<ApprovalRequest> approvals, ApprovalType type) {
+  Widget _buildApprovalList(
+      List<ApprovalRequest> approvals, ApprovalType type) {
     // Filter list
     final filtered = approvals.where((req) {
       if (req.type != type) return false;
       if (_statusFilter != null && req.status != _statusFilter) return false;
       if (_dateRange != null) {
         if (req.createdAt.isBefore(_dateRange!.start) ||
-            req.createdAt.isAfter(_dateRange!.end.add(const Duration(days: 1)))) {
+            req.createdAt
+                .isAfter(_dateRange!.end.add(const Duration(days: 1)))) {
           return false;
         }
       }
@@ -199,11 +210,15 @@ class _ApprovalsListScreenState extends ConsumerState<ApprovalsListScreen> with 
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.inbox_rounded, size: 64, color: AppColors.textMuted.withValues(alpha: 0.5)),
+            Icon(Icons.inbox_rounded,
+                size: 64, color: AppColors.textMuted.withValues(alpha: 0.5)),
             const SizedBox(height: 16),
             const Text(
               'No matching requests found',
-              style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary, fontSize: 16),
+              style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                  fontSize: 16),
             ),
           ],
         ).animate().fadeIn().scale(),
@@ -244,7 +259,10 @@ class _ApprovalsListScreenState extends ConsumerState<ApprovalsListScreen> with 
                   Expanded(
                     child: Text(
                       requesterName,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.textPrimary),
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: AppColors.textPrimary),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -255,7 +273,8 @@ class _ApprovalsListScreenState extends ConsumerState<ApprovalsListScreen> with 
               const SizedBox(height: 8),
               Text(
                 details,
-                style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                style: const TextStyle(
+                    color: AppColors.textSecondary, fontSize: 14),
               ),
               const SizedBox(height: 12),
               Row(
@@ -263,7 +282,8 @@ class _ApprovalsListScreenState extends ConsumerState<ApprovalsListScreen> with 
                 children: [
                   Text(
                     'Submitted: $submittedDate',
-                    style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                    style: const TextStyle(
+                        color: AppColors.textMuted, fontSize: 12),
                   ),
                   const Icon(
                     Icons.arrow_forward_ios_rounded,
@@ -305,7 +325,11 @@ class _ApprovalsListScreenState extends ConsumerState<ApprovalsListScreen> with 
       ),
       child: Text(
         status.name.toUpperCase(),
-        style: TextStyle(color: fg, fontWeight: FontWeight.bold, fontSize: 11, letterSpacing: 0.5),
+        style: TextStyle(
+            color: fg,
+            fontWeight: FontWeight.bold,
+            fontSize: 11,
+            letterSpacing: 0.5),
       ),
     );
   }
@@ -329,8 +353,10 @@ class _ApprovalsListScreenState extends ConsumerState<ApprovalsListScreen> with 
         final reason = payload['reason'] ?? 'None specified';
         return 'Refund of ₹$amount for $reason';
       case ApprovalType.vehicleAttachment:
-        final name = payload['vehicle_name'] ?? payload['vehicle_model'] ?? 'Vehicle';
-        final plate = payload['vehicle_number'] ?? payload['plate_number'] ?? '';
+        final name =
+            payload['vehicle_name'] ?? payload['vehicle_model'] ?? 'Vehicle';
+        final plate =
+            payload['vehicle_number'] ?? payload['plate_number'] ?? '';
         return 'Vehicle: $name ($plate)';
       case ApprovalType.payout:
         final amount = payload['amount'] ?? 'N/A';

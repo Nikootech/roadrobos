@@ -76,7 +76,8 @@ class _IncomingRequestCard extends ConsumerWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: const Color(0xFF6366F1).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
@@ -193,7 +194,10 @@ class _IncomingRequestCard extends ConsumerWidget {
       ),
     )
         .animate()
-        .scale(begin: const Offset(0.9, 0.9), duration: 400.ms, curve: Curves.easeOutBack)
+        .scale(
+            begin: const Offset(0.9, 0.9),
+            duration: 400.ms,
+            curve: Curves.easeOutBack)
         .fadeIn();
   }
 }
@@ -224,8 +228,9 @@ class _ActiveDeliveryCardState extends ConsumerState<_ActiveDeliveryCard> {
   Future<void> _markDelivered() async {
     setState(() => _isLoading = true);
     try {
-      final url =
-          await ref.read(activeDeliveryProvider.notifier).markDeliveredWithProof();
+      final url = await ref
+          .read(activeDeliveryProvider.notifier)
+          .markDeliveredWithProof();
       if (mounted && url != null) {
         setState(() => _proofUrl = url);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -255,8 +260,8 @@ class _ActiveDeliveryCardState extends ConsumerState<_ActiveDeliveryCard> {
     // Deep link to Google Maps with pickup coordinates
     // In production, geocode from pickup_address; for now use a Maps search
     final address = Uri.encodeComponent(widget.order.pickupAddress);
-    final uri = Uri.parse(
-        'https://www.google.com/maps/search/?api=1&query=$address');
+    final uri =
+        Uri.parse('https://www.google.com/maps/search/?api=1&query=$address');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
@@ -317,7 +322,8 @@ class _ActiveDeliveryCardState extends ConsumerState<_ActiveDeliveryCard> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(28)),
             ),
             child: Row(
               children: [
@@ -330,7 +336,8 @@ class _ActiveDeliveryCardState extends ConsumerState<_ActiveDeliveryCard> {
                         fontSize: 15)),
                 const Spacer(),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
@@ -359,7 +366,8 @@ class _ActiveDeliveryCardState extends ConsumerState<_ActiveDeliveryCard> {
                 const SizedBox(height: 6),
                 Padding(
                   padding: const EdgeInsets.only(left: 10),
-                  child: Container(width: 2, height: 16, color: AppColors.border),
+                  child:
+                      Container(width: 2, height: 16, color: AppColors.border),
                 ),
                 const SizedBox(height: 6),
                 _AddressRow(

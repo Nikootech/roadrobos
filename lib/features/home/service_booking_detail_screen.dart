@@ -32,7 +32,8 @@ class ServiceBookingDetailScreen extends ConsumerWidget {
             backgroundColor: Colors.white,
             elevation: 0,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: AppColors.textPrimary),
+              icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                  size: 20, color: AppColors.textPrimary),
               onPressed: () => context.pop(),
             ),
             title: const Text('Access Denied'),
@@ -43,7 +44,10 @@ class ServiceBookingDetailScreen extends ConsumerWidget {
               child: Text(
                 'You are not authorized to view this booking.',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, color: AppColors.textSecondary, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                    fontSize: 16,
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.bold),
               ),
             ),
           ),
@@ -70,7 +74,8 @@ class ServiceBookingDetailScreen extends ConsumerWidget {
           },
           child: const Padding(
             padding: EdgeInsets.all(8),
-            child: Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: AppColors.textPrimary),
+            child: Icon(Icons.arrow_back_ios_new_rounded,
+                size: 20, color: AppColors.textPrimary),
           ),
         ),
         title: Text(
@@ -122,7 +127,8 @@ class ServiceBookingDetailScreen extends ConsumerWidget {
               children: [
                 _infoRow('Package', booking.packageName),
                 _infoRow('Total', '₹${booking.totalCost.toStringAsFixed(2)}'),
-                _infoRow('Booking ID', '#${booking.id.length > 8 ? booking.id.substring(0, 8).toUpperCase() : booking.id.toUpperCase()}'),
+                _infoRow('Booking ID',
+                    '#${booking.id.length > 8 ? booking.id.substring(0, 8).toUpperCase() : booking.id.toUpperCase()}'),
               ],
             ),
             const SizedBox(height: 24),
@@ -150,11 +156,18 @@ class ServiceBookingDetailScreen extends ConsumerWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+          Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
           const SizedBox(width: 8),
           Text(
             label,
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: color, letterSpacing: 0.5),
+            style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: color,
+                letterSpacing: 0.5),
           ),
         ],
       ),
@@ -168,7 +181,10 @@ class ServiceBookingDetailScreen extends ConsumerWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 20, offset: const Offset(0, 8)),
+          BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 20,
+              offset: const Offset(0, 8)),
         ],
       ),
       child: Row(
@@ -195,19 +211,26 @@ class ServiceBookingDetailScreen extends ConsumerWidget {
               children: [
                 Text(
                   booking.packageName,
-                  style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                  style: GoogleFonts.outfit(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   '${booking.vehicleName} • ${booking.vehiclePlate}',
-                  style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                  style: const TextStyle(
+                      fontSize: 13, color: AppColors.textSecondary),
                 ),
               ],
             ),
           ),
           Text(
             '₹${booking.totalCost.toStringAsFixed(0)}',
-            style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.primaryBlue),
+            style: GoogleFonts.outfit(
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+                color: AppColors.primaryBlue),
           ),
         ],
       ),
@@ -217,8 +240,12 @@ class ServiceBookingDetailScreen extends ConsumerWidget {
   Widget _buildStatusTimeline(String status) {
     final steps = [
       _TimelineStep('Booking Placed', Icons.check_circle_rounded, true),
-      _TimelineStep('Confirmed', Icons.verified_rounded,
-          status == 'confirmed' || status == 'in_progress' || status == 'completed'),
+      _TimelineStep(
+          'Confirmed',
+          Icons.verified_rounded,
+          status == 'confirmed' ||
+              status == 'in_progress' ||
+              status == 'completed'),
       _TimelineStep('In Progress', Icons.build_circle_rounded,
           status == 'in_progress' || status == 'completed'),
       _TimelineStep('Completed', Icons.task_alt_rounded, status == 'completed'),
@@ -230,13 +257,20 @@ class ServiceBookingDetailScreen extends ConsumerWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 20, offset: const Offset(0, 8)),
+          BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 20,
+              offset: const Offset(0, 8)),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Service Status', style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+          Text('Service Status',
+              style: GoogleFonts.outfit(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary)),
           const SizedBox(height: 16),
           ...steps.asMap().entries.map((entry) {
             final i = entry.key;
@@ -250,11 +284,15 @@ class ServiceBookingDetailScreen extends ConsumerWidget {
                       width: 28,
                       height: 28,
                       decoration: BoxDecoration(
-                        color: step.done ? AppColors.primaryBlue : AppColors.bgLightGrey,
+                        color: step.done
+                            ? AppColors.primaryBlue
+                            : AppColors.bgLightGrey,
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
-                        step.done ? step.icon : Icons.radio_button_unchecked_rounded,
+                        step.done
+                            ? step.icon
+                            : Icons.radio_button_unchecked_rounded,
                         size: 16,
                         color: step.done ? Colors.white : AppColors.textMuted,
                       ),
@@ -263,7 +301,9 @@ class ServiceBookingDetailScreen extends ConsumerWidget {
                       Container(
                         width: 2,
                         height: 32,
-                        color: step.done ? AppColors.primaryBlue.withValues(alpha: 0.3) : AppColors.bgLightGrey,
+                        color: step.done
+                            ? AppColors.primaryBlue.withValues(alpha: 0.3)
+                            : AppColors.bgLightGrey,
                       ),
                   ],
                 ),
@@ -275,7 +315,9 @@ class ServiceBookingDetailScreen extends ConsumerWidget {
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: step.done ? FontWeight.w600 : FontWeight.w400,
-                      color: step.done ? AppColors.textPrimary : AppColors.textMuted,
+                      color: step.done
+                          ? AppColors.textPrimary
+                          : AppColors.textMuted,
                     ),
                   ),
                 ),
@@ -299,7 +341,10 @@ class ServiceBookingDetailScreen extends ConsumerWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 20, offset: const Offset(0, 8)),
+          BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 20,
+              offset: const Offset(0, 8)),
         ],
       ),
       child: Column(
@@ -309,11 +354,17 @@ class ServiceBookingDetailScreen extends ConsumerWidget {
             children: [
               Container(
                 padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+                decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8)),
                 child: Icon(icon, size: 16, color: color),
               ),
               const SizedBox(width: 10),
-              Text(title, style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+              Text(title,
+                  style: GoogleFonts.outfit(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary)),
             ],
           ),
           const SizedBox(height: 14),
@@ -331,12 +382,17 @@ class ServiceBookingDetailScreen extends ConsumerWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+          Text(label,
+              style: const TextStyle(
+                  fontSize: 13, color: AppColors.textSecondary)),
           Flexible(
             child: Text(
               value,
               textAlign: TextAlign.end,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+              style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary),
             ),
           ),
         ],
@@ -358,8 +414,10 @@ class ServiceBookingDetailScreen extends ConsumerWidget {
           foregroundColor: AppColors.primaryBlue,
           side: const BorderSide(color: AppColors.primaryBlue),
           padding: const EdgeInsets.symmetric(vertical: 14),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          textStyle: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w600),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          textStyle:
+              GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w600),
         ),
       ),
     ).animate().fadeIn(delay: 400.ms);
@@ -383,9 +441,11 @@ class ServiceBookingDetailScreen extends ConsumerWidget {
           backgroundColor: AppColors.primaryBlue,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 14),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           elevation: 0,
-          textStyle: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w600),
+          textStyle:
+              GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w600),
         ),
       ),
     ).animate().fadeIn(delay: 450.ms);

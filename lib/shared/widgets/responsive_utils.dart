@@ -1,19 +1,26 @@
 import 'package:flutter/material.dart';
 
 class ResponsiveLayout {
-  static double screenWidth(BuildContext context) => MediaQuery.of(context).size.width;
-  static double screenHeight(BuildContext context) => MediaQuery.of(context).size.height;
+  static double screenWidth(BuildContext context) =>
+      MediaQuery.of(context).size.width;
+  static double screenHeight(BuildContext context) =>
+      MediaQuery.of(context).size.height;
 
   static bool isSmallPhone(BuildContext context) => screenWidth(context) <= 360;
-  static bool isMediumPhone(BuildContext context) => screenWidth(context) > 360 && screenWidth(context) <= 414;
-  static bool isLargePhone(BuildContext context) => screenWidth(context) > 414 && screenWidth(context) <= 600;
+  static bool isMediumPhone(BuildContext context) =>
+      screenWidth(context) > 360 && screenWidth(context) <= 414;
+  static bool isLargePhone(BuildContext context) =>
+      screenWidth(context) > 414 && screenWidth(context) <= 600;
   static bool isTablet(BuildContext context) => screenWidth(context) > 600;
 
-  static double responsiveWidth(BuildContext context, double p) => screenWidth(context) * (p / 100);
-  static double responsiveHeight(BuildContext context, double p) => screenHeight(context) * (p / 100);
+  static double responsiveWidth(BuildContext context, double p) =>
+      screenWidth(context) * (p / 100);
+  static double responsiveHeight(BuildContext context, double p) =>
+      screenHeight(context) * (p / 100);
 
   // New method to match usage
-  static EdgeInsets responsivePadding(BuildContext context, {double horizontal = 24.0, double vertical = 0.0}) {
+  static EdgeInsets responsivePadding(BuildContext context,
+      {double horizontal = 24.0, double vertical = 0.0}) {
     double h = horizontal * (screenWidth(context) / 375);
     double v = vertical * (screenWidth(context) / 375);
     if (isTablet(context)) {

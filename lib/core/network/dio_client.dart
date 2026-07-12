@@ -72,16 +72,15 @@ class RetryInterceptor extends Interceptor {
     ErrorInterceptorHandler handler,
   ) async {
     final attempt = (err.requestOptions.extra['_retry'] as int?) ?? 0;
-    final isRetryable =
-        err.type == DioExceptionType.connectionTimeout ||
+    final isRetryable = err.type == DioExceptionType.connectionTimeout ||
         err.type == DioExceptionType.receiveTimeout ||
         err.type == DioExceptionType.connectionError ||
         err.response?.statusCode == 503;
 
     if (isRetryable && attempt < _maxRetries) {
       // Exponential backoff with jitter
-      final delay = _base * (1 << attempt) +
-          Duration(milliseconds: attempt * 30);
+      final delay =
+          _base * (1 << attempt) + Duration(milliseconds: attempt * 30);
       await Future.delayed(delay);
       err.requestOptions.extra['_retry'] = attempt + 1;
       try {
@@ -148,13 +147,17 @@ class ErrorMappingInterceptor extends Interceptor {
       case 401:
         appError = const AuthError('Session expired. Please log in again.');
       case 403:
-        appError = const AuthError('You do not have permission for this action.');
+        appError =
+            const AuthError('You do not have permission for this action.');
       case 422:
-        appError = const ValidationError('Unprocessable data — check your inputs.');
+        appError =
+            const ValidationError('Unprocessable data — check your inputs.');
       case 429:
-        appError = const NetworkError('Too many requests. Please slow down.', statusCode: 429);
+        appError = const NetworkError('Too many requests. Please slow down.',
+            statusCode: 429);
       case 503:
-        appError = const NetworkError('Service temporarily unavailable.', statusCode: 503);
+        appError = const NetworkError('Service temporarily unavailable.',
+            statusCode: 503);
       default:
         appError = NetworkError(
           err.message ?? 'An unexpected network error occurred.',

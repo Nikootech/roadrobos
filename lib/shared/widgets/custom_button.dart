@@ -87,13 +87,10 @@ class _CustomButtonState extends State<CustomButton>
           width: widget.width ?? double.infinity,
           height: widget.height,
           decoration: BoxDecoration(
-            color: widget.isLoading
-                ? bgColor.withValues(alpha: 0.7)
-                : bgColor,
+            color: widget.isLoading ? bgColor.withValues(alpha: 0.7) : bgColor,
             borderRadius: BorderRadius.circular(widget.borderRadius),
-            border: widget.isOutlined
-                ? Border.all(color: AppColors.border)
-                : null,
+            border:
+                widget.isOutlined ? Border.all(color: AppColors.border) : null,
             boxShadow: !widget.isOutlined
                 ? [
                     BoxShadow(
@@ -181,4 +178,3 @@ class GoogleSignInButton extends StatelessWidget {
     );
   }
 }
-

@@ -50,8 +50,7 @@ class AuthNotifier extends _$AuthNotifier {
         // ── S7: Forced logout on JWT expiry / 401 ──────────────────────────────
         // Supabase fires signedOut when refresh fails. We must clear all state
         // to prevent the user staying logged in with stale data.
-        if (data.event == sb.AuthChangeEvent.signedOut &&
-            state.value != null) {
+        if (data.event == sb.AuthChangeEvent.signedOut && state.value != null) {
           unawaited(
             SecureTokenStorage.instance.clearAll().catchError((_) {}),
           );
@@ -84,15 +83,16 @@ class AuthService {
   @visibleForTesting
   set mockSupabaseClient(sb.SupabaseClient client) => _mockSupabase = client;
 
-  sb.SupabaseClient get _supabase => _mockSupabase ?? sb.Supabase.instance.client;
+  sb.SupabaseClient get _supabase =>
+      _mockSupabase ?? sb.Supabase.instance.client;
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     // The web/server client ID is required on Android to get an ID token
     // that can be verified by Supabase (backend).
-    serverClientId: kIsWeb ? null : (_googleServerClientId.isNotEmpty ? _googleServerClientId : null),
+    serverClientId: kIsWeb
+        ? null
+        : (_googleServerClientId.isNotEmpty ? _googleServerClientId : null),
     clientId: kIsWeb && _googleClientId.isNotEmpty ? _googleClientId : null,
   );
-  
-
 
   Stream<sb.User?> get authStateChanges {
     // Emit current session immediately on subscribe, then listen for changes
@@ -138,7 +138,7 @@ class AuthService {
         email: email,
         password: password,
       );
-      
+
       AuthRateLimiter.reset(email);
 
       // Fetch RBAC permissions immediately after successful login.
@@ -148,7 +148,9 @@ class AuthService {
         try {
           await RbacService(_supabase).fetchUserPermissions(userId);
         } catch (e) {
-          if (kDebugMode) debugPrint('AuthService: RBAC fetch failed after login: $e');
+          if (kDebugMode) {
+            debugPrint('AuthService: RBAC fetch failed after login: $e');
+          }
         }
       }
       return response;
@@ -169,7 +171,8 @@ class AuthService {
     } on sb.AuthException catch (e) {
       if (e.message.contains('Invalid login credentials') ||
           e.statusCode == '400') {
-        throw Exception('Incorrect password. Please enter your RoadRobos account password.');
+        throw Exception(
+            'Incorrect password. Please enter your RoadRobos account password.');
       }
       rethrow;
     }
@@ -241,7 +244,8 @@ class AuthService {
         final googleName = googleUser.displayName;
 
         // 1. Update Supabase Auth metadata
-        final Map<String, dynamic> metadata = Map<String, dynamic>.from(currentUser.userMetadata ?? {});
+        final Map<String, dynamic> metadata =
+            Map<String, dynamic>.from(currentUser.userMetadata ?? {});
         bool needsMetaUpdate = false;
         if (googlePhotoUrl != null && metadata['avatar_url'] == null) {
           metadata['avatar_url'] = googlePhotoUrl;
@@ -258,7 +262,9 @@ class AuthService {
               sb.UserAttributes(data: metadata),
             );
           } catch (e) {
-            if (kDebugMode) debugPrint('Google Sign-In: Failed to update auth metadata: $e');
+            if (kDebugMode) {
+              debugPrint('Google Sign-In: Failed to update auth metadata: $e');
+            }
           }
         }
 
@@ -278,12 +284,16 @@ class AuthService {
             final existingPic = profileResponse['profile_pic'] as String?;
             final existingName = profileResponse['name'] as String?;
             final existingRole = profileResponse['role'] as String?;
-            
+
             final dbUpdates = <String, dynamic>{};
-            if ((existingPic == null || existingPic.isEmpty) && googlePhotoUrl != null) {
+            if ((existingPic == null || existingPic.isEmpty) &&
+                googlePhotoUrl != null) {
               dbUpdates['profile_pic'] = googlePhotoUrl;
             }
-            if ((existingName == null || existingName.isEmpty || existingName == 'New User') && googleName != null) {
+            if ((existingName == null ||
+                    existingName.isEmpty ||
+                    existingName == 'New User') &&
+                googleName != null) {
               dbUpdates['name'] = googleName;
             }
             if (existingRole == null) {
@@ -292,7 +302,10 @@ class AuthService {
             }
 
             if (dbUpdates.isNotEmpty) {
-              await _supabase.from('profiles').update(dbUpdates).eq('id', currentUser.id);
+              await _supabase
+                  .from('profiles')
+                  .update(dbUpdates)
+                  .eq('id', currentUser.id);
             }
 
             // If their role is driver, ensure driver record exists
@@ -312,7 +325,10 @@ class AuthService {
                   'created_at': DateTime.now().toUtc().toIso8601String(),
                 });
               } catch (e) {
-                if (kDebugMode) debugPrint('Google Sign-In: Failed to sync driver record: $e');
+                if (kDebugMode) {
+                  debugPrint(
+                      'Google Sign-In: Failed to sync driver record: $e');
+                }
               }
             }
           } else {
@@ -341,12 +357,17 @@ class AuthService {
                   'created_at': DateTime.now().toUtc().toIso8601String(),
                 });
               } catch (e) {
-                if (kDebugMode) debugPrint('Google Sign-In: Failed to create driver record: $e');
+                if (kDebugMode) {
+                  debugPrint(
+                      'Google Sign-In: Failed to create driver record: $e');
+                }
               }
             }
           }
         } catch (e) {
-          if (kDebugMode) debugPrint('Google Sign-In: Failed to sync database profile: $e');
+          if (kDebugMode) {
+            debugPrint('Google Sign-In: Failed to sync database profile: $e');
+          }
         }
       }
 
@@ -364,7 +385,9 @@ class AuthService {
     try {
       await RbacService(_supabase).clearCache();
     } catch (e) {
-      if (kDebugMode) debugPrint('AuthService: RBAC cache clear failed on logout: $e');
+      if (kDebugMode) {
+        debugPrint('AuthService: RBAC cache clear failed on logout: $e');
+      }
     }
     if (!kIsWeb) await _googleSignIn.signOut();
     await _supabase.auth.signOut();

@@ -20,6 +20,8 @@ class RentalVehicleListNotifier extends PaginatedNotifier<RentalVehicle> {
         .eq('availability_status', 'available')
         .order('created_at', ascending: false)
         .range(offset, offset + limit - 1);
-    return rows.map((row) => RentalVehicle.fromMap(row, row['id'].toString())).toList();
+    return rows
+        .map((row) => RentalVehicle.fromMap(row, row['id'].toString()))
+        .toList();
   }
 }

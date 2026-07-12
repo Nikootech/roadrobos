@@ -1,7 +1,8 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final quickActionRepositoryProvider = Provider((ref) => QuickActionRepository());
+final quickActionRepositoryProvider =
+    Provider((ref) => QuickActionRepository());
 
 class QuickAction {
   final String id;
@@ -39,8 +40,10 @@ class QuickActionRepository {
           .select()
           .eq('is_active', true)
           .order('display_order');
-      
-      return response.map((map) => QuickAction.fromMap(map, map['id'].toString())).toList();
+
+      return response
+          .map((map) => QuickAction.fromMap(map, map['id'].toString()))
+          .toList();
     } catch (e) {
       throw Exception('Failed to fetch quick actions: $e');
     }

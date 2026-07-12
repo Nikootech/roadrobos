@@ -4,14 +4,14 @@ import 'package:roadrobos/core/repositories/technician_job_repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/extensions/datetime_extensions.dart';
 
-
 // --- Models (kept for UI compatibility) ---
 class CustomerOp {
   final int activeBookings;
   final int activeRentals;
   final int activeServices;
   final List<CustomerRide> recentRides;
-  CustomerOp(this.activeBookings, this.activeRentals, this.activeServices, this.recentRides);
+  CustomerOp(this.activeBookings, this.activeRentals, this.activeServices,
+      this.recentRides);
 }
 
 class CustomerRide {
@@ -62,7 +62,8 @@ class EmergencyAlert {
   final DateTime timestamp;
   final bool isAcknowledged;
 
-  EmergencyAlert(this.id, this.userId, this.message, this.timestamp, {this.isAcknowledged = false});
+  EmergencyAlert(this.id, this.userId, this.message, this.timestamp,
+      {this.isAcknowledged = false});
 }
 
 // --- Providers backed by Firestore ---
@@ -70,13 +71,15 @@ class EmergencyAlert {
 final customersOpProvider = StreamProvider<CustomerOp>((ref) {
   final repo = ref.watch(adminOpsRepositoryProvider);
   return repo.watchRecentBookings().map((bookings) {
-    final rides = bookings.map((b) => CustomerRide(
-      b['id'] ?? '',
-      b['customer'] ?? 'Unknown',
-      b['vehicle'] ?? 'N/A',
-      b['status'] ?? 'Active',
-      b['date'] ?? 'Today',
-    )).toList();
+    final rides = bookings
+        .map((b) => CustomerRide(
+              b['id'] ?? '',
+              b['customer'] ?? 'Unknown',
+              b['vehicle'] ?? 'N/A',
+              b['status'] ?? 'Active',
+              b['date'] ?? 'Today',
+            ))
+        .toList();
 
     return CustomerOp(
       bookings.where((b) => b['type'] == 'Ride').length,
@@ -90,12 +93,14 @@ final customersOpProvider = StreamProvider<CustomerOp>((ref) {
 final driversOpProvider = StreamProvider<DriverOp>((ref) {
   final repo = ref.watch(adminOpsRepositoryProvider);
   return repo.watchDriverMetrics().map((data) {
-    final topPending = (data['topPending'] as List).map((d) => PendingDriver(
-      d['id'],
-      d['name'],
-      d['uploadDate'],
-      d['docsCount'],
-    )).toList();
+    final topPending = (data['topPending'] as List)
+        .map((d) => PendingDriver(
+              d['id'],
+              d['name'],
+              d['uploadDate'],
+              d['docsCount'],
+            ))
+        .toList();
 
     return DriverOp(
       data['online'] ?? 0,

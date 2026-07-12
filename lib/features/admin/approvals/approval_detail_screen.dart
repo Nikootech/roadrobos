@@ -13,7 +13,8 @@ class ApprovalDetailScreen extends ConsumerStatefulWidget {
   const ApprovalDetailScreen({super.key, required this.request});
 
   @override
-  ConsumerState<ApprovalDetailScreen> createState() => _ApprovalDetailScreenState();
+  ConsumerState<ApprovalDetailScreen> createState() =>
+      _ApprovalDetailScreenState();
 }
 
 class _ApprovalDetailScreenState extends ConsumerState<ApprovalDetailScreen> {
@@ -71,7 +72,8 @@ class _ApprovalDetailScreenState extends ConsumerState<ApprovalDetailScreen> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Rejection Reason', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Rejection Reason',
+            style: TextStyle(fontWeight: FontWeight.bold)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -85,7 +87,8 @@ class _ApprovalDetailScreenState extends ConsumerState<ApprovalDetailScreen> {
               maxLines: 3,
               decoration: InputDecoration(
                 hintText: 'e.g., Documents blurry, Invalid details...',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 filled: true,
                 fillColor: AppColors.bgLightGrey,
               ),
@@ -95,7 +98,8 @@ class _ApprovalDetailScreenState extends ConsumerState<ApprovalDetailScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
+            child: const Text('Cancel',
+                style: TextStyle(color: AppColors.textSecondary)),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -106,10 +110,10 @@ class _ApprovalDetailScreenState extends ConsumerState<ApprovalDetailScreen> {
                 );
                 return;
               }
-              
+
               final messenger = ScaffoldMessenger.of(context);
               final router = GoRouter.of(context);
-              
+
               Navigator.of(dialogContext).pop();
               setState(() => _isLoading = true);
               try {
@@ -137,7 +141,8 @@ class _ApprovalDetailScreenState extends ConsumerState<ApprovalDetailScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.dangerRed,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
             ),
             child: const Text('Reject'),
           ),
@@ -188,14 +193,16 @@ class _ApprovalDetailScreenState extends ConsumerState<ApprovalDetailScreen> {
             Positioned(
               bottom: 40,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
                   color: Colors.black.withValues(alpha: 0.84),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
                   title,
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold),
                 ),
               ),
             ),
@@ -208,7 +215,8 @@ class _ApprovalDetailScreenState extends ConsumerState<ApprovalDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final request = widget.request;
-    final submittedDate = '${request.createdAt.day}/${request.createdAt.month}/${request.createdAt.year}';
+    final submittedDate =
+        '${request.createdAt.day}/${request.createdAt.month}/${request.createdAt.year}';
 
     return Scaffold(
       backgroundColor: AppColors.bgLightGrey,
@@ -217,10 +225,12 @@ class _ApprovalDetailScreenState extends ConsumerState<ApprovalDetailScreen> {
         elevation: 0,
         title: Text(
           '${request.type.displayName} Details',
-          style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+          style: const TextStyle(
+              color: AppColors.textPrimary, fontWeight: FontWeight.bold),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textPrimary, size: 20),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded,
+              color: AppColors.textPrimary, size: 20),
           onPressed: () => context.pop(),
         ),
       ),
@@ -248,38 +258,42 @@ class _ApprovalDetailScreenState extends ConsumerState<ApprovalDetailScreen> {
             ),
         ],
       ),
-      bottomNavigationBar: request.status == ApprovalStatus.pending && _hasActionPermission
-          ? Container(
-              padding: const EdgeInsets.all(16),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, -4)),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: CustomButton(
-                      label: 'REJECT',
-                      backgroundColor: AppColors.bgLightGrey,
-                      textColor: AppColors.dangerRed,
-                      onPressed: _isLoading ? null : _handleReject,
-                    ),
+      bottomNavigationBar:
+          request.status == ApprovalStatus.pending && _hasActionPermission
+              ? Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                          color: Colors.black12,
+                          blurRadius: 10,
+                          offset: Offset(0, -4)),
+                    ],
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: CustomButton(
-                      label: 'APPROVE',
-                      backgroundColor: AppColors.successGreen,
-                      textColor: Colors.white,
-                      onPressed: _isLoading ? null : _handleApprove,
-                    ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: CustomButton(
+                          label: 'REJECT',
+                          backgroundColor: AppColors.bgLightGrey,
+                          textColor: AppColors.dangerRed,
+                          onPressed: _isLoading ? null : _handleReject,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: CustomButton(
+                          label: 'APPROVE',
+                          backgroundColor: AppColors.successGreen,
+                          textColor: Colors.white,
+                          onPressed: _isLoading ? null : _handleApprove,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            )
-          : null,
+                )
+              : null,
     );
   }
 
@@ -306,7 +320,8 @@ class _ApprovalDetailScreenState extends ConsumerState<ApprovalDetailScreen> {
             children: [
               Text(
                 'Request ID: ${request.id.length > 8 ? request.id.substring(0, 8) : request.id}',
-                style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold, color: AppColors.textPrimary),
               ),
               _buildStatusBadge(request.status),
             ],
@@ -315,9 +330,11 @@ class _ApprovalDetailScreenState extends ConsumerState<ApprovalDetailScreen> {
           _buildInfoRow('Requester', requesterName),
           const SizedBox(height: 8),
           _buildInfoRow('Submitted At', submittedDate),
-          if (request.status == ApprovalStatus.rejected && request.rejectionReason != null) ...[
+          if (request.status == ApprovalStatus.rejected &&
+              request.rejectionReason != null) ...[
             const Divider(height: 24),
-            _buildInfoRow('Rejection Reason', request.rejectionReason!, isWarning: true),
+            _buildInfoRow('Rejection Reason', request.rejectionReason!,
+                isWarning: true),
           ],
         ],
       ),
@@ -332,7 +349,8 @@ class _ApprovalDetailScreenState extends ConsumerState<ApprovalDetailScreen> {
           width: 120,
           child: Text(
             label,
-            style: const TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w500),
+            style: const TextStyle(
+                color: AppColors.textSecondary, fontWeight: FontWeight.w500),
           ),
         ),
         Expanded(
@@ -389,17 +407,24 @@ class _ApprovalDetailScreenState extends ConsumerState<ApprovalDetailScreen> {
           children: [
             const Text(
               'KYC Document Reviews',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+              style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary),
             ),
             const SizedBox(height: 12),
             if (payload.containsKey('document_url'))
-              _buildDocumentCard('Main Identity Proof', payload['document_url']),
+              _buildDocumentCard(
+                  'Main Identity Proof', payload['document_url']),
             if (payload.containsKey('license_front'))
-              _buildDocumentCard('Driving License Front', payload['license_front']),
+              _buildDocumentCard(
+                  'Driving License Front', payload['license_front']),
             if (payload.containsKey('license_back'))
-              _buildDocumentCard('Driving License Back', payload['license_back']),
+              _buildDocumentCard(
+                  'Driving License Back', payload['license_back']),
             if (payload.containsKey('rc_document'))
-              _buildDocumentCard('Registration Certificate (RC)', payload['rc_document']),
+              _buildDocumentCard(
+                  'Registration Certificate (RC)', payload['rc_document']),
           ],
         );
 
@@ -416,16 +441,22 @@ class _ApprovalDetailScreenState extends ConsumerState<ApprovalDetailScreen> {
             children: [
               const Text(
                 'Booking & Refund Details',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary),
               ),
               const Divider(height: 24),
-              _buildInfoRow('Booking ID', request.entityId ?? payload['booking_id'] ?? 'N/A'),
+              _buildInfoRow('Booking ID',
+                  request.entityId ?? payload['booking_id'] ?? 'N/A'),
               const SizedBox(height: 8),
-              _buildInfoRow('Original Price', '₹${payload['booking_amount'] ?? payload['original_amount'] ?? 'N/A'}'),
+              _buildInfoRow('Original Price',
+                  '₹${payload['booking_amount'] ?? payload['original_amount'] ?? 'N/A'}'),
               const SizedBox(height: 8),
               _buildInfoRow('Refund Amount', '₹${payload['amount'] ?? 'N/A'}'),
               const SizedBox(height: 8),
-              _buildInfoRow('Refund Reason', payload['reason'] ?? 'None specified'),
+              _buildInfoRow(
+                  'Refund Reason', payload['reason'] ?? 'None specified'),
             ],
           ),
         );
@@ -443,14 +474,22 @@ class _ApprovalDetailScreenState extends ConsumerState<ApprovalDetailScreen> {
             children: [
               const Text(
                 'Vehicle Details',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary),
               ),
               const Divider(height: 24),
               _buildInfoRow('Vehicle ID', request.entityId ?? 'N/A'),
               const SizedBox(height: 8),
-              _buildInfoRow('Vehicle Model', payload['vehicle_model'] ?? payload['vehicle_name'] ?? 'N/A'),
+              _buildInfoRow('Vehicle Model',
+                  payload['vehicle_model'] ?? payload['vehicle_name'] ?? 'N/A'),
               const SizedBox(height: 8),
-              _buildInfoRow('Plate Number', payload['vehicle_number'] ?? payload['plate_number'] ?? 'N/A'),
+              _buildInfoRow(
+                  'Plate Number',
+                  payload['vehicle_number'] ??
+                      payload['plate_number'] ??
+                      'N/A'),
               if (payload.containsKey('document_url')) ...[
                 const Divider(height: 24),
                 _buildDocumentCard('Vehicle Document', payload['document_url']),
@@ -472,16 +511,21 @@ class _ApprovalDetailScreenState extends ConsumerState<ApprovalDetailScreen> {
             children: [
               const Text(
                 'Payout Details',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary),
               ),
               const Divider(height: 24),
-              _buildInfoRow('Withdrawal Amount', '₹${payload['amount'] ?? 'N/A'}'),
+              _buildInfoRow(
+                  'Withdrawal Amount', '₹${payload['amount'] ?? 'N/A'}'),
               const SizedBox(height: 8),
               _buildInfoRow('Account Holder', payload['account_name'] ?? 'N/A'),
               const SizedBox(height: 8),
               _buildInfoRow('Bank Name', payload['bank_name'] ?? 'N/A'),
               const SizedBox(height: 8),
-              _buildInfoRow('Account Number', payload['account_number'] ?? 'N/A'),
+              _buildInfoRow(
+                  'Account Number', payload['account_number'] ?? 'N/A'),
               const SizedBox(height: 8),
               _buildInfoRow('IFSC Code', payload['ifsc_code'] ?? 'N/A'),
             ],
@@ -501,7 +545,10 @@ class _ApprovalDetailScreenState extends ConsumerState<ApprovalDetailScreen> {
             children: [
               const Text(
                 'Raw Payload Details',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary),
               ),
               const Divider(height: 24),
               Text(
@@ -535,7 +582,8 @@ class _ApprovalDetailScreenState extends ConsumerState<ApprovalDetailScreen> {
             children: [
               Text(
                 title,
-                style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold, color: AppColors.textPrimary),
               ),
               TextButton.icon(
                 onPressed: () => _showZoomedImage(imageUrl, title),
@@ -568,7 +616,8 @@ class _ApprovalDetailScreenState extends ConsumerState<ApprovalDetailScreen> {
                   width: double.infinity,
                   color: AppColors.bgLightGrey,
                   child: const Center(
-                    child: Icon(Icons.broken_image_rounded, size: 48, color: AppColors.textMuted),
+                    child: Icon(Icons.broken_image_rounded,
+                        size: 48, color: AppColors.textMuted),
                   ),
                 ),
               ),

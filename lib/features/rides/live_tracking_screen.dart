@@ -16,12 +16,14 @@ class LiveTrackingScreen extends ConsumerStatefulWidget {
   ConsumerState<LiveTrackingScreen> createState() => _LiveTrackingScreenState();
 }
 
-class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> with SingleTickerProviderStateMixin {
+class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen>
+    with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     // Listen for timeout — if status goes back to idle, show message and pop
     ref.listen<TaxiState>(taxiProvider, (previous, next) {
-      if (previous?.status == RideStatus.booked && next.status == RideStatus.idle) {
+      if (previous?.status == RideStatus.booked &&
+          next.status == RideStatus.idle) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -71,27 +73,37 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> with Si
                             color: AppColors.primaryBlue,
                             backgroundColor: Color(0xFFF3F4F6),
                           ),
-                          Icon(Icons.directions_bike_rounded, size: 40, color: AppColors.primaryBlue),
+                          Icon(Icons.directions_bike_rounded,
+                              size: 40, color: AppColors.primaryBlue),
                         ],
                       ),
                     ),
                     const SizedBox(height: 40),
                     const Text(
                       'Finding Your Roadrobo',
-                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: AppColors.primaryNavy),
+                      style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.primaryNavy),
                     ).animate().fadeIn().scale(),
                     const SizedBox(height: 16),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 8),
                       decoration: BoxDecoration(
                         color: AppColors.primaryBlue.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: const Text(
                         'This might take a minute...',
-                        style: TextStyle(color: AppColors.primaryBlueDark, fontWeight: FontWeight.bold, fontSize: 13),
+                        style: TextStyle(
+                            color: AppColors.primaryBlueDark,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13),
                       ),
-                    ).animate(onPlay: (c) => c.repeat(reverse: true)).shimmer(duration: 2.seconds),
+                    )
+                        .animate(onPlay: (c) => c.repeat(reverse: true))
+                        .shimmer(duration: 2.seconds),
                   ],
                 ),
               ),
@@ -112,15 +124,22 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> with Si
               left: 20,
               right: 20,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(color: Colors.red.shade700, borderRadius: BorderRadius.circular(20)),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                    color: Colors.red.shade700,
+                    borderRadius: BorderRadius.circular(20)),
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(Icons.cloud_off, color: Colors.white, size: 16),
                     SizedBox(width: 8),
-                    Text('Live updates paused', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                    Text('Live updates paused',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13)),
                   ],
                 ),
               ),
@@ -136,30 +155,45 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> with Si
                 decoration: const BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.vertical(top: Radius.circular(36)),
-                  boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 30, offset: Offset(0, -10))],
+                  boxShadow: [
+                    BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 30,
+                        offset: Offset(0, -10))
+                  ],
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const SizedBox(
-                      width: 50, height: 50,
-                      child: CircularProgressIndicator(color: AppColors.primaryBlue, strokeWidth: 4),
+                      width: 50,
+                      height: 50,
+                      child: CircularProgressIndicator(
+                          color: AppColors.primaryBlue, strokeWidth: 4),
                     ).animate(onPlay: (c) => c.repeat()).shimmer(),
                     const SizedBox(height: 24),
-                    const Text('Finding nearby drivers...', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: AppColors.primaryNavy)),
+                    const Text('Finding nearby drivers...',
+                        style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w900,
+                            color: AppColors.primaryNavy)),
                     const SizedBox(height: 8),
-                    const Text('This usually takes a few seconds', style: TextStyle(color: AppColors.textMuted, fontSize: 14)),
+                    const Text('This usually takes a few seconds',
+                        style: TextStyle(
+                            color: AppColors.textMuted, fontSize: 14)),
                     const SizedBox(height: 32),
                   ],
                 ),
               ),
-            ).animate().slideY(begin: 1, end: 0, duration: 600.ms, curve: Curves.easeOutQuart)
+            ).animate().slideY(
+                begin: 1, end: 0, duration: 600.ms, curve: Curves.easeOutQuart)
           else
             Align(
               alignment: Alignment.bottomCenter,
               child: _buildDriverBottomCard(context, taxiState),
-            ).animate().slideY(begin: 1, end: 0, duration: 600.ms, curve: Curves.easeOutQuart),
-          
+            ).animate().slideY(
+                begin: 1, end: 0, duration: 600.ms, curve: Curves.easeOutQuart),
+
           // 5. Back Button (only when not searching or for canceling)
           Positioned(
             top: MediaQuery.of(context).padding.top + 16,
@@ -180,12 +214,17 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> with Si
               },
               child: Container(
                 padding: const EdgeInsets.all(10),
-                decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)]),
+                decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(color: Colors.black12, blurRadius: 10)
+                    ]),
                 child: const Icon(Icons.close, color: Colors.black, size: 24),
               ),
             ),
           ),
-          
+
           // 6. SOS Button
           if (!isSearching) // Only show when actually tracking/riding
             Positioned(
@@ -196,20 +235,29 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> with Si
                   _showSOSBottomSheet(context, taxiState);
                 },
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   decoration: BoxDecoration(
-                    color: Colors.red, 
+                    color: Colors.red,
                     borderRadius: BorderRadius.circular(30),
-                    boxShadow: const [BoxShadow(color: Colors.redAccent, blurRadius: 15)],
+                    boxShadow: const [
+                      BoxShadow(color: Colors.redAccent, blurRadius: 15)
+                    ],
                   ),
                   child: const Row(
                     children: [
                       Icon(Icons.shield, color: Colors.white, size: 20),
                       SizedBox(width: 8),
-                      Text('SOS', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                      Text('SOS',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16)),
                     ],
                   ),
-                ).animate(onPlay: (c) => c.repeat(reverse: true)).scale(begin: const Offset(0.95, 0.95), end: const Offset(1.05, 1.05)),
+                ).animate(onPlay: (c) => c.repeat(reverse: true)).scale(
+                    begin: const Offset(0.95, 0.95),
+                    end: const Offset(1.05, 1.05)),
               ),
             ),
         ],
@@ -218,22 +266,24 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> with Si
   }
 
   Widget _buildTrackingStatusPill(TaxiState state) {
-    String statusStr = state.eta != null 
-        ? 'Arriving: ${state.eta}' 
+    String statusStr = state.eta != null
+        ? 'Arriving: ${state.eta}'
         : 'Roadrobo is arriving soon';
-        
+
     if (state.status == RideStatus.atPickup) {
       statusStr = 'Roadrobo has arrived!';
     } else if (state.status == RideStatus.headingToDropoff) {
-      statusStr = state.eta != null 
-          ? 'Dropoff in: ${state.eta}' 
+      statusStr = state.eta != null
+          ? 'Dropoff in: ${state.eta}'
           : 'Heading to destination';
     }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
-        color: state.status == RideStatus.atPickup ? Colors.green : AppColors.primaryNavy,
+        color: state.status == RideStatus.atPickup
+            ? Colors.green
+            : AppColors.primaryNavy,
         borderRadius: BorderRadius.circular(30),
         boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 10)],
       ),
@@ -242,14 +292,20 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> with Si
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            state.status == RideStatus.atPickup ? Icons.check_circle : Icons.flash_on, 
-            color: state.status == RideStatus.atPickup ? Colors.white : AppColors.primaryBlue, 
-            size: 18
-          ).animate(onPlay: (c) => c.repeat()).shimmer(),
+                  state.status == RideStatus.atPickup
+                      ? Icons.check_circle
+                      : Icons.flash_on,
+                  color: state.status == RideStatus.atPickup
+                      ? Colors.white
+                      : AppColors.primaryBlue,
+                  size: 18)
+              .animate(onPlay: (c) => c.repeat())
+              .shimmer(),
           const SizedBox(width: 12),
           Text(
             statusStr,
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+            style: const TextStyle(
+                color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
           ),
         ],
       ),
@@ -262,14 +318,23 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> with Si
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(36)),
-        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 30, offset: Offset(0, -10))],
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black12, blurRadius: 30, offset: Offset(0, -10))
+        ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           // Drag handle
-          Container(width: 40, height: 4, margin: const EdgeInsets.only(bottom: 24), decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
-          
+          Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 24),
+              decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2))),
+
           Row(
             children: [
               // Roadrobo Profile Image with Vehicle Badge
@@ -278,15 +343,25 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> with Si
                   const CircleAvatar(
                     radius: 32,
                     backgroundColor: Color(0xFFF3F4F6),
-                    backgroundImage: NetworkImage('https://i.pravatar.cc/150?u=roadrobo123'),
+                    backgroundImage:
+                        NetworkImage('https://i.pravatar.cc/150?u=roadrobo123'),
                   ),
                   Positioned(
                     bottom: 0,
                     right: 0,
                     child: Container(
                       padding: const EdgeInsets.all(4),
-                      decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 4)]),
-                      child: Image.asset(state.selectedOption?.assetPath ?? 'assets/icons/car.png', width: 16, height: 16),
+                      decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(color: Colors.black26, blurRadius: 4)
+                          ]),
+                      child: Image.asset(
+                          state.selectedOption?.assetPath ??
+                              'assets/icons/car.png',
+                          width: 16,
+                          height: 16),
                     ),
                   ),
                 ],
@@ -296,31 +371,56 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> with Si
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(state.roadroboName ?? 'Roadrobo', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, letterSpacing: -0.5)),
+                    Text(state.roadroboName ?? 'Roadrobo',
+                        style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -0.5)),
                     const SizedBox(height: 2),
                     Row(
                       children: [
-                        const Icon(Icons.star_rounded, color: Colors.orange, size: 18),
+                        const Icon(Icons.star_rounded,
+                            color: Colors.orange, size: 18),
                         const SizedBox(width: 4),
-                        const Text('4.8', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                        const Text('4.8',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 14)),
                         const SizedBox(width: 8),
-                        Container(width: 4, height: 4, decoration: const BoxDecoration(color: Colors.grey, shape: BoxShape.circle)),
+                        Container(
+                            width: 4,
+                            height: 4,
+                            decoration: const BoxDecoration(
+                                color: Colors.grey, shape: BoxShape.circle)),
                         const SizedBox(width: 8),
-                        Text(state.selectedOption?.title ?? 'Vehicle', style: const TextStyle(color: AppColors.textMuted, fontWeight: FontWeight.w600, fontSize: 14)),
+                        Text(state.selectedOption?.title ?? 'Vehicle',
+                            style: const TextStyle(
+                                color: AppColors.textMuted,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14)),
                       ],
                     ),
                     const SizedBox(height: 4),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(color: const Color(0xFFF3F4F6), borderRadius: BorderRadius.circular(6)),
-                      child: const Text('KA 01 EB 4567', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 12, letterSpacing: 1)),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                          color: const Color(0xFFF3F4F6),
+                          borderRadius: BorderRadius.circular(6)),
+                      child: const Text('KA 01 EB 4567',
+                          style: TextStyle(
+                              color: Colors.black87,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                              letterSpacing: 1)),
                     ),
                   ],
                 ),
               ),
               Row(
                 children: [
-                  _buildCircleAction(Icons.chat_bubble_rounded, AppColors.primaryBlue, onTap: () {
+                  _buildCircleAction(
+                      Icons.chat_bubble_rounded, AppColors.primaryBlue,
+                      onTap: () {
                     context.push('/chat', extra: {
                       'bookingId': state.rideId,
                       'receiverId': state.driverId ?? '',
@@ -328,7 +428,8 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> with Si
                     });
                   }),
                   const SizedBox(width: 12),
-                  _buildCircleAction(Icons.call_rounded, Colors.green, onTap: () async {
+                  _buildCircleAction(Icons.call_rounded, Colors.green,
+                      onTap: () async {
                     const phone = '+919876543210';
                     final uri = Uri(scheme: 'tel', path: phone);
                     if (await canLaunchUrl(uri)) {
@@ -336,7 +437,9 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> with Si
                     } else {
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Cannot open dialer on this device')),
+                          const SnackBar(
+                              content:
+                                  Text('Cannot open dialer on this device')),
                         );
                       }
                     }
@@ -346,7 +449,7 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> with Si
             ],
           ),
           const SizedBox(height: 24),
-          
+
           // OTP / Action Section
           Container(
             padding: const EdgeInsets.all(20),
@@ -358,34 +461,58 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> with Si
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                if (state.status == RideStatus.atPickup || state.status == RideStatus.tracking) ...[
-                   Column(
+                if (state.status == RideStatus.atPickup ||
+                    state.status == RideStatus.tracking) ...[
+                  Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('VERIFY OTP', style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w900)),
+                      const Text('VERIFY OTP',
+                          style: TextStyle(
+                              color: AppColors.textMuted,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w900)),
                       const SizedBox(height: 4),
-                      Text(state.otp ?? '----', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.green)),
+                      Text(state.otp ?? '----',
+                          style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.green)),
                     ],
                   ),
                   if (state.status == RideStatus.atPickup)
                     ElevatedButton(
-                      onPressed: () => ref.read(taxiProvider.notifier).startTrip(),
+                      onPressed: () =>
+                          ref.read(taxiProvider.notifier).startTrip(),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 32, vertical: 16),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16)),
                       ),
-                      child: const Text('Start Trip', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
+                      child: const Text('Start Trip',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w900, fontSize: 18)),
                     ),
                 ] else if (state.status == RideStatus.headingToDropoff) ...[
-                   Expanded(
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('HEADING TO', style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w900)),
+                        const Text('HEADING TO',
+                            style: TextStyle(
+                                color: AppColors.textMuted,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w900)),
                         const SizedBox(height: 4),
-                        Text(state.dropoffAddress ?? 'Destination', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: AppColors.primaryNavy)),
+                        Text(state.dropoffAddress ?? 'Destination',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w900,
+                                color: AppColors.primaryNavy)),
                       ],
                     ),
                   ),
@@ -395,26 +522,45 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> with Si
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primaryNavy,
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 16),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16)),
                     ),
-                    child: const Text('Finish Trip', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+                    child: const Text('Finish Trip',
+                        style: TextStyle(
+                            fontWeight: FontWeight.w900, fontSize: 16)),
                   ),
                 ] else ...[
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('OTP TO START TRIP', style: TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 1)),
+                      const Text('OTP TO START TRIP',
+                          style: TextStyle(
+                              color: AppColors.textMuted,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1)),
                       const SizedBox(height: 4),
-                      Text(state.otp ?? '4582', style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: AppColors.primaryNavy, letterSpacing: 4)),
+                      Text(state.otp ?? '4582',
+                          style: const TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.w900,
+                              color: AppColors.primaryNavy,
+                              letterSpacing: 4)),
                     ],
                   ),
                   Opacity(
                     opacity: 0.5,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(12)),
-                      child: const Text('Waiting for Arrival', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                          color: Colors.grey[200],
+                          borderRadius: BorderRadius.circular(12)),
+                      child: const Text('Waiting for Arrival',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 14)),
                     ),
                   ),
                 ],
@@ -430,7 +576,8 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> with Si
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (context) {
         return Padding(
           padding: const EdgeInsets.all(24.0),
@@ -439,9 +586,15 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> with Si
             children: [
               const Icon(Icons.shield, color: Colors.red, size: 64),
               const SizedBox(height: 16),
-              const Text('Emergency SOS', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.black)),
+              const Text('Emergency SOS',
+                  style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.black)),
               const SizedBox(height: 8),
-              const Text('Are you in an emergency? Choose an action below.', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey, fontSize: 16)),
+              const Text('Are you in an emergency? Choose an action below.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey, fontSize: 16)),
               const SizedBox(height: 32),
               ElevatedButton(
                 onPressed: () async {
@@ -455,14 +608,18 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> with Si
                   backgroundColor: Colors.red,
                   foregroundColor: Colors.white,
                   minimumSize: const Size(double.infinity, 56),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16)),
                 ),
-                child: const Text('Call Police (112)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                child: const Text('Call Police (112)',
+                    style:
+                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               ),
               const SizedBox(height: 16),
               OutlinedButton(
                 onPressed: () async {
-                  final message = 'Emergency! I am in a RoadRobos ride. Driver: ${state.roadroboName}. Vehicle: ${state.selectedOption?.title}. Location: https://maps.google.com/?q=${state.roadroboLocation?.latitude},${state.roadroboLocation?.longitude}';
+                  final message =
+                      'Emergency! I am in a RoadRobos ride. Driver: ${state.roadroboName}. Vehicle: ${state.selectedOption?.title}. Location: https://maps.google.com/?q=${state.roadroboLocation?.latitude},${state.roadroboLocation?.longitude}';
                   await Share.share(message);
                   if (context.mounted) context.pop();
                 },
@@ -470,14 +627,18 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen> with Si
                   foregroundColor: Colors.red,
                   side: const BorderSide(color: Colors.red),
                   minimumSize: const Size(double.infinity, 56),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16)),
                 ),
-                child: const Text('Share Live Status', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                child: const Text('Share Live Status',
+                    style:
+                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               ),
               const SizedBox(height: 16),
               TextButton(
                 onPressed: () => context.pop(),
-                child: const Text('Cancel', style: TextStyle(color: Colors.grey, fontSize: 16)),
+                child: const Text('Cancel',
+                    style: TextStyle(color: Colors.grey, fontSize: 16)),
               ),
             ],
           ),

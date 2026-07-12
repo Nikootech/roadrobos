@@ -17,11 +17,12 @@ class RentalVehicleDetailScreen extends ConsumerStatefulWidget {
   const RentalVehicleDetailScreen({super.key});
 
   @override
-  ConsumerState<RentalVehicleDetailScreen> createState() => _RentalVehicleDetailScreenState();
+  ConsumerState<RentalVehicleDetailScreen> createState() =>
+      _RentalVehicleDetailScreenState();
 }
 
-class _RentalVehicleDetailScreenState extends ConsumerState<RentalVehicleDetailScreen> {
-
+class _RentalVehicleDetailScreenState
+    extends ConsumerState<RentalVehicleDetailScreen> {
   @override
   void dispose() {
     super.dispose();
@@ -29,14 +30,54 @@ class _RentalVehicleDetailScreenState extends ConsumerState<RentalVehicleDetailS
 
   List<Map<String, dynamic>> get _defaultAddressSuggestions {
     return [
-      {'name': 'Current Location', 'address': 'Your current location', 'lat': 12.9716, 'lng': 77.5946},
-      {'name': 'Old Airport Road', 'address': 'Old Airport Road, Kodihalli, Bengaluru', 'lat': 12.9610, 'lng': 77.6487},
-      {'name': 'MG Road Metro Station', 'address': 'Mahatma Gandhi Road, Bengaluru', 'lat': 12.9756, 'lng': 77.6068},
-      {'name': 'Indiranagar Double Road', 'address': 'Indiranagar, Stage 2, Bengaluru', 'lat': 12.9719, 'lng': 77.6412},
-      {'name': 'Koramangala 4th Block', 'address': 'Koramangala, St. John\'s Hospital Road, Bengaluru', 'lat': 12.9352, 'lng': 77.6245},
-      {'name': 'Whitefield Railway Station', 'address': 'Kadugodi, Bengaluru', 'lat': 12.9698, 'lng': 77.7499},
-      {'name': 'Majestic Bus Station', 'address': 'Kempegowda Bus Station, Majestic, Bengaluru', 'lat': 12.9779, 'lng': 77.5724},
-      {'name': 'Electronic City Phase 1', 'address': 'Hosur Road, Bengaluru', 'lat': 12.8497, 'lng': 77.6749},
+      {
+        'name': 'Current Location',
+        'address': 'Your current location',
+        'lat': 12.9716,
+        'lng': 77.5946
+      },
+      {
+        'name': 'Old Airport Road',
+        'address': 'Old Airport Road, Kodihalli, Bengaluru',
+        'lat': 12.9610,
+        'lng': 77.6487
+      },
+      {
+        'name': 'MG Road Metro Station',
+        'address': 'Mahatma Gandhi Road, Bengaluru',
+        'lat': 12.9756,
+        'lng': 77.6068
+      },
+      {
+        'name': 'Indiranagar Double Road',
+        'address': 'Indiranagar, Stage 2, Bengaluru',
+        'lat': 12.9719,
+        'lng': 77.6412
+      },
+      {
+        'name': 'Koramangala 4th Block',
+        'address': 'Koramangala, St. John\'s Hospital Road, Bengaluru',
+        'lat': 12.9352,
+        'lng': 77.6245
+      },
+      {
+        'name': 'Whitefield Railway Station',
+        'address': 'Kadugodi, Bengaluru',
+        'lat': 12.9698,
+        'lng': 77.7499
+      },
+      {
+        'name': 'Majestic Bus Station',
+        'address': 'Kempegowda Bus Station, Majestic, Bengaluru',
+        'lat': 12.9779,
+        'lng': 77.5724
+      },
+      {
+        'name': 'Electronic City Phase 1',
+        'address': 'Hosur Road, Bengaluru',
+        'lat': 12.8497,
+        'lng': 77.6749
+      },
     ];
   }
 
@@ -81,32 +122,51 @@ class _RentalVehicleDetailScreenState extends ConsumerState<RentalVehicleDetailS
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        isPickup ? 'Select Pickup Location' : 'Select Drop-off Location',
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
+                        isPickup
+                            ? 'Select Pickup Location'
+                            : 'Select Drop-off Location',
+                        style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.textPrimary),
                       ),
                       const SizedBox(height: 12),
                       TextField(
                         controller: searchController,
                         autofocus: true,
-                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                        style: const TextStyle(
+                            fontSize: 15, fontWeight: FontWeight.w600),
                         decoration: InputDecoration(
                           hintText: 'Search for a location...',
-                          hintStyle: const TextStyle(color: AppColors.textMuted, fontWeight: FontWeight.normal),
+                          hintStyle: const TextStyle(
+                              color: AppColors.textMuted,
+                              fontWeight: FontWeight.normal),
                           prefixIcon: Icon(
-                            isPickup ? Icons.trip_origin_rounded : Icons.location_on_rounded,
-                            color: isPickup ? AppColors.successGreen : AppColors.accentOrange,
+                            isPickup
+                                ? Icons.trip_origin_rounded
+                                : Icons.location_on_rounded,
+                            color: isPickup
+                                ? AppColors.successGreen
+                                : AppColors.accentOrange,
                             size: 20,
                           ),
                           suffixIcon: isSearching
                               ? const Padding(
                                   padding: EdgeInsets.all(12),
-                                  child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+                                  child: SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                          strokeWidth: 2)),
                                 )
                               : null,
                           filled: true,
                           fillColor: AppColors.bgLightGrey,
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide.none),
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 14),
                         ),
                         onChanged: (query) {
                           debounce?.cancel();
@@ -117,9 +177,11 @@ class _RentalVehicleDetailScreenState extends ConsumerState<RentalVehicleDetailS
                             });
                             return;
                           }
-                          debounce = Timer(const Duration(milliseconds: 500), () async {
+                          debounce = Timer(const Duration(milliseconds: 500),
+                              () async {
                             setSheetState(() => isSearching = true);
-                            final searchResults = await osmService.searchAddress(query);
+                            final searchResults =
+                                await osmService.searchAddress(query);
                             if (ctx.mounted) {
                               setSheetState(() {
                                 results = searchResults;
@@ -157,11 +219,13 @@ class _RentalVehicleDetailScreenState extends ConsumerState<RentalVehicleDetailS
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Iconsax.location, size: 48, color: Colors.grey.shade300),
+                              Icon(Iconsax.location,
+                                  size: 48, color: Colors.grey.shade300),
                               const SizedBox(height: 12),
                               Text(
                                 'No locations found',
-                                style: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+                                style: TextStyle(
+                                    color: Colors.grey.shade400, fontSize: 14),
                               ),
                             ],
                           ),
@@ -169,7 +233,8 @@ class _RentalVehicleDetailScreenState extends ConsumerState<RentalVehicleDetailS
                       : ListView.separated(
                           padding: EdgeInsets.zero,
                           itemCount: displayList.length,
-                          separatorBuilder: (_, __) => const Divider(height: 1, indent: 60),
+                          separatorBuilder: (_, __) =>
+                              const Divider(height: 1, indent: 60),
                           itemBuilder: (context, index) {
                             final loc = displayList[index];
                             return ListTile(
@@ -179,17 +244,21 @@ class _RentalVehicleDetailScreenState extends ConsumerState<RentalVehicleDetailS
                                   color: AppColors.bgLightGrey,
                                   borderRadius: BorderRadius.circular(10),
                                 ),
-                                child: const Icon(Iconsax.location, color: AppColors.primaryBlue, size: 20),
+                                child: const Icon(Iconsax.location,
+                                    color: AppColors.primaryBlue, size: 20),
                               ),
                               title: Text(
                                 loc['name'] ?? '',
-                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                                style: const TextStyle(
+                                    fontSize: 14, fontWeight: FontWeight.w700),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
                               subtitle: Text(
                                 loc['address'] ?? '',
-                                style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                                style: const TextStyle(
+                                    fontSize: 12,
+                                    color: AppColors.textSecondary),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -197,9 +266,15 @@ class _RentalVehicleDetailScreenState extends ConsumerState<RentalVehicleDetailS
                                 // ignore: unawaited_futures
                                 HapticFeedback.lightImpact();
                                 if (isPickup) {
-                                  ref.read(rentalPickupLocationProvider.notifier).state = loc;
+                                  ref
+                                      .read(
+                                          rentalPickupLocationProvider.notifier)
+                                      .state = loc;
                                 } else {
-                                  ref.read(rentalDropoffLocationProvider.notifier).state = loc;
+                                  ref
+                                      .read(rentalDropoffLocationProvider
+                                          .notifier)
+                                      .state = loc;
                                 }
                                 Navigator.pop(sheetCtx);
                               },
@@ -223,22 +298,23 @@ class _RentalVehicleDetailScreenState extends ConsumerState<RentalVehicleDetailS
     final vehicle = ref.watch(selectedVehicleProvider);
     final pickupLocation = ref.watch(rentalPickupLocationProvider);
     final dropoffLocation = ref.watch(rentalDropoffLocationProvider);
-    
-    
+
     // Default placeholder vehicle if none selected
-    final displayVehicle = vehicle ?? {
-      'name': 'Maruti Baleno',
-      'image_url': 'assets/icons/baleno.png',
-      'price': '₹159/hr',
-      'rating': '4.9',
-      'seats': '5 Seats',
-      'type': 'Hatchback',
-    };
+    final displayVehicle = vehicle ??
+        {
+          'name': 'Maruti Baleno',
+          'image_url': 'assets/icons/baleno.png',
+          'price': '₹159/hr',
+          'rating': '4.9',
+          'seats': '5 Seats',
+          'type': 'Hatchback',
+        };
 
     final bool isBike = displayVehicle['is_bike'] == true;
-    final bool isEV = displayVehicle['type'] == 'EV Bike' || displayVehicle['category'] == 'EV';
+    final bool isEV = displayVehicle['type'] == 'EV Bike' ||
+        displayVehicle['category'] == 'EV';
 
-    final String description = isBike 
+    final String description = isBike
         ? 'The ${displayVehicle['name']} is a perfect companion for your daily commutes. Enjoy the freedom of two wheels with this well-maintained ${displayVehicle['type'].toLowerCase()}.'
         : 'The ${displayVehicle['name']} is a premium ${displayVehicle['type'].toLowerCase()} offering a perfect blend of style, comfort, and efficiency. Ideal for city drives and highway cruises.';
 
@@ -246,14 +322,35 @@ class _RentalVehicleDetailScreenState extends ConsumerState<RentalVehicleDetailS
     final spec1Text = isEV ? 'Electric' : 'Petrol';
 
     final spec2Icon = isBike ? Icons.speed_rounded : Iconsax.setting_4;
-    final spec2Text = isBike ? (displayVehicle['spec'] ?? '110cc') : 'Automatic';
+    final spec2Text =
+        isBike ? (displayVehicle['spec'] ?? '110cc') : 'Automatic';
 
     final spec3Icon = isBike ? Icons.pedal_bike_rounded : Iconsax.user;
-    final spec3Text = isBike ? displayVehicle['type'] : (displayVehicle['seats'] ?? '5 Seats');
+    final spec3Text = isBike
+        ? displayVehicle['type']
+        : (displayVehicle['seats'] ?? '5 Seats');
 
     final List<String> features = isBike
-        ? (isEV ? ['Fast Charging', 'Tubeless Tyres', 'Digital Meter', 'Disc Brakes'] : ['Helmet Included', 'Disk Brakes', 'Tubeless Tyres', 'Self Start'])
-        : ['Air Conditioning', 'Power Windows', 'Bluetooth', 'Reverse Camera', 'ABS'];
+        ? (isEV
+            ? [
+                'Fast Charging',
+                'Tubeless Tyres',
+                'Digital Meter',
+                'Disc Brakes'
+              ]
+            : [
+                'Helmet Included',
+                'Disk Brakes',
+                'Tubeless Tyres',
+                'Self Start'
+              ])
+        : [
+            'Air Conditioning',
+            'Power Windows',
+            'Bluetooth',
+            'Reverse Camera',
+            'ABS'
+          ];
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -264,53 +361,60 @@ class _RentalVehicleDetailScreenState extends ConsumerState<RentalVehicleDetailS
             pinned: true,
             backgroundColor: Colors.white,
             leading: IconButton(
-              icon: const CircleAvatar(backgroundColor: Colors.white, child: Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: AppColors.textPrimary)),
+              icon: const CircleAvatar(
+                  backgroundColor: Colors.white,
+                  child: Icon(Icons.arrow_back_ios_new_rounded,
+                      size: 18, color: AppColors.textPrimary)),
               onPressed: () => context.pop(),
             ),
             actions: [
-              Consumer(
-                builder: (context, ref, _) {
-                  final vehicleId = displayVehicle['name'].toString();
-                  final isFav = ref.watch(favoritesProvider).contains(vehicleId);
-                  
-                  return IconButton(
-                    icon: CircleAvatar(
-                      backgroundColor: Colors.white,
-                      child: Icon(
-                        isFav ? Iconsax.heart5 : Iconsax.heart, 
-                        size: 20, 
-                        color: isFav ? AppColors.dangerRed : AppColors.textPrimary
-                      ),
-                    ),
-                    onPressed: () {
-                      ref.read(favoritesProvider.notifier).toggleFavorite(vehicleId);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(isFav ? 'Removed from favorites' : 'Added to favorites!'), 
-                          behavior: SnackBarBehavior.floating
-                        )
-                      );
-                    },
-                  );
-                }
-              ),
+              Consumer(builder: (context, ref, _) {
+                final vehicleId = displayVehicle['name'].toString();
+                final isFav = ref.watch(favoritesProvider).contains(vehicleId);
+
+                return IconButton(
+                  icon: CircleAvatar(
+                    backgroundColor: Colors.white,
+                    child: Icon(isFav ? Iconsax.heart5 : Iconsax.heart,
+                        size: 20,
+                        color: isFav
+                            ? AppColors.dangerRed
+                            : AppColors.textPrimary),
+                  ),
+                  onPressed: () {
+                    ref
+                        .read(favoritesProvider.notifier)
+                        .toggleFavorite(vehicleId);
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text(isFav
+                            ? 'Removed from favorites'
+                            : 'Added to favorites!'),
+                        behavior: SnackBarBehavior.floating));
+                  },
+                );
+              }),
               const SizedBox(width: 8),
             ],
             flexibleSpace: FlexibleSpaceBar(
               background: Stack(
                 fit: StackFit.expand,
                 children: [
-                   Hero(
+                  Hero(
                     tag: 'vehicle_${displayVehicle['name']}',
-                    child: displayVehicle['image_url'].toString().startsWith('http')
-                      ? Image.network(displayVehicle['image_url'], fit: BoxFit.contain)
-                      : Image.asset(displayVehicle['image_url'], fit: BoxFit.contain),
+                    child: displayVehicle['image_url']
+                            .toString()
+                            .startsWith('http')
+                        ? Image.network(displayVehicle['image_url'],
+                            fit: BoxFit.contain)
+                        : Image.asset(displayVehicle['image_url'],
+                            fit: BoxFit.contain),
                   ),
                   Positioned(
                     bottom: 40,
                     right: 24,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(30),
@@ -338,7 +442,10 @@ class _RentalVehicleDetailScreenState extends ConsumerState<RentalVehicleDetailS
                           ),
                         ],
                       ),
-                    ).animate().fadeIn(delay: 800.ms).slideX(begin: 0.5, end: 0),
+                    )
+                        .animate()
+                        .fadeIn(delay: 800.ms)
+                        .slideX(begin: 0.5, end: 0),
                   ),
                 ],
               ),
@@ -353,8 +460,15 @@ class _RentalVehicleDetailScreenState extends ConsumerState<RentalVehicleDetailS
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Expanded(child: Text(displayVehicle['name'], style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800))),
-                      Text(displayVehicle['price'] ?? '₹159/hr', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.primaryBlue)),
+                      Expanded(
+                          child: Text(displayVehicle['name'],
+                              style: const TextStyle(
+                                  fontSize: 24, fontWeight: FontWeight.w800))),
+                      Text(displayVehicle['price'] ?? '₹159/hr',
+                          style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.primaryBlue)),
                     ],
                   ).animate().fadeIn().slideX(begin: -0.1, end: 0),
                   const SizedBox(height: 8),
@@ -362,7 +476,9 @@ class _RentalVehicleDetailScreenState extends ConsumerState<RentalVehicleDetailS
                     children: [
                       const Icon(Iconsax.star1, color: Colors.amber, size: 16),
                       const SizedBox(width: 4),
-                      Text('${displayVehicle['rating']} (124 reviews)', style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                      Text('${displayVehicle['rating']} (124 reviews)',
+                          style: const TextStyle(
+                              color: AppColors.textSecondary, fontSize: 13)),
                     ],
                   ).animate().fadeIn(delay: 200.ms),
                   const SizedBox(height: 24),
@@ -375,32 +491,46 @@ class _RentalVehicleDetailScreenState extends ConsumerState<RentalVehicleDetailS
                     ],
                   ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.1, end: 0),
                   const SizedBox(height: 32),
-                  const Text('Features', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text('Features',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 12),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: features.asMap().entries.map((entry) => Chip(
-                      label: Text(entry.value, style: const TextStyle(fontSize: 12)),
-                      backgroundColor: AppColors.bgLightGrey,
-                      side: BorderSide.none,
-                    ).animate().fadeIn(delay: (400 + entry.key * 50).ms).scale()).toList(),
+                    children: features
+                        .asMap()
+                        .entries
+                        .map((entry) => Chip(
+                              label: Text(entry.value,
+                                  style: const TextStyle(fontSize: 12)),
+                              backgroundColor: AppColors.bgLightGrey,
+                              side: BorderSide.none,
+                            )
+                                .animate()
+                                .fadeIn(delay: (400 + entry.key * 50).ms)
+                                .scale())
+                        .toList(),
                   ),
                   const SizedBox(height: 32),
 
                   // ── Pickup & Drop-off Location Section ─────────────────────
-                  const Text('Pickup & Drop-off', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text('Pickup & Drop-off',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
                   const Text(
                     'Select where you want to pick up and return the vehicle',
-                    style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                    style:
+                        TextStyle(color: AppColors.textSecondary, fontSize: 12),
                   ),
                   const SizedBox(height: 12),
                   Container(
                     decoration: BoxDecoration(
                       color: AppColors.bgLightGrey,
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+                      border: Border.all(
+                          color: AppColors.border.withValues(alpha: 0.5)),
                     ),
                     child: Column(
                       children: [
@@ -413,7 +543,11 @@ class _RentalVehicleDetailScreenState extends ConsumerState<RentalVehicleDetailS
                           address: pickupLocation?['address'] as String?,
                           onTap: () => _showLocationSearchSheet(isPickup: true),
                         ),
-                        Divider(height: 1, indent: 56, endIndent: 16, color: AppColors.border.withValues(alpha: 0.3)),
+                        Divider(
+                            height: 1,
+                            indent: 56,
+                            endIndent: 16,
+                            color: AppColors.border.withValues(alpha: 0.3)),
                         // Drop-off tile
                         _buildLocationTile(
                           icon: Icons.location_on_rounded,
@@ -421,7 +555,8 @@ class _RentalVehicleDetailScreenState extends ConsumerState<RentalVehicleDetailS
                           label: 'Drop-off Location',
                           value: dropoffLocation?['name'] as String?,
                           address: dropoffLocation?['address'] as String?,
-                          onTap: () => _showLocationSearchSheet(isPickup: false),
+                          onTap: () =>
+                              _showLocationSearchSheet(isPickup: false),
                         ),
                       ],
                     ),
@@ -429,20 +564,24 @@ class _RentalVehicleDetailScreenState extends ConsumerState<RentalVehicleDetailS
                   const SizedBox(height: 32),
 
                   if (isEV) ...[
-                    const Text('Eco-Friendly Advantage', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    const Text('Eco-Friendly Advantage',
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 12),
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: Colors.green.withValues(alpha: 0.05),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.green.withValues(alpha: 0.1)),
+                        border: Border.all(
+                            color: Colors.green.withValues(alpha: 0.1)),
                       ),
                       child: const Column(
                         children: [
                           _EcoRow(Icons.eco_rounded, 'Zero Carbon Emissions'),
                           SizedBox(height: 12),
-                          _EcoRow(Icons.volume_off_rounded, 'Silent & Smooth Operation'),
+                          _EcoRow(Icons.volume_off_rounded,
+                              'Silent & Smooth Operation'),
                           SizedBox(height: 12),
                           _EcoRow(Icons.bolt_rounded, 'Fast Charging Support'),
                         ],
@@ -450,14 +589,21 @@ class _RentalVehicleDetailScreenState extends ConsumerState<RentalVehicleDetailS
                     ).animate().fadeIn(delay: 500.ms),
                     const SizedBox(height: 32),
                   ],
-                  const Text('Description', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text('Description',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 12),
                   Text(
                     description,
-                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 14, height: 1.5),
+                    style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 14,
+                        height: 1.5),
                   ).animate().fadeIn(delay: 600.ms),
                   const SizedBox(height: 32),
-                  const Text('Pickup Location', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text('Pickup Location',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 12),
                   if (isEV) ...[
                     Container(
@@ -472,46 +618,66 @@ class _RentalVehicleDetailScreenState extends ConsumerState<RentalVehicleDetailS
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: AppColors.primaryBlue.withValues(alpha: 0.1),
+                              color:
+                                  AppColors.primaryBlue.withValues(alpha: 0.1),
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.location_on_rounded, color: AppColors.primaryBlue),
+                            child: const Icon(Icons.location_on_rounded,
+                                color: AppColors.primaryBlue),
                           ),
                           const SizedBox(width: 16),
                           const Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('RoAd RoBo\'s EV Hub', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.textPrimary)),
+                                Text('RoAd RoBo\'s EV Hub',
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                        color: AppColors.textPrimary)),
                                 SizedBox(height: 4),
-                                Text('View exact location and get directions on Google Maps.', style: TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.4)),
+                                Text(
+                                    'View exact location and get directions on Google Maps.',
+                                    style: TextStyle(
+                                        color: AppColors.textSecondary,
+                                        fontSize: 13,
+                                        height: 1.4)),
                               ],
                             ),
                           ),
                           const SizedBox(width: 8),
                           ElevatedButton(
                             onPressed: () async {
-                              final url = Uri.parse('https://maps.app.goo.gl/mkgcjKXEKmJvUEtv6');
-                              if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+                              final url = Uri.parse(
+                                  'https://maps.app.goo.gl/mkgcjKXEKmJvUEtv6');
+                              if (!await launchUrl(url,
+                                  mode: LaunchMode.externalApplication)) {
                                 debugPrint('Could not launch EV Hub URL');
                               }
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.primaryBlue,
                               foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12)),
                               elevation: 0,
                               minimumSize: const Size(0, 40),
                             ),
-                            child: const Text('Directions', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                            child: const Text('Directions',
+                                style: TextStyle(
+                                    fontSize: 12, fontWeight: FontWeight.bold)),
                           ),
                         ],
                       ),
                     ).animate().fadeIn(delay: 750.ms),
                     const SizedBox(height: 16),
                   ],
-                  const LiveMapWidget(height: 200).animate().fadeIn(delay: 800.ms).scale(),
+                  const LiveMapWidget(height: 200)
+                      .animate()
+                      .fadeIn(delay: 800.ms)
+                      .scale(),
                 ],
               ),
             ),
@@ -523,7 +689,12 @@ class _RentalVehicleDetailScreenState extends ConsumerState<RentalVehicleDetailS
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 16, offset: const Offset(0, -5))],
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 16,
+                offset: const Offset(0, -5))
+          ],
         ),
         child: SafeArea(
           child: Row(
@@ -532,8 +703,14 @@ class _RentalVehicleDetailScreenState extends ConsumerState<RentalVehicleDetailS
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Total Price', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-                  Text(displayVehicle['price'] ?? '₹159/hr', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+                  const Text('Total Price',
+                      style: TextStyle(
+                          color: AppColors.textSecondary, fontSize: 12)),
+                  Text(displayVehicle['price'] ?? '₹159/hr',
+                      style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary)),
                 ],
               ),
               const SizedBox(width: 24),
@@ -548,14 +725,18 @@ class _RentalVehicleDetailScreenState extends ConsumerState<RentalVehicleDetailS
                           .toString()
                           .toLowerCase()
                           .replaceAll(' ', '-');
-                      final url = Uri.parse('https://roadrobos.com/product/$slug');
-                      
+                      final url =
+                          Uri.parse('https://roadrobos.com/product/$slug');
+
                       try {
-                        if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-                          await launchUrl(Uri.parse('https://roadrobos.com'), mode: LaunchMode.externalApplication);
+                        if (!await launchUrl(url,
+                            mode: LaunchMode.externalApplication)) {
+                          await launchUrl(Uri.parse('https://roadrobos.com'),
+                              mode: LaunchMode.externalApplication);
                         }
                       } catch (e) {
-                        await launchUrl(Uri.parse('https://roadrobos.com'), mode: LaunchMode.externalApplication);
+                        await launchUrl(Uri.parse('https://roadrobos.com'),
+                            mode: LaunchMode.externalApplication);
                       }
                     } else {
                       // Validate pickup & drop-off locations before proceeding
@@ -567,7 +748,8 @@ class _RentalVehicleDetailScreenState extends ConsumerState<RentalVehicleDetailS
                           SnackBar(
                             content: Row(
                               children: [
-                                const Icon(Icons.info_outline_rounded, color: Colors.white, size: 18),
+                                const Icon(Icons.info_outline_rounded,
+                                    color: Colors.white, size: 18),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
@@ -576,14 +758,16 @@ class _RentalVehicleDetailScreenState extends ConsumerState<RentalVehicleDetailS
                                         : pickup == null
                                             ? 'Please select a pickup location'
                                             : 'Please select a drop-off location',
-                                    style: const TextStyle(fontWeight: FontWeight.w600),
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w600),
                                   ),
                                 ),
                               ],
                             ),
                             backgroundColor: AppColors.accentOrange,
                             behavior: SnackBarBehavior.floating,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
                           ),
                         );
                         return;
@@ -598,18 +782,26 @@ class _RentalVehicleDetailScreenState extends ConsumerState<RentalVehicleDetailS
                     backgroundColor: AppColors.primaryBlue,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
                     elevation: 0,
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        (isBike || isEV) ? 'Book through the website' : 'Book Now',
-                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+                        (isBike || isEV)
+                            ? 'Book through the website'
+                            : 'Book Now',
+                        style: const TextStyle(
+                            fontSize: 14, fontWeight: FontWeight.w800),
                       ),
                       const SizedBox(width: 8),
-                      Icon((isBike || isEV) ? Icons.open_in_new_rounded : Icons.arrow_forward_ios_rounded, size: 18),
+                      Icon(
+                          (isBike || isEV)
+                              ? Icons.open_in_new_rounded
+                              : Icons.arrow_forward_ios_rounded,
+                          size: 18),
                     ],
                   ),
                 ),
@@ -666,8 +858,11 @@ class _RentalVehicleDetailScreenState extends ConsumerState<RentalVehicleDetailS
                       hasValue ? value : 'Tap to select location',
                       style: TextStyle(
                         fontSize: 14,
-                        fontWeight: hasValue ? FontWeight.w700 : FontWeight.w500,
-                        color: hasValue ? AppColors.textPrimary : AppColors.textMuted,
+                        fontWeight:
+                            hasValue ? FontWeight.w700 : FontWeight.w500,
+                        color: hasValue
+                            ? AppColors.textPrimary
+                            : AppColors.textMuted,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -676,7 +871,8 @@ class _RentalVehicleDetailScreenState extends ConsumerState<RentalVehicleDetailS
                       const SizedBox(height: 1),
                       Text(
                         address,
-                        style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                        style: const TextStyle(
+                            fontSize: 11, color: AppColors.textSecondary),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -685,7 +881,9 @@ class _RentalVehicleDetailScreenState extends ConsumerState<RentalVehicleDetailS
                 ),
               ),
               Icon(
-                hasValue ? Icons.check_circle_rounded : Icons.arrow_forward_ios_rounded,
+                hasValue
+                    ? Icons.check_circle_rounded
+                    : Icons.arrow_forward_ios_rounded,
                 size: hasValue ? 20 : 14,
                 color: hasValue ? AppColors.successGreen : AppColors.textMuted,
               ),
@@ -700,12 +898,16 @@ class _RentalVehicleDetailScreenState extends ConsumerState<RentalVehicleDetailS
     return Container(
       width: 100,
       padding: const EdgeInsets.symmetric(vertical: 16),
-      decoration: BoxDecoration(color: AppColors.bgLightGrey, borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(
+          color: AppColors.bgLightGrey,
+          borderRadius: BorderRadius.circular(16)),
       child: Column(
         children: [
           Icon(icon, color: AppColors.primaryBlue, size: 24),
           const SizedBox(height: 8),
-          Text(val, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+          Text(val,
+              style:
+                  const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
         ],
       ),
     ).animate().fadeIn().scale();
@@ -723,7 +925,11 @@ class _EcoRow extends StatelessWidget {
       children: [
         Icon(icon, color: Colors.green.shade600, size: 20),
         const SizedBox(width: 12),
-        Text(text, style: TextStyle(color: Colors.green.shade900, fontSize: 13, fontWeight: FontWeight.w600)),
+        Text(text,
+            style: TextStyle(
+                color: Colors.green.shade900,
+                fontSize: 13,
+                fontWeight: FontWeight.w600)),
       ],
     );
   }

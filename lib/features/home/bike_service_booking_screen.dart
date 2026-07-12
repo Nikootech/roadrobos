@@ -12,10 +12,12 @@ class BikeServiceBookingScreen extends ConsumerStatefulWidget {
   const BikeServiceBookingScreen({super.key});
 
   @override
-  ConsumerState<BikeServiceBookingScreen> createState() => _BikeServiceBookingScreenState();
+  ConsumerState<BikeServiceBookingScreen> createState() =>
+      _BikeServiceBookingScreenState();
 }
 
-class _BikeServiceBookingScreenState extends ConsumerState<BikeServiceBookingScreen> {
+class _BikeServiceBookingScreenState
+    extends ConsumerState<BikeServiceBookingScreen> {
   int _selectedPackageIndex = -1;
 
   final List<Map<String, dynamic>> _packages = [
@@ -23,7 +25,12 @@ class _BikeServiceBookingScreenState extends ConsumerState<BikeServiceBookingScr
       'name': 'Basic Service',
       'price': '₹499',
       'subtitle': 'Essential maintenance for smooth rides',
-      'items': ['Engine Oil Replacement', 'Chain Clean & Lube', 'Brake Inspection & Adjustment', 'Clutch Play Adjustment'],
+      'items': [
+        'Engine Oil Replacement',
+        'Chain Clean & Lube',
+        'Brake Inspection & Adjustment',
+        'Clutch Play Adjustment'
+      ],
       'color': const Color(0xFF3B82F6),
       'isPremium': false,
     },
@@ -31,7 +38,13 @@ class _BikeServiceBookingScreenState extends ConsumerState<BikeServiceBookingScr
       'name': 'General Service',
       'price': '₹899',
       'subtitle': 'Recommended every 3,000 km',
-      'items': ['All Basic Service Items', 'Air Filter Cleaning / Replace', 'Spark Plug Check', 'Throttle Body Cleaning (BS6)', 'Foam Washing & Polishing'],
+      'items': [
+        'All Basic Service Items',
+        'Air Filter Cleaning / Replace',
+        'Spark Plug Check',
+        'Throttle Body Cleaning (BS6)',
+        'Foam Washing & Polishing'
+      ],
       'color': const Color(0xFF8B5CF6),
       'isPremium': true,
     },
@@ -39,7 +52,13 @@ class _BikeServiceBookingScreenState extends ConsumerState<BikeServiceBookingScr
       'name': 'Premium Service',
       'price': '₹1,499',
       'subtitle': 'Complete rejuvenation for your ride',
-      'items': ['All General Service Items', 'Engine Oil Flushing', 'Full Synthetic Oil', 'Brake Fluid Top-up', 'Nitrogen Air filling'],
+      'items': [
+        'All General Service Items',
+        'Engine Oil Flushing',
+        'Full Synthetic Oil',
+        'Brake Fluid Top-up',
+        'Nitrogen Air filling'
+      ],
       'color': const Color(0xFFF59E0B),
       'isPremium': true,
     },
@@ -55,12 +74,16 @@ class _BikeServiceBookingScreenState extends ConsumerState<BikeServiceBookingScr
         leading: GestureDetector(
           onTap: () => context.pop(),
           child: const Center(
-            child: Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: AppColors.textPrimary),
+            child: Icon(Icons.arrow_back_ios_new_rounded,
+                size: 18, color: AppColors.textPrimary),
           ),
         ),
         title: const Text(
           'Bike Service Packages',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+          style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary),
         ),
       ),
       body: Column(
@@ -90,13 +113,20 @@ class _BikeServiceBookingScreenState extends ConsumerState<BikeServiceBookingScr
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
             decoration: const BoxDecoration(
               color: Colors.white,
-              boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, -2))],
+              boxShadow: [
+                BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 10,
+                    offset: Offset(0, -2))
+              ],
             ),
             child: CustomButton(
               label: 'Proceed to Schedule',
-              onPressed: _selectedPackageIndex == -1 ? null : () {
-                context.push('/schedule-appointment');
-              },
+              onPressed: _selectedPackageIndex == -1
+                  ? null
+                  : () {
+                      context.push('/schedule-appointment');
+                    },
               backgroundColor: AppColors.primaryBlue,
             ),
           ),
@@ -105,17 +135,20 @@ class _BikeServiceBookingScreenState extends ConsumerState<BikeServiceBookingScr
     );
   }
 
-  Widget _buildPremiumPackageCard(int index, Map<String, dynamic> pkg, bool isSelected) {
+  Widget _buildPremiumPackageCard(
+      int index, Map<String, dynamic> pkg, bool isSelected) {
     return GestureDetector(
       onTap: () {
         setState(() => _selectedPackageIndex = index);
         final selectedVehicle = ref.read(vehicleProvider);
-        ref.read(bookingProvider.notifier).setVehicle(selectedVehicle.name, selectedVehicle.plate);
+        ref
+            .read(bookingProvider.notifier)
+            .setVehicle(selectedVehicle.name, selectedVehicle.plate);
         ref.read(bookingProvider.notifier).setPackage(
-          pkg['name'] as String, 
-          pkg['price'] as String,
-          List<String>.from(pkg['items'] as List),
-        );
+              pkg['name'] as String,
+              pkg['price'] as String,
+              List<String>.from(pkg['items'] as List),
+            );
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 20),
@@ -123,7 +156,9 @@ class _BikeServiceBookingScreenState extends ConsumerState<BikeServiceBookingScr
           color: Colors.white,
           borderRadius: BorderRadius.circular(32),
           border: Border.all(
-            color: isSelected ? AppColors.primaryBlue : Colors.grey.withValues(alpha: 0.1),
+            color: isSelected
+                ? AppColors.primaryBlue
+                : Colors.grey.withValues(alpha: 0.1),
             width: isSelected ? 2 : 1,
           ),
           boxShadow: [
@@ -141,7 +176,8 @@ class _BikeServiceBookingScreenState extends ConsumerState<BikeServiceBookingScr
                 top: 0,
                 right: 0,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
                     color: (pkg['color'] as Color).withValues(alpha: 0.8),
                     borderRadius: const BorderRadius.only(
@@ -175,7 +211,9 @@ class _BikeServiceBookingScreenState extends ConsumerState<BikeServiceBookingScr
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Icon(
-                          pkg['name'].toString().contains('Premium') ? Icons.workspace_premium_rounded : Icons.settings_rounded,
+                          pkg['name'].toString().contains('Premium')
+                              ? Icons.workspace_premium_rounded
+                              : Icons.settings_rounded,
                           color: pkg['color'],
                           size: 28,
                         ),
@@ -219,7 +257,8 @@ class _BikeServiceBookingScreenState extends ConsumerState<BikeServiceBookingScr
                               shape: BoxShape.circle,
                               color: Color(0xFFF1F5F9),
                             ),
-                            child: const Icon(Icons.check_circle_rounded, size: 20, color: Color(0xFF10B981)),
+                            child: const Icon(Icons.check_circle_rounded,
+                                size: 20, color: Color(0xFF10B981)),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -266,9 +305,11 @@ class _BikeServiceBookingScreenState extends ConsumerState<BikeServiceBookingScr
           ],
         ),
       ),
-    ).animate(delay: Duration(milliseconds: 100 * index)).fadeIn().slideY(begin: 0.1, end: 0);
+    )
+        .animate(delay: Duration(milliseconds: 100 * index))
+        .fadeIn()
+        .slideY(begin: 0.1, end: 0);
   }
-
 
   Widget _buildStepIndicator() {
     return Container(
@@ -317,4 +358,3 @@ class _BikeServiceBookingScreenState extends ConsumerState<BikeServiceBookingScr
     );
   }
 }
-

@@ -14,7 +14,8 @@ import '../extensions/datetime_extensions.dart';
 /// keeping password reset in one place (AuthService) avoids future inconsistency.
 class EnterpriseWorkflowService {
   SupabaseClient get _supabase => Supabase.instance.client;
-  FirebaseMessaging? get _fcm => Firebase.apps.isNotEmpty ? FirebaseMessaging.instance : null;
+  FirebaseMessaging? get _fcm =>
+      Firebase.apps.isNotEmpty ? FirebaseMessaging.instance : null;
 
   // ---------------------------------------------------------------------------
   // 1. PUSH NOTIFICATION SYNC

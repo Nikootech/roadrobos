@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import '../extensions/datetime_extensions.dart';
 
-
 final kycRepositoryProvider = Provider<KycRepository>((ref) {
   return KycRepository();
 });
@@ -37,7 +36,7 @@ class KycRepository {
         },
       ),
     ));
-    
+
     // Also update profile kyc_status if it's not already something else
     await _supabase.from('profiles').update({
       'kyc_status': 'pending',
@@ -45,10 +44,8 @@ class KycRepository {
   }
 
   Future<List<Map<String, dynamic>>> getKycStatus(String userId) async {
-    final response = await _supabase
-        .from('partner_kyc')
-        .select()
-        .eq('user_id', userId);
+    final response =
+        await _supabase.from('partner_kyc').select().eq('user_id', userId);
     return List<Map<String, dynamic>>.from(response);
   }
 

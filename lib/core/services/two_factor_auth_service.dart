@@ -45,12 +45,15 @@ class TwoFactorAuthService {
   /// Does NOT save anything to the DB yet — that happens only after verification.
   Future<TotpEnrollmentResult> enrollTOTP() async {
     try {
-      final response = await _supabase.auth.mfa.enroll(
-        issuer: 'RoadRobos',
-      ).timeout(
-        const Duration(seconds: 10),
-        onTimeout: () => throw TimeoutException('Supabase MFA enroll request timed out.'),
-      );
+      final response = await _supabase.auth.mfa
+          .enroll(
+            issuer: 'RoadRobos',
+          )
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () => throw TimeoutException(
+                'Supabase MFA enroll request timed out.'),
+          );
 
       final totp = response.totp;
       if (totp == null) {
@@ -58,7 +61,8 @@ class TwoFactorAuthService {
       }
 
       if (kDebugMode) {
-        debugPrint('TwoFactorAuthService: TOTP enrolled. factorId=${response.id}');
+        debugPrint(
+            'TwoFactorAuthService: TOTP enrolled. factorId=${response.id}');
       }
 
       return TotpEnrollmentResult(
@@ -82,32 +86,43 @@ class TwoFactorAuthService {
   }) async {
     try {
       // Step 1: Create a challenge
-      final challengeResponse = await _supabase.auth.mfa.challenge(
-        factorId: factorId,
-      ).timeout(
-        const Duration(seconds: 10),
-        onTimeout: () => throw TimeoutException('Supabase MFA challenge request timed out.'),
-      );
+      final challengeResponse = await _supabase.auth.mfa
+          .challenge(
+            factorId: factorId,
+          )
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () => throw TimeoutException(
+                'Supabase MFA challenge request timed out.'),
+          );
 
       // Step 2: Verify with user-entered code
-      await _supabase.auth.mfa.verify(
-        factorId: factorId,
-        challengeId: challengeResponse.id,
-        code: totpCode,
-      ).timeout(
-        const Duration(seconds: 10),
-        onTimeout: () => throw TimeoutException('Supabase MFA verification request timed out.'),
-      );
+      await _supabase.auth.mfa
+          .verify(
+            factorId: factorId,
+            challengeId: challengeResponse.id,
+            code: totpCode,
+          )
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () => throw TimeoutException(
+                'Supabase MFA verification request timed out.'),
+          );
 
       if (kDebugMode) {
         debugPrint('TwoFactorAuthService: TOTP verified successfully.');
       }
       return true;
     } on sb.AuthException catch (e) {
-      if (kDebugMode) debugPrint('TwoFactorAuthService.challengeAndVerify AuthException: ${e.message}');
+      if (kDebugMode) {
+        debugPrint(
+            'TwoFactorAuthService.challengeAndVerify AuthException: ${e.message}');
+      }
       throw Exception(e.message);
     } catch (e) {
-      if (kDebugMode) debugPrint('TwoFactorAuthService.challengeAndVerify error: $e');
+      if (kDebugMode) {
+        debugPrint('TwoFactorAuthService.challengeAndVerify error: $e');
+      }
       rethrow;
     }
   }
@@ -118,10 +133,13 @@ class TwoFactorAuthService {
   Future<void> unenroll(String factorId) async {
     try {
       await _supabase.auth.mfa.unenroll(factorId).timeout(
-        const Duration(seconds: 10),
-        onTimeout: () => throw TimeoutException('Supabase MFA unenroll request timed out.'),
-      );
-      if (kDebugMode) debugPrint('TwoFactorAuthService: Factor $factorId unenrolled.');
+            const Duration(seconds: 10),
+            onTimeout: () => throw TimeoutException(
+                'Supabase MFA unenroll request timed out.'),
+          );
+      if (kDebugMode) {
+        debugPrint('TwoFactorAuthService: Factor $factorId unenrolled.');
+      }
     } catch (e) {
       if (kDebugMode) debugPrint('TwoFactorAuthService.unenroll error: $e');
       rethrow;
@@ -137,7 +155,9 @@ class TwoFactorAuthService {
       final response = await _supabase.auth.mfa.listFactors();
       return response.totp;
     } catch (e) {
-      if (kDebugMode) debugPrint('TwoFactorAuthService.getEnrolledFactors error: $e');
+      if (kDebugMode) {
+        debugPrint('TwoFactorAuthService.getEnrolledFactors error: $e');
+      }
       return [];
     }
   }

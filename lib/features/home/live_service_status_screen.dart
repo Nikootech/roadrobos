@@ -12,10 +12,12 @@ class LiveServiceStatusScreen extends ConsumerStatefulWidget {
   const LiveServiceStatusScreen({super.key});
 
   @override
-  ConsumerState<LiveServiceStatusScreen> createState() => _LiveServiceStatusScreenState();
+  ConsumerState<LiveServiceStatusScreen> createState() =>
+      _LiveServiceStatusScreenState();
 }
 
-class _LiveServiceStatusScreenState extends ConsumerState<LiveServiceStatusScreen> {
+class _LiveServiceStatusScreenState
+    extends ConsumerState<LiveServiceStatusScreen> {
   @override
   void initState() {
     super.initState();
@@ -31,7 +33,7 @@ class _LiveServiceStatusScreenState extends ConsumerState<LiveServiceStatusScree
   @override
   Widget build(BuildContext context) {
     final TechnicianJob? job = ref.watch(selectedJobProvider);
-    
+
     if (job == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
@@ -44,12 +46,16 @@ class _LiveServiceStatusScreenState extends ConsumerState<LiveServiceStatusScree
         leading: GestureDetector(
           onTap: () => context.go('/main/home'),
           child: const Center(
-            child: Icon(Icons.close_rounded, size: 24, color: AppColors.textPrimary),
+            child: Icon(Icons.close_rounded,
+                size: 24, color: AppColors.textPrimary),
           ),
         ),
         title: Text(
           'Service Status: ${job.id}',
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+          style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary),
         ),
       ),
       body: SingleChildScrollView(
@@ -59,7 +65,7 @@ class _LiveServiceStatusScreenState extends ConsumerState<LiveServiceStatusScree
             // Vehicle Info Card
             _buildVehicleStatusCard(job),
             const SizedBox(height: 24),
-            
+
             // Progress Steps
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -69,41 +75,45 @@ class _LiveServiceStatusScreenState extends ConsumerState<LiveServiceStatusScree
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
                     color: AppColors.primaryBlue.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
                     '${(job.progress * 100).toInt()}%',
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primaryBlue),
+                    style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primaryBlue),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 20),
-            
+
             // Dynamically build progress steps from checklist
             ...List.generate(job.checklist.length, (index) {
               final step = job.checklist[index];
               final bool isCompleted = step.isDone;
-              final bool isCurrent = !isCompleted && 
+              final bool isCurrent = !isCompleted &&
                   (index == 0 || job.checklist[index - 1].isDone);
-              
+
               return _buildProgressStep(
-                step.task, 
-                step.category, 
-                isCompleted, 
+                step.task,
+                step.category,
+                isCompleted,
                 isCurrent,
                 isLast: index == job.checklist.length - 1,
               );
             }),
-            
+
             const SizedBox(height: 32),
-            
+
             // Tech info
             _buildTechnicianInfo(context),
-            
+
             const SizedBox(height: 32),
             CustomButton(
               label: 'Back to Home',
@@ -115,7 +125,8 @@ class _LiveServiceStatusScreenState extends ConsumerState<LiveServiceStatusScree
                 ref.read(technicianProvider.notifier).resetProgress(job.id);
                 ref.read(technicianProvider.notifier).startMockProgress(job.id);
               },
-              child: const Text('Restart Simulation', style: TextStyle(color: AppColors.textSecondary)),
+              child: const Text('Restart Simulation',
+                  style: TextStyle(color: AppColors.textSecondary)),
             ),
           ],
         ),
@@ -136,7 +147,10 @@ class _LiveServiceStatusScreenState extends ConsumerState<LiveServiceStatusScree
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 20, offset: const Offset(0, 10)),
+          BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 20,
+              offset: const Offset(0, 10)),
         ],
       ),
       child: Column(
@@ -147,23 +161,27 @@ class _LiveServiceStatusScreenState extends ConsumerState<LiveServiceStatusScree
                 width: 50,
                 height: 50,
                 decoration: BoxDecoration(
-                  color: (job.vehicleModel.toLowerCase().contains('car') || job.vehicleModel.toLowerCase().contains('creta')) 
-                    ? AppColors.primaryBlue.withValues(alpha: 0.1)
-                    : AppColors.accentOrange.withValues(alpha: 0.1),
+                  color: (job.vehicleModel.toLowerCase().contains('car') ||
+                          job.vehicleModel.toLowerCase().contains('creta'))
+                      ? AppColors.primaryBlue.withValues(alpha: 0.1)
+                      : AppColors.accentOrange.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: (job.vehicleModel.toLowerCase().contains('car') || job.vehicleModel.toLowerCase().contains('creta'))
-                      ? AppColors.primaryBlue.withValues(alpha: 0.2)
-                      : AppColors.accentOrange.withValues(alpha: 0.2),
+                    color: (job.vehicleModel.toLowerCase().contains('car') ||
+                            job.vehicleModel.toLowerCase().contains('creta'))
+                        ? AppColors.primaryBlue.withValues(alpha: 0.2)
+                        : AppColors.accentOrange.withValues(alpha: 0.2),
                   ),
                 ),
                 child: Icon(
-                  (job.vehicleModel.toLowerCase().contains('car') || job.vehicleModel.toLowerCase().contains('creta'))
-                    ? Icons.directions_car_rounded 
-                    : Icons.pedal_bike_rounded, 
-                  color: (job.vehicleModel.toLowerCase().contains('car') || job.vehicleModel.toLowerCase().contains('creta'))
-                    ? AppColors.primaryBlue 
-                    : AppColors.accentOrange,
+                  (job.vehicleModel.toLowerCase().contains('car') ||
+                          job.vehicleModel.toLowerCase().contains('creta'))
+                      ? Icons.directions_car_rounded
+                      : Icons.pedal_bike_rounded,
+                  color: (job.vehicleModel.toLowerCase().contains('car') ||
+                          job.vehicleModel.toLowerCase().contains('creta'))
+                      ? AppColors.primaryBlue
+                      : AppColors.accentOrange,
                 ),
               ),
               const SizedBox(width: 16),
@@ -171,10 +189,18 @@ class _LiveServiceStatusScreenState extends ConsumerState<LiveServiceStatusScree
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('${job.serviceType} - ${job.packageName}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                    Text('${job.vehicleModel} (${job.vehiclePlate})', style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                    Text('${job.serviceType} - ${job.packageName}',
+                        style: const TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold)),
+                    Text('${job.vehicleModel} (${job.vehiclePlate})',
+                        style: const TextStyle(
+                            fontSize: 13, color: AppColors.textSecondary)),
                     const SizedBox(height: 4),
-                    Text('Scheduled: ${job.date} at ${job.time}', style: const TextStyle(fontSize: 12, color: AppColors.primaryBlue, fontWeight: FontWeight.w600)),
+                    Text('Scheduled: ${job.date} at ${job.time}',
+                        style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.primaryBlue,
+                            fontWeight: FontWeight.w600)),
                   ],
                 ),
               ),
@@ -209,16 +235,25 @@ class _LiveServiceStatusScreenState extends ConsumerState<LiveServiceStatusScree
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Estimated Completion', style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
-              Text(job.estimatedCompletion, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+              const Text('Estimated Completion',
+                  style:
+                      TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+              Text(job.estimatedCompletion,
+                  style: const TextStyle(
+                      fontSize: 14, fontWeight: FontWeight.bold)),
             ],
           ),
         ],
       ),
-    ).animate().fadeIn().scale(begin: const Offset(0.9, 0.9), end: const Offset(1.0, 1.0));
+    )
+        .animate()
+        .fadeIn()
+        .scale(begin: const Offset(0.9, 0.9), end: const Offset(1.0, 1.0));
   }
 
-  Widget _buildProgressStep(String title, String subtitle, bool completed, bool current, {bool isLast = false}) {
+  Widget _buildProgressStep(
+      String title, String subtitle, bool completed, bool current,
+      {bool isLast = false}) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -228,19 +263,37 @@ class _LiveServiceStatusScreenState extends ConsumerState<LiveServiceStatusScree
               width: 24,
               height: 24,
               decoration: BoxDecoration(
-                color: completed ? AppColors.successGreen : (current ? AppColors.primaryBlue : AppColors.bgLightGrey),
+                color: completed
+                    ? AppColors.successGreen
+                    : (current ? AppColors.primaryBlue : AppColors.bgLightGrey),
                 shape: BoxShape.circle,
-                border: current ? Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.2), width: 4) : null,
+                border: current
+                    ? Border.all(
+                        color: AppColors.primaryBlue.withValues(alpha: 0.2),
+                        width: 4)
+                    : null,
               ),
-              child: completed 
-                ? const Icon(Icons.check, size: 14, color: Colors.white)
-                : (current ? Container(width: 8, height: 8, decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle)).animate(onPlay: (c) => c.repeat()).scale(duration: 1.seconds, begin: const Offset(0.8, 0.8), end: const Offset(1.2, 1.2)) : null),
+              child: completed
+                  ? const Icon(Icons.check, size: 14, color: Colors.white)
+                  : (current
+                      ? Container(
+                              width: 8,
+                              height: 8,
+                              decoration: const BoxDecoration(
+                                  color: Colors.white, shape: BoxShape.circle))
+                          .animate(onPlay: (c) => c.repeat())
+                          .scale(
+                              duration: 1.seconds,
+                              begin: const Offset(0.8, 0.8),
+                              end: const Offset(1.2, 1.2))
+                      : null),
             ),
             if (!isLast)
               Container(
                 width: 2,
                 height: 40,
-                color: completed ? AppColors.successGreen : AppColors.bgLightGrey,
+                color:
+                    completed ? AppColors.successGreen : AppColors.bgLightGrey,
               ),
           ],
         ),
@@ -254,7 +307,9 @@ class _LiveServiceStatusScreenState extends ConsumerState<LiveServiceStatusScree
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.bold,
-                  color: completed || current ? AppColors.textPrimary : AppColors.textMuted,
+                  color: completed || current
+                      ? AppColors.textPrimary
+                      : AppColors.textMuted,
                 ),
               ),
               const SizedBox(height: 2),
@@ -291,8 +346,13 @@ class _LiveServiceStatusScreenState extends ConsumerState<LiveServiceStatusScree
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Suresh Kumar', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
-                Text('Senior Technician', style: TextStyle(fontSize: 12, color: Colors.white70)),
+                Text('Suresh Kumar',
+                    style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white)),
+                Text('Senior Technician',
+                    style: TextStyle(fontSize: 12, color: Colors.white70)),
               ],
             ),
           ),
@@ -303,14 +363,15 @@ class _LiveServiceStatusScreenState extends ConsumerState<LiveServiceStatusScree
                 await launchUrl(url);
               } else {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not launch dialer')));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Could not launch dialer')));
                 }
               }
-            },            icon: const Icon(Icons.call_rounded, color: AppColors.successGreen),
+            },
+            icon: const Icon(Icons.call_rounded, color: AppColors.successGreen),
           ),
         ],
       ),
     ).animate().fadeIn(delay: 200.ms);
   }
 }
-

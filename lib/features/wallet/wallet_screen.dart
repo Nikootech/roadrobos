@@ -16,7 +16,8 @@ import '../../core/services/notification_service.dart';
 class WalletScreen extends ConsumerWidget {
   const WalletScreen({super.key});
 
-  List<double> _computeRunningBalances(List<WalletTransaction> transactions, double currentBalance) {
+  List<double> _computeRunningBalances(
+      List<WalletTransaction> transactions, double currentBalance) {
     final List<double> balances = List.filled(transactions.length, 0.0);
     if (transactions.isEmpty) return balances;
 
@@ -38,8 +39,9 @@ class WalletScreen extends ConsumerWidget {
     final walletAsync = ref.watch(walletProvider);
     final transactionsState = ref.watch(walletTransactionsProvider);
     final currentBalance = walletAsync.value?.balance ?? 0.0;
-    
-    final runningBalances = _computeRunningBalances(transactionsState.transactions, currentBalance);
+
+    final runningBalances =
+        _computeRunningBalances(transactionsState.transactions, currentBalance);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -56,7 +58,8 @@ class WalletScreen extends ConsumerWidget {
               expandedHeight: 220,
               pinned: true,
               leading: IconButton(
-                icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: Colors.white),
+                icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                    size: 18, color: Colors.white),
                 onPressed: () => context.pop(),
               ),
               backgroundColor: AppColors.primaryBlue,
@@ -66,7 +69,10 @@ class WalletScreen extends ConsumerWidget {
                     Container(
                       decoration: const BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [AppColors.primaryBlue, AppColors.primaryBlueDark],
+                          colors: [
+                            AppColors.primaryBlue,
+                            AppColors.primaryBlueDark
+                          ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
@@ -107,7 +113,8 @@ class WalletScreen extends ConsumerWidget {
                             alignment: Alignment.centerLeft,
                             child: walletAsync.when(
                               data: (wallet) => Text(
-                                NumberFormat.simpleCurrency(name: 'INR').format(wallet?.balance ?? 0.0),
+                                NumberFormat.simpleCurrency(name: 'INR')
+                                    .format(wallet?.balance ?? 0.0),
                                 style: GoogleFonts.outfit(
                                   fontSize: 42,
                                   fontWeight: FontWeight.w800,
@@ -117,27 +124,34 @@ class WalletScreen extends ConsumerWidget {
                               loading: () => const SizedBox(
                                 height: 42,
                                 width: 100,
-                                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                    color: Colors.white, strokeWidth: 2),
                               ),
                               error: (_, __) => const Text('₹--'),
                             ),
                           ),
                         ],
                       ),
-                    ).animate().fadeIn(duration: 600.ms).slideX(begin: -0.1, end: 0),
+                    )
+                        .animate()
+                        .fadeIn(duration: 600.ms)
+                        .slideX(begin: -0.1, end: 0),
                     Positioned(
                       right: 20,
                       bottom: 40,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 8),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+                          border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.3)),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.verified_user_rounded, color: Colors.white, size: 16),
+                            const Icon(Icons.verified_user_rounded,
+                                color: Colors.white, size: 16),
                             const SizedBox(width: 6),
                             Text(
                               'Verified',
@@ -163,7 +177,7 @@ class WalletScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 24),
-                    
+
                     // Primary Actions
                     Row(
                       children: [
@@ -218,16 +232,18 @@ class WalletScreen extends ConsumerWidget {
                             color: AppColors.textPrimary,
                           ),
                         ),
-                        const Icon(Iconsax.setting_4, color: AppColors.textSecondary, size: 20),
+                        const Icon(Iconsax.setting_4,
+                            color: AppColors.textSecondary, size: 20),
                       ],
                     ),
-                    
+
                     const SizedBox(height: 16),
 
                     // Transaction List, Paginated and Stateful
                     if (transactionsState.isInitialLoading)
                       _buildShimmerSkeleton()
-                    else if (currentBalance == 0.0 && transactionsState.transactions.isEmpty)
+                    else if (currentBalance == 0.0 &&
+                        transactionsState.transactions.isEmpty)
                       _buildEmptyState(context)
                     else if (transactionsState.transactions.isEmpty)
                       Center(
@@ -235,7 +251,8 @@ class WalletScreen extends ConsumerWidget {
                           padding: const EdgeInsets.symmetric(vertical: 40),
                           child: Text(
                             'No transactions yet',
-                            style: GoogleFonts.inter(color: AppColors.textSecondary),
+                            style: GoogleFonts.inter(
+                                color: AppColors.textSecondary),
                           ),
                         ),
                       )
@@ -251,14 +268,17 @@ class WalletScreen extends ConsumerWidget {
                           final runningBal = runningBalances[index];
                           return _buildTransactionCard({
                             'title': t.description,
-                            'subtitle': t.type == TransactionType.credit ? 'Credit' : 'Debit',
-                            'amount': '${t.type == TransactionType.credit ? '+' : '-'}₹${t.amount.toStringAsFixed(0)}',
+                            'subtitle': t.type == TransactionType.credit
+                                ? 'Credit'
+                                : 'Debit',
+                            'amount':
+                                '${t.type == TransactionType.credit ? '+' : '-'}₹${t.amount.toStringAsFixed(0)}',
                             'isDebit': t.type == TransactionType.debit,
                             'time': DateFormat('dd MMM').format(t.timestamp),
                           }, runningBal);
                         },
                       ),
-                      
+
                       // Pagination Load More Button
                       if (transactionsState.hasMore) ...[
                         const SizedBox(height: 24),
@@ -267,30 +287,38 @@ class WalletScreen extends ConsumerWidget {
                           child: ElevatedButton(
                             onPressed: transactionsState.isLoadingMore
                                 ? null
-                                : () => ref.read(walletTransactionsProvider.notifier).loadMore(),
+                                : () => ref
+                                    .read(walletTransactionsProvider.notifier)
+                                    .loadMore(),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.white,
                               foregroundColor: AppColors.primaryBlue,
-                              side: const BorderSide(color: AppColors.primaryBlue, width: 1.5),
+                              side: const BorderSide(
+                                  color: AppColors.primaryBlue, width: 1.5),
                               padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16)),
                               elevation: 0,
                             ),
                             child: transactionsState.isLoadingMore
                                 ? const SizedBox(
                                     width: 20,
                                     height: 20,
-                                    child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primaryBlue),
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: AppColors.primaryBlue),
                                   )
                                 : Text(
                                     'Load More',
-                                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 15),
+                                    style: GoogleFonts.outfit(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 15),
                                   ),
                           ),
                         ),
                       ],
                     ],
-                    
+
                     const SizedBox(height: 100),
                   ],
                 ),
@@ -379,8 +407,9 @@ class WalletScreen extends ConsumerWidget {
               ),
             ],
           ),
-        ).animate(onPlay: (controller) => controller.repeat())
-         .shimmer(duration: 1200.ms, color: Colors.grey.shade100);
+        )
+            .animate(onPlay: (controller) => controller.repeat())
+            .shimmer(duration: 1200.ms, color: Colors.grey.shade100);
       },
     );
   }
@@ -425,7 +454,8 @@ class WalletScreen extends ConsumerWidget {
               onPressed: () => context.push('/wallet/topup'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryBlue,
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
@@ -446,26 +476,29 @@ class WalletScreen extends ConsumerWidget {
     ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0);
   }
 
-  Widget _buildActionTile(BuildContext context, String label, IconData icon, Color color, String? route, WidgetRef ref, {bool requiresBiometric = false}) {
+  Widget _buildActionTile(BuildContext context, String label, IconData icon,
+      Color color, String? route, WidgetRef ref,
+      {bool requiresBiometric = false}) {
     return GestureDetector(
       onTap: () async {
         // ignore: unawaited_futures
         HapticFeedback.lightImpact();
-        
+
         if (requiresBiometric) {
           final bioService = ref.read(biometricServiceProvider);
           final isAvailable = await bioService.isAvailable();
-          
+
           if (isAvailable) {
             final authenticated = await bioService.authenticate(
               localizedReason: 'Please authenticate to perform $label',
             );
-            
+
             if (!authenticated) {
               ref.read(notificationServiceProvider).showError(
-                'Authentication Failed',
-                message: 'Could not verify your identity. Action cancelled.',
-              );
+                    'Authentication Failed',
+                    message:
+                        'Could not verify your identity. Action cancelled.',
+                  );
               return;
             }
           }
@@ -511,7 +544,8 @@ class WalletScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildTransactionCard(Map<String, dynamic> data, double runningBalance) {
+  Widget _buildTransactionCard(
+      Map<String, dynamic> data, double runningBalance) {
     final bool isDebit = data['isDebit'] as bool;
     return Container(
       padding: const EdgeInsets.all(16),
@@ -532,7 +566,9 @@ class WalletScreen extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: isDebit ? AppColors.dangerRed.withValues(alpha: 0.1) : AppColors.successGreen.withValues(alpha: 0.1),
+              color: isDebit
+                  ? AppColors.dangerRed.withValues(alpha: 0.1)
+                  : AppColors.successGreen.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(
@@ -576,7 +612,9 @@ class WalletScreen extends ConsumerWidget {
                   style: GoogleFonts.outfit(
                     fontSize: 17,
                     fontWeight: FontWeight.w800,
-                    color: isDebit ? AppColors.textPrimary : AppColors.successGreen,
+                    color: isDebit
+                        ? AppColors.textPrimary
+                        : AppColors.successGreen,
                   ),
                 ),
               ),

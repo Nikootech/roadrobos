@@ -47,7 +47,8 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
                     _lastSelectedLocation = camera.center;
                     // Simple mock geocoding: use coordinates as address if needed,
                     // or just keep a generic "Selected Location" text that updates.
-                    _currentAddress = 'Location: ${camera.center.latitude.toStringAsFixed(4)}, ${camera.center.longitude.toStringAsFixed(4)}';
+                    _currentAddress =
+                        'Location: ${camera.center.latitude.toStringAsFixed(4)}, ${camera.center.longitude.toStringAsFixed(4)}';
                   });
                 }
               },
@@ -62,14 +63,18 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: Colors.black,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Text(
                       'Select this point',
-                      style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold),
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -92,35 +97,51 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
                   shape: BoxShape.circle,
                   boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 8)],
                 ),
-                child: const Icon(Icons.arrow_back_rounded, size: 20, color: Colors.black87),
+                child: const Icon(Icons.arrow_back_rounded,
+                    size: 20, color: Colors.black87),
               ),
             ),
           ),
 
           // 4. Bottom Panel
           Positioned(
-            bottom: 0, left: 0, right: 0,
+            bottom: 0,
+            left: 0,
+            right: 0,
             child: Container(
               padding: const EdgeInsets.all(24),
               decoration: const BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-                boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 20, offset: Offset(0, -5))],
+                boxShadow: [
+                  BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 20,
+                      offset: Offset(0, -5))
+                ],
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Select Location', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF1F2937))),
+                  const Text('Select Location',
+                      style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFF1F2937))),
                   const SizedBox(height: 16),
                   Row(
                     children: [
-                      const Icon(Iconsax.location5, color: Color(0xFF22C55E), size: 24),
+                      const Icon(Iconsax.location5,
+                          color: Color(0xFF22C55E), size: 24),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           _currentAddress,
-                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black87),
+                          style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87),
                         ),
                       ),
                     ],
@@ -137,10 +158,13 @@ class _MapPickerScreenState extends ConsumerState<MapPickerScreen> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.black,
                         foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16)),
                         elevation: 0,
                       ),
-                      child: const Text('Confirm Location', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+                      child: const Text('Confirm Location',
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.w800)),
                     ),
                   ),
                   SizedBox(height: MediaQuery.of(context).padding.bottom),

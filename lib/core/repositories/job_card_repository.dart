@@ -3,7 +3,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../extensions/datetime_extensions.dart';
 
-
 final jobCardRepositoryProvider = Provider((ref) => JobCardRepository());
 
 class JobCardRepository {
@@ -34,7 +33,9 @@ class JobCardRepository {
 
   Future<void> startJob(String jobCardId) async {
     try {
-      await _supabase.from('job_cards').update({'status': 'in_progress'}).eq('id', jobCardId);
+      await _supabase
+          .from('job_cards')
+          .update({'status': 'in_progress'}).eq('id', jobCardId);
     } catch (e) {
       debugPrint('Start Job Error: $e');
       throw Exception('Failed to start job');
@@ -43,7 +44,9 @@ class JobCardRepository {
 
   Future<void> completeJob(String jobCardId) async {
     try {
-      await _supabase.from('job_cards').update({'status': 'completed'}).eq('id', jobCardId);
+      await _supabase
+          .from('job_cards')
+          .update({'status': 'completed'}).eq('id', jobCardId);
     } catch (e) {
       debugPrint('Complete Job Error: $e');
       throw Exception('Failed to complete job');

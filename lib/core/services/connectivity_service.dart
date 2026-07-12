@@ -27,7 +27,9 @@ class ConnectivityService {
   Stream<bool> get onConnectivityChanged {
     return _connectivity.onConnectivityChanged.map((results) {
       final online = !results.contains(ConnectivityResult.none);
-      if (kDebugMode) debugPrint('Connectivity: ${online ? "ONLINE" : "OFFLINE"}');
+      if (kDebugMode) {
+        debugPrint('Connectivity: ${online ? "ONLINE" : "OFFLINE"}');
+      }
       return online;
     });
   }
@@ -36,7 +38,8 @@ class ConnectivityService {
   Future<T> requireOnline<T>(Future<T> Function() action) async {
     final online = await isOnline;
     if (!online) {
-      throw OfflineException('No internet connection. Please check your network and try again.');
+      throw OfflineException(
+          'No internet connection. Please check your network and try again.');
     }
     return action();
   }

@@ -105,7 +105,8 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.bgLightCard,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusXL),
           borderSide: const BorderSide(color: AppColors.border),
@@ -116,7 +117,8 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusXL),
-          borderSide: const BorderSide(color: AppColors.primaryBlue, width: 1.5),
+          borderSide:
+              const BorderSide(color: AppColors.primaryBlue, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusXL),
@@ -199,7 +201,8 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.bgDarkSurface,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusXL),
           borderSide: const BorderSide(color: AppColors.bgDarkSurface),
@@ -210,7 +213,8 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(radiusXL),
-          borderSide: const BorderSide(color: AppColors.primaryBlue, width: 1.5),
+          borderSide:
+              const BorderSide(color: AppColors.primaryBlue, width: 1.5),
         ),
         hintStyle: GoogleFonts.inter(
           fontSize: 14,
@@ -236,38 +240,59 @@ class AppTheme {
         ? AppColors.textPrimary
         : AppColors.textOnDark;
     return TextTheme(
-      displayLarge: GoogleFonts.outfit(fontSize: 48, fontWeight: FontWeight.w700, color: color, letterSpacing: -0.5),
-      displayMedium: GoogleFonts.outfit(fontSize: 36, fontWeight: FontWeight.w700, color: color, letterSpacing: -0.5),
-      displaySmall: GoogleFonts.outfit(fontSize: 32, fontWeight: FontWeight.w700, color: color),
-      headlineLarge: GoogleFonts.outfit(fontSize: 28, fontWeight: FontWeight.w700, color: color),
-      headlineMedium: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.w600, color: color),
-      headlineSmall: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w600, color: color),
-      titleLarge: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w600, color: color),
-      titleMedium: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600, color: color),
-      titleSmall: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w600, color: color),
-      bodyLarge: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w400, color: color),
-      bodyMedium: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w400, color: color),
-      bodySmall: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w400, color: color),
-      labelLarge: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: color),
-      labelMedium: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500, color: color),
-      labelSmall: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w500, color: color),
+      displayLarge: GoogleFonts.outfit(
+          fontSize: 48,
+          fontWeight: FontWeight.w700,
+          color: color,
+          letterSpacing: -0.5),
+      displayMedium: GoogleFonts.outfit(
+          fontSize: 36,
+          fontWeight: FontWeight.w700,
+          color: color,
+          letterSpacing: -0.5),
+      displaySmall: GoogleFonts.outfit(
+          fontSize: 32, fontWeight: FontWeight.w700, color: color),
+      headlineLarge: GoogleFonts.outfit(
+          fontSize: 28, fontWeight: FontWeight.w700, color: color),
+      headlineMedium: GoogleFonts.outfit(
+          fontSize: 24, fontWeight: FontWeight.w600, color: color),
+      headlineSmall: GoogleFonts.outfit(
+          fontSize: 20, fontWeight: FontWeight.w600, color: color),
+      titleLarge: GoogleFonts.outfit(
+          fontSize: 18, fontWeight: FontWeight.w600, color: color),
+      titleMedium: GoogleFonts.outfit(
+          fontSize: 16, fontWeight: FontWeight.w600, color: color),
+      titleSmall: GoogleFonts.outfit(
+          fontSize: 14, fontWeight: FontWeight.w600, color: color),
+      bodyLarge: GoogleFonts.inter(
+          fontSize: 16, fontWeight: FontWeight.w400, color: color),
+      bodyMedium: GoogleFonts.inter(
+          fontSize: 14, fontWeight: FontWeight.w400, color: color),
+      bodySmall: GoogleFonts.inter(
+          fontSize: 12, fontWeight: FontWeight.w400, color: color),
+      labelLarge: GoogleFonts.inter(
+          fontSize: 14, fontWeight: FontWeight.w600, color: color),
+      labelMedium: GoogleFonts.inter(
+          fontSize: 12, fontWeight: FontWeight.w500, color: color),
+      labelSmall: GoogleFonts.inter(
+          fontSize: 10, fontWeight: FontWeight.w500, color: color),
     );
   }
 
   // ── Box Shadows ──
   static List<BoxShadow> get cardShadow => [
-    const BoxShadow(
-      color: AppColors.shadowLight,
-      blurRadius: 12,
-      offset: Offset(0, 4),
-    ),
-  ];
+        const BoxShadow(
+          color: AppColors.shadowLight,
+          blurRadius: 12,
+          offset: Offset(0, 4),
+        ),
+      ];
 
   static List<BoxShadow> get elevatedShadow => [
-    const BoxShadow(
-      color: AppColors.shadowMedium,
-      blurRadius: 24,
-      offset: Offset(0, 8),
-    ),
-  ];
+        const BoxShadow(
+          color: AppColors.shadowMedium,
+          blurRadius: 24,
+          offset: Offset(0, 8),
+        ),
+      ];
 }

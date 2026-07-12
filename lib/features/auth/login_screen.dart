@@ -31,7 +31,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  
+
   bool _isLoading = false;
   bool _isSigningUp = false; // Toggle for register vs login
   bool _dialogShowing = false;
@@ -41,25 +41,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.initState();
     // Check for multi-device logout
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final wasMultiDeviceLogout = await ref.read(localStorageServiceProvider).checkAndClearMultiDeviceLogout();
+      final wasMultiDeviceLogout = await ref
+          .read(localStorageServiceProvider)
+          .checkAndClearMultiDeviceLogout();
       if (wasMultiDeviceLogout && mounted) {
         unawaited(showDialog(
           context: context,
           barrierDismissible: false,
           builder: (context) => AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             title: const Row(
               children: [
                 Icon(Icons.warning_rounded, color: AppColors.accentOrange),
                 SizedBox(width: 8),
-                Text('Session Ended', style: TextStyle(fontWeight: FontWeight.bold)),
+                Text('Session Ended',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
               ],
             ),
-            content: const Text('Your account was logged in on another device. For security, you have been signed out of this device.'),
+            content: const Text(
+                'Your account was logged in on another device. For security, you have been signed out of this device.'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('OK', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primaryBlue)),
+                child: const Text('OK',
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primaryBlue)),
               ),
             ],
           ),
@@ -80,7 +88,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     _passwordController.dispose();
     super.dispose();
   }
-
 
   void _handleForgotPassword() async {
     final email = _emailController.text.trim();
@@ -117,10 +124,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() => _isLoading = true);
     try {
       await ref.read(authServiceProvider).signInWithEmail(
-        _emailController.text.trim(),
-        _passwordController.text.trim(),
-      );
-      
+            _emailController.text.trim(),
+            _passwordController.text.trim(),
+          );
+
       unawaited(Sentry.addBreadcrumb(
         Breadcrumb(
           message: 'Login succeeded',
@@ -130,7 +137,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       ));
 
       await _promptBiometricSetup();
-      
+
       // userProvider listens to auth changes and will fetch the profile automatically
     } catch (e) {
       if (!mounted) return;
@@ -159,21 +166,29 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         context: context,
         builder: (context) => AlertDialog(
           title: const Text('Enable Biometric Login'),
-          content: const Text('Would you like to use Face ID / Fingerprint for faster logins next time?'),
+          content: const Text(
+              'Would you like to use Face ID / Fingerprint for faster logins next time?'),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('No thanks')),
-            TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Enable')),
+            TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('No thanks')),
+            TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Enable')),
           ],
         ),
       );
 
       if (enable == true) {
-        final authenticated = await biometricService.authenticate(localizedReason: 'Authenticate to enable biometrics');
+        final authenticated = await biometricService.authenticate(
+            localizedReason: 'Authenticate to enable biometrics');
         if (authenticated) {
           await prefs.setBool('biometric_enabled', true);
           const storage = FlutterSecureStorage();
-          await storage.write(key: 'email', value: _emailController.text.trim());
-          await storage.write(key: 'password', value: _passwordController.text.trim());
+          await storage.write(
+              key: 'email', value: _emailController.text.trim());
+          await storage.write(
+              key: 'password', value: _passwordController.text.trim());
         }
       }
     }
@@ -183,19 +198,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() => _isLoading = true);
     try {
       final response = await ref.read(authServiceProvider).signUpWithEmail(
-        _emailController.text.trim(),
-        _passwordController.text.trim(),
-      );
-      
+            _emailController.text.trim(),
+            _passwordController.text.trim(),
+          );
+
       if (response.user != null) {
         // Save initial profile with selected role and current device ID
-        final savedRoleName = await ref.read(localStorageServiceProvider).getSelectedRole();
+        final savedRoleName =
+            await ref.read(localStorageServiceProvider).getSelectedRole();
         final selectedRole = UserRole.values.firstWhere(
           (e) => e.name == savedRoleName,
           orElse: () => UserRole.customer,
         );
-        final deviceId = await ref.read(localStorageServiceProvider).getLocalDeviceId();
-        
+        final deviceId =
+            await ref.read(localStorageServiceProvider).getLocalDeviceId();
+
         final newUser = AppUser(
           id: response.user!.id,
           name: 'New User',
@@ -207,8 +224,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         );
         await ref.read(userRepositoryProvider).saveUser(newUser);
 
-        await ref.read(userProvider.notifier).fetchUserProfile(response.user!.id);
-        
+        await ref
+            .read(userProvider.notifier)
+            .fetchUserProfile(response.user!.id);
+
         final error = ref.read(userProvider).error;
         if (mounted && error != null) {
           setState(() => _isLoading = false);
@@ -233,7 +252,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (!isEnabled) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Biometric setup required. Please login with email first.')),
+          const SnackBar(
+              content: Text(
+                  'Biometric setup required. Please login with email first.')),
         );
       }
       return;
@@ -243,7 +264,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     if (!await biometricService.isAvailable()) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Biometric authentication not available on this device')),
+          const SnackBar(
+              content: Text(
+                  'Biometric authentication not available on this device')),
         );
       }
       return;
@@ -291,10 +314,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               message: 'Login failed',
               category: 'auth',
               level: SentryLevel.warning,
-              data: const {'method': 'biometric', 'error': 'No credentials found'},
+              data: const {
+                'method': 'biometric',
+                'error': 'No credentials found'
+              },
             ),
           ));
-          NavHelpers.showError(context, 'No credentials found for Biometric Login');
+          NavHelpers.showError(
+              context, 'No credentials found for Biometric Login');
         }
       }
     }
@@ -343,16 +370,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
-
-
-
-
-
-
   void _showSessionMismatchDialog() {
     if (_dialogShowing) return;
     _dialogShowing = true;
-    
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -373,7 +394,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.4 : 0.08),
+                color: Colors.black.withValues(
+                    alpha: Theme.of(context).brightness == Brightness.dark
+                        ? 0.4
+                        : 0.08),
                 blurRadius: 24,
                 offset: const Offset(0, 12),
               ),
@@ -451,9 +475,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               const SizedBox(height: 12),
               OutlinedButton(
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: Theme.of(context).brightness == Brightness.dark
-                      ? Colors.white.withValues(alpha: 0.7)
-                      : AppColors.textSecondary,
+                  foregroundColor:
+                      Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white.withValues(alpha: 0.7)
+                          : AppColors.textSecondary,
                   side: BorderSide(
                     color: Theme.of(context).brightness == Brightness.dark
                         ? Colors.white.withValues(alpha: 0.15)
@@ -508,7 +533,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           child: Column(
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Row(
                   children: [
                     GestureDetector(
@@ -519,19 +545,27 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: AppColors.bgWhite,
-                          border: Border.all(color: AppColors.brandGreen.withValues(alpha: 0.2)),
+                          border: Border.all(
+                              color:
+                                  AppColors.brandGreen.withValues(alpha: 0.2)),
                         ),
-                        child: const Icon(Icons.arrow_back_ios_new_rounded, size: 16, color: AppColors.brandGreen),
+                        child: const Icon(Icons.arrow_back_ios_new_rounded,
+                            size: 16, color: AppColors.brandGreen),
                       ),
                     ),
                     const Expanded(
                       child: Text(
                         'Sign In',
                         textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                        style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary),
                       ),
                     ),
-                    const SizedBox(width: 42), // Keep spacing symmetrical without the info icon
+                    const SizedBox(
+                        width:
+                            42), // Keep spacing symmetrical without the info icon
                   ],
                 ),
               ),
@@ -547,20 +581,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   children: [
                     Text(
                       AppStrings.welcomeBack,
-                      style: GoogleFonts.outfit(fontSize: 30, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
+                      style: GoogleFonts.outfit(
+                          fontSize: 30,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary),
                     ),
                     const SizedBox(height: 6),
                     Text(
                       AppStrings.loginSubtitle,
-                      style: TextStyle(fontSize: 14, color: AppColors.textSecondary.withValues(alpha: 0.8)),
+                      style: TextStyle(
+                          fontSize: 14,
+                          color:
+                              AppColors.textSecondary.withValues(alpha: 0.8)),
                     ),
                   ],
                 ),
               ),
 
               const SizedBox(height: 24),
-
-
 
               // Form Fields
               Padding(
@@ -576,20 +614,30 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
                         validator: (value) {
-                          if (value == null || value.isEmpty) return 'Email is required';
-                          if (!value.contains('@')) return 'Enter a valid email';
+                          if (value == null || value.isEmpty) {
+                            return 'Email is required';
+                          }
+                          if (!value.contains('@')) {
+                            return 'Enter a valid email';
+                          }
                           return null;
                         },
                       ),
                       CustomTextField(
                         label: 'Password',
-                        hint: _isSigningUp ? 'Create a password' : 'Enter your password',
+                        hint: _isSigningUp
+                            ? 'Create a password'
+                            : 'Enter your password',
                         prefixIcon: Iconsax.lock,
                         isPassword: true,
                         controller: _passwordController,
                         validator: (value) {
-                          if (value == null || value.isEmpty) return 'Password is required';
-                          if (_isSigningUp && value.length < 6) return 'Mini 6 characters';
+                          if (value == null || value.isEmpty) {
+                            return 'Password is required';
+                          }
+                          if (_isSigningUp && value.length < 6) {
+                            return 'Mini 6 characters';
+                          }
                           return null;
                         },
                       ),
@@ -616,12 +664,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                       const SizedBox(height: 16),
 
-
-
                       const SizedBox(height: 8),
 
                       CustomButton(
-                        label: _isSigningUp ? 'Join RoAd RoBo\'s' : 'Sign In with Email',
+                        label: _isSigningUp
+                            ? 'Join RoAd RoBo\'s'
+                            : 'Sign In with Email',
                         onPressed: _handleLogin,
                         isLoading: _isLoading,
                         backgroundColor: AppColors.brandGreen,
@@ -632,12 +680,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       // Social Login
                       Row(
                         children: [
-                          Expanded(child: Divider(color: AppColors.border.withValues(alpha: 0.6))),
+                          Expanded(
+                              child: Divider(
+                                  color:
+                                      AppColors.border.withValues(alpha: 0.6))),
                           const Padding(
                             padding: EdgeInsets.symmetric(horizontal: 16),
-                            child: Text(AppStrings.orContinueWith, style: TextStyle(fontSize: 13, color: AppColors.textMuted)),
+                            child: Text(AppStrings.orContinueWith,
+                                style: TextStyle(
+                                    fontSize: 13, color: AppColors.textMuted)),
                           ),
-                          Expanded(child: Divider(color: AppColors.border.withValues(alpha: 0.6))),
+                          Expanded(
+                              child: Divider(
+                                  color:
+                                      AppColors.border.withValues(alpha: 0.6))),
                         ],
                       ),
 
@@ -652,49 +708,50 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(color: AppColors.border),
                           ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              width: 24,
-                              height: 24,
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.white,
-                              ),
-                              child: Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  Text(
-                                    'G',
-                                    style: GoogleFonts.outfit(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w900,
-                                      foreground: Paint()
-                                        ..shader = const LinearGradient(
-                                          colors: [
-                                            Color(0xFF4285F4), // Blue
-                                            Color(0xFF34A853), // Green
-                                            Color(0xFFFBBC05), // Yellow
-                                            Color(0xFFEA4335), // Red
-                                          ],
-                                        ).createShader(const Rect.fromLTWH(0, 0, 24, 24)),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                width: 24,
+                                height: 24,
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.white,
+                                ),
+                                child: Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    Text(
+                                      'G',
+                                      style: GoogleFonts.outfit(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w900,
+                                        foreground: Paint()
+                                          ..shader = const LinearGradient(
+                                            colors: [
+                                              Color(0xFF4285F4), // Blue
+                                              Color(0xFF34A853), // Green
+                                              Color(0xFFFBBC05), // Yellow
+                                              Color(0xFFEA4335), // Red
+                                            ],
+                                          ).createShader(const Rect.fromLTWH(
+                                              0, 0, 24, 24)),
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 12),
-                            const Text(
-                              'Continue with Google', 
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600, 
-                                fontSize: 16,
-                                color: Colors.black87,
+                              const SizedBox(width: 12),
+                              const Text(
+                                'Continue with Google',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 16,
+                                  color: Colors.black87,
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
+                            ],
+                          ),
                         ),
                       ),
 
@@ -710,7 +767,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.primaryBlue.withValues(alpha: 0.3),
+                                color: AppColors.primaryBlue
+                                    .withValues(alpha: 0.3),
                                 blurRadius: 10,
                                 offset: const Offset(0, 4),
                               ),
@@ -719,11 +777,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           child: const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Iconsax.finger_scan, color: Colors.white, size: 24),
+                              Icon(Iconsax.finger_scan,
+                                  color: Colors.white, size: 24),
                               SizedBox(width: 12),
                               Text(
-                                'Login with Biometrics', 
-                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
+                                'Login with Biometrics',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                    color: Colors.white),
                               ),
                             ],
                           ),
@@ -736,17 +798,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            _isSigningUp ? 'Already have an account?' : AppStrings.dontHaveAccount, 
-                            style: const TextStyle(fontSize: 14, color: AppColors.textSecondary)
-                          ),
+                              _isSigningUp
+                                  ? 'Already have an account?'
+                                  : AppStrings.dontHaveAccount,
+                              style: const TextStyle(
+                                  fontSize: 14,
+                                  color: AppColors.textSecondary)),
                           GestureDetector(
                             onTap: () {
                               setState(() => _isSigningUp = !_isSigningUp);
                             },
                             child: Text(
-                              _isSigningUp ? ' Sign In' : ' Sign Up Free', 
-                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.brandGreen)
-                            ),
+                                _isSigningUp ? ' Sign In' : ' Sign Up Free',
+                                style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.brandGreen)),
                           ),
                         ],
                       ),
@@ -774,22 +841,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             Container(
               width: 100,
               height: 100,
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(30)),
+              decoration: BoxDecoration(
+                  color: Colors.white, borderRadius: BorderRadius.circular(30)),
               padding: const EdgeInsets.all(4),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(26),
-                child: Image.asset('assets/signin_icon.png', fit: BoxFit.contain),
+                child:
+                    Image.asset('assets/signin_icon.png', fit: BoxFit.contain),
               ),
             ),
             const SizedBox(height: 12),
-            Text('RoAd RoBo\'s', style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.w900, color: AppColors.brandGreen)),
+            Text('RoAd RoBo\'s',
+                style: GoogleFonts.outfit(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.brandGreen)),
           ],
         ),
       ),
     );
   }
-
-
-
-
 }

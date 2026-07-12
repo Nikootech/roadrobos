@@ -35,7 +35,8 @@ class WalletTransactionsState {
   }
 }
 
-class WalletTransactionsNotifier extends StateNotifier<WalletTransactionsState> {
+class WalletTransactionsNotifier
+    extends StateNotifier<WalletTransactionsState> {
   final WalletRepository _repository;
   final String? _userId;
 
@@ -55,7 +56,7 @@ class WalletTransactionsNotifier extends StateNotifier<WalletTransactionsState> 
       state = state.copyWith(isInitialLoading: false, hasMore: false);
       return;
     }
-    
+
     // ignore: avoid_redundant_argument_values
     state = state.copyWith(isInitialLoading: true, error: null);
     try {
@@ -102,12 +103,13 @@ class WalletTransactionsNotifier extends StateNotifier<WalletTransactionsState> 
 final walletProvider = StreamProvider<Wallet?>((ref) {
   final user = ref.watch(userProvider).user;
   if (user == null) return Stream.value(null);
-  
+
   return ref.watch(walletRepositoryProvider).getWallet(user.id);
 });
 
 final walletTransactionsProvider =
-    StateNotifierProvider<WalletTransactionsNotifier, WalletTransactionsState>((ref) {
+    StateNotifierProvider<WalletTransactionsNotifier, WalletTransactionsState>(
+        (ref) {
   final user = ref.watch(userProvider).user;
   final repository = ref.watch(walletRepositoryProvider);
   return WalletTransactionsNotifier(repository, user?.id);

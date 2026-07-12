@@ -5,10 +5,14 @@ class AppColors {
   AppColors._();
 
   // ── Brand Greens (RoAdRoBo's Logo Palette) ──
-  static const Color brandGreen = Color(0xFF006241);      // Deep forest green — main logo color
-  static const Color brandGreenMid = Color(0xFF1B8A5A);   // Mid green — swirl accent
-  static const Color brandGreenLight = Color(0xFF10B981); // Bright green — electric bolt
-  static const Color brandGreenBg = Color(0xFFF0FBF5);    // Soft green tint background
+  static const Color brandGreen =
+      Color(0xFF006241); // Deep forest green — main logo color
+  static const Color brandGreenMid =
+      Color(0xFF1B8A5A); // Mid green — swirl accent
+  static const Color brandGreenLight =
+      Color(0xFF10B981); // Bright green — electric bolt
+  static const Color brandGreenBg =
+      Color(0xFFF0FBF5); // Soft green tint background
   static const LinearGradient brandGreenGradient = LinearGradient(
     colors: [brandGreen, brandGreenMid],
     begin: Alignment.topLeft,
@@ -16,13 +20,15 @@ class AppColors {
   );
 
   // ── Primary Greens (Brand palette — replaces blues) ──
-  static const Color primaryBlue = Color(0xFF1B8A5A);      // Brand green (replaces sky blue)
-  static const Color primaryBlueDark = Color(0xFF006241);  // Deep forest green
+  static const Color primaryBlue =
+      Color(0xFF1B8A5A); // Brand green (replaces sky blue)
+  static const Color primaryBlueDark = Color(0xFF006241); // Deep forest green
   static const Color primaryBlueLight = Color(0xFF34D399); // Light mint green
-  static const Color bgSkyLight = Color(0xFFF0FBF5);       // Soft green tint (was sky blue)
-  static const Color primaryNavy = Color(0xFF004D32);      // Deep green navy
+  static const Color bgSkyLight =
+      Color(0xFFF0FBF5); // Soft green tint (was sky blue)
+  static const Color primaryNavy = Color(0xFF004D32); // Deep green navy
   static const Color deepNavy = Color(0xFF003322);
-  static const Color accentIndigo = Color(0xFF059669);     // Emerald accent
+  static const Color accentIndigo = Color(0xFF059669); // Emerald accent
 
   // ── Accent / CTA (Vibrant Amber/Orange) ──
   static const Color accentOrange = Color(0xFFF97316);
@@ -85,7 +91,7 @@ class AppColors {
   static const Color shadowMedium = Color(0x1A000000);
 
   // ── Chip / Tag Colors ──
-  static const Color chipBlue = Color(0xFFECFDF5);  // Now green-tinted
+  static const Color chipBlue = Color(0xFFECFDF5); // Now green-tinted
   static const Color chipGreen = Color(0xFFECFDF5);
   static const Color chipRed = Color(0xFFFEF2F2);
   static const Color chipYellow = Color(0xFFFEFCE8);

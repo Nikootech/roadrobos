@@ -2,7 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/repositories/user_vehicle_repository.dart';
 import 'user_provider.dart';
 
-final vehicleProvider = StateNotifierProvider<VehicleNotifier, AsyncValue<List<UserVehicle>>>((ref) {
+final vehicleProvider =
+    StateNotifierProvider<VehicleNotifier, AsyncValue<List<UserVehicle>>>(
+        (ref) {
   final repository = ref.watch(userVehicleRepositoryProvider);
   final user = ref.watch(userProvider);
   return VehicleNotifier(repository, user.user?.id);
@@ -12,7 +14,8 @@ class VehicleNotifier extends StateNotifier<AsyncValue<List<UserVehicle>>> {
   final UserVehicleRepository _repository;
   final String? _userId;
 
-  VehicleNotifier(this._repository, this._userId) : super(const AsyncValue.loading()) {
+  VehicleNotifier(this._repository, this._userId)
+      : super(const AsyncValue.loading()) {
     fetchVehicles();
   }
 
@@ -21,7 +24,7 @@ class VehicleNotifier extends StateNotifier<AsyncValue<List<UserVehicle>>> {
       state = const AsyncValue.data([]);
       return;
     }
-    
+
     state = const AsyncValue.loading();
     try {
       final vehicles = await _repository.getUserVehicles(_userId);
@@ -50,7 +53,7 @@ class VehicleNotifier extends StateNotifier<AsyncValue<List<UserVehicle>>> {
         year: year,
         type: type,
       );
-      
+
       await _repository.addVehicle(newVehicle);
       await fetchVehicles(); // Refresh list
     } catch (e) {

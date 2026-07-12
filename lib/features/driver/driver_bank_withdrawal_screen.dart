@@ -18,11 +18,14 @@ class DriverBankWithdrawalScreen extends ConsumerStatefulWidget {
   const DriverBankWithdrawalScreen({super.key});
 
   @override
-  ConsumerState<DriverBankWithdrawalScreen> createState() => _DriverBankWithdrawalScreenState();
+  ConsumerState<DriverBankWithdrawalScreen> createState() =>
+      _DriverBankWithdrawalScreenState();
 }
 
-class _DriverBankWithdrawalScreenState extends ConsumerState<DriverBankWithdrawalScreen> {
-  final TextEditingController _amountController = TextEditingController(text: '5000');
+class _DriverBankWithdrawalScreenState
+    extends ConsumerState<DriverBankWithdrawalScreen> {
+  final TextEditingController _amountController =
+      TextEditingController(text: '5000');
   bool _isProcessing = false;
   String _selectedBankName = 'HDFC Bank';
   String _selectedBankAcc = '**** 1234';
@@ -43,7 +46,8 @@ class _DriverBankWithdrawalScreenState extends ConsumerState<DriverBankWithdrawa
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: AppColors.textPrimary),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded,
+              size: 18, color: AppColors.textPrimary),
           onPressed: () {
             HapticFeedback.lightImpact();
             context.pop();
@@ -51,7 +55,11 @@ class _DriverBankWithdrawalScreenState extends ConsumerState<DriverBankWithdrawa
         ),
         title: const Text(
           'Withdraw Funds',
-          style: TextStyle(color: AppColors.deepNavy, fontWeight: FontWeight.w900, fontSize: 20, letterSpacing: -0.5),
+          style: TextStyle(
+              color: AppColors.deepNavy,
+              fontWeight: FontWeight.w900,
+              fontSize: 20,
+              letterSpacing: -0.5),
         ),
       ),
       body: SingleChildScrollView(
@@ -71,7 +79,10 @@ class _DriverBankWithdrawalScreenState extends ConsumerState<DriverBankWithdrawa
                 ),
                 borderRadius: BorderRadius.circular(32),
                 boxShadow: [
-                  BoxShadow(color: AppColors.deepNavy.withValues(alpha: 0.2), blurRadius: 20, offset: const Offset(0, 10)),
+                  BoxShadow(
+                      color: AppColors.deepNavy.withValues(alpha: 0.2),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10)),
                 ],
               ),
               child: Column(
@@ -80,93 +91,153 @@ class _DriverBankWithdrawalScreenState extends ConsumerState<DriverBankWithdrawa
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('AVAILABLE BALANCE', style: TextStyle(color: Colors.white60, fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 1.2)),
-                      Icon(Iconsax.wallet_1, color: Colors.white.withValues(alpha: 0.3), size: 20),
+                      const Text('AVAILABLE BALANCE',
+                          style: TextStyle(
+                              color: Colors.white60,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 1.2)),
+                      Icon(Iconsax.wallet_1,
+                          color: Colors.white.withValues(alpha: 0.3), size: 20),
                     ],
                   ),
                   const SizedBox(height: 8),
                   walletAsync.when(
                     data: (wallet) => Text(
-                      NumberFormat.simpleCurrency(name: 'INR').format(wallet?.balance ?? 0.0),
-                      style: const TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.w900, letterSpacing: -1),
+                      NumberFormat.simpleCurrency(name: 'INR')
+                          .format(wallet?.balance ?? 0.0),
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 36,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -1),
                     ),
                     loading: () => const SizedBox(
                       height: 36,
                       width: 36,
-                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                      child: CircularProgressIndicator(
+                          color: Colors.white, strokeWidth: 2),
                     ),
-                    error: (_, __) => const Text('₹0.00', style: TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.w900, letterSpacing: -1)),
+                    error: (_, __) => const Text('₹0.00',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 36,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -1)),
                   ),
                 ],
               ),
             ).animate().fadeIn().slideY(begin: 0.1, end: 0),
-            
+
             const SizedBox(height: 24),
-            const Text('Enter amount to withdraw', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.textPrimary, letterSpacing: -0.5)),
+            const Text('Enter amount to withdraw',
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.textPrimary,
+                    letterSpacing: -0.5)),
             const SizedBox(height: 20),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
               decoration: BoxDecoration(
                 color: AppColors.bgLightGrey.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(28),
-                border: Border.all(color: AppColors.border.withValues(alpha: 0.3)),
+                border:
+                    Border.all(color: AppColors.border.withValues(alpha: 0.3)),
               ),
               child: Row(
                 children: [
-                  const Text('₹', style: TextStyle(fontSize: 36, fontWeight: FontWeight.w900, color: AppColors.deepNavy)),
+                  const Text('₹',
+                      style: TextStyle(
+                          fontSize: 36,
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.deepNavy)),
                   const SizedBox(width: 16),
                   Expanded(
                     child: TextField(
                       controller: _amountController,
                       keyboardType: TextInputType.number,
-                      style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w900, color: AppColors.deepNavy, letterSpacing: -1),
-                      decoration: const InputDecoration(border: InputBorder.none, contentPadding: EdgeInsets.zero, isDense: true, hintText: '0.00'),
+                      style: const TextStyle(
+                          fontSize: 36,
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.deepNavy,
+                          letterSpacing: -1),
+                      decoration: const InputDecoration(
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.zero,
+                          isDense: true,
+                          hintText: '0.00'),
                     ),
                   ),
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 24),
-            const Text('Payout method', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.textPrimary, letterSpacing: -0.5)),
+            const Text('Payout method',
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.textPrimary,
+                    letterSpacing: -0.5)),
             const SizedBox(height: 20),
             Container(
               padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(28),
-                border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+                border:
+                    Border.all(color: AppColors.border.withValues(alpha: 0.5)),
                 color: Colors.white,
-                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 15, offset: const Offset(0, 5))],
+                boxShadow: [
+                  BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.02),
+                      blurRadius: 15,
+                      offset: const Offset(0, 5))
+                ],
               ),
               child: Row(
                 children: [
                   Container(
                     padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(color: AppColors.primaryBlue.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(18)),
-                    child: const Icon(Iconsax.bank, color: AppColors.primaryBlue, size: 26),
+                    decoration: BoxDecoration(
+                        color: AppColors.primaryBlue.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(18)),
+                    child: const Icon(Iconsax.bank,
+                        color: AppColors.primaryBlue, size: 26),
                   ),
                   const SizedBox(width: 20),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(_selectedBankName, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 17, color: AppColors.textPrimary)),
+                        Text(_selectedBankName,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w900,
+                                fontSize: 17,
+                                color: AppColors.textPrimary)),
                         const SizedBox(height: 4),
-                        Text('Account No: $_selectedBankAcc', style: const TextStyle(color: AppColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
+                        Text('Account No: $_selectedBankAcc',
+                            style: const TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600)),
                       ],
                     ),
                   ),
                   IconButton(
                     onPressed: () => _showBankSelectionSheet(context),
-                    icon: const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.textSecondary),
+                    icon: const Icon(Icons.keyboard_arrow_down_rounded,
+                        color: AppColors.textSecondary),
                   ),
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 32),
             if (_isProcessing)
-              const Center(child: CircularProgressIndicator(color: AppColors.primaryBlue))
+              const Center(
+                  child:
+                      CircularProgressIndicator(color: AppColors.primaryBlue))
             else
               SizedBox(
                 width: double.infinity,
@@ -184,12 +255,14 @@ class _DriverBankWithdrawalScreenState extends ConsumerState<DriverBankWithdrawa
                     final amount = double.tryParse(amountText);
                     if (amount == null || amount <= 0) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Please enter a valid amount')),
+                        const SnackBar(
+                            content: Text('Please enter a valid amount')),
                       );
                       return;
                     }
 
-                    final currentBalance = ref.read(walletProvider).value?.balance ?? 0.0;
+                    final currentBalance =
+                        ref.read(walletProvider).value?.balance ?? 0.0;
                     if (amount > currentBalance) {
                       InsufficientBalanceSheet.show(
                         context,
@@ -207,28 +280,34 @@ class _DriverBankWithdrawalScreenState extends ConsumerState<DriverBankWithdrawa
                     setState(() => _isProcessing = true);
 
                     try {
-                      final success = await ref.read(walletRepositoryProvider).withdrawFunds(
-                        user.id,
-                        amount,
-                        '$_selectedBankName ($_selectedBankAcc)',
-                      );
+                      final success = await ref
+                          .read(walletRepositoryProvider)
+                          .withdrawFunds(
+                            user.id,
+                            amount,
+                            '$_selectedBankName ($_selectedBankAcc)',
+                          );
                       if (success) {
                         if (!context.mounted) return;
                         // ignore: unawaited_futures
                         HapticFeedback.heavyImpact();
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: const Text('Withdrawal request submitted!'),
+                            content:
+                                const Text('Withdrawal request submitted!'),
                             behavior: SnackBarBehavior.floating,
                             backgroundColor: AppColors.deepNavy,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
                           ),
                         );
                         context.pop();
                       } else {
                         if (!context.mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Failed to submit withdrawal request')),
+                          const SnackBar(
+                              content:
+                                  Text('Failed to submit withdrawal request')),
                         );
                       }
                     } on InsufficientBalanceException catch (_) {
@@ -241,7 +320,9 @@ class _DriverBankWithdrawalScreenState extends ConsumerState<DriverBankWithdrawa
                     } catch (e) {
                       if (!context.mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(e.toString()), backgroundColor: AppColors.dangerRed),
+                        SnackBar(
+                            content: Text(e.toString()),
+                            backgroundColor: AppColors.dangerRed),
                       );
                     } finally {
                       if (mounted) setState(() => _isProcessing = false);
@@ -250,17 +331,21 @@ class _DriverBankWithdrawalScreenState extends ConsumerState<DriverBankWithdrawa
                   backgroundColor: AppColors.deepNavy,
                 ).animate().scale(delay: 200.ms),
               ),
-            
+
             const SizedBox(height: 24),
             const Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.info_outline_rounded, size: 14, color: AppColors.textMuted),
+                Icon(Icons.info_outline_rounded,
+                    size: 14, color: AppColors.textMuted),
                 SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     'Funds will be credited to your bank within 2-4 hours',
-                    style: TextStyle(fontSize: 12, color: AppColors.textMuted, fontWeight: FontWeight.w500),
+                    style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textMuted,
+                        fontWeight: FontWeight.w500),
                   ),
                 ),
               ],
@@ -278,20 +363,27 @@ class _DriverBankWithdrawalScreenState extends ConsumerState<DriverBankWithdrawa
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) {
           return Container(
-            decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
+            decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
             padding: const EdgeInsets.all(24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Select Bank Account', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.deepNavy)),
+                const Text('Select Bank Account',
+                    style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.deepNavy)),
                 const SizedBox(height: 24),
                 GestureDetector(
                   onTap: () => setModalState(() {
                     _selectedBankName = 'HDFC Bank';
                     _selectedBankAcc = '**** 1234';
                   }),
-                  child: _buildBankOption('HDFC Bank', '**** 1234', _selectedBankName == 'HDFC Bank'),
+                  child: _buildBankOption('HDFC Bank', '**** 1234',
+                      _selectedBankName == 'HDFC Bank'),
                 ),
                 const SizedBox(height: 12),
                 GestureDetector(
@@ -299,7 +391,8 @@ class _DriverBankWithdrawalScreenState extends ConsumerState<DriverBankWithdrawa
                     _selectedBankName = 'ICICI Bank';
                     _selectedBankAcc = '**** 5678';
                   }),
-                  child: _buildBankOption('ICICI Bank', '**** 5678', _selectedBankName == 'ICICI Bank'),
+                  child: _buildBankOption('ICICI Bank', '**** 5678',
+                      _selectedBankName == 'ICICI Bank'),
                 ),
                 const SizedBox(height: 12),
                 GestureDetector(
@@ -307,7 +400,8 @@ class _DriverBankWithdrawalScreenState extends ConsumerState<DriverBankWithdrawa
                     _selectedBankName = 'SBI Bank';
                     _selectedBankAcc = '**** 9012';
                   }),
-                  child: _buildBankOption('SBI Bank', '**** 9012', _selectedBankName == 'SBI Bank'),
+                  child: _buildBankOption(
+                      'SBI Bank', '**** 9012', _selectedBankName == 'SBI Bank'),
                 ),
                 const SizedBox(height: 32),
                 SizedBox(
@@ -320,9 +414,12 @@ class _DriverBankWithdrawalScreenState extends ConsumerState<DriverBankWithdrawa
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.deepNavy,
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16)),
                     ),
-                    child: const Text('Confirm Selection', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    child: const Text('Confirm Selection',
+                        style: TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.bold)),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -338,24 +435,35 @@ class _DriverBankWithdrawalScreenState extends ConsumerState<DriverBankWithdrawa
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isSelected ? AppColors.primaryBlue.withValues(alpha: 0.05) : Colors.white,
+        color: isSelected
+            ? AppColors.primaryBlue.withValues(alpha: 0.05)
+            : Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: isSelected ? AppColors.primaryBlue : AppColors.border),
+        border: Border.all(
+            color: isSelected ? AppColors.primaryBlue : AppColors.border),
       ),
       child: Row(
         children: [
-          Icon(Iconsax.bank, color: isSelected ? AppColors.primaryBlue : AppColors.textSecondary),
+          Icon(Iconsax.bank,
+              color:
+                  isSelected ? AppColors.primaryBlue : AppColors.textSecondary),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                Text(acc, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                Text(name,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 16)),
+                Text(acc,
+                    style: const TextStyle(
+                        color: AppColors.textSecondary, fontSize: 13)),
               ],
             ),
           ),
-          if (isSelected) const Icon(Icons.check_circle_rounded, color: AppColors.primaryBlue),
+          if (isSelected)
+            const Icon(Icons.check_circle_rounded,
+                color: AppColors.primaryBlue),
         ],
       ),
     );

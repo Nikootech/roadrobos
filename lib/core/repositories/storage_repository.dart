@@ -20,9 +20,9 @@ class StorageRepository {
     final fullPath = '$path/$fileName';
 
     await _supabase.storage.from(bucket).upload(
-      fullPath,
-      file,
-    );
+          fullPath,
+          file,
+        );
 
     return _supabase.storage.from(bucket).getPublicUrl(fullPath);
   }

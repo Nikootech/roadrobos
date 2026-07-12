@@ -130,7 +130,8 @@ class _StartupErrorScreenState extends State<_StartupErrorScreen> {
                               fontSize: 10,
                               fontWeight: FontWeight.w800,
                               letterSpacing: 1.5,
-                              color: const Color(0xFFFF4E4E).withValues(alpha: 0.8),
+                              color: const Color(0xFFFF4E4E)
+                                  .withValues(alpha: 0.8),
                             ),
                           ),
                           InkWell(
@@ -143,7 +144,9 @@ class _StartupErrorScreenState extends State<_StartupErrorScreen> {
                                   Icon(
                                     _copied ? Icons.check : Icons.copy_rounded,
                                     size: 12,
-                                    color: _copied ? const Color(0xFF00FF88) : Colors.white.withValues(alpha: 0.6),
+                                    color: _copied
+                                        ? const Color(0xFF00FF88)
+                                        : Colors.white.withValues(alpha: 0.6),
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
@@ -151,7 +154,9 @@ class _StartupErrorScreenState extends State<_StartupErrorScreen> {
                                     style: TextStyle(
                                       fontSize: 10,
                                       fontWeight: FontWeight.bold,
-                                      color: _copied ? const Color(0xFF00FF88) : Colors.white.withValues(alpha: 0.6),
+                                      color: _copied
+                                          ? const Color(0xFF00FF88)
+                                          : Colors.white.withValues(alpha: 0.6),
                                     ),
                                   ),
                                 ],
@@ -229,7 +234,7 @@ class _StartupErrorScreenState extends State<_StartupErrorScreen> {
                   ],
                 ),
                 const SizedBox(height: 24),
-                
+
                 // Extra Help message
                 Text(
                   'Check your internet connection and verify that your\n.dart_defines.json parameters are loaded correctly.',

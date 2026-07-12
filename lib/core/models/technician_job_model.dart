@@ -1,4 +1,3 @@
-
 import '../extensions/datetime_extensions.dart';
 
 class FirestoreChecklistItem {
@@ -13,10 +12,10 @@ class FirestoreChecklistItem {
   });
 
   Map<String, dynamic> toMap() => {
-    'task': task,
-    'category': category,
-    'isDone': isDone,
-  };
+        'task': task,
+        'category': category,
+        'isDone': isDone,
+      };
 
   factory FirestoreChecklistItem.fromMap(Map<String, dynamic> map) {
     return FirestoreChecklistItem(
@@ -39,10 +38,10 @@ class FirestoreSparePart {
   });
 
   Map<String, dynamic> toMap() => {
-    'name': name,
-    'qty': qty,
-    'isFound': isFound,
-  };
+        'name': name,
+        'qty': qty,
+        'isFound': isFound,
+      };
 
   factory FirestoreSparePart.fromMap(Map<String, dynamic> map) {
     return FirestoreSparePart(
@@ -65,7 +64,8 @@ class TechnicianJobModel {
   final double progress;
   final List<FirestoreChecklistItem> checklist;
   final List<FirestoreSparePart> parts;
-  final String status; // SCHEDULED, ACCEPTED, IN PROGRESS, QUALITY CHECK, COMPLETED
+  final String
+      status; // SCHEDULED, ACCEPTED, IN PROGRESS, QUALITY CHECK, COMPLETED
   final String price;
   final String? assignedTechId;
   final String? customerId;
@@ -93,23 +93,23 @@ class TechnicianJobModel {
   }) : createdAt = createdAt ?? DateTime.now();
 
   Map<String, dynamic> toMap() => {
-    'estimated_completion': estimatedCompletion,
-    'vehicle_model': vehicleModel,
-    'vehicle_plate': vehiclePlate,
-    'service_type': serviceType,
-    'package_name': packageName,
-    'date': date,
-    'time': time,
-    'progress': progress,
-    'checklist': checklist.map((c) => c.toMap()).toList(),
-    'parts': parts.map((p) => p.toMap()).toList(),
-    'status': status,
-    'price': price,
-    'assigned_tech_id': assignedTechId,
-    'customer_id': customerId,
-    'service_booking_id': serviceBookingId,
-    'created_at': createdAt.utcIso,
-  };
+        'estimated_completion': estimatedCompletion,
+        'vehicle_model': vehicleModel,
+        'vehicle_plate': vehiclePlate,
+        'service_type': serviceType,
+        'package_name': packageName,
+        'date': date,
+        'time': time,
+        'progress': progress,
+        'checklist': checklist.map((c) => c.toMap()).toList(),
+        'parts': parts.map((p) => p.toMap()).toList(),
+        'status': status,
+        'price': price,
+        'assigned_tech_id': assignedTechId,
+        'customer_id': customerId,
+        'service_booking_id': serviceBookingId,
+        'created_at': createdAt.utcIso,
+      };
 
   factory TechnicianJobModel.fromMap(Map<String, dynamic> map, String docId) {
     return TechnicianJobModel(
@@ -123,18 +123,22 @@ class TechnicianJobModel {
       time: map['time'] ?? '',
       progress: (map['progress'] ?? 0.0).toDouble(),
       checklist: (map['checklist'] as List<dynamic>?)
-          ?.map((c) => FirestoreChecklistItem.fromMap(Map<String, dynamic>.from(c)))
-          .toList() ?? [],
+              ?.map((c) =>
+                  FirestoreChecklistItem.fromMap(Map<String, dynamic>.from(c)))
+              .toList() ??
+          [],
       parts: (map['parts'] as List<dynamic>?)
-          ?.map((p) => FirestoreSparePart.fromMap(Map<String, dynamic>.from(p)))
-          .toList() ?? [],
+              ?.map((p) =>
+                  FirestoreSparePart.fromMap(Map<String, dynamic>.from(p)))
+              .toList() ??
+          [],
       status: map['status'] ?? 'SCHEDULED',
       price: map['price'] ?? '₹0',
       assignedTechId: map['assigned_tech_id'],
       customerId: map['customer_id'],
       serviceBookingId: map['service_booking_id'],
-      createdAt: map['created_at'] != null 
-          ? DateTime.parse(map['created_at']) 
+      createdAt: map['created_at'] != null
+          ? DateTime.parse(map['created_at'])
           : DateTime.now(),
     );
   }

@@ -20,7 +20,8 @@ class DocumentsUploadScreen extends ConsumerStatefulWidget {
   const DocumentsUploadScreen({super.key});
 
   @override
-  ConsumerState<DocumentsUploadScreen> createState() => _DocumentsUploadScreenState();
+  ConsumerState<DocumentsUploadScreen> createState() =>
+      _DocumentsUploadScreenState();
 }
 
 class _DocumentsUploadScreenState extends ConsumerState<DocumentsUploadScreen> {
@@ -75,17 +76,22 @@ class _DocumentsUploadScreenState extends ConsumerState<DocumentsUploadScreen> {
   @override
   Widget build(BuildContext context) {
     final int uploadedCount = _docs.values.where((v) => v != null).length;
-    
+
     return Scaffold(
       backgroundColor: AppColors.bgLightAlt,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: AppColors.textPrimary),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded,
+              size: 18, color: AppColors.textPrimary),
           onPressed: () => context.pop(),
         ),
-        title: const Text('Captain Registration', style: TextStyle(color: AppColors.deepNavy, fontWeight: FontWeight.w900, fontSize: 18)),
+        title: const Text('Captain Registration',
+            style: TextStyle(
+                color: AppColors.deepNavy,
+                fontWeight: FontWeight.w900,
+                fontSize: 18)),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
@@ -93,80 +99,127 @@ class _DocumentsUploadScreenState extends ConsumerState<DocumentsUploadScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Header Info
-            Text(
-              'Welcome, Roadrobo!', 
-              style: GoogleFonts.outfit(fontSize: 32, fontWeight: FontWeight.w900, color: AppColors.deepNavy, letterSpacing: -1)
-            ).animate().fadeIn().slideX(),
+            Text('Welcome, Roadrobo!',
+                    style: GoogleFonts.outfit(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.deepNavy,
+                        letterSpacing: -1))
+                .animate()
+                .fadeIn()
+                .slideX(),
             const SizedBox(height: 8),
-            const Text('Complete your profile to start receiving ride requests today.', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w500)),
+            const Text(
+                'Complete your profile to start receiving ride requests today.',
+                style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w500)),
             const SizedBox(height: 32),
-            
+
             // Progress Tracker (Premium Blue Style)
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(28),
-                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 20, offset: const Offset(0, 8))],
-                border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.1)),
-              ),
-              child: Row(
-                children: [
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(28),
+                  boxShadow: [
+                    BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.04),
+                        blurRadius: 20,
+                        offset: const Offset(0, 8))
+                  ],
+                  border: Border.all(
+                      color: AppColors.primaryBlue.withValues(alpha: 0.1)),
+                ),
+                child: Row(children: [
                   Container(
                     padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(color: AppColors.primaryBlue.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(16)),
-                    child: const Icon(Iconsax.verify, color: AppColors.primaryBlue, size: 28),
+                    decoration: BoxDecoration(
+                        color: AppColors.primaryBlue.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(16)),
+                    child: const Icon(Iconsax.verify,
+                        color: AppColors.primaryBlue, size: 28),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Verification Progress', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13, color: AppColors.textPrimary, letterSpacing: 0.2)),
+                      child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                        const Text('Verification Progress',
+                            style: TextStyle(
+                                fontWeight: FontWeight.w900,
+                                fontSize: 13,
+                                color: AppColors.textPrimary,
+                                letterSpacing: 0.2)),
                         const SizedBox(height: 12),
                         ClipRRect(
                           borderRadius: BorderRadius.circular(10),
                           child: LinearProgressIndicator(
-                            value: uploadedCount / 8, 
-                            backgroundColor: AppColors.bgLightGrey, 
-                            valueColor: const AlwaysStoppedAnimation(AppColors.primaryBlue), 
-                            minHeight: 6
-                          ),
+                              value: uploadedCount / 8,
+                              backgroundColor: AppColors.bgLightGrey,
+                              valueColor: const AlwaysStoppedAnimation(
+                                  AppColors.primaryBlue),
+                              minHeight: 6),
                         )
-                      ]
-                    )
-                  ),
+                      ])),
                   const SizedBox(width: 20),
-                  Text('$uploadedCount/8', style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 18, color: AppColors.primaryBlue)),
-                ]
-              )
-            ).animate(delay: 200.ms).fadeIn().slideY(begin: 0.1),
+                  Text('$uploadedCount/8',
+                      style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.w900,
+                          fontSize: 18,
+                          color: AppColors.primaryBlue)),
+                ])).animate(delay: 200.ms).fadeIn().slideY(begin: 0.1),
 
             const SizedBox(height: 40),
-            
+
             // Personal Details
             _buildSectionHeader('Personal Details'),
             const SizedBox(height: 16),
             Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10)],
-              ),
-              child: Column(
-                children: [
-                  CustomTextField(controller: _nameController, hint: 'Full Name', prefixIcon: Iconsax.user, onChanged: (_) => setState((){})),
-                  CustomTextField(controller: _phoneController, hint: 'Phone Number', prefixIcon: Iconsax.mobile, keyboardType: TextInputType.phone, onChanged: (_) => setState((){})),
-                  CustomTextField(controller: _bikeModelController, hint: 'Vehicle Model', prefixIcon: Iconsax.lovely, onChanged: (_) => setState((){})),
-                  CustomTextField(controller: _chassisController, hint: 'Chassis Number', prefixIcon: Iconsax.hashtag, onChanged: (_) => setState((){})),
-                  CustomTextField(controller: _licenseController, hint: 'Driving License No.', prefixIcon: Iconsax.card, onChanged: (_) => setState((){})),
-                ],
-              )
-            ).animate(delay: 300.ms).fadeIn(),
-            
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.02),
+                        blurRadius: 10)
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    CustomTextField(
+                        controller: _nameController,
+                        hint: 'Full Name',
+                        prefixIcon: Iconsax.user,
+                        onChanged: (_) => setState(() {})),
+                    CustomTextField(
+                        controller: _phoneController,
+                        hint: 'Phone Number',
+                        prefixIcon: Iconsax.mobile,
+                        keyboardType: TextInputType.phone,
+                        onChanged: (_) => setState(() {})),
+                    CustomTextField(
+                        controller: _bikeModelController,
+                        hint: 'Vehicle Model',
+                        prefixIcon: Iconsax.lovely,
+                        onChanged: (_) => setState(() {})),
+                    CustomTextField(
+                        controller: _chassisController,
+                        hint: 'Chassis Number',
+                        prefixIcon: Iconsax.hashtag,
+                        onChanged: (_) => setState(() {})),
+                    CustomTextField(
+                        controller: _licenseController,
+                        hint: 'Driving License No.',
+                        prefixIcon: Iconsax.card,
+                        onChanged: (_) => setState(() {})),
+                  ],
+                )).animate(delay: 300.ms).fadeIn(),
+
             const SizedBox(height: 40),
-            
+
             // Document Grid
             _buildSectionHeader('Document Uploads'),
             const SizedBox(height: 16),
@@ -182,51 +235,63 @@ class _DocumentsUploadScreenState extends ConsumerState<DocumentsUploadScreen> {
               itemCount: _docs.keys.length,
               itemBuilder: (context, index) {
                 final String key = _docs.keys.elementAt(index);
-                return _buildUploadZone(key).animate(delay: (400 + index * 50).ms).fadeIn().scale(begin: const Offset(0.9, 0.9));
+                return _buildUploadZone(key)
+                    .animate(delay: (400 + index * 50).ms)
+                    .fadeIn()
+                    .scale(begin: const Offset(0.9, 0.9));
               },
             ),
-            
+
             const SizedBox(height: 48),
-            
+
             // Submit Button
             SizedBox(
               width: double.infinity,
               child: CustomButton(
                 label: 'SUBMIT APPLICATION',
-                onPressed: _isAllValid ? () async {
-                  // ignore: unawaited_futures
-                  HapticFeedback.heavyImpact();
-                  
-                  // Show loading indicator or handle result
-                  final userState = ref.read(userProvider);
-                  if (userState.user == null) return;
-                  
-                  final success = await ref.read(driverRepositoryProvider).registerDriver(
-                    uid: userState.user!.id,
-                    name: _nameController.text,
-                    phone: _phoneController.text,
-                    vehicleModel: _bikeModelController.text,
-                    chassisNumber: _chassisController.text,
-                    licenseNumber: _licenseController.text,
-                  );
+                onPressed: _isAllValid
+                    ? () async {
+                        // ignore: unawaited_futures
+                        HapticFeedback.heavyImpact();
 
-                  if (!mounted) return;
+                        // Show loading indicator or handle result
+                        final userState = ref.read(userProvider);
+                        if (userState.user == null) return;
 
-                  if (success) {
-                    if (context.mounted) {
-                      context.pushReplacement('/driver-verification-pending');
-                    }
-                  } else {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Submission failed. Please try again.'), backgroundColor: AppColors.dangerRed),
-                      );
-                    }
-                  }
-                } : null,
+                        final success = await ref
+                            .read(driverRepositoryProvider)
+                            .registerDriver(
+                              uid: userState.user!.id,
+                              name: _nameController.text,
+                              phone: _phoneController.text,
+                              vehicleModel: _bikeModelController.text,
+                              chassisNumber: _chassisController.text,
+                              licenseNumber: _licenseController.text,
+                            );
+
+                        if (!mounted) return;
+
+                        if (success) {
+                          if (context.mounted) {
+                            context.pushReplacement(
+                                '/driver-verification-pending');
+                          }
+                        } else {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text(
+                                      'Submission failed. Please try again.'),
+                                  backgroundColor: AppColors.dangerRed),
+                            );
+                          }
+                        }
+                      }
+                    : null,
                 backgroundColor: AppColors.deepNavy,
               ),
-            ).animate(target: _isAllValid ? 1 : 0).scale(begin: const Offset(0.98, 0.98), curve: Curves.easeOutBack),
+            ).animate(target: _isAllValid ? 1 : 0).scale(
+                begin: const Offset(0.98, 0.98), curve: Curves.easeOutBack),
             const SizedBox(height: 40),
           ],
         ),
@@ -237,7 +302,11 @@ class _DocumentsUploadScreenState extends ConsumerState<DocumentsUploadScreen> {
   Widget _buildSectionHeader(String title) {
     return Text(
       title.toUpperCase(),
-      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: AppColors.textSecondary, letterSpacing: 1.5),
+      style: const TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w900,
+          color: AppColors.textSecondary,
+          letterSpacing: 1.5),
     );
   }
 
@@ -256,7 +325,11 @@ class _DocumentsUploadScreenState extends ConsumerState<DocumentsUploadScreen> {
           children: [
             Image.file(File(file.path), fit: BoxFit.cover),
             Container(color: AppColors.deepNavy.withValues(alpha: 0.7)),
-            const Center(child: Icon(Iconsax.tick_circle, color: Colors.white, size: 32)).animate().scale(curve: Curves.elasticOut),
+            const Center(
+                    child: Icon(Iconsax.tick_circle,
+                        color: Colors.white, size: 32))
+                .animate()
+                .scale(curve: Curves.elasticOut),
           ],
         ),
       );
@@ -266,11 +339,18 @@ class _DocumentsUploadScreenState extends ConsumerState<DocumentsUploadScreen> {
         children: [
           Container(
             padding: const EdgeInsets.all(10),
-            decoration: const BoxDecoration(color: AppColors.bgLightGrey, shape: BoxShape.circle),
-            child: const Icon(Iconsax.add, color: AppColors.primaryBlue, size: 24),
+            decoration: const BoxDecoration(
+                color: AppColors.bgLightGrey, shape: BoxShape.circle),
+            child:
+                const Icon(Iconsax.add, color: AppColors.primaryBlue, size: 24),
           ),
           const SizedBox(height: 12),
-          Text(title, textAlign: TextAlign.center, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+          Text(title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary)),
         ],
       );
     }
@@ -279,14 +359,18 @@ class _DocumentsUploadScreenState extends ConsumerState<DocumentsUploadScreen> {
       onTap: () => _pickDocument(title),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: file != null ? AppColors.primaryBlue : Colors.transparent, 
-            width: 2
-          ),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4))]
-        ),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+                color:
+                    file != null ? AppColors.primaryBlue : Colors.transparent,
+                width: 2),
+            boxShadow: [
+              BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.02),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4))
+            ]),
         child: content,
       ),
     );

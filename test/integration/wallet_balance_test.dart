@@ -9,7 +9,8 @@ import 'package:roadrobos/core/repositories/wallet_repository.dart';
 // ── Mock classes ─────────────────────────────────────────────────────────────
 class MockSupabaseClient extends Mock implements SupabaseClient {}
 
-class MockPostgrestFilterBuilder extends Mock implements PostgrestFilterBuilder<dynamic> {
+class MockPostgrestFilterBuilder extends Mock
+    implements PostgrestFilterBuilder<dynamic> {
   final FutureOr<dynamic> Function() handler;
 
   MockPostgrestFilterBuilder(this.handler);
@@ -20,7 +21,7 @@ class MockPostgrestFilterBuilder extends Mock implements PostgrestFilterBuilder<
     Function? onError,
   }) {
     final completer = Completer<R>();
-    
+
     Future.sync(() => handler()).then((result) {
       Future.sync(() => onValue(result)).then(
         (val) => completer.complete(val),
@@ -36,7 +37,7 @@ class MockPostgrestFilterBuilder extends Mock implements PostgrestFilterBuilder<
         completer.completeError(e, st);
       }
     });
-    
+
     return completer.future;
   }
 }
@@ -74,7 +75,8 @@ void main() {
             'update_wallet_balance',
             params: any(named: 'params'),
           )).thenAnswer((invocation) {
-        lastRpcParams = invocation.namedArguments[const Symbol('params')] as Map<String, dynamic>;
+        lastRpcParams = invocation.namedArguments[const Symbol('params')]
+            as Map<String, dynamic>;
         return mockRpcFilterBuilder;
       });
 
@@ -85,7 +87,9 @@ void main() {
       expect(mockBalance, equals(150.0));
     });
 
-    test('debiting more than balance throws InsufficientBalanceException and balance remains unchanged', () async {
+    test(
+        'debiting more than balance throws InsufficientBalanceException and balance remains unchanged',
+        () async {
       // 1. Mock the update_wallet_balance RPC call to return a mock builder executing debit logic
       final mockRpcFilterBuilder = MockPostgrestFilterBuilder(() {
         final amount = lastRpcParams['amount'] as double;
@@ -106,7 +110,8 @@ void main() {
             'update_wallet_balance',
             params: any(named: 'params'),
           )).thenAnswer((invocation) {
-        lastRpcParams = invocation.namedArguments[const Symbol('params')] as Map<String, dynamic>;
+        lastRpcParams = invocation.namedArguments[const Symbol('params')]
+            as Map<String, dynamic>;
         return mockRpcFilterBuilder;
       });
 
@@ -120,7 +125,9 @@ void main() {
       expect(mockBalance, equals(100.0));
     });
 
-    test('concurrent debit race condition - only one succeeds if total exceeds balance', () async {
+    test(
+        'concurrent debit race condition - only one succeeds if total exceeds balance',
+        () async {
       // 1. Mock the update_wallet_balance RPC with lock emulation and lag
       final mockRpcFilterBuilder = MockPostgrestFilterBuilder(() async {
         final amount = lastRpcParams['amount'] as double;
@@ -148,30 +155,34 @@ void main() {
             'update_wallet_balance',
             params: any(named: 'params'),
           )).thenAnswer((invocation) {
-        lastRpcParams = invocation.namedArguments[const Symbol('params')] as Map<String, dynamic>;
+        lastRpcParams = invocation.namedArguments[const Symbol('params')]
+            as Map<String, dynamic>;
         return mockRpcFilterBuilder;
       });
 
       // 2. Dispatch two concurrent debits: 60.0 and 50.0 (Total: 110.0, Balance: 100.0)
       final results = <dynamic>[];
-      
+
       await Future.wait([
         walletRepository.payFromWallet('user_123', 60.0, 'Debit A').then(
-          (success) => results.add(success),
-          onError: (e) => results.add(e),
-        ),
+              (success) => results.add(success),
+              onError: (e) => results.add(e),
+            ),
         walletRepository.payFromWallet('user_123', 50.0, 'Debit B').then(
-          (success) => results.add(success),
-          onError: (e) => results.add(e),
-        ),
+              (success) => results.add(success),
+              onError: (e) => results.add(e),
+            ),
       ]);
 
       // 3. Verify that one succeeded (returned true) and the other failed (threw InsufficientBalanceException)
       final successCount = results.where((r) => r == true).length;
-      final failureCount = results.whereType<InsufficientBalanceException>().length;
+      final failureCount =
+          results.whereType<InsufficientBalanceException>().length;
 
-      expect(successCount, equals(1), reason: 'Exactly one concurrent debit must succeed');
-      expect(failureCount, equals(1), reason: 'Exactly one concurrent debit must fail');
+      expect(successCount, equals(1),
+          reason: 'Exactly one concurrent debit must succeed');
+      expect(failureCount, equals(1),
+          reason: 'Exactly one concurrent debit must fail');
 
       // 4. Assert that the balance never fell below zero (it should be either 40.0 or 50.0)
       expect(mockBalance, isNot(isNegative));

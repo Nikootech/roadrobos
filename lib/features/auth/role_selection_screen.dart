@@ -13,7 +13,8 @@ class RoleSelectionScreen extends ConsumerStatefulWidget {
   const RoleSelectionScreen({super.key});
 
   @override
-  ConsumerState<RoleSelectionScreen> createState() => _RoleSelectionScreenState();
+  ConsumerState<RoleSelectionScreen> createState() =>
+      _RoleSelectionScreenState();
 }
 
 class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen> {
@@ -27,10 +28,10 @@ class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen> {
 
   Future<void> _handleContinue() async {
     if (_selectedRole == null) return;
-    
+
     // Save selection
     await ref.read(localStorageServiceProvider).setSelectedRole(_selectedRole!);
-    
+
     if (mounted) {
       NavHelpers.go(context, '/auth/login');
     }
@@ -94,7 +95,10 @@ class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen> {
                         color: const Color(0xFF0F172A),
                         height: 1.2,
                       ),
-                    ).animate().fadeIn(duration: 500.ms).slideY(begin: 0.2, end: 0),
+                    )
+                        .animate()
+                        .fadeIn(duration: 500.ms)
+                        .slideY(begin: 0.2, end: 0),
                     const SizedBox(height: 8),
                     const Text(
                       'Select your profile type to continue. You can change this or add roles later.',
@@ -103,15 +107,19 @@ class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen> {
                         color: Color(0xFF64748B),
                         height: 1.4,
                       ),
-                    ).animate(delay: 100.ms).fadeIn(duration: 500.ms).slideY(begin: 0.2, end: 0),
-                    
+                    )
+                        .animate(delay: 100.ms)
+                        .fadeIn(duration: 500.ms)
+                        .slideY(begin: 0.2, end: 0),
+
                     const SizedBox(height: 36),
 
                     // Role Cards
                     _buildRoleCard(
                       role: 'customer',
                       title: 'Customer',
-                      description: 'Book immediate/scheduled rides or local vehicle repair and services.',
+                      description:
+                          'Book immediate/scheduled rides or local vehicle repair and services.',
                       icon: Iconsax.user,
                       activeColor: AppColors.primaryBlue,
                       gradient: const LinearGradient(
@@ -119,14 +127,18 @@ class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen> {
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
-                    ).animate(delay: 200.ms).fadeIn(duration: 500.ms).slideX(begin: 0.1, end: 0),
+                    )
+                        .animate(delay: 200.ms)
+                        .fadeIn(duration: 500.ms)
+                        .slideX(begin: 0.1, end: 0),
 
                     const SizedBox(height: 18),
 
                     _buildRoleCard(
                       role: 'driver',
                       title: 'Rider / Driver',
-                      description: 'Register as an onboarded driver and earn by accepting trips and rides.',
+                      description:
+                          'Register as an onboarded driver and earn by accepting trips and rides.',
                       icon: Iconsax.car,
                       activeColor: AppColors.accentOrange,
                       gradient: const LinearGradient(
@@ -134,14 +146,18 @@ class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen> {
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
-                    ).animate(delay: 300.ms).fadeIn(duration: 500.ms).slideX(begin: 0.1, end: 0),
+                    )
+                        .animate(delay: 300.ms)
+                        .fadeIn(duration: 500.ms)
+                        .slideX(begin: 0.1, end: 0),
 
                     const SizedBox(height: 18),
 
                     _buildRoleCard(
                       role: 'technician',
                       title: 'Service Partner / Tech',
-                      description: 'Fulfill service requests, create job cards, and manage spare parts.',
+                      description:
+                          'Fulfill service requests, create job cards, and manage spare parts.',
                       icon: Iconsax.setting_2,
                       activeColor: AppColors.successGreen,
                       gradient: const LinearGradient(
@@ -149,14 +165,18 @@ class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen> {
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
-                    ).animate(delay: 400.ms).fadeIn(duration: 500.ms).slideX(begin: 0.1, end: 0),
+                    )
+                        .animate(delay: 400.ms)
+                        .fadeIn(duration: 500.ms)
+                        .slideX(begin: 0.1, end: 0),
 
                     const SizedBox(height: 18),
 
                     _buildRoleCard(
                       role: 'admin',
                       title: 'Core Team',
-                      description: 'Internal staff, area managers, and administrators.',
+                      description:
+                          'Internal staff, area managers, and administrators.',
                       icon: Iconsax.briefcase,
                       activeColor: const Color(0xFF6366F1),
                       gradient: const LinearGradient(
@@ -164,7 +184,10 @@ class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen> {
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
-                    ).animate(delay: 500.ms).fadeIn(duration: 500.ms).slideX(begin: 0.1, end: 0),
+                    )
+                        .animate(delay: 500.ms)
+                        .fadeIn(duration: 500.ms)
+                        .slideX(begin: 0.1, end: 0),
 
                     const SizedBox(height: 40),
                   ],
@@ -268,7 +291,9 @@ class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen> {
                     description,
                     style: TextStyle(
                       fontSize: 14,
-                      color: isSelected ? const Color(0xFF334155) : const Color(0xFF64748B),
+                      color: isSelected
+                          ? const Color(0xFF334155)
+                          : const Color(0xFF64748B),
                       height: 1.35,
                     ),
                   ),

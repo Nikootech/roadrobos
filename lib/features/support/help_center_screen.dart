@@ -12,57 +12,69 @@ class HelpCenterScreen extends StatelessWidget {
     'Getting Started': [
       {
         'q': 'How do I book a ride?',
-        'a': 'To book a ride, go to the Rides section from the Home screen, search and select your pickup and dropoff locations, choose your preferred vehicle class (Bike, Auto, or Cab), and tap "Book Ride".'
+        'a':
+            'To book a ride, go to the Rides section from the Home screen, search and select your pickup and dropoff locations, choose your preferred vehicle class (Bike, Auto, or Cab), and tap "Book Ride".'
       },
       {
         'q': 'How do I place a delivery order?',
-        'a': 'Navigate to the Delivery section, fill in the pickup and dropoff addresses, describe your package type, specify the estimated weight, review the dynamic price calculation, and click "Place Delivery Order".'
+        'a':
+            'Navigate to the Delivery section, fill in the pickup and dropoff addresses, describe your package type, specify the estimated weight, review the dynamic price calculation, and click "Place Delivery Order".'
       },
       {
         'q': 'What services are available on RoAdRoBos?',
-        'a': 'RoAdRoBos offers comprehensive mobility and vehicle services: ride-hailing (taxi), instant package delivery, professional vehicle servicing (bike and car maintenance), and long-term vehicle rentals.'
+        'a':
+            'RoAdRoBos offers comprehensive mobility and vehicle services: ride-hailing (taxi), instant package delivery, professional vehicle servicing (bike and car maintenance), and long-term vehicle rentals.'
       },
     ],
     'Booking & Rides': [
       {
         'q': 'Can I schedule a booking in advance?',
-        'a': 'Yes, you can schedule services in advance by going to the specific service page and choosing the "Schedule" option, allowing you to select your preferred date and time slot.'
+        'a':
+            'Yes, you can schedule services in advance by going to the specific service page and choosing the "Schedule" option, allowing you to select your preferred date and time slot.'
       },
       {
         'q': 'What is the cancellation policy?',
-        'a': 'You can cancel a booking for free before a driver/service provider accepts your request. If cancelled after acceptance, a nominal cancellation fee may apply depending on the time elapsed.'
+        'a':
+            'You can cancel a booking for free before a driver/service provider accepts your request. If cancelled after acceptance, a nominal cancellation fee may apply depending on the time elapsed.'
       },
       {
         'q': 'How is the ride fare determined?',
-        'a': 'Ride fares are calculated dynamically using a base fare plus a charge per kilometer of distance and minute of travel duration. Fares may vary depending on traffic conditions and vehicle type.'
+        'a':
+            'Ride fares are calculated dynamically using a base fare plus a charge per kilometer of distance and minute of travel duration. Fares may vary depending on traffic conditions and vehicle type.'
       },
     ],
     'Wallet & Billing': [
       {
         'q': 'How do I add money to my wallet?',
-        'a': 'Open the Wallet screen, tap the "Topup" button, enter your desired amount, and proceed through our secured payment gateway using UPI, card, or net banking.'
+        'a':
+            'Open the Wallet screen, tap the "Topup" button, enter your desired amount, and proceed through our secured payment gateway using UPI, card, or net banking.'
       },
       {
         'q': 'Can I transfer wallet balance to a friend?',
-        'a': 'Yes, you can easily transfer funds from your wallet to any other registered user by entering their phone number on the "Transfer" screen.'
+        'a':
+            'Yes, you can easily transfer funds from your wallet to any other registered user by entering their phone number on the "Transfer" screen.'
       },
       {
         'q': 'Is my payment secure?',
-        'a': 'Absolutely. All transactions and card details are encrypted using banking-grade security standards via our integration with secure payment processors.'
+        'a':
+            'Absolutely. All transactions and card details are encrypted using banking-grade security standards via our integration with secure payment processors.'
       },
     ],
     'Account Security': [
       {
         'q': 'How do I update my profile or password?',
-        'a': 'Navigate to Profile > Account Settings. From there, you can update your personal information, manage saved addresses, or safely change your account password.'
+        'a':
+            'Navigate to Profile > Account Settings. From there, you can update your personal information, manage saved addresses, or safely change your account password.'
       },
       {
         'q': 'How do I set up Emergency SOS?',
-        'a': 'Go to Profile > SOS Setup. You can add up to 3 emergency contacts. During a ride or delivery, tapping the SOS icon will immediately share your live location via SMS.'
+        'a':
+            'Go to Profile > SOS Setup. You can add up to 3 emergency contacts. During a ride or delivery, tapping the SOS icon will immediately share your live location via SMS.'
       },
       {
         'q': 'What should I do if I suspect fraud?',
-        'a': 'If you notice any unauthorized transaction or suspicious activity, immediately tap "Contact Support" to chat live with our security response team, or call our emergency hotline.'
+        'a':
+            'If you notice any unauthorized transaction or suspicious activity, immediately tap "Contact Support" to chat live with our security response team, or call our emergency hotline.'
       },
     ],
   };
@@ -118,7 +130,8 @@ class HelpCenterScreen extends StatelessWidget {
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close_rounded, color: AppColors.textSecondary),
+                      icon: const Icon(Icons.close_rounded,
+                          color: AppColors.textSecondary),
                       onPressed: () => Navigator.pop(context),
                     ),
                   ],
@@ -128,11 +141,13 @@ class HelpCenterScreen extends StatelessWidget {
               // FAQ List
               Expanded(
                 child: ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                   itemCount: faqs.length,
                   itemBuilder: (context, index) {
                     final faq = faqs[index];
-                    return _FAQExpansionTile(question: faq['q']!, answer: faq['a']!);
+                    return _FAQExpansionTile(
+                        question: faq['q']!, answer: faq['a']!);
                   },
                 ),
               ),
@@ -198,28 +213,34 @@ class HelpCenterScreen extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                 ),
                 decoration: InputDecoration(
-                  prefixIcon: const Icon(Iconsax.search_normal_1, size: 20, color: Color(0xFF6366F1)),
+                  prefixIcon: const Icon(Iconsax.search_normal_1,
+                      size: 20, color: Color(0xFF6366F1)),
                   hintText: 'Search for help...',
-                  hintStyle: const TextStyle(color: AppColors.textMuted, fontWeight: FontWeight.w500),
+                  hintStyle: const TextStyle(
+                      color: AppColors.textMuted, fontWeight: FontWeight.w500),
                   filled: true,
                   fillColor: Colors.white,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
+                  contentPadding:
+                      const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(20),
-                    borderSide: BorderSide(color: AppColors.border.withValues(alpha: 0.8)),
+                    borderSide: BorderSide(
+                        color: AppColors.border.withValues(alpha: 0.8)),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(20),
-                    borderSide: BorderSide(color: AppColors.border.withValues(alpha: 0.8)),
+                    borderSide: BorderSide(
+                        color: AppColors.border.withValues(alpha: 0.8)),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(20),
-                    borderSide: const BorderSide(color: Color(0xFF6366F1), width: 1.5),
+                    borderSide:
+                        const BorderSide(color: Color(0xFF6366F1), width: 1.5),
                   ),
                 ),
               ),
             ).animate().fadeIn(duration: 300.ms).slideY(begin: -0.05),
-            
+
             const SizedBox(height: 32),
             const Text(
               'Popular Categories',
@@ -269,7 +290,7 @@ class HelpCenterScreen extends StatelessWidget {
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 32),
             _buildActionCard(
               context,
@@ -387,7 +408,8 @@ class HelpCenterScreen extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
+              border:
+                  Border.all(color: AppColors.border.withValues(alpha: 0.6)),
             ),
             child: Row(
               children: [
@@ -426,17 +448,25 @@ class HelpCenterScreen extends StatelessWidget {
                                 shape: BoxShape.circle,
                               ),
                             )
-                            .animate(onPlay: (controller) => controller.repeat(reverse: true))
-                            .scale(begin: const Offset(0.8, 0.8), end: const Offset(1.3, 1.3), duration: 800.ms)
-                            .fadeIn(begin: 0.6, duration: 800.ms),
+                                .animate(
+                                    onPlay: (controller) =>
+                                        controller.repeat(reverse: true))
+                                .scale(
+                                    begin: const Offset(0.8, 0.8),
+                                    end: const Offset(1.3, 1.3),
+                                    duration: 800.ms)
+                                .fadeIn(begin: 0.6, duration: 800.ms),
                             const SizedBox(width: 6),
                           ],
                           Text(
                             subtitle,
                             style: TextStyle(
-                              color: showPulse ? const Color(0xFF059669) : AppColors.textSecondary,
+                              color: showPulse
+                                  ? const Color(0xFF059669)
+                                  : AppColors.textSecondary,
                               fontSize: 12,
-                              fontWeight: showPulse ? FontWeight.w700 : FontWeight.w500,
+                              fontWeight:
+                                  showPulse ? FontWeight.w700 : FontWeight.w500,
                             ),
                           ),
                         ],
@@ -444,7 +474,9 @@ class HelpCenterScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-                Icon(Icons.arrow_forward_ios_rounded, size: 16, color: AppColors.textMuted.withValues(alpha: 0.6)),
+                Icon(Icons.arrow_forward_ios_rounded,
+                    size: 16,
+                    color: AppColors.textMuted.withValues(alpha: 0.6)),
               ],
             ),
           ),
@@ -475,7 +507,9 @@ class _FAQExpansionTileState extends State<_FAQExpansionTile> {
         color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: _isExpanded ? const Color(0xFF6366F1).withValues(alpha: 0.15) : Colors.transparent,
+          color: _isExpanded
+              ? const Color(0xFF6366F1).withValues(alpha: 0.15)
+              : Colors.transparent,
           width: 1.5,
         ),
       ),
@@ -492,7 +526,8 @@ class _FAQExpansionTileState extends State<_FAQExpansionTile> {
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w700,
-              color: _isExpanded ? const Color(0xFF6366F1) : AppColors.textPrimary,
+              color:
+                  _isExpanded ? const Color(0xFF6366F1) : AppColors.textPrimary,
             ),
           ),
           iconColor: const Color(0xFF6366F1),

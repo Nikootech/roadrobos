@@ -25,13 +25,13 @@ class ChatScreen extends ConsumerStatefulWidget {
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  
+
   List<ChatMessage> _messages = [];
   bool _isLoading = false;
   bool _hasMore = true;
   int _offset = 0;
   final int _limit = 30;
-  
+
   RealtimeChannel? _chatChannel;
   RealtimeChannel? _presenceChannel;
   bool _isTyping = false;
@@ -43,8 +43,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   bool _isValidUuid(String str) {
     if (str.isEmpty) return false;
     final uuidRegex = RegExp(
-      r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
-    );
+        r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
     return uuidRegex.hasMatch(str);
   }
 
@@ -104,16 +103,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     if (widget.bookingId.isEmpty || !_isValidUuid(widget.bookingId)) return;
     if (_isLoading || !_hasMore) return;
     setState(() => _isLoading = true);
-    
+
     try {
       final olderMessages = await _chatRepository.getMessageHistory(
         bookingId: widget.bookingId,
         limit: _limit,
         offset: _offset,
       );
-      
+
       setState(() {
-        _messages.addAll(olderMessages); // Append to the end of the list (older messages)
+        _messages.addAll(
+            olderMessages); // Append to the end of the list (older messages)
         _offset += olderMessages.length;
         _hasMore = olderMessages.length == _limit;
         _isLoading = false;
@@ -143,7 +143,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               _messages.insert(0, newMessage);
               _offset++;
             });
-            if (newMessage.receiverId == Supabase.instance.client.auth.currentUser?.id) {
+            if (newMessage.receiverId ==
+                Supabase.instance.client.auth.currentUser?.id) {
               _markAsRead();
             }
           },
@@ -156,22 +157,24 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final userId = Supabase.instance.client.auth.currentUser?.id;
     if (userId == null) return;
 
-    _presenceChannel = Supabase.instance.client.channel('presence:chat:${widget.bookingId}');
-    
+    _presenceChannel =
+        Supabase.instance.client.channel('presence:chat:${widget.bookingId}');
+
     _presenceChannel?.onPresenceSync((payload) {
       final presenceState = _presenceChannel?.presenceState();
       bool receiverTyping = false;
-      
+
       if (presenceState != null) {
         for (var state in presenceState) {
           for (var presence in state.presences) {
-            if (presence.payload['user_id'] == widget.receiverId && presence.payload['is_typing'] == true) {
+            if (presence.payload['user_id'] == widget.receiverId &&
+                presence.payload['is_typing'] == true) {
               receiverTyping = true;
             }
           }
         }
       }
-      
+
       if (mounted && _isReceiverTyping != receiverTyping) {
         setState(() {
           _isReceiverTyping = receiverTyping;
@@ -267,9 +270,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             if (_hasMore)
               TextButton(
                 onPressed: _loadEarlierMessages,
-                child: _isLoading 
-                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Text('Load earlier'),
+                child: _isLoading
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Text('Load earlier'),
               ),
             Expanded(
               child: ListView.builder(
@@ -281,10 +287,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   final isMe = message.senderId == currentUserId;
 
                   return Align(
-                    alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+                    alignment:
+                        isMe ? Alignment.centerRight : Alignment.centerLeft,
                     child: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 10),
                       decoration: BoxDecoration(
                         color: isMe ? Colors.blue : Colors.grey[300],
                         borderRadius: BorderRadius.circular(20).copyWith(
@@ -294,7 +303,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       ),
                       child: Text(
                         message.content,
-                        style: TextStyle(color: isMe ? Colors.white : Colors.black87),
+                        style: TextStyle(
+                            color: isMe ? Colors.white : Colors.black87),
                       ),
                     ),
                   );
@@ -314,7 +324,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(24),
                         ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
                       ),
                       textInputAction: TextInputAction.send,
                       onSubmitted: (_) => _sendMessage(),

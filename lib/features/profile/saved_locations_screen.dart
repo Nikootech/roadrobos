@@ -25,10 +25,13 @@ class SavedLocationsScreen extends ConsumerWidget {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: AppColors.textPrimary),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded,
+              size: 18, color: AppColors.textPrimary),
           onPressed: () => context.pop(),
         ),
-        title: const Text('Saved Locations', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
+        title: const Text('Saved Locations',
+            style: TextStyle(
+                color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -40,19 +43,20 @@ class SavedLocationsScreen extends ConsumerWidget {
                 child: Center(
                   child: Column(
                     children: [
-                      Icon(Icons.location_off_rounded, size: 80, color: AppColors.textMuted.withValues(alpha: 0.2)),
+                      Icon(Icons.location_off_rounded,
+                          size: 80,
+                          color: AppColors.textMuted.withValues(alpha: 0.2)),
                       const SizedBox(height: 16),
-                      const Text('No saved locations yet', style: TextStyle(color: AppColors.textSecondary)),
+                      const Text('No saved locations yet',
+                          style: TextStyle(color: AppColors.textSecondary)),
                     ],
                   ),
                 ),
               ),
-            
             ...locations.map((loc) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: _buildLocationTile(context, ref, loc),
-            )),
-            
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _buildLocationTile(context, ref, loc),
+                )),
             const SizedBox(height: 48),
             TextButton.icon(
               onPressed: () => _showAddAddressSheet(context, ref),
@@ -60,7 +64,8 @@ class SavedLocationsScreen extends ConsumerWidget {
               label: const Text('ADD NEW ADDRESS'),
               style: TextButton.styleFrom(
                 foregroundColor: AppColors.primaryBlue,
-                textStyle: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1),
+                textStyle: const TextStyle(
+                    fontWeight: FontWeight.bold, letterSpacing: 1),
               ),
             ),
           ],
@@ -72,7 +77,7 @@ class SavedLocationsScreen extends ConsumerWidget {
   void _showAddAddressSheet(BuildContext context, WidgetRef ref) {
     final titleController = TextEditingController();
     final addressController = TextEditingController();
-    
+
     // We use a ValueNotifier for the local loading state of the GPS fetch
     final isLoadingAddress = ValueNotifier<bool>(false);
 
@@ -81,20 +86,31 @@ class SavedLocationsScreen extends ConsumerWidget {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
-        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom + 24, left: 24, right: 24, top: 24),
+        decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
+        padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+            left: 24,
+            right: 24,
+            top: 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Add New Address', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.deepNavy)),
+            const Text('Add New Address',
+                style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.deepNavy)),
             const SizedBox(height: 24),
             TextField(
               controller: titleController,
               decoration: InputDecoration(
                 labelText: 'Address Name',
                 hintText: 'e.g. Home, Office',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
             ),
             const SizedBox(height: 16),
@@ -106,13 +122,22 @@ class SavedLocationsScreen extends ConsumerWidget {
                   decoration: InputDecoration(
                     labelText: 'Full Address',
                     hintText: 'Street, Building, City...',
-                    suffixIcon: loading 
-                        ? const Padding(padding: EdgeInsets.all(12), child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)))
+                    suffixIcon: loading
+                        ? const Padding(
+                            padding: EdgeInsets.all(12),
+                            child: SizedBox(
+                                width: 20,
+                                height: 20,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2)))
                         : IconButton(
-                            icon: const Icon(Icons.my_location_rounded, color: AppColors.primaryBlue),
-                            onPressed: () => _getCurrentAddress(context, addressController, isLoadingAddress),
+                            icon: const Icon(Icons.my_location_rounded,
+                                color: AppColors.primaryBlue),
+                            onPressed: () => _getCurrentAddress(
+                                context, addressController, isLoadingAddress),
                           ),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12)),
                   ),
                   maxLines: 2,
                 );
@@ -123,8 +148,11 @@ class SavedLocationsScreen extends ConsumerWidget {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () async {
-                  if (titleController.text.isEmpty || addressController.text.isEmpty) return;
-                  
+                  if (titleController.text.isEmpty ||
+                      addressController.text.isEmpty) {
+                    return;
+                  }
+
                   final newLoc = SavedLocation(
                     id: DateTime.now().millisecondsSinceEpoch.toString(),
                     title: titleController.text,
@@ -134,20 +162,29 @@ class SavedLocationsScreen extends ConsumerWidget {
                   final user = ref.read(userProvider).user;
                   if (user != null) {
                     final updatedLocations = [...user.savedLocations, newLoc];
-                    await ref.read(userRepositoryProvider).updateField(user.id, 'saved_locations', updatedLocations.map((x) => x.toMap()).toList());
-                    await ref.read(userProvider.notifier).fetchUserProfile(user.id);
+                    await ref.read(userRepositoryProvider).updateField(
+                        user.id,
+                        'saved_locations',
+                        updatedLocations.map((x) => x.toMap()).toList());
+                    await ref
+                        .read(userProvider.notifier)
+                        .fetchUserProfile(user.id);
                     if (context.mounted) {
                       Navigator.pop(context);
-                      NavHelpers.showSuccess(context, 'Address added successfully!');
+                      NavHelpers.showSuccess(
+                          context, 'Address added successfully!');
                     }
                   }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryBlue,
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16)),
                 ),
-                child: const Text('Save Address', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                child: const Text('Save Address',
+                    style: TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.bold)),
               ),
             ),
           ],
@@ -156,29 +193,34 @@ class SavedLocationsScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _getCurrentAddress(BuildContext context, TextEditingController controller, ValueNotifier<bool> loading) async {
+  Future<void> _getCurrentAddress(BuildContext context,
+      TextEditingController controller, ValueNotifier<bool> loading) async {
     try {
       loading.value = true;
-      
+
       // 1. Check & Request Permissions
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) return;
       }
-      
+
       if (permission == LocationPermission.deniedForever) {
-        if (context.mounted) NavHelpers.showError(context, 'Location permissions are permanently denied.');
+        if (context.mounted) {
+          NavHelpers.showError(
+              context, 'Location permissions are permanently denied.');
+        }
         return;
       }
 
       // 2. Get Current Position
       final position = await Geolocator.getCurrentPosition();
-      
+
       // 3. Reverse Geocode using Nominatim (OpenStreetMap)
       // Note: We use an explicit User-Agent as per Nominatim policy
       final response = await http.get(
-        Uri.parse('https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.latitude}&lon=${position.longitude}'),
+        Uri.parse(
+            'https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.latitude}&lon=${position.longitude}'),
         headers: {'User-Agent': 'RoAdRoBos_App'},
       );
 
@@ -188,32 +230,42 @@ class SavedLocationsScreen extends ConsumerWidget {
         if (address != null) {
           controller.text = address;
           if (context.mounted) {
-            NavHelpers.showSuccess(context, 'Real-time address fetched successfully!');
+            NavHelpers.showSuccess(
+                context, 'Real-time address fetched successfully!');
           }
         }
       } else {
         throw Exception('Failed to fetch address');
       }
     } catch (e) {
-      if (context.mounted) NavHelpers.showError(context, 'Could not fetch real-time address. Please enter manually.');
+      if (context.mounted) {
+        NavHelpers.showError(context,
+            'Could not fetch real-time address. Please enter manually.');
+      }
     } finally {
       loading.value = false;
     }
   }
 
-  Widget _buildLocationTile(BuildContext context, WidgetRef ref, SavedLocation loc) {
+  Widget _buildLocationTile(
+      BuildContext context, WidgetRef ref, SavedLocation loc) {
     IconData icon = Icons.location_on_rounded;
     if (loc.title.toLowerCase().contains('home')) icon = Icons.home_rounded;
-    if (loc.title.toLowerCase().contains('work') || loc.title.toLowerCase().contains('office')) icon = Icons.business_rounded;
+    if (loc.title.toLowerCase().contains('work') ||
+        loc.title.toLowerCase().contains('office')) {
+      icon = Icons.business_rounded;
+    }
 
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(
+          color: Colors.white, borderRadius: BorderRadius.circular(16)),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(10),
-            decoration: const BoxDecoration(color: AppColors.bgLightGrey, shape: BoxShape.circle),
+            decoration: const BoxDecoration(
+                color: AppColors.bgLightGrey, shape: BoxShape.circle),
             child: Icon(icon, color: AppColors.primaryBlue, size: 20),
           ),
           const SizedBox(width: 16),
@@ -221,24 +273,37 @@ class SavedLocationsScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(loc.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                Text(loc.address, style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
+                Text(loc.title,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 14)),
+                Text(loc.address,
+                    style: const TextStyle(
+                        color: AppColors.textSecondary, fontSize: 11)),
               ],
             ),
           ),
           PopupMenuButton(
-            icon: const Icon(Icons.more_vert, size: 18, color: AppColors.textMuted),
+            icon: const Icon(Icons.more_vert,
+                size: 18, color: AppColors.textMuted),
             itemBuilder: (context) => [
               PopupMenuItem(
                 onTap: () async {
                   final user = ref.read(userProvider).user;
                   if (user != null) {
-                    final updated = user.savedLocations.where((x) => x.id != loc.id).toList();
-                    await ref.read(userRepositoryProvider).updateField(user.id, 'saved_locations', updated.map((x) => x.toMap()).toList());
-                    await ref.read(userProvider.notifier).fetchUserProfile(user.id);
+                    final updated = user.savedLocations
+                        .where((x) => x.id != loc.id)
+                        .toList();
+                    await ref.read(userRepositoryProvider).updateField(
+                        user.id,
+                        'saved_locations',
+                        updated.map((x) => x.toMap()).toList());
+                    await ref
+                        .read(userProvider.notifier)
+                        .fetchUserProfile(user.id);
                   }
                 },
-                child: const Text('Delete', style: TextStyle(color: AppColors.dangerRed)),
+                child: const Text('Delete',
+                    style: TextStyle(color: AppColors.dangerRed)),
               ),
             ],
           ),

@@ -21,14 +21,21 @@ class DriverVerificationSuccessScreen extends StatelessWidget {
       body: Stack(
         children: [
           // Background "Confetti" dots (Simulated)
-          ...List.generate(6, (index) => Positioned(
-            top: 200 + (index * 60),
-            left: 50 + (index * 40),
-            child: Icon(Icons.circle, size: 8, color: AppColors.primaryBlue.withValues(alpha: 0.1))
-                .animate(onPlay: (c) => c.repeat(reverse: true))
-                .moveY(begin: 0, end: 20, duration: (1 + index * 0.2).seconds)
-                .fadeIn(),
-          )),
+          ...List.generate(
+              6,
+              (index) => Positioned(
+                    top: 200 + (index * 60),
+                    left: 50 + (index * 40),
+                    child: Icon(Icons.circle,
+                            size: 8,
+                            color: AppColors.primaryBlue.withValues(alpha: 0.1))
+                        .animate(onPlay: (c) => c.repeat(reverse: true))
+                        .moveY(
+                            begin: 0,
+                            end: 20,
+                            duration: (1 + index * 0.2).seconds)
+                        .fadeIn(),
+                  )),
 
           Center(
             child: Padding(
@@ -40,38 +47,54 @@ class DriverVerificationSuccessScreen extends StatelessWidget {
                     alignment: Alignment.center,
                     children: [
                       Container(
-                        width: 160, height: 160,
+                        width: 160,
+                        height: 160,
                         decoration: BoxDecoration(
                           color: AppColors.successGreen.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
-                      ).animate().scale(duration: 800.ms, curve: Curves.elasticOut),
-                      
+                      )
+                          .animate()
+                          .scale(duration: 800.ms, curve: Curves.elasticOut),
                       Container(
-                        width: 100, height: 100,
+                        width: 100,
+                        height: 100,
                         decoration: const BoxDecoration(
                           color: AppColors.successGreen,
                           shape: BoxShape.circle,
-                          boxShadow: [BoxShadow(color: AppColors.successGreen, blurRadius: 20, spreadRadius: -5)],
+                          boxShadow: [
+                            BoxShadow(
+                                color: AppColors.successGreen,
+                                blurRadius: 20,
+                                spreadRadius: -5)
+                          ],
                         ),
-                        child: const Icon(Iconsax.tick_circle, size: 60, color: Colors.white),
-                      ).animate().scale(duration: 600.ms, curve: Curves.elasticOut),
+                        child: const Icon(Iconsax.tick_circle,
+                            size: 60, color: Colors.white),
+                      )
+                          .animate()
+                          .scale(duration: 600.ms, curve: Curves.elasticOut),
                     ],
                   ),
-                  
                   const SizedBox(height: 56),
                   Text(
                     'Verification Successful!',
-                    style: GoogleFonts.outfit(fontSize: 32, fontWeight: FontWeight.w900, color: AppColors.deepNavy, letterSpacing: -1),
+                    style: GoogleFonts.outfit(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.deepNavy,
+                        letterSpacing: -1),
                   ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.2, end: 0),
-                  
                   const SizedBox(height: 16),
                   const Text(
                     'Congratulations Roadrobo! Your profile is verified. You are now authorized to accept ride requests.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 16, color: AppColors.textSecondary, height: 1.6, fontWeight: FontWeight.w500),
+                    style: TextStyle(
+                        fontSize: 16,
+                        color: AppColors.textSecondary,
+                        height: 1.6,
+                        fontWeight: FontWeight.w500),
                   ).animate().fadeIn(delay: 600.ms).slideY(begin: 0.2, end: 0),
-                  
                   const SizedBox(height: 72),
                   SizedBox(
                     width: double.infinity,

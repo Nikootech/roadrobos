@@ -15,10 +15,12 @@ class DriverRideRequestScreen extends ConsumerStatefulWidget {
   const DriverRideRequestScreen({super.key});
 
   @override
-  ConsumerState<DriverRideRequestScreen> createState() => _DriverRideRequestScreenState();
+  ConsumerState<DriverRideRequestScreen> createState() =>
+      _DriverRideRequestScreenState();
 }
 
-class _DriverRideRequestScreenState extends ConsumerState<DriverRideRequestScreen>
+class _DriverRideRequestScreenState
+    extends ConsumerState<DriverRideRequestScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _progressController;
   bool _isProcessing = false;
@@ -28,12 +30,13 @@ class _DriverRideRequestScreenState extends ConsumerState<DriverRideRequestScree
   @override
   void initState() {
     super.initState();
-    _progressController =
-        AnimationController(vsync: this, duration: const Duration(seconds: _timeoutSeconds))
-          ..forward().then((_) {
-            if (mounted) context.pop();
-          });
-    Future.delayed(const Duration(milliseconds: 300), () => HapticFeedback.vibrate());
+    _progressController = AnimationController(
+        vsync: this, duration: const Duration(seconds: _timeoutSeconds))
+      ..forward().then((_) {
+        if (mounted) context.pop();
+      });
+    Future.delayed(
+        const Duration(milliseconds: 300), () => HapticFeedback.vibrate());
   }
 
   @override
@@ -48,7 +51,9 @@ class _DriverRideRequestScreenState extends ConsumerState<DriverRideRequestScree
     unawaited(HapticFeedback.heavyImpact());
     _progressController.stop();
     try {
-      await ref.read(rideRequestsActionProvider.notifier).acceptRequest(ride.id);
+      await ref
+          .read(rideRequestsActionProvider.notifier)
+          .acceptRequest(ride.id);
       if (mounted) context.pushReplacement('/driver-assigned');
     } catch (e) {
       if (mounted) {
@@ -79,7 +84,10 @@ class _DriverRideRequestScreenState extends ConsumerState<DriverRideRequestScree
               decoration: BoxDecoration(
                 gradient: RadialGradient(
                   radius: 1.5,
-                  colors: [AppColors.primaryBlue.withValues(alpha: 0.2), Colors.black],
+                  colors: [
+                    AppColors.primaryBlue.withValues(alpha: 0.2),
+                    Colors.black
+                  ],
                 ),
               ),
             ),
@@ -106,12 +114,23 @@ class _DriverRideRequestScreenState extends ConsumerState<DriverRideRequestScree
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text('NEW RIDE REQUEST',
-                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: AppColors.primaryBlue, letterSpacing: 1.5)),
+                          style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w900,
+                              color: AppColors.primaryBlue,
+                              letterSpacing: 1.5)),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(color: AppColors.bgLightGrey, borderRadius: BorderRadius.circular(8)),
-                        child: Text('₹${ride?.fare.toStringAsFixed(0) ?? '---'}',
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: AppColors.deepNavy)),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                            color: AppColors.bgLightGrey,
+                            borderRadius: BorderRadius.circular(8)),
+                        child: Text(
+                            '₹${ride?.fare.toStringAsFixed(0) ?? '---'}',
+                            style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w900,
+                                color: AppColors.deepNavy)),
                       ),
                     ],
                   ),
@@ -120,22 +139,37 @@ class _DriverRideRequestScreenState extends ConsumerState<DriverRideRequestScree
                     alignment: Alignment.center,
                     children: [
                       Container(
-                        height: 100, width: double.infinity,
-                        decoration: BoxDecoration(color: AppColors.bgLightGrey, borderRadius: BorderRadius.circular(20)),
-                        child: Icon(Iconsax.map_1, color: AppColors.primaryBlue.withValues(alpha: 0.3), size: 50),
+                        height: 100,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                            color: AppColors.bgLightGrey,
+                            borderRadius: BorderRadius.circular(20)),
+                        child: Icon(Iconsax.map_1,
+                            color: AppColors.primaryBlue.withValues(alpha: 0.3),
+                            size: 50),
                       ),
-                      const Icon(Icons.circle, color: AppColors.primaryBlue, size: 12)
+                      const Icon(Icons.circle,
+                              color: AppColors.primaryBlue, size: 12)
                           .animate(onPlay: (c) => c.repeat())
-                          .scale(duration: 1.seconds, begin: const Offset(1, 1), end: const Offset(3, 3))
+                          .scale(
+                              duration: 1.seconds,
+                              begin: const Offset(1, 1),
+                              end: const Offset(3, 3))
                           .fadeOut(),
                     ],
                   ),
                   const SizedBox(height: 24),
-                  _buildLocation(Icons.radio_button_checked_rounded, AppColors.primaryBlue, 'PICKUP', ride?.pickup ?? '...'),
+                  _buildLocation(Icons.radio_button_checked_rounded,
+                      AppColors.primaryBlue, 'PICKUP', ride?.pickup ?? '...'),
                   const SizedBox(height: 6),
-                  Container(width: 2, height: 14, color: AppColors.bgLightGrey, margin: const EdgeInsets.only(left: 9)),
+                  Container(
+                      width: 2,
+                      height: 14,
+                      color: AppColors.bgLightGrey,
+                      margin: const EdgeInsets.only(left: 9)),
                   const SizedBox(height: 6),
-                  _buildLocation(Icons.location_on_rounded, AppColors.dangerRed, 'DROP OFF', ride?.dropoff ?? '...'),
+                  _buildLocation(Icons.location_on_rounded, AppColors.dangerRed,
+                      'DROP OFF', ride?.dropoff ?? '...'),
                   const SizedBox(height: 24),
                   const Divider(height: 1),
                   const SizedBox(height: 20),
@@ -144,14 +178,18 @@ class _DriverRideRequestScreenState extends ConsumerState<DriverRideRequestScree
                     children: [
                       _buildStat('CUSTOMER', ride?.riderName ?? '---'),
                       _buildStat('DISTANCE', ride?.distance ?? '---'),
-                      _buildStat('FARE', '₹${ride?.fare.toStringAsFixed(0) ?? '0'}', isMain: true),
+                      _buildStat(
+                          'FARE', '₹${ride?.fare.toStringAsFixed(0) ?? '0'}',
+                          isMain: true),
                     ],
                   ),
                   const SizedBox(height: 24),
                   AnimatedBuilder(
                     animation: _progressController,
                     builder: (context, _) {
-                      final remaining = (_timeoutSeconds * (1 - _progressController.value)).ceil();
+                      final remaining =
+                          (_timeoutSeconds * (1 - _progressController.value))
+                              .ceil();
                       final isUrgent = remaining <= 10;
                       return Column(
                         children: [
@@ -159,7 +197,9 @@ class _DriverRideRequestScreenState extends ConsumerState<DriverRideRequestScree
                             value: 1 - _progressController.value,
                             backgroundColor: AppColors.bgLightGrey,
                             valueColor: AlwaysStoppedAnimation<Color>(
-                              isUrgent ? AppColors.dangerRed : AppColors.primaryBlue,
+                              isUrgent
+                                  ? AppColors.dangerRed
+                                  : AppColors.primaryBlue,
                             ),
                             minHeight: 4,
                             borderRadius: BorderRadius.circular(10),
@@ -169,7 +209,9 @@ class _DriverRideRequestScreenState extends ConsumerState<DriverRideRequestScree
                             'Auto-declining in ${remaining}s',
                             style: TextStyle(
                               fontSize: 10,
-                              color: isUrgent ? AppColors.dangerRed : AppColors.textMuted,
+                              color: isUrgent
+                                  ? AppColors.dangerRed
+                                  : AppColors.textMuted,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
@@ -185,10 +227,13 @@ class _DriverRideRequestScreenState extends ConsumerState<DriverRideRequestScree
                           onPressed: _isProcessing ? null : _onDecline,
                           style: TextButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 18),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20)),
                           ),
                           child: const Text('Decline',
-                              style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w800)),
+                              style: TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontWeight: FontWeight.w800)),
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -197,22 +242,32 @@ class _DriverRideRequestScreenState extends ConsumerState<DriverRideRequestScree
                             ? const Center(child: CircularProgressIndicator())
                             : CustomButton(
                                 label: 'ACCEPT',
-                                onPressed: ride != null ? () => _onAccept(ride) : null,
+                                onPressed:
+                                    ride != null ? () => _onAccept(ride) : null,
                                 backgroundColor: AppColors.successGreen,
-                              ).animate(onPlay: (c) => c.repeat(reverse: true)).shimmer(delay: 1.seconds),
+                              )
+                                .animate(onPlay: (c) => c.repeat(reverse: true))
+                                .shimmer(delay: 1.seconds),
                       ),
                     ],
                   ),
                 ],
               ),
             ),
-          ).animate().scale(begin: const Offset(0.85, 0.85), duration: 500.ms, curve: Curves.easeOutBack).fadeIn(),
+          )
+              .animate()
+              .scale(
+                  begin: const Offset(0.85, 0.85),
+                  duration: 500.ms,
+                  curve: Curves.easeOutBack)
+              .fadeIn(),
         ],
       ),
     );
   }
 
-  Widget _buildLocation(IconData icon, Color color, String label, String address) {
+  Widget _buildLocation(
+      IconData icon, Color color, String label, String address) {
     return Row(
       children: [
         Icon(icon, color: color, size: 20),
@@ -221,8 +276,19 @@ class _DriverRideRequestScreenState extends ConsumerState<DriverRideRequestScree
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: const TextStyle(fontSize: 10, color: AppColors.textSecondary, fontWeight: FontWeight.w800, letterSpacing: 0.5)),
-              Text(address, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textPrimary), maxLines: 2, overflow: TextOverflow.ellipsis),
+              Text(label,
+                  style: const TextStyle(
+                      fontSize: 10,
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.5)),
+              Text(address,
+                  style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis),
             ],
           ),
         ),
@@ -233,9 +299,18 @@ class _DriverRideRequestScreenState extends ConsumerState<DriverRideRequestScree
   Widget _buildStat(String label, String value, {bool isMain = false}) {
     return Column(
       children: [
-        Text(label, style: const TextStyle(fontSize: 9, color: AppColors.textSecondary, fontWeight: FontWeight.w800, letterSpacing: 0.5)),
+        Text(label,
+            style: const TextStyle(
+                fontSize: 9,
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.5)),
         const SizedBox(height: 4),
-        Text(value, style: TextStyle(fontSize: isMain ? 22 : 14, fontWeight: FontWeight.w900, color: isMain ? AppColors.deepNavy : AppColors.textPrimary)),
+        Text(value,
+            style: TextStyle(
+                fontSize: isMain ? 22 : 14,
+                fontWeight: FontWeight.w900,
+                color: isMain ? AppColors.deepNavy : AppColors.textPrimary)),
       ],
     );
   }

@@ -9,7 +9,10 @@ class AdminOpsMetrics {
   final int activeRides;
   final int pendingServices;
   final int walletRequests;
-  AdminOpsMetrics({required this.activeRides, required this.pendingServices, required this.walletRequests});
+  AdminOpsMetrics(
+      {required this.activeRides,
+      required this.pendingServices,
+      required this.walletRequests});
 }
 
 class BookingOp {
@@ -18,7 +21,12 @@ class BookingOp {
   final String vehicle;
   final String status;
   final String date;
-  BookingOp({required this.id, required this.customer, required this.vehicle, required this.status, required this.date});
+  BookingOp(
+      {required this.id,
+      required this.customer,
+      required this.vehicle,
+      required this.status,
+      required this.date});
 }
 
 class ServiceOp {
@@ -26,7 +34,11 @@ class ServiceOp {
   final String vehicleReg;
   final String tech;
   final String status;
-  ServiceOp({required this.id, required this.vehicleReg, required this.tech, required this.status});
+  ServiceOp(
+      {required this.id,
+      required this.vehicleReg,
+      required this.tech,
+      required this.status});
 }
 
 // --- Firestore-Backed Providers ---
@@ -40,10 +52,10 @@ final adminMetricsStreamProvider = StreamProvider<AdminOpsMetrics>((ref) {
 
   final repo = ref.watch(adminOpsRepositoryProvider);
   return repo.watchMetrics().map((live) => AdminOpsMetrics(
-    activeRides: live.activeRides,
-    pendingServices: live.pendingServices,
-    walletRequests: live.activeRentals, // Mapped to rentals count for now
-  ));
+        activeRides: live.activeRides,
+        pendingServices: live.pendingServices,
+        walletRequests: live.activeRentals, // Mapped to rentals count for now
+      ));
 });
 
 final adminBookingsProvider = StreamProvider<List<BookingOp>>((ref) {
@@ -54,13 +66,15 @@ final adminBookingsProvider = StreamProvider<List<BookingOp>>((ref) {
   }
 
   final repo = ref.watch(adminOpsRepositoryProvider);
-  return repo.watchRecentBookings().map((bookings) => bookings.map((b) => BookingOp(
-    id: b['id'] ?? '',
-    customer: b['customer'] ?? 'Unknown',
-    vehicle: b['vehicle'] ?? 'N/A',
-    status: b['status'] ?? 'Pending',
-    date: b['date'] ?? 'Today',
-  )).toList());
+  return repo.watchRecentBookings().map((bookings) => bookings
+      .map((b) => BookingOp(
+            id: b['id'] ?? '',
+            customer: b['customer'] ?? 'Unknown',
+            vehicle: b['vehicle'] ?? 'N/A',
+            status: b['status'] ?? 'Pending',
+            date: b['date'] ?? 'Today',
+          ))
+      .toList());
 });
 
 class ServiceOpsNotifier extends Notifier<AsyncValue<List<ServiceOp>>> {
@@ -75,7 +89,7 @@ class ServiceOpsNotifier extends Notifier<AsyncValue<List<ServiceOp>>> {
     }
 
     _init();
-    
+
     // Ensure cleanup of stream listener
     ref.onDispose(() {
       _subscription?.cancel();
@@ -88,12 +102,14 @@ class ServiceOpsNotifier extends Notifier<AsyncValue<List<ServiceOp>>> {
     final repo = ref.read(adminOpsRepositoryProvider);
     _subscription?.cancel();
     _subscription = repo.watchActiveServices().listen((services) {
-      state = AsyncValue.data(services.map((s) => ServiceOp(
-        id: s['id'] ?? '',
-        vehicleReg: s['vehicleReg'] ?? 'N/A',
-        tech: s['tech'] ?? 'Unassigned',
-        status: s['status'] ?? 'Pending',
-      )).toList());
+      state = AsyncValue.data(services
+          .map((s) => ServiceOp(
+                id: s['id'] ?? '',
+                vehicleReg: s['vehicleReg'] ?? 'N/A',
+                tech: s['tech'] ?? 'Unassigned',
+                status: s['status'] ?? 'Pending',
+              ))
+          .toList());
     }, onError: (err) {
       state = AsyncValue.error(err, StackTrace.current);
     });
@@ -101,21 +117,31 @@ class ServiceOpsNotifier extends Notifier<AsyncValue<List<ServiceOp>>> {
 
   Future<void> approveService(String id) async {
     try {
-       // 1. Persist to Firestore
-       await ref.read(adminOpsRepositoryProvider).updateServiceStatus(id, 'Approved');
-       
-       // 2. Optimistic Update (Local UI)
-       if (state.hasValue) {
-         final current = state.value!;
-         state = AsyncValue.data(
-           current.map((s) => s.id == id ? ServiceOp(id: s.id, vehicleReg: s.vehicleReg, tech: s.tech, status: 'Approved') : s).toList()
-         );
-       }
+      // 1. Persist to Firestore
+      await ref
+          .read(adminOpsRepositoryProvider)
+          .updateServiceStatus(id, 'Approved');
+
+      // 2. Optimistic Update (Local UI)
+      if (state.hasValue) {
+        final current = state.value!;
+        state = AsyncValue.data(current
+            .map((s) => s.id == id
+                ? ServiceOp(
+                    id: s.id,
+                    vehicleReg: s.vehicleReg,
+                    tech: s.tech,
+                    status: 'Approved')
+                : s)
+            .toList());
+      }
     } catch (e) {
-       // Rollback or handle error
-       state = AsyncValue.error('Failed to approve: $e', StackTrace.current);
+      // Rollback or handle error
+      state = AsyncValue.error('Failed to approve: $e', StackTrace.current);
     }
   }
 }
 
-final adminServicesProvider = NotifierProvider<ServiceOpsNotifier, AsyncValue<List<ServiceOp>>>(() => ServiceOpsNotifier());
+final adminServicesProvider =
+    NotifierProvider<ServiceOpsNotifier, AsyncValue<List<ServiceOp>>>(
+        () => ServiceOpsNotifier());

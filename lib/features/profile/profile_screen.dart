@@ -35,7 +35,10 @@ class ProfileScreen extends ConsumerWidget {
                   children: [
                     const Text(
                       AppStrings.myProfile,
-                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                      style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary),
                     ),
                     GestureDetector(
                       onTap: () => context.push('/account-settings'),
@@ -43,11 +46,12 @@ class ProfileScreen extends ConsumerWidget {
                         width: 40,
                         height: 40,
                         decoration: BoxDecoration(
-                          shape: BoxShape.circle, 
+                          shape: BoxShape.circle,
                           color: Colors.white,
                           border: Border.all(color: AppColors.border),
                         ),
-                        child: const Icon(Icons.settings_outlined, color: AppColors.textPrimary, size: 20),
+                        child: const Icon(Icons.settings_outlined,
+                            color: AppColors.textPrimary, size: 20),
                       ),
                     ),
                   ],
@@ -80,12 +84,17 @@ class ProfileScreen extends ConsumerWidget {
                       GestureDetector(
                         onTap: () async {
                           final picker = ImagePicker();
-                          final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+                          final XFile? image = await picker.pickImage(
+                              source: ImageSource.gallery);
                           if (image != null) {
                             final storageService = StorageService();
-                            final url = await storageService.uploadAvatar(File(image.path), user.id);
+                            final url = await storageService.uploadAvatar(
+                                File(image.path), user.id);
                             if (url != null) {
-                              await Supabase.instance.client.from('profiles').update({'profile_pic': url}).eq('id', user.id);
+                              await Supabase.instance.client
+                                  .from('profiles')
+                                  .update({'profile_pic': url}).eq(
+                                      'id', user.id);
                               ref.invalidate(userProvider);
                             }
                           }
@@ -95,14 +104,15 @@ class ProfileScreen extends ConsumerWidget {
                           height: 64,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            border: Border.all(color: AppColors.warningAmber, width: 2),
+                            border: Border.all(
+                                color: AppColors.warningAmber, width: 2),
                           ),
-                        child: AppAvatar(
-                          imageUrl: user.profileImageUrl,
-                          radius: 30,
-                          backgroundColor: AppColors.bgSkyLight,
+                          child: AppAvatar(
+                            imageUrl: user.profileImageUrl,
+                            radius: 30,
+                            backgroundColor: AppColors.bgSkyLight,
+                          ),
                         ),
-                      ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
@@ -113,16 +123,36 @@ class ProfileScreen extends ConsumerWidget {
                               user.name,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                              style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.textPrimary),
                             ),
                             const SizedBox(height: 4),
-                             Row(
+                            Row(
                               children: [
-                                Icon(Icons.star_rounded, size: 16, color: user.points > 5000 ? AppColors.warningAmber : (user.points > 2000 ? Colors.grey.shade400 : Colors.brown.shade400)),
+                                Icon(Icons.star_rounded,
+                                    size: 16,
+                                    color: user.points > 5000
+                                        ? AppColors.warningAmber
+                                        : (user.points > 2000
+                                            ? Colors.grey.shade400
+                                            : Colors.brown.shade400)),
                                 const SizedBox(width: 4),
                                 Text(
-                                  user.points > 5000 ? 'Gold Member' : (user.points > 2000 ? 'Silver Member' : 'Bronze Member'),
-                                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: user.points > 5000 ? AppColors.warningAmber : (user.points > 2000 ? Colors.grey.shade400 : Colors.brown.shade400)),
+                                  user.points > 5000
+                                      ? 'Gold Member'
+                                      : (user.points > 2000
+                                          ? 'Silver Member'
+                                          : 'Bronze Member'),
+                                  style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: user.points > 5000
+                                          ? AppColors.warningAmber
+                                          : (user.points > 2000
+                                              ? Colors.grey.shade400
+                                              : Colors.brown.shade400)),
                                 ),
                               ],
                             ),
@@ -145,7 +175,10 @@ class ProfileScreen extends ConsumerWidget {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(AppStrings.loyaltyPoints, style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                            const Text(AppStrings.loyaltyPoints,
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    color: AppColors.textSecondary)),
                             const SizedBox(height: 4),
                             FittedBox(
                               fit: BoxFit.scaleDown,
@@ -153,11 +186,19 @@ class ProfileScreen extends ConsumerWidget {
                               child: Row(
                                 children: [
                                   Text(
-                                    user.points.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m.group(1) ?? ''},'),
-                                    style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: AppColors.warningAmber),
+                                    user.points.toString().replaceAllMapped(
+                                        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+                                        (Match m) => '${m.group(1) ?? ''},'),
+                                    style: const TextStyle(
+                                        fontSize: 28,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.warningAmber),
                                   ),
                                   const SizedBox(width: 14),
-                                  const Text('pts', style: TextStyle(fontSize: 14, color: AppColors.textSecondary)),
+                                  const Text('pts',
+                                      style: TextStyle(
+                                          fontSize: 14,
+                                          color: AppColors.textSecondary)),
                                 ],
                               ),
                             ),
@@ -173,9 +214,15 @@ class ProfileScreen extends ConsumerWidget {
                                 value: (user.points % 1000) / 1000,
                                 strokeWidth: 4,
                                 backgroundColor: AppColors.bgSkyLight,
-                                valueColor: const AlwaysStoppedAnimation(AppColors.warningAmber),
+                                valueColor: const AlwaysStoppedAnimation(
+                                    AppColors.warningAmber),
                               ),
-                              Text('${((user.points % 1000) / 10).toStringAsFixed(0)}%', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.warningAmber)),
+                              Text(
+                                  '${((user.points % 1000) / 10).toStringAsFixed(0)}%',
+                                  style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.warningAmber)),
                             ],
                           ),
                         ),
@@ -194,15 +241,22 @@ class ProfileScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Your Gold Privileges', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                  const Text('Your Gold Privileges',
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary)),
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      _buildBenefitCard(Icons.confirmation_num_rounded, '10% Off\nAll Services', const Color(0xFF3B82F6)),
+                      _buildBenefitCard(Icons.confirmation_num_rounded,
+                          '10% Off\nAll Services', const Color(0xFF3B82F6)),
                       const SizedBox(width: 10),
-                      _buildBenefitCard(Icons.directions_car_rounded, 'Free Pickup\n& Drop', const Color(0xFF10B981)),
+                      _buildBenefitCard(Icons.directions_car_rounded,
+                          'Free Pickup\n& Drop', const Color(0xFF10B981)),
                       const SizedBox(width: 10),
-                      _buildBenefitCard(Icons.auto_awesome_rounded, 'Priority\nBooking', const Color(0xFFF97316)),
+                      _buildBenefitCard(Icons.auto_awesome_rounded,
+                          'Priority\nBooking', const Color(0xFFF97316)),
                     ],
                   ),
                 ],
@@ -216,16 +270,47 @@ class ProfileScreen extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
               child: Column(
                 children: [
-                  _buildMenuItem(Icons.person_outline_rounded, 'Account Settings', 'Profile, security, and more', () => context.push('/account-settings')),
-                  _buildMenuItem(Icons.directions_car_filled_rounded, 'My Vehicles', 'Manage your vehicles', () => context.push('/vehicles')),
-                  _buildMenuItem(Icons.location_on_outlined, 'Saved Locations', 'Add/edit addresses', () => context.push('/saved-locations')),
-                  _buildMenuItem(Icons.history_rounded, 'Ride History', 'View past trips', () => context.push('/ride-history')),
-                  _buildMenuItem(Icons.notifications_active_outlined, 'Service Reminders', 'Upcoming maintenance alerts', () => context.push('/service-reminders')),
-                  _buildMenuItem(Icons.assignment_outlined, 'Service History', 'Maintenance logs & invoices', () => context.push('/service-history')),
-                  _buildMenuItem(Icons.card_giftcard_rounded, 'Refer & Earn', 'Invite friends & earn', () => context.push('/referral')),
-                  _buildMenuItem(Icons.help_outline_rounded, 'Help Center', 'FAQ & support chat', () => context.push('/help-center')),
-                  _buildMenuItem(Icons.privacy_tip_outlined, 'Privacy Policy', 'Data usage and security', () => context.push('/privacy-policy')),
-                  _buildMenuItem(Icons.description_outlined, 'Terms of Service', 'Read our terms and conditions', () => context.push('/terms-of-service')),
+                  _buildMenuItem(
+                      Icons.person_outline_rounded,
+                      'Account Settings',
+                      'Profile, security, and more',
+                      () => context.push('/account-settings')),
+                  _buildMenuItem(
+                      Icons.directions_car_filled_rounded,
+                      'My Vehicles',
+                      'Manage your vehicles',
+                      () => context.push('/vehicles')),
+                  _buildMenuItem(
+                      Icons.location_on_outlined,
+                      'Saved Locations',
+                      'Add/edit addresses',
+                      () => context.push('/saved-locations')),
+                  _buildMenuItem(Icons.history_rounded, 'Ride History',
+                      'View past trips', () => context.push('/ride-history')),
+                  _buildMenuItem(
+                      Icons.notifications_active_outlined,
+                      'Service Reminders',
+                      'Upcoming maintenance alerts',
+                      () => context.push('/service-reminders')),
+                  _buildMenuItem(
+                      Icons.assignment_outlined,
+                      'Service History',
+                      'Maintenance logs & invoices',
+                      () => context.push('/service-history')),
+                  _buildMenuItem(Icons.card_giftcard_rounded, 'Refer & Earn',
+                      'Invite friends & earn', () => context.push('/referral')),
+                  _buildMenuItem(Icons.help_outline_rounded, 'Help Center',
+                      'FAQ & support chat', () => context.push('/help-center')),
+                  _buildMenuItem(
+                      Icons.privacy_tip_outlined,
+                      'Privacy Policy',
+                      'Data usage and security',
+                      () => context.push('/privacy-policy')),
+                  _buildMenuItem(
+                      Icons.description_outlined,
+                      'Terms of Service',
+                      'Read our terms and conditions',
+                      () => context.push('/terms-of-service')),
                   const SizedBox(height: 12),
                   // Logout button
                   GestureDetector(
@@ -240,15 +325,24 @@ class ProfileScreen extends ConsumerWidget {
                       decoration: BoxDecoration(
                         color: AppColors.dangerRed.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppColors.dangerRed.withValues(alpha: 0.2)),
+                        border: Border.all(
+                            color: AppColors.dangerRed.withValues(alpha: 0.2)),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.logout_rounded, color: AppColors.dangerRed, size: 22),
+                          const Icon(Icons.logout_rounded,
+                              color: AppColors.dangerRed, size: 22),
                           const SizedBox(width: 14),
-                          const Text(AppStrings.logout, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.dangerRed)),
+                          const Text(AppStrings.logout,
+                              style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.dangerRed)),
                           const Spacer(),
-                          Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.dangerRed.withValues(alpha: 0.5)),
+                          Icon(Icons.arrow_forward_ios_rounded,
+                              size: 14,
+                              color:
+                                  AppColors.dangerRed.withValues(alpha: 0.5)),
                         ],
                       ),
                     ),
@@ -268,14 +362,23 @@ class ProfileScreen extends ConsumerWidget {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(16), border: Border.all(color: color.withValues(alpha: 0.2))),
+        decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: color.withValues(alpha: 0.2))),
         child: Column(
           children: [
             Icon(icon, color: color, size: 24),
             const SizedBox(height: 8),
             FittedBox(
               fit: BoxFit.scaleDown,
-              child: Text(label, textAlign: TextAlign.center, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: color, height: 1.3)),
+              child: Text(label,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: color,
+                      height: 1.3)),
             ),
           ],
         ),
@@ -283,7 +386,8 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildMenuItem(IconData icon, String title, String subtitle, VoidCallback onTap) {
+  Widget _buildMenuItem(
+      IconData icon, String title, String subtitle, VoidCallback onTap) {
     return GestureDetector(
       onTap: () {
         HapticFeedback.lightImpact();
@@ -293,7 +397,7 @@ class ProfileScreen extends ConsumerWidget {
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white, 
+          color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: AppColors.border),
         ),
@@ -302,7 +406,9 @@ class ProfileScreen extends ConsumerWidget {
             Container(
               width: 40,
               height: 40,
-              decoration: BoxDecoration(color: AppColors.bgSkyLight, borderRadius: BorderRadius.circular(12)),
+              decoration: BoxDecoration(
+                  color: AppColors.bgSkyLight,
+                  borderRadius: BorderRadius.circular(12)),
               child: Icon(icon, color: AppColors.primaryBlue, size: 20),
             ),
             const SizedBox(width: 14),
@@ -310,12 +416,19 @@ class ProfileScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: AppColors.textPrimary)),
-                  Text(subtitle, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                  Text(title,
+                      style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.textPrimary)),
+                  Text(subtitle,
+                      style: const TextStyle(
+                          fontSize: 12, color: AppColors.textSecondary)),
                 ],
               ),
             ),
-            const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: AppColors.textMuted),
+            const Icon(Icons.arrow_forward_ios_rounded,
+                size: 14, color: AppColors.textMuted),
           ],
         ),
       ),

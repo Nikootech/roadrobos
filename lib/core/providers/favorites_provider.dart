@@ -9,7 +9,8 @@ class FavoritesNotifier extends StateNotifier<Set<String>> {
   final SharedPreferences _prefs;
   static const _key = 'user_favorites';
 
-  FavoritesNotifier(this._prefs) : super(_prefs.getStringList(_key)?.toSet() ?? {}) {
+  FavoritesNotifier(this._prefs)
+      : super(_prefs.getStringList(_key)?.toSet() ?? {}) {
     _loadFavorites();
   }
 
@@ -32,7 +33,8 @@ class FavoritesNotifier extends StateNotifier<Set<String>> {
   bool isFavorite(String itemId) => state.contains(itemId);
 }
 
-final favoritesProvider = StateNotifierProvider<FavoritesNotifier, Set<String>>((ref) {
+final favoritesProvider =
+    StateNotifierProvider<FavoritesNotifier, Set<String>>((ref) {
   final prefs = ref.watch(sharedPreferencesProvider);
   return FavoritesNotifier(prefs);
 });

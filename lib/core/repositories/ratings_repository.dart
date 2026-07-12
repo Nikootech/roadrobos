@@ -9,7 +9,8 @@ class RatingsRepositoryException implements Exception {
   RatingsRepositoryException(this.message, [this.details]);
 
   @override
-  String toString() => 'RatingsRepositoryException: $message (${details ?? ''})';
+  String toString() =>
+      'RatingsRepositoryException: $message (${details ?? ''})';
 }
 
 class RatingsRepository {
@@ -55,7 +56,7 @@ class RatingsRepository {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('pendingRatingBookingId');
   }
-  
+
   /// Get all recent reviews for the admin dashboard
   Future<List<RatingModel>> getRecentReviews({int limit = 50}) async {
     try {
@@ -64,12 +65,14 @@ class RatingsRepository {
           .select()
           .order('created_at', ascending: false)
           .limit(limit);
-      return (response as List).map((json) => RatingModel.fromJson(json)).toList();
+      return (response as List)
+          .map((json) => RatingModel.fromJson(json))
+          .toList();
     } catch (e) {
       throw RatingsRepositoryException('Failed to fetch recent reviews', e);
     }
   }
-  
+
   /// Delete a review (Admin)
   Future<void> deleteReview(String id) async {
     try {
@@ -84,7 +87,9 @@ final ratingsRepositoryProvider = Provider<RatingsRepository>((ref) {
   return RatingsRepository();
 });
 
-final partnerRatingProvider = FutureProvider.family<Map<String, dynamic>?, String>((ref, partnerId) async {
+final partnerRatingProvider =
+    FutureProvider.family<Map<String, dynamic>?, String>(
+        (ref, partnerId) async {
   final repo = ref.read(ratingsRepositoryProvider);
   return repo.getPartnerRating(partnerId);
 });

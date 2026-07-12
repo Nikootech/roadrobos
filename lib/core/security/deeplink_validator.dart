@@ -14,14 +14,13 @@ class DeeplinkValidator {
   }
 
   static Set<String> get _allowedHosts => {
-    'roadrobos.app',
-    'roadrobos.vercel.app',
-    'localhost',
-    '127.0.0.1',
-    // Supabase project URL — used for OAuth redirects
-    if (_supabaseHost.isNotEmpty) _supabaseHost,
-  };
-
+        'roadrobos.app',
+        'roadrobos.vercel.app',
+        'localhost',
+        '127.0.0.1',
+        // Supabase project URL — used for OAuth redirects
+        if (_supabaseHost.isNotEmpty) _supabaseHost,
+      };
 
   /// Returns true if the URI is a valid, trusted deeplink.
   static bool isValid(Uri uri) {
@@ -31,16 +30,16 @@ class DeeplinkValidator {
     // 2. For https/http deeplinks, host must be in allowlist or end with .vercel.app
     if (uri.scheme == 'https' || uri.scheme == 'http') {
       final host = uri.host;
-      
+
       // Strict rule: http is ONLY allowed for localhost/127.0.0.1
       if (uri.scheme == 'http' && host != 'localhost' && host != '127.0.0.1') {
         return false;
       }
 
       // Check against allowlist or Vercel preview domains
-      if (host != 'localhost' && 
-          host != '127.0.0.1' && 
-          !_allowedHosts.contains(host) && 
+      if (host != 'localhost' &&
+          host != '127.0.0.1' &&
+          !_allowedHosts.contains(host) &&
           !host.endsWith('.vercel.app')) {
         return false;
       }

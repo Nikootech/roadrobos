@@ -90,8 +90,7 @@ class EncryptedStringConverter extends TypeConverter<String, String>
         true,
         AEADParameters(KeyParameter(key), 128, nonce, Uint8List(0)),
       );
-    final cipherBytes =
-        cipher.process(Uint8List.fromList(utf8.encode(value)));
+    final cipherBytes = cipher.process(Uint8List.fromList(utf8.encode(value)));
     final result = Uint8List(12 + cipherBytes.length)
       ..setAll(0, nonce)
       ..setAll(12, cipherBytes);
@@ -106,8 +105,7 @@ class EncryptedStringConverter extends TypeConverter<String, String>
 }
 
 /// Nullable variant — stores null as empty string.
-class NullableEncryptedStringConverter
-    extends TypeConverter<String?, String> {
+class NullableEncryptedStringConverter extends TypeConverter<String?, String> {
   const NullableEncryptedStringConverter();
 
   static const _inner = EncryptedStringConverter();

@@ -80,12 +80,14 @@ class _RatingBottomSheetState extends ConsumerState<RatingBottomSheet> {
         revieweeId: widget.revieweeId,
         role: widget.role,
         score: _score,
-        reviewText: _reviewController.text.trim().isEmpty ? null : _reviewController.text.trim(),
+        reviewText: _reviewController.text.trim().isEmpty
+            ? null
+            : _reviewController.text.trim(),
       );
 
       final repo = ref.read(ratingsRepositoryProvider);
       await repo.submitRating(rating);
-      
+
       // Clear pending rating if any
       await repo.clearPendingRating();
 
@@ -215,7 +217,8 @@ class _RatingBottomSheetState extends ConsumerState<RatingBottomSheet> {
                       )
                     : const Text(
                         'Submit Rating',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
                       ),
               ),
             ),

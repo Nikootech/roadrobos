@@ -19,25 +19,37 @@ final permissionsProvider = FutureProvider<Set<String>>((ref) async {
 
   // Use the demo mock logic if user is a demo user
   if (userState.isDemo || user.id.startsWith('demo_')) {
-     final Set<String> permissions = {};
-     if (['super_admin', 'founder_admin', 'ops_head', 'city_manager', 'area_manager', 'finance_manager', 'support_manager', 'marketing_admin', 'admin'].contains(user.role.name)) {
-         permissions.add('admin_access');
-     }
-     if (['driver', 'technician'].contains(user.role.name)) {
-         permissions.add('field_staff_access');
-     }
-     return permissions;
+    final Set<String> permissions = {};
+    if ([
+      'super_admin',
+      'founder_admin',
+      'ops_head',
+      'city_manager',
+      'area_manager',
+      'finance_manager',
+      'support_manager',
+      'marketing_admin',
+      'admin'
+    ].contains(user.role.name)) {
+      permissions.add('admin_access');
+    }
+    if (['driver', 'technician'].contains(user.role.name)) {
+      permissions.add('field_staff_access');
+    }
+    return permissions;
   }
 
   return await rbacService.fetchUserPermissions(user.id);
 });
 
-final hasPermissionProvider = Provider.family<bool, String>((ref, permissionName) {
+final hasPermissionProvider =
+    Provider.family<bool, String>((ref, permissionName) {
   final permissionsAsync = ref.watch(permissionsProvider);
-  
+
   return permissionsAsync.when(
     data: (permissions) => permissions.contains(permissionName),
-    loading: () => false, // Consider defaulting to cached if needed, but false is safer
+    loading: () =>
+        false, // Consider defaulting to cached if needed, but false is safer
     error: (_, __) => false,
   );
 });

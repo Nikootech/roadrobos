@@ -21,7 +21,8 @@ void main() {
 
   setUp(() {
     mockAuth = MockAuthService();
-    when(() => mockAuth.authStateChanges).thenAnswer((_) => const Stream.empty());
+    when(() => mockAuth.authStateChanges)
+        .thenAnswer((_) => const Stream.empty());
     when(() => mockAuth.restoredUser).thenReturn(null);
     when(() => mockAuth.currentUser).thenReturn(null);
   });
@@ -41,7 +42,7 @@ void main() {
 
       // Assert: Service booking screen renders
       expect(find.byType(BikeServiceBookingScreen), findsOneWidget);
-      
+
       // Assert: Package options are displayed
       expect(find.text('Bike Service Packages'), findsOneWidget);
       expect(find.text('Choose a Package'), findsOneWidget);

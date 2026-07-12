@@ -11,10 +11,12 @@ class ServiceFeedbackAnalyticsScreen extends ConsumerStatefulWidget {
   const ServiceFeedbackAnalyticsScreen({super.key});
 
   @override
-  ConsumerState<ServiceFeedbackAnalyticsScreen> createState() => _ServiceFeedbackAnalyticsScreenState();
+  ConsumerState<ServiceFeedbackAnalyticsScreen> createState() =>
+      _ServiceFeedbackAnalyticsScreenState();
 }
 
-class _ServiceFeedbackAnalyticsScreenState extends ConsumerState<ServiceFeedbackAnalyticsScreen> {
+class _ServiceFeedbackAnalyticsScreenState
+    extends ConsumerState<ServiceFeedbackAnalyticsScreen> {
   List<RatingModel> _reviews = [];
   bool _isLoading = true;
 
@@ -68,7 +70,8 @@ class _ServiceFeedbackAnalyticsScreenState extends ConsumerState<ServiceFeedback
     // Calculate overall rating if possible
     double avgScore = 0;
     if (_reviews.isNotEmpty) {
-      avgScore = _reviews.fold(0.0, (sum, item) => sum + item.score) / _reviews.length;
+      avgScore =
+          _reviews.fold(0.0, (sum, item) => sum + item.score) / _reviews.length;
     }
 
     return Scaffold(
@@ -77,64 +80,80 @@ class _ServiceFeedbackAnalyticsScreenState extends ConsumerState<ServiceFeedback
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: AppColors.textPrimary),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded,
+              size: 18, color: AppColors.textPrimary),
           onPressed: () => context.pop(),
         ),
-        title: const Text('Feedback & Reviews', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
+        title: const Text('Feedback & Reviews',
+            style: TextStyle(
+                color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
       ),
-      body: _isLoading 
-        ? const Center(child: CircularProgressIndicator())
-        : SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Overall Rating
-            Container(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
               padding: const EdgeInsets.all(20),
-              decoration: const BoxDecoration(color: AppColors.primaryBlue, borderRadius: BorderRadius.all(Radius.circular(24))),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Column(
-                    children: [
-                      Text(avgScore.toStringAsFixed(1), style: const TextStyle(color: Colors.white, fontSize: 42, fontWeight: FontWeight.w900)),
-                      const Row(
-                        children: [
-                          Icon(Icons.star, color: Colors.amber, size: 14),
-                          Icon(Icons.star, color: Colors.amber, size: 14),
-                          Icon(Icons.star, color: Colors.amber, size: 14),
-                          Icon(Icons.star, color: Colors.amber, size: 14),
-                          Icon(Icons.star_half, color: Colors.amber, size: 14),
-                        ],
-                      ),
-                      const Text('Overall Rating', style: TextStyle(color: Colors.white60, fontSize: 11)),
-                    ],
-                  ),
-                  const SizedBox(width: 32),
-                  const Expanded(
-                    child: Column(
+                  // Overall Rating
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: const BoxDecoration(
+                        color: AppColors.primaryBlue,
+                        borderRadius: BorderRadius.all(Radius.circular(24))),
+                    child: Row(
                       children: [
-                        _RatingBar(stars: 5, progress: 0.8),
-                        _RatingBar(stars: 4, progress: 0.15),
-                        _RatingBar(stars: 3, progress: 0.03),
-                        _RatingBar(stars: 2, progress: 0.01),
-                        _RatingBar(stars: 1, progress: 0.01),
+                        Column(
+                          children: [
+                            Text(avgScore.toStringAsFixed(1),
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 42,
+                                    fontWeight: FontWeight.w900)),
+                            const Row(
+                              children: [
+                                Icon(Icons.star, color: Colors.amber, size: 14),
+                                Icon(Icons.star, color: Colors.amber, size: 14),
+                                Icon(Icons.star, color: Colors.amber, size: 14),
+                                Icon(Icons.star, color: Colors.amber, size: 14),
+                                Icon(Icons.star_half,
+                                    color: Colors.amber, size: 14),
+                              ],
+                            ),
+                            const Text('Overall Rating',
+                                style: TextStyle(
+                                    color: Colors.white60, fontSize: 11)),
+                          ],
+                        ),
+                        const SizedBox(width: 32),
+                        const Expanded(
+                          child: Column(
+                            children: [
+                              _RatingBar(stars: 5, progress: 0.8),
+                              _RatingBar(stars: 4, progress: 0.15),
+                              _RatingBar(stars: 3, progress: 0.03),
+                              _RatingBar(stars: 2, progress: 0.01),
+                              _RatingBar(stars: 1, progress: 0.01),
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                   ),
+
+                  const SizedBox(height: 32),
+                  const Text('Recent Reviews',
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 16),
+                  if (_reviews.isEmpty)
+                    const Center(
+                        child: Text('No reviews yet.',
+                            style: TextStyle(color: AppColors.textMuted))),
+                  ..._reviews.map((review) => _buildReviewTile(review)),
                 ],
               ),
             ),
-            
-            const SizedBox(height: 32),
-            const Text('Recent Reviews', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
-            if (_reviews.isEmpty)
-              const Center(child: Text('No reviews yet.', style: TextStyle(color: AppColors.textMuted))),
-            ..._reviews.map((review) => _buildReviewTile(review)),
-          ],
-        ),
-      ),
     );
   }
 
@@ -142,7 +161,9 @@ class _ServiceFeedbackAnalyticsScreenState extends ConsumerState<ServiceFeedback
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: AppColors.bgLightGrey, borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(
+          color: AppColors.bgLightGrey,
+          borderRadius: BorderRadius.circular(16)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -150,23 +171,26 @@ class _ServiceFeedbackAnalyticsScreenState extends ConsumerState<ServiceFeedback
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Row(
-                children: List.generate(5, (index) => Icon(
-                  index < review.score ? Icons.star : Icons.star_border,
-                  color: Colors.amber,
-                  size: 14,
-                )),
+                children: List.generate(
+                    5,
+                    (index) => Icon(
+                          index < review.score ? Icons.star : Icons.star_border,
+                          color: Colors.amber,
+                          size: 14,
+                        )),
               ),
               Row(
                 children: [
                   Text(
-                    review.createdAt != null 
-                      ? '${review.createdAt!.day}/${review.createdAt!.month}/${review.createdAt!.year}' 
-                      : '', 
-                    style: const TextStyle(color: AppColors.textMuted, fontSize: 10)
-                  ),
+                      review.createdAt != null
+                          ? '${review.createdAt!.day}/${review.createdAt!.month}/${review.createdAt!.year}'
+                          : '',
+                      style: const TextStyle(
+                          color: AppColors.textMuted, fontSize: 10)),
                   const SizedBox(width: 8),
                   IconButton(
-                    icon: const Icon(Icons.delete_outline, color: AppColors.dangerRed, size: 16),
+                    icon: const Icon(Icons.delete_outline,
+                        color: AppColors.dangerRed, size: 16),
                     constraints: const BoxConstraints(),
                     padding: EdgeInsets.zero,
                     onPressed: () {
@@ -181,11 +205,19 @@ class _ServiceFeedbackAnalyticsScreenState extends ConsumerState<ServiceFeedback
           ),
           const SizedBox(height: 8),
           if (review.reviewText != null && review.reviewText!.isNotEmpty)
-            Text(review.reviewText!, style: const TextStyle(fontSize: 13, height: 1.4))
+            Text(review.reviewText!,
+                style: const TextStyle(fontSize: 13, height: 1.4))
           else
-            const Text('No comment provided', style: TextStyle(fontSize: 13, height: 1.4, color: AppColors.textMuted, fontStyle: FontStyle.italic)),
+            const Text('No comment provided',
+                style: TextStyle(
+                    fontSize: 13,
+                    height: 1.4,
+                    color: AppColors.textMuted,
+                    fontStyle: FontStyle.italic)),
           const SizedBox(height: 4),
-          Text('Role: ${review.role}', style: const TextStyle(fontSize: 10, color: AppColors.primaryBlue)),
+          Text('Role: ${review.role}',
+              style:
+                  const TextStyle(fontSize: 10, color: AppColors.primaryBlue)),
         ],
       ),
     ).animate().fadeIn().scale();
@@ -203,7 +235,11 @@ class _RatingBar extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
         children: [
-          Text('$stars', style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+          Text('$stars',
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold)),
           const SizedBox(width: 8),
           Expanded(
             child: LinearProgressIndicator(

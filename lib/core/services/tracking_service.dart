@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../extensions/datetime_extensions.dart';
 
-
 final trackingServiceProvider = Provider<TrackingService>((ref) {
   return TrackingService();
 });
@@ -40,12 +39,14 @@ class TrackingService {
         forceLocationManager: true,
         intervalDuration: const Duration(seconds: 4),
         foregroundNotificationConfig: const ForegroundNotificationConfig(
-          notificationText: 'App will continue to receive your location even when you aren\'t using it',
+          notificationText:
+              'App will continue to receive your location even when you aren\'t using it',
           notificationTitle: 'Location Tracking Active',
           enableWakeLock: true,
         ),
       );
-    } else if (defaultTargetPlatform == TargetPlatform.iOS || defaultTargetPlatform == TargetPlatform.macOS) {
+    } else if (defaultTargetPlatform == TargetPlatform.iOS ||
+        defaultTargetPlatform == TargetPlatform.macOS) {
       locationSettings = AppleSettings(
         accuracy: LocationAccuracy.high,
         activityType: ActivityType.automotiveNavigation,
@@ -82,10 +83,10 @@ class TrackingService {
     // ignore: unawaited_futures
     _positionStream?.cancel();
     _positionStream = null;
-    
+
     _upsertTimer?.cancel();
     _upsertTimer = null;
-    
+
     if (_trackingDriverId != null) {
       await _supabase.from('driver_locations').upsert({
         'driver_id': _trackingDriverId,

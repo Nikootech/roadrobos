@@ -2,7 +2,8 @@ class ServiceItem {
   final String id;
   final String title;
   final String desc;
-  final String price; // Storing as string because it contains formatting like "₹2,499"
+  final String
+      price; // Storing as string because it contains formatting like "₹2,499"
   final double rating;
   final String image;
   final String duration;

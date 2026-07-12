@@ -36,7 +36,8 @@ class TaxiRideScreen extends ConsumerStatefulWidget {
 }
 
 class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
-  final DraggableScrollableController _sheetController = DraggableScrollableController();
+  final DraggableScrollableController _sheetController =
+      DraggableScrollableController();
   bool get isDark => Theme.of(context).brightness == Brightness.dark;
 
   final FocusNode _pickupFocusNode = FocusNode();
@@ -56,14 +57,54 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
     final state = ref.read(taxiProvider);
     final currentLoc = state.pickupLocation ?? const LatLng(12.9716, 77.5946);
     return [
-      {'name': state.pickupAddress ?? 'Current Location', 'address': 'Your current location', 'lat': currentLoc.latitude, 'lng': currentLoc.longitude},
-      {'name': 'Old Airport Road', 'address': 'Old Airport Road, Kodihalli, Bengaluru', 'lat': 12.9610, 'lng': 77.6487},
-      {'name': 'MG Road Metro Station', 'address': 'Mahatma Gandhi Road, Bengaluru', 'lat': 12.9756, 'lng': 77.6068},
-      {'name': 'Indiranagar Double Road', 'address': 'Indiranagar, Stage 2, Bengaluru', 'lat': 12.9719, 'lng': 77.6412},
-      {'name': 'Koramangala 4th Block', 'address': 'Koramangala, St. John\'s Hospital Road, Bengaluru', 'lat': 12.9352, 'lng': 77.6245},
-      {'name': 'Whitefield Railway Station', 'address': 'Kadugodi, Bengaluru', 'lat': 12.9698, 'lng': 77.7499},
-      {'name': 'Majestic Bus Station', 'address': 'Kempegowda Bus Station, Majestic, Bengaluru', 'lat': 12.9779, 'lng': 77.5724},
-      {'name': 'Electronic City Phase 1', 'address': 'Hosur Road, Bengaluru', 'lat': 12.8497, 'lng': 77.6749},
+      {
+        'name': state.pickupAddress ?? 'Current Location',
+        'address': 'Your current location',
+        'lat': currentLoc.latitude,
+        'lng': currentLoc.longitude
+      },
+      {
+        'name': 'Old Airport Road',
+        'address': 'Old Airport Road, Kodihalli, Bengaluru',
+        'lat': 12.9610,
+        'lng': 77.6487
+      },
+      {
+        'name': 'MG Road Metro Station',
+        'address': 'Mahatma Gandhi Road, Bengaluru',
+        'lat': 12.9756,
+        'lng': 77.6068
+      },
+      {
+        'name': 'Indiranagar Double Road',
+        'address': 'Indiranagar, Stage 2, Bengaluru',
+        'lat': 12.9719,
+        'lng': 77.6412
+      },
+      {
+        'name': 'Koramangala 4th Block',
+        'address': 'Koramangala, St. John\'s Hospital Road, Bengaluru',
+        'lat': 12.9352,
+        'lng': 77.6245
+      },
+      {
+        'name': 'Whitefield Railway Station',
+        'address': 'Kadugodi, Bengaluru',
+        'lat': 12.9698,
+        'lng': 77.7499
+      },
+      {
+        'name': 'Majestic Bus Station',
+        'address': 'Kempegowda Bus Station, Majestic, Bengaluru',
+        'lat': 12.9779,
+        'lng': 77.5724
+      },
+      {
+        'name': 'Electronic City Phase 1',
+        'address': 'Hosur Road, Bengaluru',
+        'lat': 12.8497,
+        'lng': 77.6749
+      },
     ];
   }
 
@@ -72,7 +113,7 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(taxiProvider.notifier).initializeLocation();
-      
+
       _pickupFocusNode.addListener(() {
         if (_pickupFocusNode.hasFocus) {
           setState(() {
@@ -80,11 +121,17 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
             _searchQuery = ref.read(pickupControllerProvider).text;
             _isPickupSearch = true;
           });
-          _sheetController.animateTo(0.85, duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
-          ref.read(taxiProvider.notifier).updateStatus(RideStatus.selectingPickup);
+          _sheetController.animateTo(0.85,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOut);
+          ref
+              .read(taxiProvider.notifier)
+              .updateStatus(RideStatus.selectingPickup);
         } else {
           Future.delayed(const Duration(milliseconds: 200), () {
-            if (mounted && !_pickupFocusNode.hasFocus && !_dropoffFocusNode.hasFocus) {
+            if (mounted &&
+                !_pickupFocusNode.hasFocus &&
+                !_dropoffFocusNode.hasFocus) {
               setState(() {
                 _showSuggestions = false;
               });
@@ -100,11 +147,17 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
             _searchQuery = ref.read(dropoffControllerProvider).text;
             _isPickupSearch = false;
           });
-          _sheetController.animateTo(0.85, duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
-          ref.read(taxiProvider.notifier).updateStatus(RideStatus.selectingDrop);
+          _sheetController.animateTo(0.85,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOut);
+          ref
+              .read(taxiProvider.notifier)
+              .updateStatus(RideStatus.selectingDrop);
         } else {
           Future.delayed(const Duration(milliseconds: 200), () {
-            if (mounted && !_pickupFocusNode.hasFocus && !_dropoffFocusNode.hasFocus) {
+            if (mounted &&
+                !_pickupFocusNode.hasFocus &&
+                !_dropoffFocusNode.hasFocus) {
               setState(() {
                 _showSuggestions = false;
               });
@@ -159,10 +212,14 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
 
     // Sync controllers with state
     // Sync controllers with state ONLY if they are not currently focused to avoid jitter
-    if (taxiState.pickupAddress != null && pickupController.text != taxiState.pickupAddress && !_pickupFocusNode.hasFocus) {
+    if (taxiState.pickupAddress != null &&
+        pickupController.text != taxiState.pickupAddress &&
+        !_pickupFocusNode.hasFocus) {
       pickupController.text = taxiState.pickupAddress!;
     }
-    if (taxiState.dropoffAddress != null && dropoffController.text != taxiState.dropoffAddress && !_dropoffFocusNode.hasFocus) {
+    if (taxiState.dropoffAddress != null &&
+        dropoffController.text != taxiState.dropoffAddress &&
+        !_dropoffFocusNode.hasFocus) {
       dropoffController.text = taxiState.dropoffAddress!;
     }
 
@@ -175,11 +232,14 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
           Positioned.fill(
             child: LiveMapWidget(
               height: MediaQuery.of(context).size.height,
-              showLiveIndicator: taxiState.status == RideStatus.idle || taxiState.status == RideStatus.selectingPickup,
+              showLiveIndicator: taxiState.status == RideStatus.idle ||
+                  taxiState.status == RideStatus.selectingPickup,
               roadroboLocation: taxiState.roadroboLocation,
               showNearbyTaxis: true,
               onPositionChanged: (camera, hasGesture) {
-                if (hasGesture && (taxiState.status == RideStatus.selectingPickup || taxiState.status == RideStatus.selectingDrop)) {
+                if (hasGesture &&
+                    (taxiState.status == RideStatus.selectingPickup ||
+                        taxiState.status == RideStatus.selectingDrop)) {
                   final center = camera.center;
                   if (taxiState.status == RideStatus.selectingPickup) {
                     taxiNotifier.setPickup(center, 'Map Pin Location');
@@ -192,7 +252,8 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
           ),
 
           // 2. Center Pin for Selection
-          if (taxiState.status == RideStatus.selectingPickup || taxiState.status == RideStatus.selectingDrop)
+          if (taxiState.status == RideStatus.selectingPickup ||
+              taxiState.status == RideStatus.selectingDrop)
             _buildCenterPin(taxiState.status == RideStatus.selectingPickup),
 
           // 3. Safe Area Top Controls
@@ -201,32 +262,43 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
                 children: [
-                  _buildRoundedButton(Icons.arrow_back, () => Navigator.pop(context)),
+                  _buildRoundedButton(
+                      Icons.arrow_back, () => Navigator.pop(context)),
                   const Spacer(),
-                  if (taxiState.status == RideStatus.tracking || 
+                  if (taxiState.status == RideStatus.tracking ||
                       taxiState.status == RideStatus.headingToDropoff)
                     _buildRoundedButton(Icons.share, () {
-                      final pos = taxiState.pickupLocation; // Using pickup as live loc for demo
+                      final pos = taxiState
+                          .pickupLocation; // Using pickup as live loc for demo
                       if (pos != null) {
-                        final link = 'https://www.google.com/maps/search/?api=1&query=${pos.latitude},${pos.longitude}';
+                        final link =
+                            'https://www.google.com/maps/search/?api=1&query=${pos.latitude},${pos.longitude}';
                         ref.read(taxiProvider.notifier).shareTrip(link);
                       }
                     }),
                   const SizedBox(width: 12),
-                  if ((taxiState.status == RideStatus.tracking || 
-                      taxiState.status == RideStatus.atPickup ||
-                      taxiState.status == RideStatus.headingToDropoff) && !isOffline)
+                  if ((taxiState.status == RideStatus.tracking ||
+                          taxiState.status == RideStatus.atPickup ||
+                          taxiState.status == RideStatus.headingToDropoff) &&
+                      !isOffline)
                     _buildETAIndicator(taxiState.eta ?? 'Calculating...'),
                   if (isOffline)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(color: Colors.red.shade700, borderRadius: BorderRadius.circular(20)),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                          color: Colors.red.shade700,
+                          borderRadius: BorderRadius.circular(20)),
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.cloud_off, color: Colors.white, size: 14),
                           SizedBox(width: 8),
-                          Text('Live updates paused', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+                          Text('Live updates paused',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13)),
                         ],
                       ),
                     ),
@@ -236,15 +308,17 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
           ),
 
           // 3. Main UI Overlay based on Status
-          _buildBottomUI(context, taxiState, taxiNotifier, pickupController, dropoffController),
-          
+          _buildBottomUI(context, taxiState, taxiNotifier, pickupController,
+              dropoffController),
+
           // 3b. SOS Button Overlay (Visible during tracking/ride)
-          if (taxiState.status == RideStatus.tracking || 
-              taxiState.status == RideStatus.atPickup || 
+          if (taxiState.status == RideStatus.tracking ||
+              taxiState.status == RideStatus.atPickup ||
               taxiState.status == RideStatus.headingToDropoff)
             Positioned(
               right: 20,
-              bottom: MediaQuery.of(context).size.height * 0.45 + 20, // Sit above the sheet
+              bottom: MediaQuery.of(context).size.height * 0.45 +
+                  20, // Sit above the sheet
               child: SOSButton(
                 onTrigger: () {
                   final userId = ref.read(userProvider).user?.id ?? 'demo';
@@ -254,16 +328,15 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
             ).animate().fadeIn().scale(),
 
           // 4. Booking Shimmer Overlay
-          if (taxiState.status == RideStatus.booked)
-            _buildBookingShimmer(),
+          if (taxiState.status == RideStatus.booked) _buildBookingShimmer(),
         ],
       ),
     );
   }
 
   Widget _buildBottomUI(
-    BuildContext context, 
-    TaxiState state, 
+    BuildContext context,
+    TaxiState state,
     TaxiNotifier notifier,
     TextEditingController pickupCtrl,
     TextEditingController dropoffCtrl,
@@ -279,30 +352,34 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
           decoration: BoxDecoration(
             color: isDark ? AppColors.bgDarkCard : Colors.white,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 20)],
+            boxShadow: [
+              BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1), blurRadius: 20)
+            ],
           ),
           child: ListView(
             controller: scrollController,
             padding: const EdgeInsets.all(24),
             children: [
-              Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: isDark ? Colors.grey[700] : Colors.grey[200], borderRadius: BorderRadius.circular(2)))),
+              Center(
+                  child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                          color: isDark ? Colors.grey[700] : Colors.grey[200],
+                          borderRadius: BorderRadius.circular(2)))),
               const SizedBox(height: 24),
-              
-              if (state.status == RideStatus.idle || 
-                  state.status == RideStatus.selectingPickup || 
+              if (state.status == RideStatus.idle ||
+                  state.status == RideStatus.selectingPickup ||
                   state.status == RideStatus.selectingDrop ||
                   state.status == RideStatus.vehicleSelection)
                 _buildSearchSection(state, notifier, pickupCtrl, dropoffCtrl),
-              
               if (state.status == RideStatus.tracking)
                 _buildTrackingSection(state, notifier),
-                
               if (state.status == RideStatus.atPickup)
                 _buildAtPickupSection(state, notifier),
-
               if (state.status == RideStatus.headingToDropoff)
                 _buildHeadingToDropSection(state, notifier),
-                
               if (state.status == RideStatus.completed)
                 _buildCompletedSection(state, notifier),
             ],
@@ -312,7 +389,8 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
     );
   }
 
-  Widget _buildSearchSection(TaxiState state, TaxiNotifier notifier, TextEditingController pCtrl, TextEditingController dCtrl) {
+  Widget _buildSearchSection(TaxiState state, TaxiNotifier notifier,
+      TextEditingController pCtrl, TextEditingController dCtrl) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -332,12 +410,12 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
           prefixIcon: Iconsax.location,
           focusNode: _pickupFocusNode,
           onChanged: (val) {
-             setState(() {
-               _searchQuery = val;
-               _showSuggestions = true;
-             });
-             _onSearchChanged(val);
-             notifier.updateStatus(RideStatus.selectingPickup);
+            setState(() {
+              _searchQuery = val;
+              _showSuggestions = true;
+            });
+            _onSearchChanged(val);
+            notifier.updateStatus(RideStatus.selectingPickup);
           },
         ),
         const SizedBox(height: 16),
@@ -348,12 +426,12 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
           prefixIcon: Iconsax.routing,
           focusNode: _dropoffFocusNode,
           onChanged: (val) {
-             setState(() {
-               _searchQuery = val;
-               _showSuggestions = true;
-             });
-             _onSearchChanged(val);
-             notifier.updateStatus(RideStatus.selectingDrop);
+            setState(() {
+              _searchQuery = val;
+              _showSuggestions = true;
+            });
+            _onSearchChanged(val);
+            notifier.updateStatus(RideStatus.selectingDrop);
           },
         ),
         if (_showSuggestions)
@@ -366,27 +444,44 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              const Row(children: [Icon(Icons.money, color: Colors.green, size: 20), SizedBox(width: 4), Text('Cash', style: TextStyle(fontWeight: FontWeight.bold))]),
+              const Row(children: [
+                Icon(Icons.money, color: Colors.green, size: 20),
+                SizedBox(width: 4),
+                Text('Cash', style: TextStyle(fontWeight: FontWeight.bold))
+              ]),
               Container(width: 1, height: 20, color: Colors.grey),
-              const Row(children: [Icon(Icons.local_offer, color: Colors.green, size: 20), SizedBox(width: 4), Text('Coupon', style: TextStyle(fontWeight: FontWeight.bold))]),
+              const Row(children: [
+                Icon(Icons.local_offer, color: Colors.green, size: 20),
+                SizedBox(width: 4),
+                Text('Coupon', style: TextStyle(fontWeight: FontWeight.bold))
+              ]),
               Container(width: 1, height: 20, color: Colors.grey),
-              const Row(children: [Icon(Icons.person, color: Colors.grey, size: 20), SizedBox(width: 4), Text('Myself', style: TextStyle(fontWeight: FontWeight.bold))]),
+              const Row(children: [
+                Icon(Icons.person, color: Colors.grey, size: 20),
+                SizedBox(width: 4),
+                Text('Myself', style: TextStyle(fontWeight: FontWeight.bold))
+              ]),
             ],
           ),
           const SizedBox(height: 16),
         ],
         CustomButton(
-          label: state.status == RideStatus.vehicleSelection ? 'Book ${state.selectedOption?.title ?? 'Ride'}' : 'SELECT LOCATIONS',
-          onPressed: (state.status == RideStatus.booked || _isBooking) ? null : () async {
-            _triggerHaptic();
-            if (state.status == RideStatus.vehicleSelection) {
-              setState(() => _isBooking = true);
-              await notifier.bookRide(); 
-              if (mounted) setState(() => _isBooking = false);
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select both locations')));
-            }
-          },
+          label: state.status == RideStatus.vehicleSelection
+              ? 'Book ${state.selectedOption?.title ?? 'Ride'}'
+              : 'SELECT LOCATIONS',
+          onPressed: (state.status == RideStatus.booked || _isBooking)
+              ? null
+              : () async {
+                  _triggerHaptic();
+                  if (state.status == RideStatus.vehicleSelection) {
+                    setState(() => _isBooking = true);
+                    await notifier.bookRide();
+                    if (mounted) setState(() => _isBooking = false);
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text('Please select both locations')));
+                  }
+                },
           isLoading: state.status == RideStatus.booked || _isBooking,
         ),
       ],
@@ -446,7 +541,8 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
             Expanded(
               child: Text(
                 state.dropoffAddress ?? 'Your Destination',
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                style:
+                    const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -459,7 +555,11 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
             children: [
               const Icon(Icons.timer, color: AppColors.primaryBlue),
               const SizedBox(width: 8),
-              Text(state.eta!, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.primaryBlue)),
+              Text(state.eta!,
+                  style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primaryBlue)),
             ],
           ),
         ],
@@ -477,8 +577,8 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
     ).animate().fadeIn();
   }
 
-  Widget _buildSuggestionsSection(TaxiState state, TaxiNotifier notifier, TextEditingController pCtrl, TextEditingController dCtrl) {
-    
+  Widget _buildSuggestionsSection(TaxiState state, TaxiNotifier notifier,
+      TextEditingController pCtrl, TextEditingController dCtrl) {
     // Filter suggestions based on what the user types
     final filtered = _addressSuggestions.where((s) {
       final name = s['name'].toString().toLowerCase();
@@ -510,9 +610,14 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
             padding: EdgeInsets.symmetric(vertical: 12),
             child: Row(
               children: [
-                SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+                SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2)),
                 SizedBox(width: 12),
-                Text('Searching...', style: TextStyle(fontWeight: FontWeight.w500, color: Colors.grey)),
+                Text('Searching...',
+                    style: TextStyle(
+                        fontWeight: FontWeight.w500, color: Colors.grey)),
               ],
             ),
           ),
@@ -578,8 +683,8 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
                     _searchQuery = '';
                   });
                   _sheetController.animateTo(
-                    state.status == RideStatus.vehicleSelection ? 0.45 : 0.35, 
-                    duration: const Duration(milliseconds: 300), 
+                    state.status == RideStatus.vehicleSelection ? 0.45 : 0.35,
+                    duration: const Duration(milliseconds: 300),
                     curve: Curves.easeOut,
                   );
                 },
@@ -593,7 +698,7 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
 
   Widget _buildFareEstimate(TaxiState state, TaxiNotifier notifier) {
     if (state.rideOptions.isEmpty) return const SizedBox.shrink();
-    
+
     if (state.selectedOption == null && state.rideOptions.isNotEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         notifier.selectOption(state.rideOptions.first);
@@ -601,25 +706,30 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
     }
 
     return Container(
-      constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.4),
+      constraints:
+          BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.4),
       child: ListView.separated(
         shrinkWrap: true,
         padding: EdgeInsets.zero,
         itemCount: state.rideOptions.length,
-        separatorBuilder: (context, index) => Divider(height: 1, color: isDark ? Colors.grey[800] : Colors.grey[200]),
+        separatorBuilder: (context, index) => Divider(
+            height: 1, color: isDark ? Colors.grey[800] : Colors.grey[200]),
         itemBuilder: (context, index) {
           final option = state.rideOptions[index];
           final isSelected = state.selectedOption?.id == option.id;
-          
+
           return GestureDetector(
             onTap: () => notifier.selectOption(option),
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
               decoration: BoxDecoration(
-                color: isSelected ? AppColors.primaryBlue.withValues(alpha: 0.1) : Colors.transparent,
+                color: isSelected
+                    ? AppColors.primaryBlue.withValues(alpha: 0.1)
+                    : Colors.transparent,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: isSelected ? AppColors.primaryBlue : Colors.transparent,
+                  color:
+                      isSelected ? AppColors.primaryBlue : Colors.transparent,
                 ),
               ),
               child: Row(
@@ -627,7 +737,9 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
                   if (option.assetPath != null)
                     Image.asset(option.assetPath!, width: 40, height: 40)
                   else
-                    Icon(option.icon, size: 40, color: isDark ? Colors.white : AppColors.primaryNavy),
+                    Icon(option.icon,
+                        size: 40,
+                        color: isDark ? Colors.white : AppColors.primaryNavy),
                   const SizedBox(width: 16),
                   Expanded(
                     child: Column(
@@ -635,26 +747,47 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
                       children: [
                         Row(
                           children: [
-                            Text(option.title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: isDark ? Colors.white : AppColors.textPrimary)),
+                            Text(option.title,
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                    color: isDark
+                                        ? Colors.white
+                                        : AppColors.textPrimary)),
                             if (option.tag != null) ...[
                               const SizedBox(width: 8),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
                                   color: AppColors.primaryBlue,
                                   borderRadius: BorderRadius.circular(4),
                                 ),
-                                child: Text(option.tag!, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                                child: Text(option.tag!,
+                                    style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold)),
                               ),
                             ]
                           ],
                         ),
                         const SizedBox(height: 4),
-                        Text(option.subtitle, style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[400] : AppColors.textSecondary)),
+                        Text(option.subtitle,
+                            style: TextStyle(
+                                fontSize: 12,
+                                color: isDark
+                                    ? Colors.grey[400]
+                                    : AppColors.textSecondary)),
                       ],
                     ),
                   ),
-                  Text('₹${option.price.toInt()}', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: isDark ? Colors.white : AppColors.textPrimary)),
+                  Text('₹${option.price.toInt()}',
+                      style: TextStyle(
+                          fontWeight: FontWeight.w900,
+                          fontSize: 16,
+                          color:
+                              isDark ? Colors.white : AppColors.textPrimary)),
                 ],
               ),
             ),
@@ -678,23 +811,37 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
                 color: isDark ? AppColors.textOnDark : AppColors.textPrimary,
               ),
             ),
-            Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4), decoration: BoxDecoration(color: Colors.green[50], borderRadius: BorderRadius.circular(8)), child: Text('OTP: ${state.otp}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green))),
+            Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                    color: Colors.green[50],
+                    borderRadius: BorderRadius.circular(8)),
+                child: Text('OTP: ${state.otp}',
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, color: Colors.green))),
           ],
         ),
         const SizedBox(height: 20),
         GlassCard(
           child: Row(
             children: [
-              const CircleAvatar(radius: 24, backgroundColor: AppColors.bgLightAlt, child: Icon(Iconsax.user, color: AppColors.primaryBlue)),
+              const CircleAvatar(
+                  radius: 24,
+                  backgroundColor: AppColors.bgLightAlt,
+                  child: Icon(Iconsax.user, color: AppColors.primaryBlue)),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(state.roadroboName ?? 'Roadrobo', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    Text(state.roadroboName ?? 'Roadrobo',
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 16)),
                     Text(
                       state.selectedOption?.title ?? 'Vehicle',
-                      style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                      style: const TextStyle(
+                          fontSize: 12, color: AppColors.textSecondary),
                     ),
                   ],
                 ),
@@ -720,10 +867,12 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
                   try {
                     final success = await launchUrl(url);
                     if (!success) {
-                      scaffoldMessenger.showSnackBar(const SnackBar(content: Text('Could not launch dialer')));
+                      scaffoldMessenger.showSnackBar(const SnackBar(
+                          content: Text('Could not launch dialer')));
                     }
                   } catch (e) {
-                    scaffoldMessenger.showSnackBar(const SnackBar(content: Text('Could not launch dialer')));
+                    scaffoldMessenger.showSnackBar(const SnackBar(
+                        content: Text('Could not launch dialer')));
                   }
                 },
               ),
@@ -758,6 +907,7 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
       ],
     ).animate().fadeIn();
   }
+
   Widget _buildCompletedSection(TaxiState state, TaxiNotifier notifier) {
     return Column(
       children: [
@@ -772,7 +922,8 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
           ),
         ),
         const SizedBox(height: 24),
-        const Text('How was your experience?', style: TextStyle(color: AppColors.textSecondary)),
+        const Text('How was your experience?',
+            style: TextStyle(color: AppColors.textSecondary)),
         const SizedBox(height: 16),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -783,8 +934,12 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
                 setState(() => _completedRating = index + 1);
               },
               child: Icon(
-                index < _completedRating ? Icons.star_rounded : Icons.star_border_rounded,
-                color: index < _completedRating ? Colors.amber : Colors.amber.withValues(alpha: 0.3),
+                index < _completedRating
+                    ? Icons.star_rounded
+                    : Icons.star_border_rounded,
+                color: index < _completedRating
+                    ? Colors.amber
+                    : Colors.amber.withValues(alpha: 0.3),
                 size: 36,
               ),
             );
@@ -833,7 +988,8 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
           shape: BoxShape.circle,
           boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 8)],
         ),
-        child: Icon(icon, size: 20, color: isDark ? Colors.white : AppColors.textPrimary),
+        child: Icon(icon,
+            size: 20, color: isDark ? Colors.white : AppColors.textPrimary),
       ),
     );
   }
@@ -841,13 +997,18 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
   Widget _buildETAIndicator(String eta) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(color: Colors.black87, borderRadius: BorderRadius.circular(20)),
+      decoration: BoxDecoration(
+          color: Colors.black87, borderRadius: BorderRadius.circular(20)),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           const Icon(Icons.timer, color: Colors.white, size: 14),
           const SizedBox(width: 8),
-          Text(eta, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+          Text(eta,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13)),
         ],
       ),
     );
@@ -862,10 +1023,14 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
           children: [
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(12)),
+              decoration: BoxDecoration(
+                  color: Colors.black, borderRadius: BorderRadius.circular(12)),
               child: Text(
                 isPickup ? 'PICKUP HERE' : 'SET DESTINATION',
-                style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold),
               ),
             ),
             const Icon(Icons.location_on, size: 44, color: AppColors.errorRed),
@@ -900,7 +1065,8 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
                 left: 24.0,
                 right: 24.0,
                 top: 24.0,
-                bottom: MediaQuery.of(bottomSheetContext).viewInsets.bottom + 24.0,
+                bottom:
+                    MediaQuery.of(bottomSheetContext).viewInsets.bottom + 24.0,
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -911,7 +1077,8 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
                     style: GoogleFonts.outfit(
                       fontSize: 20,
                       fontWeight: FontWeight.w700,
-                      color: isDark ? AppColors.textOnDark : AppColors.textPrimary,
+                      color:
+                          isDark ? AppColors.textOnDark : AppColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -919,7 +1086,9 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
                     'Please let us know why you are canceling.',
                     style: TextStyle(
                       fontSize: 14,
-                      color: isDark ? AppColors.textOnDarkMuted : AppColors.textSecondary,
+                      color: isDark
+                          ? AppColors.textOnDarkMuted
+                          : AppColors.textSecondary,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -935,15 +1104,21 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
                         child: Row(
                           children: [
                             Icon(
-                              selectedReason == reason ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-                              color: selectedReason == reason ? AppColors.primaryBlue : Colors.grey,
+                              selectedReason == reason
+                                  ? Icons.radio_button_checked
+                                  : Icons.radio_button_unchecked,
+                              color: selectedReason == reason
+                                  ? AppColors.primaryBlue
+                                  : Colors.grey,
                             ),
                             const SizedBox(width: 16),
                             Expanded(
                               child: Text(
                                 reason,
                                 style: TextStyle(
-                                  color: isDark ? AppColors.textOnDark : AppColors.textPrimary,
+                                  color: isDark
+                                      ? AppColors.textOnDark
+                                      : AppColors.textPrimary,
                                   fontSize: 16,
                                 ),
                               ),
@@ -961,10 +1136,15 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
                           onPressed: () => Navigator.pop(bottomSheetContext),
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            side: const BorderSide(color: AppColors.primaryBlue),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                            side:
+                                const BorderSide(color: AppColors.primaryBlue),
                           ),
-                          child: const Text('Keep Ride', style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.bold)),
+                          child: const Text('Keep Ride',
+                              style: TextStyle(
+                                  color: AppColors.primaryBlue,
+                                  fontWeight: FontWeight.bold)),
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -974,7 +1154,9 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
                           onPressed: () async {
                             if (selectedReason.isEmpty) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Please select a reason first')),
+                                const SnackBar(
+                                    content:
+                                        Text('Please select a reason first')),
                               );
                               return;
                             }
@@ -985,27 +1167,33 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
                                 await Supabase.instance.client
                                     .from('ride_bookings')
                                     .update({
-                                      'status': 'cancelled',
-                                      'cancellation_reason': selectedReason,
-                                      'cancelled_at': DateTime.now().toIso8601String(),
-                                    })
-                                    .eq('id', rideId);
+                                  'status': 'cancelled',
+                                  'cancellation_reason': selectedReason,
+                                  'cancelled_at':
+                                      DateTime.now().toIso8601String(),
+                                }).eq('id', rideId);
                               } catch (e) {
-                                debugPrint('Failed to log cancellation reason: $e');
+                                debugPrint(
+                                    'Failed to log cancellation reason: $e');
                               }
                             }
                             notifier.cancelRide();
-                            if (context.mounted) Navigator.pop(bottomSheetContext);
+                            if (context.mounted) {
+                              Navigator.pop(bottomSheetContext);
+                            }
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text('Ride cancelled: $selectedReason'),
+                                  content:
+                                      Text('Ride cancelled: $selectedReason'),
                                   backgroundColor: Colors.redAccent,
                                 ),
                               );
                             }
                           },
-                          backgroundColor: selectedReason.isEmpty ? Colors.grey : AppColors.errorRed,
+                          backgroundColor: selectedReason.isEmpty
+                              ? Colors.grey
+                              : AppColors.errorRed,
                         ),
                       ),
                     ],
@@ -1033,31 +1221,35 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
           final userId = userData?.id ?? 'demo';
 
           try {
-            await ref.read(paymentServiceProvider.notifier).startPayment(
-              PaymentDetails(
-                bookingId: state.rideId ?? '00000000-0000-0000-0000-000000000000',
-                bookingType: BookingType.ride,
-                totalCost: breakdown.totalPayable,
-                userId: userId,
-                contact: userData?.phone ?? '9876543210',
-                email: userData?.email ?? 'customer@example.com',
-                description: 'Taxi Ride Payment',
-              )
-            );
+            await ref
+                .read(paymentServiceProvider.notifier)
+                .startPayment(PaymentDetails(
+                  bookingId:
+                      state.rideId ?? '00000000-0000-0000-0000-000000000000',
+                  bookingType: BookingType.ride,
+                  totalCost: breakdown.totalPayable,
+                  userId: userId,
+                  contact: userData?.phone ?? '9876543210',
+                  email: userData?.email ?? 'customer@example.com',
+                  description: 'Taxi Ride Payment',
+                ));
 
             // On success
-            await ref.read(transactionRepositoryProvider).logTransaction(AppTransaction(
-              id: '',
-              userId: userId,
-              razoprayPaymentId: 'VERIFIED_ON_SERVER',
-              baseAmount: breakdown.baseAmount,
-              gstAmount: breakdown.gstAmount,
-              platformFee: breakdown.platformFee,
-              handlingCharges: breakdown.handlingCharges,
-              totalAmount: breakdown.totalPayable,
-              description: 'Taxi Ride: ${state.pickupAddress} to ${state.dropoffAddress}',
-              timestamp: DateTime.now(),
-            ));
+            await ref
+                .read(transactionRepositoryProvider)
+                .logTransaction(AppTransaction(
+                  id: '',
+                  userId: userId,
+                  razoprayPaymentId: 'VERIFIED_ON_SERVER',
+                  baseAmount: breakdown.baseAmount,
+                  gstAmount: breakdown.gstAmount,
+                  platformFee: breakdown.platformFee,
+                  handlingCharges: breakdown.handlingCharges,
+                  totalAmount: breakdown.totalPayable,
+                  description:
+                      'Taxi Ride: ${state.pickupAddress} to ${state.dropoffAddress}',
+                  timestamp: DateTime.now(),
+                ));
 
             ref.read(taxiProvider.notifier).reset();
             if (context.mounted) Navigator.pop(context);

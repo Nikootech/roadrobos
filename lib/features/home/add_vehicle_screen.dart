@@ -26,7 +26,7 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
   String _selectedFuelType = 'Petrol';
   XFile? _pickedImage;
   final ImagePicker _picker = ImagePicker();
-  
+
   final _nameController = TextEditingController();
   final _modelController = TextEditingController();
   final _plateController = TextEditingController();
@@ -51,12 +51,14 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
         insuranceExpiry: _insuranceExpiry,
         taxExpiry: _taxExpiry,
       );
-      
+
       ref.read(allVehiclesProvider.notifier).addVehicle(newVehicle);
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Vehicle added to your garage!'), backgroundColor: AppColors.successGreen),
+          const SnackBar(
+              content: Text('Vehicle added to your garage!'),
+              backgroundColor: AppColors.successGreen),
         );
         context.pop();
       }
@@ -138,7 +140,8 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                         child: const Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.camera_alt_rounded, color: AppColors.primaryBlue, size: 32),
+                            Icon(Icons.camera_alt_rounded,
+                                color: AppColors.primaryBlue, size: 32),
                             SizedBox(height: 8),
                             Text(
                               'Capture',
@@ -180,7 +183,8 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                         child: const Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.photo_library_rounded, color: AppColors.primaryBlue, size: 32),
+                            Icon(Icons.photo_library_rounded,
+                                color: AppColors.primaryBlue, size: 32),
                             SizedBox(height: 8),
                             Text(
                               'Upload',
@@ -222,12 +226,19 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                     child: Container(
                       width: 40,
                       height: 40,
-                      decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: AppColors.border)),
-                      child: const Icon(Icons.arrow_back_ios_new_rounded, size: 16, color: AppColors.textPrimary),
+                      decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: AppColors.border)),
+                      child: const Icon(Icons.arrow_back_ios_new_rounded,
+                          size: 16, color: AppColors.textPrimary),
                     ),
                   ),
                 ),
-                title: Text(AppStrings.addNewVehicle, style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                title: Text(AppStrings.addNewVehicle,
+                    style: GoogleFonts.outfit(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary)),
               ),
 
               // Category Selection
@@ -235,19 +246,25 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                 child: Container(
                   margin: const EdgeInsets.all(16),
                   padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(color: AppColors.bgWhite, borderRadius: BorderRadius.circular(16)),
+                  decoration: BoxDecoration(
+                      color: AppColors.bgWhite,
+                      borderRadius: BorderRadius.circular(16)),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Vehicle Category', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700)),
+                      Text('Vehicle Category',
+                          style: GoogleFonts.outfit(
+                              fontSize: 16, fontWeight: FontWeight.w700)),
                       const SizedBox(height: 16),
                       Row(
                         children: [
-                          _buildCategoryItem('Car', Icons.directions_car_rounded),
+                          _buildCategoryItem(
+                              'Car', Icons.directions_car_rounded),
                           const SizedBox(width: 12),
                           _buildCategoryItem('Bike', Icons.pedal_bike_rounded),
                           const SizedBox(width: 12),
-                          _buildCategoryItem('EV Bike', Icons.electric_bike_rounded),
+                          _buildCategoryItem(
+                              'EV Bike', Icons.electric_bike_rounded),
                         ],
                       ),
                     ],
@@ -267,13 +284,23 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                   child: GestureDetector(
                     onTap: _pickImage,
                     child: _pickedImage != null
-                        ? ClipRRect(borderRadius: BorderRadius.circular(16), child: Image.file(File(_pickedImage!.path), width: double.infinity, height: 140, fit: BoxFit.cover))
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: Image.file(File(_pickedImage!.path),
+                                width: double.infinity,
+                                height: 140,
+                                fit: BoxFit.cover))
                         : const Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.camera_alt_outlined, color: AppColors.primaryBlue, size: 28),
+                              Icon(Icons.camera_alt_outlined,
+                                  color: AppColors.primaryBlue, size: 28),
                               SizedBox(height: 8),
-                              Text('Upload Photo', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.textSecondary)),
+                              Text('Upload Photo',
+                                  style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      color: AppColors.textSecondary)),
                             ],
                           ),
                   ),
@@ -284,14 +311,22 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                 child: Container(
                   margin: const EdgeInsets.all(16),
                   padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(color: AppColors.bgWhite, borderRadius: BorderRadius.circular(16)),
+                  decoration: BoxDecoration(
+                      color: AppColors.bgWhite,
+                      borderRadius: BorderRadius.circular(16)),
                   child: Column(
                     children: [
                       CustomTextField(
                         controller: _nameController,
                         label: AppStrings.vehicleName,
-                        hint: _selectedCategory == 'Car' ? 'e.g. Hyundai Creta' : (_selectedCategory == 'Bike' ? 'e.g. Royal Enfield' : 'e.g. Revolt RV400'),
-                        prefixIcon: _selectedCategory == 'Car' ? Icons.directions_car_outlined : Icons.pedal_bike_outlined,
+                        hint: _selectedCategory == 'Car'
+                            ? 'e.g. Hyundai Creta'
+                            : (_selectedCategory == 'Bike'
+                                ? 'e.g. Royal Enfield'
+                                : 'e.g. Revolt RV400'),
+                        prefixIcon: _selectedCategory == 'Car'
+                            ? Icons.directions_car_outlined
+                            : Icons.pedal_bike_outlined,
                       ),
                       const SizedBox(height: 14),
                       CustomTextField(
@@ -323,7 +358,8 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                         hint: 'Select FC Expiry Date',
                         selectedDate: _fcExpiry,
                         prefixIcon: Icons.description_rounded,
-                        onDateSelected: (date) => setState(() => _fcExpiry = date),
+                        onDateSelected: (date) =>
+                            setState(() => _fcExpiry = date),
                       ),
                       const SizedBox(height: 14),
 
@@ -333,7 +369,8 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                         hint: 'Select Insurance Expiry Date',
                         selectedDate: _insuranceExpiry,
                         prefixIcon: Icons.shield_rounded,
-                        onDateSelected: (date) => setState(() => _insuranceExpiry = date),
+                        onDateSelected: (date) =>
+                            setState(() => _insuranceExpiry = date),
                       ),
                       const SizedBox(height: 14),
 
@@ -343,7 +380,8 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                         hint: 'Select Road Tax Expiry Date',
                         selectedDate: _taxExpiry,
                         prefixIcon: Icons.receipt_long_rounded,
-                        onDateSelected: (date) => setState(() => _taxExpiry = date),
+                        onDateSelected: (date) =>
+                            setState(() => _taxExpiry = date),
                       ),
                     ],
                   ),
@@ -354,28 +392,47 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                 child: Container(
                   margin: const EdgeInsets.symmetric(horizontal: 16),
                   padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(color: AppColors.bgWhite, borderRadius: BorderRadius.circular(16)),
+                  decoration: BoxDecoration(
+                      color: AppColors.bgWhite,
+                      borderRadius: BorderRadius.circular(16)),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Fuel Type', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
+                      const Text('Fuel Type',
+                          style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary)),
                       const SizedBox(height: 12),
                       Row(
                         children: ['Petrol', 'Diesel', 'EV', 'CNG'].map((fuel) {
                           final isSelected = _selectedFuelType == fuel;
                           return Expanded(
                             child: GestureDetector(
-                              onTap: () => setState(() => _selectedFuelType = fuel),
+                              onTap: () =>
+                                  setState(() => _selectedFuelType = fuel),
                               child: Container(
                                 margin: const EdgeInsets.only(right: 8),
-                                padding: const EdgeInsets.symmetric(vertical: 10),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 10),
                                 decoration: BoxDecoration(
-                                  color: isSelected ? AppColors.primaryBlue : AppColors.bgLightCard,
+                                  color: isSelected
+                                      ? AppColors.primaryBlue
+                                      : AppColors.bgLightCard,
                                   borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(color: isSelected ? AppColors.primaryBlue : AppColors.border),
+                                  border: Border.all(
+                                      color: isSelected
+                                          ? AppColors.primaryBlue
+                                          : AppColors.border),
                                 ),
                                 child: Center(
-                                  child: Text(fuel, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: isSelected ? Colors.white : AppColors.textSecondary)),
+                                  child: Text(fuel,
+                                      style: TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w500,
+                                          color: isSelected
+                                              ? Colors.white
+                                              : AppColors.textSecondary)),
                                 ),
                               ),
                             ),
@@ -390,14 +447,20 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
               const SliverToBoxAdapter(child: SizedBox(height: 120)),
             ],
           ),
-
           Positioned(
             bottom: 0,
             left: 0,
             right: 0,
             child: Container(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-              decoration: const BoxDecoration(color: AppColors.bgWhite, boxShadow: [BoxShadow(color: AppColors.shadowMedium, blurRadius: 16, offset: Offset(0, -4))]),
+              decoration: const BoxDecoration(
+                  color: AppColors.bgWhite,
+                  boxShadow: [
+                    BoxShadow(
+                        color: AppColors.shadowMedium,
+                        blurRadius: 16,
+                        offset: Offset(0, -4))
+                  ]),
               child: CustomButton(
                 label: AppStrings.save,
                 onPressed: _saveVehicle,
@@ -423,15 +486,30 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 16),
           decoration: BoxDecoration(
-            color: isSelected ? AppColors.primaryBlue.withValues(alpha: 0.1) : Colors.transparent,
+            color: isSelected
+                ? AppColors.primaryBlue.withValues(alpha: 0.1)
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: isSelected ? AppColors.primaryBlue : AppColors.border, width: isSelected ? 2 : 1),
+            border: Border.all(
+                color: isSelected ? AppColors.primaryBlue : AppColors.border,
+                width: isSelected ? 2 : 1),
           ),
           child: Column(
             children: [
-              Icon(icon, color: isSelected ? AppColors.primaryBlue : AppColors.textSecondary, size: 24),
+              Icon(icon,
+                  color: isSelected
+                      ? AppColors.primaryBlue
+                      : AppColors.textSecondary,
+                  size: 24),
               const SizedBox(height: 8),
-              Text(label, style: TextStyle(fontSize: 12, fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500, color: isSelected ? AppColors.primaryBlue : AppColors.textSecondary)),
+              Text(label,
+                  style: TextStyle(
+                      fontSize: 12,
+                      fontWeight:
+                          isSelected ? FontWeight.w700 : FontWeight.w500,
+                      color: isSelected
+                          ? AppColors.primaryBlue
+                          : AppColors.textSecondary)),
             ],
           ),
         ),
@@ -492,17 +570,21 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
           },
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: GoogleFonts.outfit(color: AppColors.textMuted, fontSize: 14),
+            hintStyle:
+                GoogleFonts.outfit(color: AppColors.textMuted, fontSize: 14),
             filled: true,
             fillColor: AppColors.bgLightCard,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             prefixIcon: Icon(prefixIcon, color: AppColors.textMuted, size: 20),
             suffixIcon: selectedDate != null
                 ? IconButton(
-                    icon: const Icon(Icons.clear_rounded, color: AppColors.textMuted, size: 18),
+                    icon: const Icon(Icons.clear_rounded,
+                        color: AppColors.textMuted, size: 18),
                     onPressed: () => onDateSelected(null),
                   )
-                : const Icon(Icons.calendar_today_rounded, color: AppColors.textMuted, size: 18),
+                : const Icon(Icons.calendar_today_rounded,
+                    color: AppColors.textMuted, size: 18),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: AppColors.border),
@@ -513,7 +595,8 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.primaryBlue, width: 1.5),
+              borderSide:
+                  const BorderSide(color: AppColors.primaryBlue, width: 1.5),
             ),
           ),
           style: GoogleFonts.outfit(
@@ -525,4 +608,3 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
     );
   }
 }
-

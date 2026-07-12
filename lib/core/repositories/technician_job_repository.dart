@@ -9,7 +9,6 @@ import '../data/local_database.dart';
 import '../extensions/datetime_extensions.dart';
 import '../services/unified_sync_service.dart';
 
-
 class TechnicianJobRepository {
   final SupabaseClient _supabase = Supabase.instance.client;
   final AppDatabase _db;
@@ -70,7 +69,8 @@ class TechnicianJobRepository {
           .stream(primaryKey: ['id'])
           .eq('assigned_tech_id', techId)
           .map((list) => list
-              .map((map) => TechnicianJobModel.fromMap(map, map['id'].toString()))
+              .map((map) =>
+                  TechnicianJobModel.fromMap(map, map['id'].toString()))
               .toList());
     }
 
@@ -81,7 +81,9 @@ class TechnicianJobRepository {
         .eq('assigned_tech_id', techId)
         .order('created_at', ascending: false)
         .then((data) {
-      final jobs = data.map((map) => TechnicianJobModel.fromMap(map, map['id'].toString())).toList();
+      final jobs = data
+          .map((map) => TechnicianJobModel.fromMap(map, map['id'].toString()))
+          .toList();
       _cacheJobs(jobs);
     }).catchError((e) {
       debugPrint('Supabase watchJobsForTech offline fallback: $e');
@@ -90,7 +92,10 @@ class TechnicianJobRepository {
     // Return local Drift stream
     final query = _db.select(_db.cachedTechnicianJobs)
       ..where((t) => t.assignedTechId.equals(techId))
-      ..orderBy([(t) => drift.OrderingTerm(expression: t.createdAt, mode: drift.OrderingMode.desc)]);
+      ..orderBy([
+        (t) => drift.OrderingTerm(
+            expression: t.createdAt, mode: drift.OrderingMode.desc)
+      ]);
 
     return query.watch().map((rows) {
       return rows.map((row) {
@@ -103,8 +108,12 @@ class TechnicianJobRepository {
           date: row.date,
           time: row.time,
           progress: row.progress,
-          checklist: (jsonDecode(row.checklist) as List).map((c) => FirestoreChecklistItem.fromMap(c)).toList(),
-          parts: (jsonDecode(row.parts) as List).map((p) => FirestoreSparePart.fromMap(p)).toList(),
+          checklist: (jsonDecode(row.checklist) as List)
+              .map((c) => FirestoreChecklistItem.fromMap(c))
+              .toList(),
+          parts: (jsonDecode(row.parts) as List)
+              .map((p) => FirestoreSparePart.fromMap(p))
+              .toList(),
           status: row.status,
           price: row.price,
           assignedTechId: row.assignedTechId,
@@ -131,7 +140,9 @@ class TechnicianJobRepository {
   Future<void> updateJobStatus(String jobId, String status) async {
     // 1. Optimistic Local Update (native only — ISSUE-04)
     if (!kIsWeb) {
-      await (_db.update(_db.cachedTechnicianJobs)..where((t) => t.id.equals(jobId))).write(
+      await (_db.update(_db.cachedTechnicianJobs)
+            ..where((t) => t.id.equals(jobId)))
+          .write(
         CachedTechnicianJobsCompanion(status: drift.Value(status)),
       );
     }
@@ -140,8 +151,7 @@ class TechnicianJobRepository {
     try {
       await _supabase
           .from('technician_jobs')
-          .update({'status': status})
-          .eq('id', jobId);
+          .update({'status': status}).eq('id', jobId);
     } catch (e) {
       // 3. Queue for sync if offline (no-op on web — ISSUE-04)
       await _syncService.enqueue(
@@ -154,10 +164,13 @@ class TechnicianJobRepository {
   }
 
   /// Update vehicle details
-  Future<void> updateVehicleDetails(String jobId, String model, String plate) async {
+  Future<void> updateVehicleDetails(
+      String jobId, String model, String plate) async {
     // Optimistic Local (native only — ISSUE-04)
     if (!kIsWeb) {
-      await (_db.update(_db.cachedTechnicianJobs)..where((t) => t.id.equals(jobId))).write(
+      await (_db.update(_db.cachedTechnicianJobs)
+            ..where((t) => t.id.equals(jobId)))
+          .write(
         CachedTechnicianJobsCompanion(
           vehicleModel: drift.Value(model),
           vehiclePlate: drift.Value(plate),
@@ -182,7 +195,9 @@ class TechnicianJobRepository {
   /// Update job progress value
   Future<void> updateJobProgress(String jobId, double progress) async {
     if (!kIsWeb) {
-      await (_db.update(_db.cachedTechnicianJobs)..where((t) => t.id.equals(jobId))).write(
+      await (_db.update(_db.cachedTechnicianJobs)
+            ..where((t) => t.id.equals(jobId)))
+          .write(
         CachedTechnicianJobsCompanion(progress: drift.Value(progress)),
       );
     }
@@ -190,8 +205,7 @@ class TechnicianJobRepository {
     try {
       await _supabase
           .from('technician_jobs')
-          .update({'progress': progress})
-          .eq('id', jobId);
+          .update({'progress': progress}).eq('id', jobId);
     } catch (e) {
       await _syncService.enqueue(
         entityType: 'technician_job',
@@ -205,28 +219,43 @@ class TechnicianJobRepository {
   Future<void> toggleChecklistItem(String jobId, int index) async {
     if (kIsWeb) {
       // Web: fetch from Supabase, toggle, write back (no local cache — ISSUE-04)
-      final data = await _supabase.from('technician_jobs').select('checklist, progress').eq('id', jobId).maybeSingle();
+      final data = await _supabase
+          .from('technician_jobs')
+          .select('checklist, progress')
+          .eq('id', jobId)
+          .maybeSingle();
       if (data == null) return;
-      final checklist = (data['checklist'] as List? ?? []).map((c) => Map<String, dynamic>.from(c as Map)).toList();
+      final checklist = (data['checklist'] as List? ?? [])
+          .map((c) => Map<String, dynamic>.from(c as Map))
+          .toList();
       if (index >= 0 && index < checklist.length) {
         checklist[index]['isDone'] = !(checklist[index]['isDone'] ?? false);
-        final doneCount = checklist.where((item) => item['isDone'] == true).length;
+        final doneCount =
+            checklist.where((item) => item['isDone'] == true).length;
         final progress = doneCount / checklist.length;
-        await _supabase.from('technician_jobs').update({'checklist': checklist, 'progress': progress}).eq('id', jobId);
+        await _supabase.from('technician_jobs').update(
+            {'checklist': checklist, 'progress': progress}).eq('id', jobId);
       }
       return;
     }
 
     // Native: Fetch from local db first for optimistic update
-    final localJob = await (_db.select(_db.cachedTechnicianJobs)..where((t) => t.id.equals(jobId))).getSingleOrNull();
+    final localJob = await (_db.select(_db.cachedTechnicianJobs)
+          ..where((t) => t.id.equals(jobId)))
+        .getSingleOrNull();
     if (localJob != null) {
-      final checklist = (jsonDecode(localJob.checklist) as List).map((c) => Map<String, dynamic>.from(c)).toList();
+      final checklist = (jsonDecode(localJob.checklist) as List)
+          .map((c) => Map<String, dynamic>.from(c))
+          .toList();
       if (index >= 0 && index < checklist.length) {
         checklist[index]['isDone'] = !(checklist[index]['isDone'] ?? false);
-        final doneCount = checklist.where((item) => item['isDone'] == true).length;
+        final doneCount =
+            checklist.where((item) => item['isDone'] == true).length;
         final progress = doneCount / checklist.length;
 
-        await (_db.update(_db.cachedTechnicianJobs)..where((t) => t.id.equals(jobId))).write(
+        await (_db.update(_db.cachedTechnicianJobs)
+              ..where((t) => t.id.equals(jobId)))
+            .write(
           CachedTechnicianJobsCompanion(
             checklist: drift.Value(jsonEncode(checklist)),
             progress: drift.Value(progress),
@@ -242,7 +271,12 @@ class TechnicianJobRepository {
           await _syncService.enqueue(
             entityType: 'technician_job',
             action: 'toggle_checklist',
-            payload: {'jobId': jobId, 'index': index, 'checklist': checklist, 'progress': progress},
+            payload: {
+              'jobId': jobId,
+              'index': index,
+              'checklist': checklist,
+              'progress': progress
+            },
           );
         }
       }
@@ -253,21 +287,35 @@ class TechnicianJobRepository {
   Future<void> addSparePart(String jobId, FirestoreSparePart part) async {
     if (kIsWeb) {
       // Web: fetch from Supabase, add part, write back (no local cache — ISSUE-04)
-      final data = await _supabase.from('technician_jobs').select('parts').eq('id', jobId).maybeSingle();
+      final data = await _supabase
+          .from('technician_jobs')
+          .select('parts')
+          .eq('id', jobId)
+          .maybeSingle();
       if (data == null) return;
-      final parts = (data['parts'] as List? ?? []).map((p) => Map<String, dynamic>.from(p as Map)).toList();
+      final parts = (data['parts'] as List? ?? [])
+          .map((p) => Map<String, dynamic>.from(p as Map))
+          .toList();
       parts.add(part.toMap());
-      await _supabase.from('technician_jobs').update({'parts': parts}).eq('id', jobId);
+      await _supabase
+          .from('technician_jobs')
+          .update({'parts': parts}).eq('id', jobId);
       return;
     }
 
     // Native: optimistic local update
-    final localJob = await (_db.select(_db.cachedTechnicianJobs)..where((t) => t.id.equals(jobId))).getSingleOrNull();
+    final localJob = await (_db.select(_db.cachedTechnicianJobs)
+          ..where((t) => t.id.equals(jobId)))
+        .getSingleOrNull();
     if (localJob != null) {
-      final parts = (jsonDecode(localJob.parts) as List).map((p) => Map<String, dynamic>.from(p)).toList();
+      final parts = (jsonDecode(localJob.parts) as List)
+          .map((p) => Map<String, dynamic>.from(p))
+          .toList();
       parts.add(part.toMap());
 
-      await (_db.update(_db.cachedTechnicianJobs)..where((t) => t.id.equals(jobId))).write(
+      await (_db.update(_db.cachedTechnicianJobs)
+            ..where((t) => t.id.equals(jobId)))
+          .write(
         CachedTechnicianJobsCompanion(
           parts: drift.Value(jsonEncode(parts)),
         ),
@@ -297,11 +345,13 @@ class TechnicianJobRepository {
   Stream<Map<String, int>> watchJobMetrics() {
     return _supabase
         .from('technician_jobs')
-        .stream(primaryKey: ['id'])
-        .map((list) {
+        .stream(primaryKey: ['id']).map((list) {
       return {
         'scheduled': list.where((j) => j['status'] == 'SCHEDULED').length,
-        'inProgress': list.where((j) => j['status'] == 'IN PROGRESS' || j['status'] == 'ACCEPTED').length,
+        'inProgress': list
+            .where((j) =>
+                j['status'] == 'IN PROGRESS' || j['status'] == 'ACCEPTED')
+            .length,
         'completed': list.where((j) => j['status'] == 'COMPLETED').length,
         'total': list.length,
       };
@@ -322,7 +372,8 @@ class TechnicianJobRepository {
   }
 }
 
-final technicianJobRepositoryProvider = Provider<TechnicianJobRepository>((ref) {
+final technicianJobRepositoryProvider =
+    Provider<TechnicianJobRepository>((ref) {
   return TechnicianJobRepository(
     ref.watch(localDatabaseProvider),
     ref.watch(unifiedSyncServiceProvider),

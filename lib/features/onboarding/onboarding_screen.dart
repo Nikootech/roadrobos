@@ -81,9 +81,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: GestureDetector(
-                    onTap: () async {
+                  onTap: () async {
                     final router = GoRouter.of(context);
-                    await ref.read(localStorageServiceProvider).setOnboardingComplete();
+                    await ref
+                        .read(localStorageServiceProvider)
+                        .setOnboardingComplete();
                     router.go('/auth/role-selection');
                   },
                   child: Container(
@@ -217,7 +219,8 @@ class _OnboardingPage extends StatelessWidget {
                       color: data.color,
                     )
                         .animate(
-                          onPlay: (controller) => controller.repeat(reverse: true),
+                          onPlay: (controller) =>
+                              controller.repeat(reverse: true),
                         )
                         .scale(
                           begin: const Offset(0.95, 0.95),
@@ -302,4 +305,3 @@ class _OnboardingPage extends StatelessWidget {
     );
   }
 }
-

@@ -14,8 +14,10 @@ class ServiceHistoryScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final userId = ref.watch(authNotifierProvider).value?.id;
-    final servicesAsync = userId != null 
-        ? ref.watch(serviceBookingRepositoryProvider).getPagedCustomerServiceBookings(userId, limit: 50) 
+    final servicesAsync = userId != null
+        ? ref
+            .watch(serviceBookingRepositoryProvider)
+            .getPagedCustomerServiceBookings(userId, limit: 50)
         : Future<List>.value([]);
 
     return Scaffold(
@@ -24,10 +26,13 @@ class ServiceHistoryScreen extends ConsumerWidget {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: AppColors.textPrimary),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded,
+              size: 18, color: AppColors.textPrimary),
           onPressed: () => context.pop(),
         ),
-        title: const Text('Service History', style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
+        title: const Text('Service History',
+            style: TextStyle(
+                color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
       ),
       body: FutureBuilder(
         future: servicesAsync,
@@ -35,17 +40,20 @@ class ServiceHistoryScreen extends ConsumerWidget {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
-          
+
           final services = snapshot.data ?? [];
-          
+
           if (services.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.history_rounded, size: 80, color: AppColors.textMuted.withValues(alpha: 0.2)),
+                  Icon(Icons.history_rounded,
+                      size: 80,
+                      color: AppColors.textMuted.withValues(alpha: 0.2)),
                   const SizedBox(height: 16),
-                  const Text('No service history found', style: TextStyle(color: AppColors.textSecondary)),
+                  const Text('No service history found',
+                      style: TextStyle(color: AppColors.textSecondary)),
                 ],
               ),
             );
@@ -70,7 +78,8 @@ class ServiceHistoryScreen extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardBg = isDark ? AppColors.bgDarkCard : Colors.white;
     final textCol = isDark ? AppColors.textOnDark : AppColors.textPrimary;
-    final subTextCol = isDark ? AppColors.textOnDarkMuted : AppColors.textSecondary;
+    final subTextCol =
+        isDark ? AppColors.textOnDarkMuted : AppColors.textSecondary;
     final borderCol = isDark ? Colors.transparent : AppColors.border;
 
     return Container(
@@ -79,13 +88,15 @@ class ServiceHistoryScreen extends ConsumerWidget {
         color: cardBg,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: borderCol),
-        boxShadow: isDark ? [] : [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          )
-        ],
+        boxShadow: isDark
+            ? []
+            : [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.03),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                )
+              ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -131,7 +142,8 @@ class ServiceHistoryScreen extends ConsumerWidget {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
                   color: AppColors.primaryBlue.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
@@ -166,12 +178,14 @@ class ServiceHistoryScreen extends ConsumerWidget {
               ),
               const Spacer(),
               TextButton.icon(
-                onPressed: () => NavHelpers.showSuccess(context, 'Invoice PDF downloaded successfully!'),
+                onPressed: () => NavHelpers.showSuccess(
+                    context, 'Invoice PDF downloaded successfully!'),
                 icon: const Icon(Icons.download_rounded, size: 16),
                 label: const Text('Invoice'),
                 style: TextButton.styleFrom(
                   foregroundColor: AppColors.primaryBlue,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   textStyle: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 12,
@@ -185,4 +199,3 @@ class ServiceHistoryScreen extends ConsumerWidget {
     ).animate().fadeIn().slideY(begin: 0.1, end: 0);
   }
 }
-

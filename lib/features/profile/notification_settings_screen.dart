@@ -9,10 +9,12 @@ class NotificationSettingsScreen extends ConsumerStatefulWidget {
   const NotificationSettingsScreen({super.key});
 
   @override
-  ConsumerState<NotificationSettingsScreen> createState() => _NotificationSettingsScreenState();
+  ConsumerState<NotificationSettingsScreen> createState() =>
+      _NotificationSettingsScreenState();
 }
 
-class _NotificationSettingsScreenState extends ConsumerState<NotificationSettingsScreen> {
+class _NotificationSettingsScreenState
+    extends ConsumerState<NotificationSettingsScreen> {
   // Notification Channels
   bool _pushNotifications = true;
   bool _emailNotifications = true;
@@ -51,7 +53,8 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardBgColor = isDark ? AppColors.bgDarkCard : Colors.white;
-    final headerTextColor = isDark ? AppColors.textOnDarkMuted : AppColors.textSecondary;
+    final headerTextColor =
+        isDark ? AppColors.textOnDarkMuted : AppColors.textSecondary;
     final scaffoldBg = Theme.of(context).scaffoldBackgroundColor;
 
     return Scaffold(
@@ -60,7 +63,8 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
         backgroundColor: isDark ? AppColors.bgDarkDeep : Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: isDark ? Colors.white : AppColors.textPrimary),
+          icon: Icon(Icons.arrow_back_ios_new_rounded,
+              size: 18, color: isDark ? Colors.white : AppColors.textPrimary),
           onPressed: () => context.pop(),
         ),
         title: Text(
@@ -87,7 +91,9 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
                 _pushNotifications,
                 (v) {
                   setState(() => _pushNotifications = v);
-                  ref.read(userProvider.notifier).updateNotificationPreferences({'push': v});
+                  ref
+                      .read(userProvider.notifier)
+                      .updateNotificationPreferences({'push': v});
                 },
               ),
               const Divider(height: 1, indent: 60),
@@ -98,7 +104,9 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
                 _emailNotifications,
                 (v) {
                   setState(() => _emailNotifications = v);
-                  ref.read(userProvider.notifier).updateNotificationPreferences({'email': v});
+                  ref
+                      .read(userProvider.notifier)
+                      .updateNotificationPreferences({'email': v});
                 },
               ),
               const Divider(height: 1, indent: 60),
@@ -109,7 +117,9 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
                 _smsAlerts,
                 (v) {
                   setState(() => _smsAlerts = v);
-                  ref.read(userProvider.notifier).updateNotificationPreferences({'sms': v});
+                  ref
+                      .read(userProvider.notifier)
+                      .updateNotificationPreferences({'sms': v});
                 },
               ),
               const Divider(height: 1, indent: 60),
@@ -120,7 +130,9 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
                 _whatsappUpdates,
                 (v) {
                   setState(() => _whatsappUpdates = v);
-                  ref.read(userProvider.notifier).updateNotificationPreferences({'whatsapp': v});
+                  ref
+                      .read(userProvider.notifier)
+                      .updateNotificationPreferences({'whatsapp': v});
                 },
               ),
             ]),
@@ -135,7 +147,9 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
                 _rides,
                 (v) {
                   setState(() => _rides = v);
-                  ref.read(userProvider.notifier).updateNotificationPreferences({'rides': v});
+                  ref
+                      .read(userProvider.notifier)
+                      .updateNotificationPreferences({'rides': v});
                 },
               ),
               const Divider(height: 1, indent: 60),
@@ -146,7 +160,9 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
                 _offers,
                 (v) {
                   setState(() => _offers = v);
-                  ref.read(userProvider.notifier).updateNotificationPreferences({'offers': v});
+                  ref
+                      .read(userProvider.notifier)
+                      .updateNotificationPreferences({'offers': v});
                 },
               ),
               const Divider(height: 1, indent: 60),
@@ -157,7 +173,9 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
                 _maintenance,
                 (v) {
                   setState(() => _maintenance = v);
-                  ref.read(userProvider.notifier).updateNotificationPreferences({'maintenance': v});
+                  ref
+                      .read(userProvider.notifier)
+                      .updateNotificationPreferences({'maintenance': v});
                 },
               ),
               const Divider(height: 1, indent: 60),
@@ -168,7 +186,9 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
                 _wallet,
                 (v) {
                   setState(() => _wallet = v);
-                  ref.read(userProvider.notifier).updateNotificationPreferences({'wallet': v});
+                  ref
+                      .read(userProvider.notifier)
+                      .updateNotificationPreferences({'wallet': v});
                 },
               ),
             ]),
@@ -183,7 +203,9 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
                 _quietHours,
                 (v) {
                   setState(() => _quietHours = v);
-                  ref.read(userProvider.notifier).updateNotificationPreferences({'quiet': v});
+                  ref
+                      .read(userProvider.notifier)
+                      .updateNotificationPreferences({'quiet': v});
                 },
               ),
               const Divider(height: 1, indent: 60),
@@ -194,7 +216,9 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
                 _soundVibration,
                 (v) {
                   setState(() => _soundVibration = v);
-                  ref.read(userProvider.notifier).updateNotificationPreferences({'sound': v});
+                  ref
+                      .read(userProvider.notifier)
+                      .updateNotificationPreferences({'sound': v});
                 },
               ),
             ]),
@@ -207,7 +231,8 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
               ),
               child: const Row(
                 children: [
-                  Icon(Icons.info_outline_rounded, color: AppColors.primaryBlue, size: 18),
+                  Icon(Icons.info_outline_rounded,
+                      color: AppColors.primaryBlue, size: 18),
                   SizedBox(width: 12),
                   Expanded(
                     child: Text(
@@ -272,8 +297,10 @@ class _NotificationSettingsScreenState extends ConsumerState<NotificationSetting
   ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final tileTitleColor = isDark ? Colors.white : AppColors.textPrimary;
-    final tileSubColor = isDark ? AppColors.textOnDarkMuted : AppColors.textSecondary;
-    final iconBgColor = isDark ? AppColors.bgDarkSurface : AppColors.bgLightGrey;
+    final tileSubColor =
+        isDark ? AppColors.textOnDarkMuted : AppColors.textSecondary;
+    final iconBgColor =
+        isDark ? AppColors.bgDarkSurface : AppColors.bgLightGrey;
 
     return SwitchListTile(
       value: value,

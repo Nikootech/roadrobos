@@ -29,7 +29,8 @@ void main() {
     mockAuth = MockAuthService();
     mockApprovalRepo = MockApprovalRepository();
 
-    when(() => mockAuth.authStateChanges).thenAnswer((_) => const Stream.empty());
+    when(() => mockAuth.authStateChanges)
+        .thenAnswer((_) => const Stream.empty());
     when(() => mockAuth.restoredUser).thenReturn(null);
     when(() => mockAuth.currentUser).thenReturn(null);
   });

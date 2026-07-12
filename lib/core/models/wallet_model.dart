@@ -23,8 +23,8 @@ class Wallet {
     return Wallet(
       userId: map['id'] ?? map['userId'] ?? '',
       balance: (map['balance'] ?? 0.0).toDouble(),
-      lastUpdated: map['updated_at'] != null 
-          ? DateTime.parse(map['updated_at']) 
+      lastUpdated: map['updated_at'] != null
+          ? DateTime.parse(map['updated_at'])
           : DateTime.now(),
     );
   }
@@ -66,8 +66,8 @@ class WalletTransaction {
       amount: (map['amount'] ?? 0.0).toDouble(),
       type: TransactionType.values.byName(map['type'] ?? 'credit'),
       description: map['description'] ?? '',
-      timestamp: map['created_at'] != null 
-          ? DateTime.parse(map['created_at']) 
+      timestamp: map['created_at'] != null
+          ? DateTime.parse(map['created_at'])
           : DateTime.now(),
     );
   }

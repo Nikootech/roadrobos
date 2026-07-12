@@ -28,7 +28,9 @@ class RatingModel {
       role: json['role'] as String,
       score: json['score'] as int,
       reviewText: json['review_text'] as String?,
-      createdAt: json['created_at'] != null ? DateTime.parse(json['created_at']) : null,
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
+          : null,
     );
   }
 

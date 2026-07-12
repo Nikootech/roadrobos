@@ -51,10 +51,8 @@ class AppNetworkImage extends StatelessWidget {
       height: height,
       fit: fit,
       fadeInDuration: const Duration(milliseconds: 200),
-      placeholder: (_, __) =>
-          customPlaceholder ?? _placeholderWidget(),
-      errorWidget: (_, __, ___) =>
-          customError ?? _errorWidget(),
+      placeholder: (_, __) => customPlaceholder ?? _placeholderWidget(),
+      errorWidget: (_, __, ___) => customError ?? _errorWidget(),
     );
 
     if (borderRadius != null) {

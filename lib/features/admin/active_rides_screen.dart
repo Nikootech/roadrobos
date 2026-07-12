@@ -10,13 +10,17 @@ import '../../core/repositories/admin_ops_repository.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/live_map_widget.dart';
 
-final activeRidesStreamProvider = StreamProvider.autoDispose<List<Map<String, dynamic>>>((ref) {
+final activeRidesStreamProvider =
+    StreamProvider.autoDispose<List<Map<String, dynamic>>>((ref) {
   final supabase = Supabase.instance.client;
   return supabase
       .from('ride_bookings')
       .stream(primaryKey: ['id'])
       .order('created_at')
-      .map((list) => list.where((item) => ['searching', 'accepted', 'on_trip'].contains(item['status'])).toList());
+      .map((list) => list
+          .where((item) =>
+              ['searching', 'accepted', 'on_trip'].contains(item['status']))
+          .toList());
 });
 
 class ActiveRidesScreen extends ConsumerStatefulWidget {
@@ -37,16 +41,21 @@ class _ActiveRidesScreenState extends ConsumerState<ActiveRidesScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: AppColors.textPrimary),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded,
+              size: 18, color: AppColors.textPrimary),
           onPressed: () => context.pop(),
         ),
         title: Text(
           'Active Rides',
-          style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+          style: GoogleFonts.outfit(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary),
         ),
         actions: [
           IconButton(
-            icon: Icon(_isMapMode ? Iconsax.menu : Iconsax.map, color: AppColors.primaryBlue),
+            icon: Icon(_isMapMode ? Iconsax.menu : Iconsax.map,
+                color: AppColors.primaryBlue),
             onPressed: () => setState(() => _isMapMode = !_isMapMode),
           ),
           IconButton(
@@ -75,10 +84,17 @@ class _ActiveRidesScreenState extends ConsumerState<ActiveRidesScreen> {
           children: [
             Text(
               'Filter Rides',
-              style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.deepNavy),
+              style: GoogleFonts.outfit(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.deepNavy),
             ),
             const SizedBox(height: 24),
-            const Text('Status', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: AppColors.textSecondary)),
+            const Text('Status',
+                style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                    color: AppColors.textSecondary)),
             const SizedBox(height: 12),
             Wrap(
               spacing: 8,
@@ -90,7 +106,11 @@ class _ActiveRidesScreenState extends ConsumerState<ActiveRidesScreen> {
               ],
             ),
             const SizedBox(height: 24),
-            const Text('Ride Type', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: AppColors.textSecondary)),
+            const Text('Ride Type',
+                style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                    color: AppColors.textSecondary)),
             const SizedBox(height: 12),
             Wrap(
               spacing: 8,
@@ -109,10 +129,13 @@ class _ActiveRidesScreenState extends ConsumerState<ActiveRidesScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryBlue,
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16)),
                   elevation: 0,
                 ),
-                child: const Text('Apply Filters', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                child: const Text('Apply Filters',
+                    style: TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.bold)),
               ),
             ),
             const SizedBox(height: 16),
@@ -147,7 +170,10 @@ class _ActiveRidesScreenState extends ConsumerState<ActiveRidesScreen> {
       data: (rides) {
         final total = rides.length;
         final transit = rides.where((r) => r['status'] == 'on_trip').length;
-        final pending = rides.where((r) => r['status'] == 'searching' || r['status'] == 'accepted').length;
+        final pending = rides
+            .where(
+                (r) => r['status'] == 'searching' || r['status'] == 'accepted')
+            .length;
 
         return Column(
           children: [
@@ -164,16 +190,20 @@ class _ActiveRidesScreenState extends ConsumerState<ActiveRidesScreen> {
                 ],
               ),
             ),
-            
+
             Expanded(
               child: rides.isEmpty
                   ? Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Iconsax.radar, size: 80, color: AppColors.textMuted.withValues(alpha: 0.2)),
+                          Icon(Iconsax.radar,
+                              size: 80,
+                              color:
+                                  AppColors.textMuted.withValues(alpha: 0.2)),
                           const SizedBox(height: 16),
-                          const Text('No active rides at the moment', style: TextStyle(color: AppColors.textSecondary)),
+                          const Text('No active rides at the moment',
+                              style: TextStyle(color: AppColors.textSecondary)),
                         ],
                       ),
                     )
@@ -189,18 +219,22 @@ class _ActiveRidesScreenState extends ConsumerState<ActiveRidesScreen> {
           ],
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primaryBlue)),
-      error: (err, stack) => Center(child: Text('Error loading active rides: $err')),
+      loading: () => const Center(
+          child: CircularProgressIndicator(color: AppColors.primaryBlue)),
+      error: (err, stack) =>
+          Center(child: Text('Error loading active rides: $err')),
     );
   }
 
-  void _showAssignDriverDialog(BuildContext context, Map<String, dynamic> ride) async {
+  void _showAssignDriverDialog(
+      BuildContext context, Map<String, dynamic> ride) async {
     final repo = ref.read(adminOpsRepositoryProvider);
-    
+
     unawaited(showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator(color: AppColors.primaryBlue)),
+      builder: (context) => const Center(
+          child: CircularProgressIndicator(color: AppColors.primaryBlue)),
     ));
 
     List<Map<String, dynamic>> allDrivers = [];
@@ -210,21 +244,25 @@ class _ActiveRidesScreenState extends ConsumerState<ActiveRidesScreen> {
     } catch (e) {
       if (context.mounted) {
         Navigator.pop(context); // Pop loading
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error loading drivers: $e')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Error loading drivers: $e')));
       }
       return;
     }
 
-    final onlineDrivers = allDrivers.where((d) => d['is_online'] == true).toList();
+    final onlineDrivers =
+        allDrivers.where((d) => d['is_online'] == true).toList();
 
     if (onlineDrivers.isEmpty) {
       if (context.mounted) {
         unawaited(showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             title: const Text('No Online Drivers'),
-            content: const Text('There are currently no drivers online to assign.'),
+            content:
+                const Text('There are currently no drivers online to assign.'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
@@ -241,7 +279,8 @@ class _ActiveRidesScreenState extends ConsumerState<ActiveRidesScreen> {
       unawaited(showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: const Text('Assign Driver'),
           content: SizedBox(
             width: double.maxFinite,
@@ -258,29 +297,41 @@ class _ActiveRidesScreenState extends ConsumerState<ActiveRidesScreen> {
                 return ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: CircleAvatar(
-                    backgroundColor: AppColors.primaryBlue.withValues(alpha: 0.1),
-                    child: const Icon(Icons.person, color: AppColors.primaryBlue),
+                    backgroundColor:
+                        AppColors.primaryBlue.withValues(alpha: 0.1),
+                    child:
+                        const Icon(Icons.person, color: AppColors.primaryBlue),
                   ),
-                  title: Text(driverName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                  subtitle: Text('Vehicle: $vehicleModel', style: const TextStyle(fontSize: 12)),
+                  title: Text(driverName,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 14)),
+                  subtitle: Text('Vehicle: $vehicleModel',
+                      style: const TextStyle(fontSize: 12)),
                   onTap: () async {
                     Navigator.pop(context); // Close list dialog
                     unawaited(showDialog(
                       context: context,
                       barrierDismissible: false,
-                      builder: (context) => const Center(child: CircularProgressIndicator(color: AppColors.primaryBlue)),
+                      builder: (context) => const Center(
+                          child: CircularProgressIndicator(
+                              color: AppColors.primaryBlue)),
                     ));
 
                     try {
-                      await repo.assignDriverToRide(ride['id'].toString(), driverId);
+                      await repo.assignDriverToRide(
+                          ride['id'].toString(), driverId);
                       if (context.mounted) {
                         Navigator.pop(context); // Pop progress
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Driver assigned successfully!')));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content:
+                                    Text('Driver assigned successfully!')));
                       }
                     } catch (e) {
                       if (context.mounted) {
                         Navigator.pop(context); // Pop progress
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to assign driver: $e')));
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text('Failed to assign driver: $e')));
                       }
                     }
                   },
@@ -315,16 +366,20 @@ class _ActiveRidesScreenState extends ConsumerState<ActiveRidesScreen> {
               color: Colors.white.withValues(alpha: 0.9),
               borderRadius: const BorderRadius.all(Radius.circular(16)),
               boxShadow: [
-                BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10),
+                BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1), blurRadius: 10),
               ],
             ),
             child: Row(
               children: [
-                const Icon(Iconsax.radar, color: AppColors.primaryBlue, size: 20),
+                const Icon(Iconsax.radar,
+                    color: AppColors.primaryBlue, size: 20),
                 const SizedBox(width: 12),
                 Text(
                   'Tracking Live Rides',
-                  style: GoogleFonts.outfit(fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                  style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary),
                 ),
               ],
             ),
@@ -337,8 +392,16 @@ class _ActiveRidesScreenState extends ConsumerState<ActiveRidesScreen> {
   Widget _buildSummaryItem(String label, String value) {
     return Column(
       children: [
-        Text(value, style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w800, color: AppColors.primaryBlue)),
-        Text(label, style: GoogleFonts.inter(fontSize: 11, color: AppColors.textSecondary, fontWeight: FontWeight.w500)),
+        Text(value,
+            style: GoogleFonts.outfit(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                color: AppColors.primaryBlue)),
+        Text(label,
+            style: GoogleFonts.inter(
+                fontSize: 11,
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w500)),
       ],
     );
   }
@@ -353,46 +416,60 @@ class _ActiveRidesScreenState extends ConsumerState<ActiveRidesScreen> {
     final rideId = ride['id']?.toString() ?? '';
 
     return Container(
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: AppColors.border)),
+      decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.border)),
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
           Row(
             children: [
-              const CircleAvatar(backgroundColor: Color(0xFFF0F4FF), child: Icon(Icons.person, color: AppColors.primaryBlue)),
+              const CircleAvatar(
+                  backgroundColor: Color(0xFFF0F4FF),
+                  child: Icon(Icons.person, color: AppColors.primaryBlue)),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Ride Request', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
-                    Text('ID: RID-${rideId.length > 8 ? rideId.substring(0, 8).toUpperCase() : rideId.toUpperCase()}', style: GoogleFonts.inter(color: AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.w500)),
+                    Text('Ride Request',
+                        style: GoogleFonts.outfit(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary)),
+                    Text(
+                        'ID: RID-${rideId.length > 8 ? rideId.substring(0, 8).toUpperCase() : rideId.toUpperCase()}',
+                        style: GoogleFonts.inter(
+                            color: AppColors.textSecondary,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500)),
                   ],
                 ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: isSearching 
-                      ? AppColors.warningAmber.withValues(alpha: 0.1) 
-                      : AppColors.successGreen.withValues(alpha: 0.1), 
-                  borderRadius: BorderRadius.circular(6)
-                ),
-                child: Text(
-                  status, 
-                  style: TextStyle(
-                    color: isSearching ? AppColors.warningAmber : AppColors.successGreen, 
-                    fontSize: 10, 
-                    fontWeight: FontWeight.bold
-                  )
-                ),
+                    color: isSearching
+                        ? AppColors.warningAmber.withValues(alpha: 0.1)
+                        : AppColors.successGreen.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(6)),
+                child: Text(status,
+                    style: TextStyle(
+                        color: isSearching
+                            ? AppColors.warningAmber
+                            : AppColors.successGreen,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold)),
               ),
             ],
           ),
           const Divider(height: 24),
-          _buildLocationRow(Icons.radio_button_checked, AppColors.primaryBlue, pickup),
+          _buildLocationRow(
+              Icons.radio_button_checked, AppColors.primaryBlue, pickup),
           const SizedBox(height: 12),
-          _buildLocationRow(Icons.location_on_rounded, AppColors.dangerRed, dest),
+          _buildLocationRow(
+              Icons.location_on_rounded, AppColors.dangerRed, dest),
           const Divider(height: 24),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -400,8 +477,12 @@ class _ActiveRidesScreenState extends ConsumerState<ActiveRidesScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(vehicleType.toUpperCase(), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
-                  Text('Fare: ₹$fare', style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
+                  Text(vehicleType.toUpperCase(),
+                      style: const TextStyle(
+                          fontSize: 12, fontWeight: FontWeight.w500)),
+                  Text('Fare: ₹$fare',
+                      style: const TextStyle(
+                          color: AppColors.textSecondary, fontSize: 11)),
                 ],
               ),
               Row(
@@ -413,10 +494,14 @@ class _ActiveRidesScreenState extends ConsumerState<ActiveRidesScreen> {
                         backgroundColor: AppColors.primaryBlue,
                         foregroundColor: Colors.white,
                         elevation: 0,
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8)),
                       ),
-                      child: const Text('Assign Driver', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                      child: const Text('Assign Driver',
+                          style: TextStyle(
+                              fontSize: 12, fontWeight: FontWeight.bold)),
                     ),
                     const SizedBox(width: 8),
                   ],
@@ -445,15 +530,13 @@ class _ActiveRidesScreenState extends ConsumerState<ActiveRidesScreen> {
         Icon(icon, size: 16, color: color),
         const SizedBox(width: 12),
         Expanded(
-          child: Text(
-            text, 
-            maxLines: 1, 
-            overflow: TextOverflow.ellipsis, 
-            style: const TextStyle(fontSize: 13, color: AppColors.textPrimary)
-          ),
+          child: Text(text,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style:
+                  const TextStyle(fontSize: 13, color: AppColors.textPrimary)),
         ),
       ],
     );
   }
 }
-

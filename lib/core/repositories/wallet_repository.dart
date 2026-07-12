@@ -18,13 +18,14 @@ class WalletRepository {
         .stream(primaryKey: ['id'])
         .eq('id', userId)
         .map((list) {
-      if (list.isEmpty) return null;
-      return Wallet.fromMap(list.first);
-    });
+          if (list.isEmpty) return null;
+          return Wallet.fromMap(list.first);
+        });
   }
 
   /// Atomic Wallet Top-up using RPC
-  Future<void> topUpWallet(String userId, double amount, String paymentId) async {
+  Future<void> topUpWallet(
+      String userId, double amount, String paymentId) async {
     try {
       await _supabase.rpc('update_wallet_balance', params: {
         'wallet_id': userId,
@@ -38,9 +39,10 @@ class WalletRepository {
   }
 
   /// Atomic Wallet Payment using RPC
-  Future<bool> payFromWallet(String userId, double amount, String description) async {
+  Future<bool> payFromWallet(
+      String userId, double amount, String description) async {
     try {
-      // We still check local balance for immediate UI feedback, 
+      // We still check local balance for immediate UI feedback,
       // but the RPC handles the final source of truth and atomic check.
       await _supabase.rpc('update_wallet_balance', params: {
         'wallet_id': userId,
@@ -64,7 +66,8 @@ class WalletRepository {
     }
   }
 
-  Future<List<WalletTransaction>> getPagedTransactionHistory(String userId, {int limit = 20, int offset = 0}) async {
+  Future<List<WalletTransaction>> getPagedTransactionHistory(String userId,
+      {int limit = 20, int offset = 0}) async {
     try {
       final response = await _supabase
           .from('transactions')
@@ -73,7 +76,9 @@ class WalletRepository {
           .order('created_at', ascending: false)
           .range(offset, offset + limit - 1);
 
-      return response.map((map) => WalletTransaction.fromMap(map, map['id'].toString())).toList();
+      return response
+          .map((map) => WalletTransaction.fromMap(map, map['id'].toString()))
+          .toList();
     } catch (e, st) {
       unawaited(Sentry.captureException(e, stackTrace: st));
       throw Exception('Failed to fetch transactions: $e');
@@ -83,7 +88,8 @@ class WalletRepository {
   /// SECURE RPC user lookup by phone
   Future<Map<String, dynamic>?> lookupUserByPhone(String phone) async {
     try {
-      final List<dynamic> response = await _supabase.rpc('lookup_user_by_phone', params: {
+      final List<dynamic> response =
+          await _supabase.rpc('lookup_user_by_phone', params: {
         'phone_param': phone,
       });
       if (response.isEmpty) return null;
@@ -101,7 +107,8 @@ class WalletRepository {
   /// 038_transfer_funds_atomic.sql) which wraps both the debit and
   /// credit in a single transaction — no funds can disappear if the app
   /// crashes or the network drops between two separate calls.
-  Future<bool> transferFunds(String senderId, String recipientPhone, double amount) async {
+  Future<bool> transferFunds(
+      String senderId, String recipientPhone, double amount) async {
     try {
       // 1. Find recipient by phone using secure RPC
       final recipientRes = await lookupUserByPhone(recipientPhone);
@@ -119,10 +126,11 @@ class WalletRepository {
       // 2. Single atomic RPC — replaces the old 2-step debit + credit pattern.
       //    The DB function uses SELECT FOR UPDATE locking to prevent race conditions.
       final result = await _supabase.rpc('transfer_funds', params: {
-        'sender_id':   senderId,
+        'sender_id': senderId,
         'receiver_id': recipientId,
-        'amount':      amount,
-        'description': 'Transfer to ${recipientRes['full_name'] ?? recipientPhone}',
+        'amount': amount,
+        'description':
+            'Transfer to ${recipientRes['full_name'] ?? recipientPhone}',
       });
 
       final success = result?['success'] == true;
@@ -137,11 +145,13 @@ class WalletRepository {
       if (msg.contains('insufficient_funds')) {
         throw Exception('Insufficient wallet balance.');
       } else if (msg.contains('receiver_not_found')) {
-        throw Exception('Recipient wallet not found. They may need to add funds first.');
+        throw Exception(
+            'Recipient wallet not found. They may need to add funds first.');
       } else if (msg.contains('sender_not_found')) {
         throw Exception('Your wallet was not found. Please contact support.');
       } else if (msg.contains('invalid_amount')) {
-        throw Exception('Invalid transfer amount. Amount must be greater than zero.');
+        throw Exception(
+            'Invalid transfer amount. Amount must be greater than zero.');
       } else if (msg.contains('same_account')) {
         throw Exception('Cannot transfer funds to yourself.');
       }
@@ -156,7 +166,8 @@ class WalletRepository {
   }
 
   /// Withdraw funds to bank
-  Future<bool> withdrawFunds(String userId, double amount, String bankDetails) async {
+  Future<bool> withdrawFunds(
+      String userId, double amount, String bankDetails) async {
     try {
       await _supabase.rpc('create_payout_request', params: {
         'p_user_id': userId,
@@ -178,7 +189,8 @@ class WalletRepository {
     }
   }
 
-  Future<void> syncTransaction(String action, Map<String, dynamic> payload) async {
+  Future<void> syncTransaction(
+      String action, Map<String, dynamic> payload) async {
     switch (action) {
       case 'create_transaction':
         await _supabase.from('wallet_transactions').upsert(payload);
@@ -186,8 +198,7 @@ class WalletRepository {
       case 'update_transaction_status':
         await _supabase
             .from('wallet_transactions')
-            .update({'status': payload['status']})
-            .eq('id', payload['id']);
+            .update({'status': payload['status']}).eq('id', payload['id']);
         break;
       default:
         throw Exception('Unknown wallet_transaction action: $action');
@@ -199,7 +210,8 @@ final walletRepositoryProvider = Provider<WalletRepository>((ref) {
   return WalletRepository();
 });
 
-final walletStreamProvider = StreamProvider.family<Wallet?, String>((ref, userId) {
+final walletStreamProvider =
+    StreamProvider.family<Wallet?, String>((ref, userId) {
   return ref.watch(walletRepositoryProvider).getWallet(userId);
 });
 

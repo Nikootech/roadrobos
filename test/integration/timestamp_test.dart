@@ -11,7 +11,7 @@ void main() {
 
       final nowUtc = DateTime.now().toUtc();
       expect(nowUtc.utcIso, endsWith('Z'));
-      
+
       final specificLocal = DateTime(2026, 6, 7, 18, 30);
       expect(specificLocal.utcIso, endsWith('Z'));
     });
@@ -21,10 +21,13 @@ void main() {
     test('No repository method writes a non-UTC timestamp to Database', () {
       // 1. Locate the repositories directory
       final repoDir = Directory('lib/core/repositories');
-      expect(repoDir.existsSync(), isTrue, reason: 'Repository directory must exist');
+      expect(repoDir.existsSync(), isTrue,
+          reason: 'Repository directory must exist');
 
-      final repoFiles = repoDir.listSync().where((file) => file.path.endsWith('.dart'));
-      expect(repoFiles.isNotEmpty, isTrue, reason: 'There must be repository files to check');
+      final repoFiles =
+          repoDir.listSync().where((file) => file.path.endsWith('.dart'));
+      expect(repoFiles.isNotEmpty, isTrue,
+          reason: 'There must be repository files to check');
 
       for (final file in repoFiles) {
         if (file is File) {
@@ -33,7 +36,7 @@ void main() {
 
           for (int i = 0; i < lines.length; i++) {
             final rawLine = lines[i];
-            
+
             // Clean up comments and whitespace
             String cleanedLine = rawLine;
             if (cleanedLine.contains('//')) {
@@ -45,11 +48,12 @@ void main() {
 
             // Rule 1: Prohibit raw .toIso8601String() without .toUtc() or .utcIso helper
             if (cleanedLine.contains('.toIso8601String()')) {
-              final isUtcConversion = cleanedLine.contains('.toUtc().toIso8601String()') ||
-                  cleanedLine.contains('toUtc()?.toIso8601String()');
-              
+              final isUtcConversion =
+                  cleanedLine.contains('.toUtc().toIso8601String()') ||
+                      cleanedLine.contains('toUtc()?.toIso8601String()');
+
               expect(
-                isUtcConversion, 
+                isUtcConversion,
                 isTrue,
                 reason: 'Violation in ${file.path} at line ${i + 1}: '
                     'Found raw ".toIso8601String()" call without explicit UTC conversion. '

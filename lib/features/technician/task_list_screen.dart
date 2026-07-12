@@ -22,9 +22,15 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
 
   List<TechnicianJob> _getFilteredJobs(List<TechnicianJob> jobs) {
     if (_selectedFilter == 'All Jobs') return jobs;
-    if (_selectedFilter == 'High Priority') return jobs.where((j) => j.status == 'ACCEPTED').toList();
-    if (_selectedFilter == 'In-Progress') return jobs.where((j) => j.status == 'IN PROGRESS').toList();
-    if (_selectedFilter == 'Completed') return jobs.where((j) => j.status == 'COMPLETED').toList();
+    if (_selectedFilter == 'High Priority') {
+      return jobs.where((j) => j.status == 'ACCEPTED').toList();
+    }
+    if (_selectedFilter == 'In-Progress') {
+      return jobs.where((j) => j.status == 'IN PROGRESS').toList();
+    }
+    if (_selectedFilter == 'Completed') {
+      return jobs.where((j) => j.status == 'COMPLETED').toList();
+    }
     return jobs;
   }
 
@@ -32,10 +38,17 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
     HapticFeedback.lightImpact();
     setState(() => _bottomNavIndex = index);
     switch (index) {
-      case 0: context.go('/tech-dashboard'); break;
-      case 1: break; // Already on tasks
-      case 2: context.go('/tech-spare-parts'); break;
-      case 3: context.go('/tech-profile'); break;
+      case 0:
+        context.go('/tech-dashboard');
+        break;
+      case 1:
+        break; // Already on tasks
+      case 2:
+        context.go('/tech-spare-parts');
+        break;
+      case 3:
+        context.go('/tech-profile');
+        break;
     }
   }
 
@@ -58,7 +71,11 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
                   const Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Service Tasks', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Color(0xFF1A237E))),
+                      Text('Service Tasks',
+                          style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF1A237E))),
                     ],
                   ),
                   GestureDetector(
@@ -77,11 +94,23 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
                 children: [
-                  Expanded(child: _buildSummaryCard('ASSIGNED', '${jobs.length}', Iconsax.box, const Color(0xFF5E6AD2))),
+                  Expanded(
+                      child: _buildSummaryCard('ASSIGNED', '${jobs.length}',
+                          Iconsax.box, const Color(0xFF5E6AD2))),
                   const SizedBox(width: 12),
-                  Expanded(child: _buildSummaryCard('PENDING', '${jobs.where((j) => j.status != 'COMPLETED').length}', Iconsax.timer_1, const Color(0xFFFF9F43))),
+                  Expanded(
+                      child: _buildSummaryCard(
+                          'PENDING',
+                          '${jobs.where((j) => j.status != 'COMPLETED').length}',
+                          Iconsax.timer_1,
+                          const Color(0xFFFF9F43))),
                   const SizedBox(width: 12),
-                  Expanded(child: _buildSummaryCard('DONE', '${jobs.where((j) => j.status == 'COMPLETED').length}', Iconsax.tick_circle, const Color(0xFF28C76F))),
+                  Expanded(
+                      child: _buildSummaryCard(
+                          'DONE',
+                          '${jobs.where((j) => j.status == 'COMPLETED').length}',
+                          Iconsax.tick_circle,
+                          const Color(0xFF28C76F))),
                 ],
               ),
             ),
@@ -94,7 +123,12 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                children: ['All Jobs', 'High Priority', 'In-Progress', 'Completed'].map((label) {
+                children: [
+                  'All Jobs',
+                  'High Priority',
+                  'In-Progress',
+                  'Completed'
+                ].map((label) {
                   return _buildFilterChip(label, _selectedFilter == label);
                 }).toList(),
               ),
@@ -104,22 +138,24 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
 
             // 4. Job List
             Expanded(
-              child: filteredJobs.isEmpty 
-                ? const Center(child: Text('No jobs found matching the filter.'))
-                : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                    itemCount: filteredJobs.length,
-                    itemBuilder: (context, index) {
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: _buildJobCard(
-                          context: context,
-                          ref: ref,
-                          job: filteredJobs[index],
-                        ),
-                      );
-                    },
-                  ),
+              child: filteredJobs.isEmpty
+                  ? const Center(
+                      child: Text('No jobs found matching the filter.'))
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 10),
+                      itemCount: filteredJobs.length,
+                      itemBuilder: (context, index) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: _buildJobCard(
+                            context: context,
+                            ref: ref,
+                            job: filteredJobs[index],
+                          ),
+                        );
+                      },
+                    ),
             ),
           ],
         ),
@@ -139,7 +175,9 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         shape: BoxShape.circle,
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)],
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)
+        ],
       ),
       child: Stack(
         children: [
@@ -150,7 +188,8 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
             child: Container(
               width: 8,
               height: 8,
-              decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+              decoration: const BoxDecoration(
+                  color: Colors.red, shape: BoxShape.circle),
             ),
           )
         ],
@@ -158,7 +197,8 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
     );
   }
 
-  Widget _buildSummaryCard(String label, String value, IconData icon, Color color) {
+  Widget _buildSummaryCard(
+      String label, String value, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -171,12 +211,21 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey[600], letterSpacing: 0.5)),
+              Text(label,
+                  style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[600],
+                      letterSpacing: 0.5)),
               Icon(icon, size: 16, color: color),
             ],
           ),
           const SizedBox(height: 8),
-          Text(value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Color(0xFF1A237E))),
+          Text(value,
+              style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w900,
+                  color: Color(0xFF1A237E))),
         ],
       ),
     );
@@ -195,7 +244,10 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
         decoration: BoxDecoration(
           color: isSelected ? const Color(0xFF1A237E) : Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: isSelected ? const Color(0xFF1A237E) : const Color(0xFFE5E9F0)),
+          border: Border.all(
+              color: isSelected
+                  ? const Color(0xFF1A237E)
+                  : const Color(0xFFE5E9F0)),
         ),
         child: Center(
           child: Text(
@@ -216,15 +268,22 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
     required WidgetRef ref,
     required TechnicianJob job,
   }) {
-    final statusLabel = job.status == 'COMPLETED' ? 'Done' : (job.status == 'IN PROGRESS' ? 'In-Progress' : 'To-Do');
+    final statusLabel = job.status == 'COMPLETED'
+        ? 'Done'
+        : (job.status == 'IN PROGRESS' ? 'In-Progress' : 'To-Do');
     final priority = job.status == 'ACCEPTED' ? 'HIGH PRIORITY' : 'STANDARD';
-    
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: const Color(0xFFE5E9F0)),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4))],
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withValues(alpha: 0.02),
+              blurRadius: 10,
+              offset: const Offset(0, 4))
+        ],
       ),
       child: Column(
         children: [
@@ -239,9 +298,12 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
                     Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: priority == 'HIGH PRIORITY' ? const Color(0xFFFFEBEE) : const Color(0xFFF1F2F4),
+                            color: priority == 'HIGH PRIORITY'
+                                ? const Color(0xFFFFEBEE)
+                                : const Color(0xFFF1F2F4),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
@@ -249,33 +311,54 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
-                              color: priority == 'HIGH PRIORITY' ? Colors.red : Colors.grey[600],
+                              color: priority == 'HIGH PRIORITY'
+                                  ? Colors.red
+                                  : Colors.grey[600],
                             ),
                           ),
                         ),
                         const SizedBox(width: 8),
                         Row(
                           children: [
-                            const Icon(Icons.access_time_filled, size: 12, color: Colors.grey),
+                            const Icon(Icons.access_time_filled,
+                                size: 12, color: Colors.grey),
                             const SizedBox(width: 4),
-                            Text(job.estimatedCompletion, style: const TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.bold)),
+                            Text(job.estimatedCompletion,
+                                style: const TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey,
+                                    fontWeight: FontWeight.bold)),
                           ],
                         ),
                       ],
                     ),
-                    Container(width: 44, height: 44, color: Colors.grey[200], child: const Icon(Icons.car_repair, size: 20, color: Colors.grey)),
+                    Container(
+                        width: 44,
+                        height: 44,
+                        color: Colors.grey[200],
+                        child: const Icon(Icons.car_repair,
+                            size: 20, color: Colors.grey)),
                   ],
                 ),
                 const SizedBox(height: 12),
-                Text(job.vehicleModel, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF1A237E))),
+                Text(job.vehicleModel,
+                    style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                        color: Color(0xFF1A237E))),
                 const SizedBox(height: 4),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFFF9C4),
                     borderRadius: BorderRadius.circular(4),
                   ),
-                  child: Text(job.vehiclePlate, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF827717))),
+                  child: Text(job.vehiclePlate,
+                      style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF827717))),
                 ),
                 const SizedBox(height: 16),
                 const Divider(height: 1, color: Color(0xFFF1F2F4)),
@@ -283,15 +366,25 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Iconsax.setting_2, size: 16, color: Color(0xFF1A237E)),
+                    const Icon(Iconsax.setting_2,
+                        size: 16, color: Color(0xFF1A237E)),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(job.checklist.isNotEmpty ? job.checklist.first.task : 'General Service', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF1A237E))),
+                          Text(
+                              job.checklist.isNotEmpty
+                                  ? job.checklist.first.task
+                                  : 'General Service',
+                              style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF1A237E))),
                           const SizedBox(height: 4),
-                          Text(job.serviceType, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                          Text(job.serviceType,
+                              style: const TextStyle(
+                                  fontSize: 12, color: Colors.grey)),
                         ],
                       ),
                     ),
@@ -308,7 +401,8 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
                   child: Row(
                     children: [
                       _statusSegment('To-Do', statusLabel == 'To-Do'),
-                      _statusSegment('In-Progress', statusLabel == 'In-Progress'),
+                      _statusSegment(
+                          'In-Progress', statusLabel == 'In-Progress'),
                       _statusSegment('Done', statusLabel == 'Done'),
                     ],
                   ),
@@ -324,17 +418,25 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
                       ref.read(selectedJobIdProvider.notifier).state = job.id;
                       if (statusLabel == 'To-Do') {
                         try {
-                          await ref.read(jobCardRepositoryProvider).startJob(job.id);
-                          ref.read(technicianProvider.notifier).startJob(job.id);
+                          await ref
+                              .read(jobCardRepositoryProvider)
+                              .startJob(job.id);
+                          ref
+                              .read(technicianProvider.notifier)
+                              .startJob(job.id);
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Job started!'), backgroundColor: Color(0xFF1A237E)),
+                              const SnackBar(
+                                  content: Text('Job started!'),
+                                  backgroundColor: Color(0xFF1A237E)),
                             );
                           }
                         } catch (e) {
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Failed to start: $e'), backgroundColor: Colors.red),
+                              SnackBar(
+                                  content: Text('Failed to start: $e'),
+                                  backgroundColor: Colors.red),
                             );
                           }
                         }
@@ -344,25 +446,39 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
                       }
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: statusLabel == 'Done' ? Colors.white : const Color(0xFF1A237E),
-                      foregroundColor: statusLabel == 'Done' ? const Color(0xFF1A237E) : Colors.white,
+                      backgroundColor: statusLabel == 'Done'
+                          ? Colors.white
+                          : const Color(0xFF1A237E),
+                      foregroundColor: statusLabel == 'Done'
+                          ? const Color(0xFF1A237E)
+                          : Colors.white,
                       elevation: 0,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
-                        side: statusLabel == 'Done' ? const BorderSide(color: Color(0xFFE5E9F0)) : BorderSide.none,
+                        side: statusLabel == 'Done'
+                            ? const BorderSide(color: Color(0xFFE5E9F0))
+                            : BorderSide.none,
                       ),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        if (statusLabel == 'To-Do') const Icon(Icons.play_arrow_rounded, size: 20),
-                        if (statusLabel == 'In-Progress') const Icon(Icons.check_circle_outline, size: 20),
-                        if (statusLabel == 'Done') const Icon(Icons.visibility_rounded, size: 20),
+                        if (statusLabel == 'To-Do')
+                          const Icon(Icons.play_arrow_rounded, size: 20),
+                        if (statusLabel == 'In-Progress')
+                          const Icon(Icons.check_circle_outline, size: 20),
+                        if (statusLabel == 'Done')
+                          const Icon(Icons.visibility_rounded, size: 20),
                         const SizedBox(width: 8),
                         Text(
-                          statusLabel == 'Done' ? 'View Report' : (statusLabel == 'To-Do' ? 'Start Work' : 'Manage Job'),
-                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                          statusLabel == 'Done'
+                              ? 'View Report'
+                              : (statusLabel == 'To-Do'
+                                  ? 'Start Work'
+                                  : 'Manage Job'),
+                          style: const TextStyle(
+                              fontSize: 14, fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),
@@ -384,7 +500,13 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
         decoration: BoxDecoration(
           color: isActive ? Colors.white : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
-          boxShadow: isActive ? [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4)] : null,
+          boxShadow: isActive
+              ? [
+                  BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 4)
+                ]
+              : null,
         ),
         child: Text(
           label,
@@ -404,7 +526,9 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
       decoration: const BoxDecoration(
         color: Colors.white,
         border: Border(top: BorderSide(color: Color(0xFFF1F2F4))),
-        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, -2))],
+        boxShadow: [
+          BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, -2))
+        ],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -418,16 +542,23 @@ class _TaskListScreenState extends ConsumerState<TaskListScreen> {
     );
   }
 
-  Widget _navItem(BuildContext context, IconData icon, String label, int index) {
+  Widget _navItem(
+      BuildContext context, IconData icon, String label, int index) {
     final isActive = _bottomNavIndex == index;
     return GestureDetector(
       onTap: () => _onBottomNavTap(index),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, color: isActive ? const Color(0xFF1A237E) : Colors.grey, size: 24),
+          Icon(icon,
+              color: isActive ? const Color(0xFF1A237E) : Colors.grey,
+              size: 24),
           const SizedBox(height: 4),
-          Text(label, style: TextStyle(fontSize: 10, fontWeight: isActive ? FontWeight.bold : FontWeight.w500, color: isActive ? const Color(0xFF1A237E) : Colors.grey)),
+          Text(label,
+              style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+                  color: isActive ? const Color(0xFF1A237E) : Colors.grey)),
         ],
       ),
     );

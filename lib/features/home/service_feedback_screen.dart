@@ -94,7 +94,9 @@ class ServiceFeedbackScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(5, (index) {
                       return Icon(
-                        index < 4 ? Icons.star_rounded : Icons.star_half_rounded,
+                        index < 4
+                            ? Icons.star_rounded
+                            : Icons.star_half_rounded,
                         color: AppColors.warningAmber,
                         size: 28,
                       );
@@ -113,10 +115,7 @@ class ServiceFeedbackScreen extends StatelessWidget {
                   ..._buildRatingBars(),
                 ],
               ),
-            )
-                .animate()
-                .fadeIn(duration: 500.ms)
-                .slideY(begin: 0.05, end: 0),
+            ).animate().fadeIn(duration: 500.ms).slideY(begin: 0.05, end: 0),
 
             const SizedBox(height: 20),
 
@@ -132,7 +131,8 @@ class ServiceFeedbackScreen extends StatelessWidget {
             const SizedBox(height: 12),
             _buildCategoryCard('Service Quality', 4.8, AppColors.successDark),
             _buildCategoryCard('Timeliness', 4.5, AppColors.primaryBlue),
-            _buildCategoryCard('Price Transparency', 4.6, AppColors.accentOrange),
+            _buildCategoryCard(
+                'Price Transparency', 4.6, AppColors.accentOrange),
             _buildCategoryCard('Communication', 4.9, AppColors.warningAmber),
 
             const SizedBox(height: 20),
@@ -182,7 +182,8 @@ class ServiceFeedbackScreen extends StatelessWidget {
                 ),
               ),
             ),
-            const Icon(Icons.star_rounded, size: 12, color: AppColors.warningAmber),
+            const Icon(Icons.star_rounded,
+                size: 12, color: AppColors.warningAmber),
             const SizedBox(width: 8),
             Expanded(
               child: ClipRRect(
@@ -190,7 +191,8 @@ class ServiceFeedbackScreen extends StatelessWidget {
                 child: LinearProgressIndicator(
                   value: r[1] as double,
                   backgroundColor: AppColors.bgDarkProfile,
-                  valueColor: const AlwaysStoppedAnimation(AppColors.warningAmber),
+                  valueColor:
+                      const AlwaysStoppedAnimation(AppColors.warningAmber),
                   minHeight: 6,
                 ),
               ),
@@ -254,8 +256,13 @@ class ServiceFeedbackScreen extends StatelessWidget {
         .slideX(begin: 0.03, end: 0);
   }
 
-  Widget _buildTechnicianItem(String name, String rating, String services, int rank) {
-    final rankColors = [AppColors.warningAmber, AppColors.textMuted, const Color(0xFFCD7F32)];
+  Widget _buildTechnicianItem(
+      String name, String rating, String services, int rank) {
+    final rankColors = [
+      AppColors.warningAmber,
+      AppColors.textMuted,
+      const Color(0xFFCD7F32)
+    ];
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -318,14 +325,12 @@ class ServiceFeedbackScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 3),
-              const Icon(Icons.star_rounded, size: 14, color: AppColors.warningAmber),
+              const Icon(Icons.star_rounded,
+                  size: 14, color: AppColors.warningAmber),
             ],
           ),
         ],
       ),
-    )
-        .animate(delay: 500.ms)
-        .fadeIn(duration: 400.ms);
+    ).animate(delay: 500.ms).fadeIn(duration: 400.ms);
   }
 }
-

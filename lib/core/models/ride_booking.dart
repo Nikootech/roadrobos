@@ -50,8 +50,12 @@ class RideBooking {
       fare: (map['fare'] ?? 0.0).toDouble(),
       vehicleType: map['vehicle_type'],
       otp: map['otp']?.toString(),
-      createdAt: map['created_at'] != null ? DateTime.parse(map['created_at']) : DateTime.now(),
-      scheduledFor: map['scheduled_for'] != null ? DateTime.parse(map['scheduled_for']) : null,
+      createdAt: map['created_at'] != null
+          ? DateTime.parse(map['created_at'])
+          : DateTime.now(),
+      scheduledFor: map['scheduled_for'] != null
+          ? DateTime.parse(map['scheduled_for'])
+          : null,
     );
   }
 

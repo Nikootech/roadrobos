@@ -14,7 +14,8 @@ class InsufficientBalanceSheet extends StatelessWidget {
     required this.requiredAmount,
   });
 
-  static void show(BuildContext context, {required double currentBalance, required double requiredAmount}) {
+  static void show(BuildContext context,
+      {required double currentBalance, required double requiredAmount}) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -29,7 +30,8 @@ class InsufficientBalanceSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final shortfall = requiredAmount - currentBalance;
-    final currencyFormatter = NumberFormat.simpleCurrency(name: 'INR', decimalDigits: 0);
+    final currencyFormatter =
+        NumberFormat.simpleCurrency(name: 'INR', decimalDigits: 0);
 
     return Container(
       decoration: const BoxDecoration(
@@ -64,7 +66,7 @@ class InsufficientBalanceSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            
+
             // Warning Icon
             CircleAvatar(
               radius: 28,
@@ -76,7 +78,7 @@ class InsufficientBalanceSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            
+
             // Title
             Text(
               'Insufficient Wallet Balance',
@@ -98,24 +100,28 @@ class InsufficientBalanceSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            
+
             // Balance Details Card
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: AppColors.bgLightGrey,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+                border:
+                    Border.all(color: AppColors.border.withValues(alpha: 0.5)),
               ),
               child: Column(
                 children: [
-                  _buildDetailRow('Required Amount', currencyFormatter.format(requiredAmount), isBold: true),
+                  _buildDetailRow('Required Amount',
+                      currencyFormatter.format(requiredAmount),
+                      isBold: true),
                   const Divider(height: 20),
-                  _buildDetailRow('Current Balance', currencyFormatter.format(currentBalance)),
+                  _buildDetailRow('Current Balance',
+                      currencyFormatter.format(currentBalance)),
                   const SizedBox(height: 8),
                   _buildDetailRow(
-                    'Shortfall Amount', 
-                    currencyFormatter.format(shortfall), 
+                    'Shortfall Amount',
+                    currencyFormatter.format(shortfall),
                     valueColor: AppColors.dangerRed,
                     isBold: true,
                   ),
@@ -123,7 +129,7 @@ class InsufficientBalanceSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 32),
-            
+
             // CTA Button
             ElevatedButton(
               onPressed: () {
@@ -148,7 +154,7 @@ class InsufficientBalanceSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            
+
             // Cancel Button
             TextButton(
               onPressed: () => Navigator.pop(context),
@@ -167,7 +173,8 @@ class InsufficientBalanceSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailRow(String label, String value, {Color? valueColor, bool isBold = false}) {
+  Widget _buildDetailRow(String label, String value,
+      {Color? valueColor, bool isBold = false}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [

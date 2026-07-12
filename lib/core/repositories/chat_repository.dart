@@ -7,7 +7,8 @@ final chatRepositoryProvider = Provider<ChatRepository>((ref) {
   return ChatRepository();
 });
 
-final chatMessagesProvider = StreamProvider.family<List<ChatMessage>, (String, String)>((ref, arg) {
+final chatMessagesProvider =
+    StreamProvider.family<List<ChatMessage>, (String, String)>((ref, arg) {
   final roomId = arg.$1;
   return ref.watch(chatRepositoryProvider).watchMessages(roomId);
 });
@@ -51,7 +52,8 @@ class ChatRepository {
 
     // 3. Dispatch notifications for support managers or clients in real-time
     try {
-      if (cleanReceiverId == '00000000-0000-0000-0000-000000000000' || message.roomId.contains('_support')) {
+      if (cleanReceiverId == '00000000-0000-0000-0000-000000000000' ||
+          message.roomId.contains('_support')) {
         // Customer -> Support: notify all support managers
         if (cleanReceiverId == '00000000-0000-0000-0000-000000000000') {
           // Fetch sender's profile name
@@ -119,7 +121,8 @@ class ChatRepository {
   }
 
   /// Submit user feedback/rating for the chat support session
-  Future<void> submitFeedback(String roomId, String? userId, int rating, String comment) async {
+  Future<void> submitFeedback(
+      String roomId, String? userId, int rating, String comment) async {
     try {
       await _supabase.from('chat_feedback').insert({
         'room_id': roomId,

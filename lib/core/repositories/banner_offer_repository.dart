@@ -5,7 +5,8 @@ import '../models/banner_offer.dart';
 import '../data/local_database.dart';
 import 'package:drift/drift.dart' as drift;
 
-final bannerOfferRepositoryProvider = Provider((ref) => BannerOfferRepository(ref.watch(localDatabaseProvider)));
+final bannerOfferRepositoryProvider =
+    Provider((ref) => BannerOfferRepository(ref.watch(localDatabaseProvider)));
 
 class BannerOfferRepository {
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -26,13 +27,15 @@ class BannerOfferRepository {
             debugPrint('Background banner sync failed: $e');
             return <BannerOffer>[];
           });
-          return localBanners.map((b) => BannerOffer(
-            id: b.id,
-            title: b.title,
-            subtitle: b.subtitle,
-            image: b.image,
-            cta: b.cta,
-          )).toList();
+          return localBanners
+              .map((b) => BannerOffer(
+                    id: b.id,
+                    title: b.title,
+                    subtitle: b.subtitle,
+                    image: b.image,
+                    cta: b.cta,
+                  ))
+              .toList();
         }
       }
 
@@ -44,12 +47,12 @@ class BannerOfferRepository {
   }
 
   Future<List<BannerOffer>> _syncBannersFromRemote() async {
-    final response = await _supabase
-        .from('banners')
-        .select()
-        .eq('is_active', true);
+    final response =
+        await _supabase.from('banners').select().eq('is_active', true);
 
-    final banners = response.map((map) => BannerOffer.fromMap(map, map['id'].toString())).toList();
+    final banners = response
+        .map((map) => BannerOffer.fromMap(map, map['id'].toString()))
+        .toList();
 
     // Cache to Drift only on native platforms (ISSUE-04)
     if (!kIsWeb) {
@@ -57,15 +60,15 @@ class BannerOfferRepository {
         await _db.delete(_db.cachedBanners).go();
         for (final banner in banners) {
           await _db.into(_db.cachedBanners).insert(
-            CachedBanner(
-              id: banner.id,
-              title: banner.title,
-              subtitle: banner.subtitle,
-              image: banner.image,
-              cta: banner.cta,
-            ),
-            mode: drift.InsertMode.insertOrReplace,
-          );
+                CachedBanner(
+                  id: banner.id,
+                  title: banner.title,
+                  subtitle: banner.subtitle,
+                  image: banner.image,
+                  cta: banner.cta,
+                ),
+                mode: drift.InsertMode.insertOrReplace,
+              );
         }
       });
     }
@@ -80,28 +83,33 @@ class BannerOfferRepository {
     required String cta,
   }) async {
     try {
-      final response = await _supabase.from('banners').insert({
-        'title': title,
-        'subtitle': subtitle,
-        'image': image,
-        'cta': cta,
-        'is_active': true,
-      }).select().single();
+      final response = await _supabase
+          .from('banners')
+          .insert({
+            'title': title,
+            'subtitle': subtitle,
+            'image': image,
+            'cta': cta,
+            'is_active': true,
+          })
+          .select()
+          .single();
 
-      final newBanner = BannerOffer.fromMap(response, response['id'].toString());
+      final newBanner =
+          BannerOffer.fromMap(response, response['id'].toString());
 
       // Update local cache on native only (ISSUE-04)
       if (!kIsWeb) {
         await _db.into(_db.cachedBanners).insert(
-          CachedBanner(
-            id: newBanner.id,
-            title: newBanner.title,
-            subtitle: newBanner.subtitle,
-            image: newBanner.image,
-            cta: newBanner.cta,
-          ),
-          mode: drift.InsertMode.insertOrReplace,
-        );
+              CachedBanner(
+                id: newBanner.id,
+                title: newBanner.title,
+                subtitle: newBanner.subtitle,
+                image: newBanner.image,
+                cta: newBanner.cta,
+              ),
+              mode: drift.InsertMode.insertOrReplace,
+            );
       }
 
       return newBanner;

@@ -1,7 +1,8 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final userVehicleRepositoryProvider = Provider((ref) => UserVehicleRepository());
+final userVehicleRepositoryProvider =
+    Provider((ref) => UserVehicleRepository());
 
 class UserVehicle {
   final String id;
@@ -48,15 +49,29 @@ class UserVehicle {
       userId: map['user_id'] ?? map['userId'] ?? '',
       make: map['make'] ?? map['name'] ?? '',
       model: map['model'] ?? '',
-      year: map['year'] is int ? map['year'] : int.tryParse(map['year'].toString()) ?? 2020,
-      plateNumber: map['plate_number'] ?? map['plateNumber'] ?? map['plate'] ?? '',
-      vehicleType: map['vehicle_type'] ?? map['vehicleType'] ?? map['type'] ?? 'car',
+      year: map['year'] is int
+          ? map['year']
+          : int.tryParse(map['year'].toString()) ?? 2020,
+      plateNumber:
+          map['plate_number'] ?? map['plateNumber'] ?? map['plate'] ?? '',
+      vehicleType:
+          map['vehicle_type'] ?? map['vehicleType'] ?? map['type'] ?? 'car',
       isPrimary: map['is_primary'] ?? map['isPrimary'] ?? false,
-      createdAt: map['created_at'] != null ? DateTime.tryParse(map['created_at'].toString()) : null,
-      deletedAt: map['deleted_at'] != null ? DateTime.tryParse(map['deleted_at'].toString()) : null,
-      fcExpiry: map['fc_expiry'] != null ? DateTime.tryParse(map['fc_expiry'].toString()) : null,
-      insuranceExpiry: map['insurance_expiry'] != null ? DateTime.tryParse(map['insurance_expiry'].toString()) : null,
-      taxExpiry: map['tax_expiry'] != null ? DateTime.tryParse(map['tax_expiry'].toString()) : null,
+      createdAt: map['created_at'] != null
+          ? DateTime.tryParse(map['created_at'].toString())
+          : null,
+      deletedAt: map['deleted_at'] != null
+          ? DateTime.tryParse(map['deleted_at'].toString())
+          : null,
+      fcExpiry: map['fc_expiry'] != null
+          ? DateTime.tryParse(map['fc_expiry'].toString())
+          : null,
+      insuranceExpiry: map['insurance_expiry'] != null
+          ? DateTime.tryParse(map['insurance_expiry'].toString())
+          : null,
+      taxExpiry: map['tax_expiry'] != null
+          ? DateTime.tryParse(map['tax_expiry'].toString())
+          : null,
     );
   }
 
@@ -78,7 +93,8 @@ class UserVehicle {
   }
 
   // Getters for backward compatibility
-  String get name => make.isNotEmpty && model.isNotEmpty ? '$make $model' : make;
+  String get name =>
+      make.isNotEmpty && model.isNotEmpty ? '$make $model' : make;
   String get plate => plateNumber;
   String get fuel => 'Petrol';
   String get type => vehicleType;
@@ -126,8 +142,11 @@ class UserVehicleRepository {
           .select()
           .eq('user_id', userId)
           .isFilter('deleted_at', null);
-      
-      return response.map<UserVehicle>((map) => UserVehicle.fromMap(map, map['id'].toString())).toList();
+
+      return response
+          .map<UserVehicle>(
+              (map) => UserVehicle.fromMap(map, map['id'].toString()))
+          .toList();
     } catch (e) {
       if (e.toString().contains('404')) {
         return [];
@@ -144,7 +163,8 @@ class UserVehicleRepository {
         .map((data) {
           return data
               .where((map) => map['deleted_at'] == null)
-              .map<UserVehicle>((map) => UserVehicle.fromMap(map, map['id'].toString()))
+              .map<UserVehicle>(
+                  (map) => UserVehicle.fromMap(map, map['id'].toString()))
               .toList();
         });
   }
@@ -176,13 +196,11 @@ class UserVehicleRepository {
     try {
       await _supabase
           .from('user_vehicles')
-          .update({'is_primary': false})
-          .eq('user_id', userId);
+          .update({'is_primary': false}).eq('user_id', userId);
 
       await _supabase
           .from('user_vehicles')
-          .update({'is_primary': true})
-          .eq('id', vehicleId);
+          .update({'is_primary': true}).eq('id', vehicleId);
     } catch (e) {
       rethrow;
     }
@@ -192,8 +210,8 @@ class UserVehicleRepository {
     try {
       await _supabase
           .from('user_vehicles')
-          .update({'deleted_at': DateTime.now().toUtc().toIso8601String()})
-          .eq('id', vehicleId);
+          .update({'deleted_at': DateTime.now().toUtc().toIso8601String()}).eq(
+              'id', vehicleId);
     } catch (e) {
       rethrow;
     }

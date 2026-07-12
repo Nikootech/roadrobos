@@ -49,9 +49,17 @@ class RbacService {
         final role = row['roles'];
         if (role != null) {
           final roleName = role['name'] as String;
-          if (['super_admin', 'founder_admin', 'ops_head', 'city_manager',
-               'area_manager', 'finance_manager', 'support_manager',
-               'marketing_admin', 'admin'].contains(roleName)) {
+          if ([
+            'super_admin',
+            'founder_admin',
+            'ops_head',
+            'city_manager',
+            'area_manager',
+            'finance_manager',
+            'support_manager',
+            'marketing_admin',
+            'admin'
+          ].contains(roleName)) {
             permissions.add('admin_access');
           }
           if (['driver', 'technician'].contains(roleName)) {
@@ -68,7 +76,8 @@ class RbacService {
       await prefs.setStringList(_prefsKey, permissions.toList());
 
       if (kDebugMode) {
-        debugPrint('RbacService: Loaded ${permissions.length} permissions for user $userId');
+        debugPrint(
+            'RbacService: Loaded ${permissions.length} permissions for user $userId');
       }
       return permissions;
     } catch (e) {

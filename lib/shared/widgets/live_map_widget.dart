@@ -43,11 +43,12 @@ class LiveMapWidget extends ConsumerStatefulWidget {
   ConsumerState<LiveMapWidget> createState() => _LiveMapWidgetState();
 }
 
-class _LiveMapWidgetState extends ConsumerState<LiveMapWidget> with SingleTickerProviderStateMixin {
+class _LiveMapWidgetState extends ConsumerState<LiveMapWidget>
+    with SingleTickerProviderStateMixin {
   late final MapController _mapController;
   late final AnimationController _pulseController;
   final _osmService = OSMMapsService();
-  
+
   LatLng? _selectedPoint;
   String? _selectedLabel;
   List<LatLng> _routePoints = [];
@@ -70,26 +71,27 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget> with SingleTicker
           .stream(primaryKey: ['driver_id'])
           .eq('driver_id', widget.driverId!)
           .listen((data) {
-        if (data.isNotEmpty) {
-          final lat = data.first['lat'] as double?;
-          final lng = data.first['lng'] as double?;
-          if (lat != null && lng != null && mounted) {
-            setState(() {
-              _selectedPoint = LatLng(lat, lng);
-            });
-            if (widget.isTracking) {
-              _mapController.move(LatLng(lat, lng), _mapController.camera.zoom);
+            if (data.isNotEmpty) {
+              final lat = data.first['lat'] as double?;
+              final lng = data.first['lng'] as double?;
+              if (lat != null && lng != null && mounted) {
+                setState(() {
+                  _selectedPoint = LatLng(lat, lng);
+                });
+                if (widget.isTracking) {
+                  _mapController.move(
+                      LatLng(lat, lng), _mapController.camera.zoom);
+                }
+              }
             }
-          }
-        }
-      });
+          });
     }
   }
 
   @override
   void didUpdateWidget(LiveMapWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.pickupLocation != oldWidget.pickupLocation || 
+    if (widget.pickupLocation != oldWidget.pickupLocation ||
         widget.roadroboLocation != oldWidget.roadroboLocation) {
       _updateRoute();
     }
@@ -98,8 +100,11 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget> with SingleTicker
   Future<void> _updateRoute() async {
     final taxiState = ref.read(taxiProvider);
 
-    if (taxiState.status == RideStatus.vehicleSelection && taxiState.pickupLocation != null && taxiState.dropoffLocation != null) {
-      final points = await _osmService.getRoute(taxiState.pickupLocation!, taxiState.dropoffLocation!);
+    if (taxiState.status == RideStatus.vehicleSelection &&
+        taxiState.pickupLocation != null &&
+        taxiState.dropoffLocation != null) {
+      final points = await _osmService.getRoute(
+          taxiState.pickupLocation!, taxiState.dropoffLocation!);
       if (mounted) {
         setState(() {
           _routePoints = points;
@@ -111,7 +116,7 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget> with SingleTicker
 
     if (widget.roadroboLocation != null) {
       LatLng? target;
-      
+
       if (taxiState.status == RideStatus.headingToDropoff) {
         target = taxiState.dropoffLocation;
       } else {
@@ -119,7 +124,8 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget> with SingleTicker
       }
 
       if (target != null) {
-        final points = await _osmService.getRoute(widget.roadroboLocation!, target);
+        final points =
+            await _osmService.getRoute(widget.roadroboLocation!, target);
         if (mounted) {
           setState(() {
             _routePoints = points;
@@ -151,7 +157,8 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget> with SingleTicker
       _mapController.fitCamera(
         CameraFit.bounds(
           bounds: bounds,
-          padding: const EdgeInsets.only(top: 80, bottom: 340, left: 60, right: 60),
+          padding:
+              const EdgeInsets.only(top: 80, bottom: 340, left: 60, right: 60),
         ),
       );
     });
@@ -163,8 +170,8 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget> with SingleTicker
     final taxiState = ref.watch(taxiProvider);
 
     ref.listen<TaxiState>(taxiProvider, (previous, next) {
-      if (previous?.dropoffLocation != next.dropoffLocation || 
-          previous?.pickupLocation != next.pickupLocation || 
+      if (previous?.dropoffLocation != next.dropoffLocation ||
+          previous?.pickupLocation != next.pickupLocation ||
           previous?.status != next.status) {
         _updateRoute();
       }
@@ -187,7 +194,7 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget> with SingleTicker
     }
 
     final markers = <Marker>[];
-    
+
     // Pickup/Drop Markers
     if (!widget.isTracking) {
       if (taxiState.status != RideStatus.selectingPickup) {
@@ -196,40 +203,54 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget> with SingleTicker
             point: taxiState.pickupLocation ?? mapState.userLocation,
             width: 60,
             height: 60,
-            child: _buildLocationPin(isPickup: true, point: taxiState.pickupLocation ?? mapState.userLocation, label: 'Pickup Point'),
+            child: _buildLocationPin(
+                isPickup: true,
+                point: taxiState.pickupLocation ?? mapState.userLocation,
+                label: 'Pickup Point'),
           ),
         );
       }
 
-      if (taxiState.dropoffLocation != null && taxiState.status != RideStatus.selectingDrop) {
+      if (taxiState.dropoffLocation != null &&
+          taxiState.status != RideStatus.selectingDrop) {
         markers.add(
           Marker(
             point: taxiState.dropoffLocation!,
             width: 60,
             height: 60,
-            child: _buildLocationPin(isPickup: false, point: taxiState.dropoffLocation!, label: 'Drop-off Point'),
+            child: _buildLocationPin(
+                isPickup: false,
+                point: taxiState.dropoffLocation!,
+                label: 'Drop-off Point'),
           ),
         );
       }
     } else {
-      if (widget.pickupLocation != null && taxiState.status != RideStatus.headingToDropoff) {
+      if (widget.pickupLocation != null &&
+          taxiState.status != RideStatus.headingToDropoff) {
         markers.add(
           Marker(
             point: widget.pickupLocation!,
             width: 40,
             height: 40,
-            child: _buildLocationPin(isPickup: true, point: widget.pickupLocation!, label: 'Pickup Point'),
+            child: _buildLocationPin(
+                isPickup: true,
+                point: widget.pickupLocation!,
+                label: 'Pickup Point'),
           ),
         );
       }
-      
+
       if (taxiState.dropoffLocation != null) {
         markers.add(
           Marker(
             point: taxiState.dropoffLocation!,
             width: 50,
             height: 50,
-            child: _buildLocationPin(isPickup: false, point: taxiState.dropoffLocation!, label: 'Drop-off Point'),
+            child: _buildLocationPin(
+                isPickup: false,
+                point: taxiState.dropoffLocation!,
+                label: 'Drop-off Point'),
           ),
         );
       }
@@ -242,27 +263,27 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget> with SingleTicker
           point: widget.roadroboLocation!,
           width: 50,
           height: 50,
-          child: _buildVehicleMarker(taxiState.selectedOption?.assetPath ?? 'assets/icons/car.png'),
+          child: _buildVehicleMarker(
+              taxiState.selectedOption?.assetPath ?? 'assets/icons/car.png'),
         ),
       );
     }
 
     // Live Taxis from Supabase
     if (widget.showNearbyTaxis) {
-      final liveTaxis = ref.watch(availableTaxiLocationsProvider).value ?? const [];
+      final liveTaxis =
+          ref.watch(availableTaxiLocationsProvider).value ?? const [];
       for (final taxi in liveTaxis) {
         markers.add(
           Marker(
             point: taxi.position,
             width: 40,
             height: 40,
-            child: _buildVehicleMarker(
-              taxi.type == 'bike' 
-                  ? 'assets/icons/bycicle.png' 
-                  : taxi.type == 'auto' 
-                      ? 'assets/icons/rikshaw.png' 
-                      : 'assets/icons/car.png'
-            ),
+            child: _buildVehicleMarker(taxi.type == 'bike'
+                ? 'assets/icons/bycicle.png'
+                : taxi.type == 'auto'
+                    ? 'assets/icons/rikshaw.png'
+                    : 'assets/icons/car.png'),
           ),
         );
       }
@@ -311,7 +332,7 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget> with SingleTicker
           // --- UI Overlays ---
           if (widget.showLiveIndicator)
             Positioned(top: 20, right: 20, child: _buildLiveIndicator()),
-            
+
           Positioned(
             bottom: 24,
             right: 20,
@@ -319,10 +340,12 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget> with SingleTicker
           ),
 
           if (_selectedPoint != null)
-            Positioned(bottom: 100, left: 20, right: 20, child: _buildMarkerCallout()),
+            Positioned(
+                bottom: 100, left: 20, right: 20, child: _buildMarkerCallout()),
 
           if (mapState.isLoading)
-            const Center(child: CircularProgressIndicator(color: AppColors.primaryBlue)),
+            const Center(
+                child: CircularProgressIndicator(color: AppColors.primaryBlue)),
         ],
       ),
     );
@@ -341,18 +364,21 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget> with SingleTicker
         const SizedBox(height: 12),
         _buildCircleButton(
           icon: Icons.add,
-          onTap: () => _mapController.move(_mapController.camera.center, _mapController.camera.zoom + 1),
+          onTap: () => _mapController.move(
+              _mapController.camera.center, _mapController.camera.zoom + 1),
         ),
         const SizedBox(height: 12),
         _buildCircleButton(
           icon: Icons.remove,
-          onTap: () => _mapController.move(_mapController.camera.center, _mapController.camera.zoom - 1),
+          onTap: () => _mapController.move(
+              _mapController.camera.center, _mapController.camera.zoom - 1),
         ),
       ],
     );
   }
 
-  Widget _buildCircleButton({required IconData icon, required VoidCallback onTap}) {
+  Widget _buildCircleButton(
+      {required IconData icon, required VoidCallback onTap}) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -360,7 +386,12 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget> with SingleTicker
         decoration: BoxDecoration(
           color: Colors.white,
           shape: BoxShape.circle,
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, 4))],
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 10,
+                offset: const Offset(0, 4))
+          ],
         ),
         child: Icon(icon, color: AppColors.primaryNavy, size: 24),
       ),
@@ -379,7 +410,12 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget> with SingleTicker
             decoration: BoxDecoration(
               color: Colors.white,
               shape: BoxShape.circle,
-              boxShadow: [BoxShadow(color: AppColors.primaryBlue.withValues(alpha: 0.3), blurRadius: 10, spreadRadius: 2)],
+              boxShadow: [
+                BoxShadow(
+                    color: AppColors.primaryBlue.withValues(alpha: 0.3),
+                    blurRadius: 10,
+                    spreadRadius: 2)
+              ],
               border: Border.all(color: AppColors.primaryBlue, width: 2),
             ),
             child: Image.asset(asset, width: 30, height: 30),
@@ -395,8 +431,11 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget> with SingleTicker
         children: [
           Container(
             padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(color: AppColors.primaryBlue.withValues(alpha: 0.1), shape: BoxShape.circle),
-            child: const Icon(Iconsax.location, color: AppColors.primaryBlue, size: 20),
+            decoration: BoxDecoration(
+                color: AppColors.primaryBlue.withValues(alpha: 0.1),
+                shape: BoxShape.circle),
+            child: const Icon(Iconsax.location,
+                color: AppColors.primaryBlue, size: 20),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -404,8 +443,12 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget> with SingleTicker
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(_selectedLabel ?? 'Location Details', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                const Text('Arriving in 4 mins', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                Text(_selectedLabel ?? 'Location Details',
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 14)),
+                const Text('Arriving in 4 mins',
+                    style: TextStyle(
+                        fontSize: 12, color: AppColors.textSecondary)),
               ],
             ),
           ),
@@ -421,7 +464,8 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget> with SingleTicker
     );
   }
 
-  Widget _buildLocationPin({required bool isPickup, LatLng? point, required String label}) {
+  Widget _buildLocationPin(
+      {required bool isPickup, LatLng? point, required String label}) {
     final color = isPickup ? Colors.green : AppColors.errorRed;
     return GestureDetector(
       onTap: point != null ? () => _onMarkerTap(point, label) : null,
@@ -429,25 +473,40 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget> with SingleTicker
         alignment: Alignment.center,
         children: [
           Container(
-            width: 45, height: 45,
+            width: 45,
+            height: 45,
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.15),
               shape: BoxShape.circle,
-              boxShadow: [BoxShadow(color: color.withValues(alpha: 0.2), blurRadius: 15, spreadRadius: 5)],
+              boxShadow: [
+                BoxShadow(
+                    color: color.withValues(alpha: 0.2),
+                    blurRadius: 15,
+                    spreadRadius: 5)
+              ],
             ),
-          ).animate(onPlay: (c) => c.repeat(reverse: true))
-           .scale(begin: const Offset(1, 1), end: const Offset(1.2, 1.2), duration: 1000.ms),
-           
+          ).animate(onPlay: (c) => c.repeat(reverse: true)).scale(
+              begin: const Offset(1, 1),
+              end: const Offset(1.2, 1.2),
+              duration: 1000.ms),
           Container(
-            width: 24, height: 24,
+            width: 24,
+            height: 24,
             decoration: BoxDecoration(
               color: Colors.white,
               shape: BoxShape.circle,
               border: Border.all(width: 3),
-              boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2))],
+              boxShadow: const [
+                BoxShadow(
+                    color: Colors.black26, blurRadius: 4, offset: Offset(0, 2))
+              ],
             ),
             child: Center(
-              child: Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+              child: Container(
+                  width: 8,
+                  height: 8,
+                  decoration:
+                      BoxDecoration(color: color, shape: BoxShape.circle)),
             ),
           ),
         ],
@@ -461,19 +520,27 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget> with SingleTicker
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10)],
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10)
+        ],
         border: Border.all(color: AppColors.border),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(width: 8, height: 8, decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle))
-            .animate(onPlay: (c) => c.repeat(reverse: true)).fadeOut(duration: 1.seconds),
+          Container(
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(
+                      color: Colors.green, shape: BoxShape.circle))
+              .animate(onPlay: (c) => c.repeat(reverse: true))
+              .fadeOut(duration: 1.seconds),
           const SizedBox(width: 6),
-          const Text('LIVE TRACKING', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1)),
+          const Text('LIVE TRACKING',
+              style: TextStyle(
+                  fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1)),
         ],
       ),
     );
   }
 }
-

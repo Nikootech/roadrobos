@@ -189,7 +189,8 @@ class _EtaCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFF6366F1).withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF6366F1).withValues(alpha: 0.2)),
+        border:
+            Border.all(color: const Color(0xFF6366F1).withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [
@@ -239,11 +240,36 @@ class _StatusTimeline extends StatelessWidget {
   const _StatusTimeline({required this.currentStatus});
 
   static const _steps = [
-    (DeliveryStatus.pending, 'Order Placed', 'Waiting for a driver to accept', Iconsax.box),
-    (DeliveryStatus.accepted, 'Driver Accepted', 'Driver is heading to pickup', Iconsax.truck),
-    (DeliveryStatus.pickedUp, 'Package Picked Up', 'Your package is with the driver', Iconsax.bag_2),
-    (DeliveryStatus.inTransit, 'In Transit', 'Your package is on the way', Iconsax.routing),
-    (DeliveryStatus.delivered, 'Delivered', 'Package delivered successfully', Iconsax.tick_circle),
+    (
+      DeliveryStatus.pending,
+      'Order Placed',
+      'Waiting for a driver to accept',
+      Iconsax.box
+    ),
+    (
+      DeliveryStatus.accepted,
+      'Driver Accepted',
+      'Driver is heading to pickup',
+      Iconsax.truck
+    ),
+    (
+      DeliveryStatus.pickedUp,
+      'Package Picked Up',
+      'Your package is with the driver',
+      Iconsax.bag_2
+    ),
+    (
+      DeliveryStatus.inTransit,
+      'In Transit',
+      'Your package is on the way',
+      Iconsax.routing
+    ),
+    (
+      DeliveryStatus.delivered,
+      'Delivered',
+      'Package delivered successfully',
+      Iconsax.tick_circle
+    ),
   ];
 
   int get _currentIndex {
@@ -309,7 +335,8 @@ class _CancelledBanner extends StatelessWidget {
               children: [
                 Text('Order Cancelled',
                     style: TextStyle(
-                        fontWeight: FontWeight.w800, color: AppColors.dangerRed)),
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.dangerRed)),
                 Text('This delivery was cancelled.',
                     style: TextStyle(
                         fontSize: 12, color: AppColors.textSecondary)),
@@ -383,8 +410,9 @@ class _TimelineStep extends StatelessWidget {
                     style: TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 14,
-                        color:
-                            isDone ? AppColors.textPrimary : AppColors.textMuted)),
+                        color: isDone
+                            ? AppColors.textPrimary
+                            : AppColors.textMuted)),
                 const SizedBox(height: 2),
                 Text(subtitle,
                     style: const TextStyle(
@@ -509,9 +537,11 @@ class _ProofImageCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.border),
       ),
-      child: Image.network(url, fit: BoxFit.cover,
+      child: Image.network(url,
+          fit: BoxFit.cover,
           errorBuilder: (_, __, ___) => const Center(
-                child: Icon(Iconsax.image, size: 40, color: AppColors.textMuted),
+                child:
+                    Icon(Iconsax.image, size: 40, color: AppColors.textMuted),
               )),
     ).animate().fadeIn(delay: 200.ms);
   }
@@ -546,9 +576,11 @@ class _StatusBadge extends StatelessWidget {
     }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(20)),
+      decoration:
+          BoxDecoration(color: bg, borderRadius: BorderRadius.circular(20)),
       child: Text(status.label,
-          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: text)),
+          style: TextStyle(
+              fontSize: 11, fontWeight: FontWeight.w800, color: text)),
     );
   }
 }
@@ -578,15 +610,15 @@ class _ErrorView extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Iconsax.warning_2, size: 48, color: AppColors.dangerRed),
+              const Icon(Iconsax.warning_2,
+                  size: 48, color: AppColors.dangerRed),
               const SizedBox(height: 16),
               Text(message,
                   textAlign: TextAlign.center,
                   style: const TextStyle(color: AppColors.textSecondary)),
               const SizedBox(height: 24),
               ElevatedButton(
-                  onPressed: () => context.pop(),
-                  child: const Text('Go Back')),
+                  onPressed: () => context.pop(), child: const Text('Go Back')),
             ],
           ),
         ),

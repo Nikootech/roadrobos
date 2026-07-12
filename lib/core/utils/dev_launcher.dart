@@ -9,7 +9,6 @@ import '../../features/profile/user_provider.dart';
 import '../services/auth_service.dart';
 import 'app_debugger.dart';
 
-
 /// ── DEV LAUNCHER OVERLAY ────────────────────────────────────────────────────
 /// A draggable floating button visible ONLY in debug/dev mode.
 /// Lets developers jump to any screen instantly without logging in.
@@ -341,14 +340,18 @@ class _DevPanelState extends ConsumerState<_DevPanel> {
             children: [
               Icon(
                 icon,
-                color: active ? const Color(0xFF00FF88) : Colors.white.withValues(alpha: 0.4),
+                color: active
+                    ? const Color(0xFF00FF88)
+                    : Colors.white.withValues(alpha: 0.4),
                 size: 15,
               ),
               const SizedBox(height: 4),
               Text(
                 label,
                 style: TextStyle(
-                  color: active ? const Color(0xFF00FF88) : Colors.white.withValues(alpha: 0.4),
+                  color: active
+                      ? const Color(0xFF00FF88)
+                      : Colors.white.withValues(alpha: 0.4),
                   fontSize: 8,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 1.0,
@@ -411,12 +414,17 @@ class _DevPanelState extends ConsumerState<_DevPanel> {
                   style: const TextStyle(fontSize: 12, color: Colors.white70),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                    color: isSuccess ? Colors.green.withValues(alpha: 0.15) : Colors.red.withValues(alpha: 0.15),
+                    color: isSuccess
+                        ? Colors.green.withValues(alpha: 0.15)
+                        : Colors.red.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(4),
                     border: Border.all(
-                      color: isSuccess ? Colors.green.withValues(alpha: 0.5) : Colors.red.withValues(alpha: 0.5),
+                      color: isSuccess
+                          ? Colors.green.withValues(alpha: 0.5)
+                          : Colors.red.withValues(alpha: 0.5),
                     ),
                   ),
                   child: Text(
@@ -433,22 +441,35 @@ class _DevPanelState extends ConsumerState<_DevPanel> {
           );
         }),
         const SizedBox(height: 20),
-        
         _buildSectionHeader('ENVIRONMENT CONFIG'),
-        _buildConfigItem('SUPABASE_URL', AppConfig.supabaseUrl.isNotEmpty ? 'SET' : 'EMPTY', isCritical: true),
-        _buildConfigItem('SUPABASE_ANON_KEY', AppConfig.supabaseAnonKey.isNotEmpty ? 'SET' : 'EMPTY', isCritical: true),
-        _buildConfigItem('GOOGLE_CLIENT_ID', AppConfig.googleClientId.isNotEmpty ? 'SET' : 'EMPTY'),
-        _buildConfigItem('RAZORPAY_KEY_ID', AppConfig.razorpayKey.isNotEmpty ? 'SET' : 'EMPTY'),
-        _buildConfigItem('SENTRY_DSN', AppConfig.sentryDsn.isNotEmpty ? 'SET' : 'EMPTY'),
+        _buildConfigItem(
+            'SUPABASE_URL', AppConfig.supabaseUrl.isNotEmpty ? 'SET' : 'EMPTY',
+            isCritical: true),
+        _buildConfigItem('SUPABASE_ANON_KEY',
+            AppConfig.supabaseAnonKey.isNotEmpty ? 'SET' : 'EMPTY',
+            isCritical: true),
+        _buildConfigItem('GOOGLE_CLIENT_ID',
+            AppConfig.googleClientId.isNotEmpty ? 'SET' : 'EMPTY'),
+        _buildConfigItem('RAZORPAY_KEY_ID',
+            AppConfig.razorpayKey.isNotEmpty ? 'SET' : 'EMPTY'),
+        _buildConfigItem(
+            'SENTRY_DSN', AppConfig.sentryDsn.isNotEmpty ? 'SET' : 'EMPTY'),
         const SizedBox(height: 20),
-
         _buildSectionHeader('REAL-TIME AUTH STATE'),
-        _buildStateItem('Auth Loading', authState?.isLoading.toString() ?? 'N/A'),
-        _buildStateItem('Logged In', (authState?.value != null || (userState?.isDemo ?? false)).toString()),
-        _buildStateItem('User UID', authState?.value?.id.substring(0, 8) ?? (userState?.isDemo == true ? 'demo_user' : 'null')),
+        _buildStateItem(
+            'Auth Loading', authState?.isLoading.toString() ?? 'N/A'),
+        _buildStateItem(
+            'Logged In',
+            (authState?.value != null || (userState?.isDemo ?? false))
+                .toString()),
+        _buildStateItem(
+            'User UID',
+            authState?.value?.id.substring(0, 8) ??
+                (userState?.isDemo == true ? 'demo_user' : 'null')),
         _buildStateItem('User Name', userState?.name ?? 'null'),
         _buildStateItem('User Role', userState?.user?.role.name ?? 'null'),
-        _buildStateItem('Is Approved', userState?.user?.isApproved.toString() ?? 'null'),
+        _buildStateItem(
+            'Is Approved', userState?.user?.isApproved.toString() ?? 'null'),
       ],
     );
   }
@@ -466,7 +487,8 @@ class _DevPanelState extends ConsumerState<_DevPanel> {
                 onPressed: () => setState(() {}),
                 icon: const Icon(Icons.refresh_rounded, size: 14),
                 label: const Text('Refresh', style: TextStyle(fontSize: 11)),
-                style: TextButton.styleFrom(foregroundColor: const Color(0xFF00FF88)),
+                style: TextButton.styleFrom(
+                    foregroundColor: const Color(0xFF00FF88)),
               ),
               TextButton.icon(
                 onPressed: () {
@@ -501,7 +523,10 @@ class _DevPanelState extends ConsumerState<_DevPanel> {
                     itemCount: AppDebugger.debugLogs.length,
                     itemBuilder: (context, index) {
                       final log = AppDebugger.debugLogs[index];
-                      final isError = log.contains('failed') || log.contains('Error') || log.contains('Exception') || log.contains('FAILED');
+                      final isError = log.contains('failed') ||
+                          log.contains('Error') ||
+                          log.contains('Exception') ||
+                          log.contains('FAILED');
                       return Padding(
                         padding: const EdgeInsets.symmetric(vertical: 2),
                         child: Text(
@@ -509,7 +534,9 @@ class _DevPanelState extends ConsumerState<_DevPanel> {
                           style: TextStyle(
                             fontFamily: 'monospace',
                             fontSize: 10,
-                            color: isError ? const Color(0xFFFF4E4E) : Colors.white70,
+                            color: isError
+                                ? const Color(0xFFFF4E4E)
+                                : Colors.white70,
                           ),
                         ),
                       );
@@ -550,7 +577,8 @@ class _DevPanelState extends ConsumerState<_DevPanel> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(key, style: const TextStyle(fontSize: 11, color: Colors.white60)),
+          Text(key,
+              style: const TextStyle(fontSize: 11, color: Colors.white60)),
           Text(
             value,
             style: TextStyle(
@@ -572,10 +600,14 @@ class _DevPanelState extends ConsumerState<_DevPanel> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(fontSize: 11, color: Colors.white60)),
+          Text(label,
+              style: const TextStyle(fontSize: 11, color: Colors.white60)),
           Text(
             value,
-            style: const TextStyle(fontSize: 11, color: Colors.white70, fontWeight: FontWeight.w600),
+            style: const TextStyle(
+                fontSize: 11,
+                color: Colors.white70,
+                fontWeight: FontWeight.w600),
           ),
         ],
       ),

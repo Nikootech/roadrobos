@@ -26,7 +26,9 @@ class ChatMessage {
       senderId: map['sender_id'] ?? '',
       receiverId: map['receiver_id'] ?? '',
       message: map['message'] ?? '',
-      timestamp: map['created_at'] != null ? DateTime.parse(map['created_at']) : DateTime.now(),
+      timestamp: map['created_at'] != null
+          ? DateTime.parse(map['created_at'])
+          : DateTime.now(),
       isRead: map['is_read'] ?? false,
     );
   }

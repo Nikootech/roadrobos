@@ -44,11 +44,15 @@ class DeliveryRepository {
   // ── Driver: accept a pending order ────────────────────────────────────────
   Future<void> acceptOrder(String orderId, String driverId) async {
     try {
-      await _supabase.from('delivery_orders').update({
-        'driver_id': driverId,
-        'status': 'accepted',
-        'updated_at': DateTime.now().utcIso,
-      }).eq('id', orderId).eq('status', 'pending');
+      await _supabase
+          .from('delivery_orders')
+          .update({
+            'driver_id': driverId,
+            'status': 'accepted',
+            'updated_at': DateTime.now().utcIso,
+          })
+          .eq('id', orderId)
+          .eq('status', 'pending');
     } catch (e, st) {
       unawaited(Sentry.captureException(e, stackTrace: st));
       throw Exception('Failed to accept order: $e');
@@ -78,15 +82,15 @@ class DeliveryRepository {
       final ext = p.extension(imageFile.path).isNotEmpty
           ? p.extension(imageFile.path)
           : '.jpg';
-      final storagePath = '$orderId/${DateTime.now().millisecondsSinceEpoch}$ext';
+      final storagePath =
+          '$orderId/${DateTime.now().millisecondsSinceEpoch}$ext';
 
       await _supabase.storage
           .from('delivery-proofs')
           .upload(storagePath, imageFile);
 
-      final publicUrl = _supabase.storage
-          .from('delivery-proofs')
-          .getPublicUrl(storagePath);
+      final publicUrl =
+          _supabase.storage.from('delivery-proofs').getPublicUrl(storagePath);
 
       await _supabase.from('delivery_orders').update({
         'proof_image_url': publicUrl,
@@ -107,7 +111,8 @@ class DeliveryRepository {
         .from('delivery_orders')
         .stream(primaryKey: ['id'])
         .eq('id', orderId)
-        .map((rows) => rows.isNotEmpty ? DeliveryOrder.fromMap(rows.first) : null);
+        .map((rows) =>
+            rows.isNotEmpty ? DeliveryOrder.fromMap(rows.first) : null);
   }
 
   // ── Customer: fetch all own orders (paginated) ────────────────────────────
@@ -166,7 +171,8 @@ class DeliveryRepository {
         });
   }
 
-  Future<void> syncDeliveryOrder(String action, Map<String, dynamic> payload) async {
+  Future<void> syncDeliveryOrder(
+      String action, Map<String, dynamic> payload) async {
     switch (action) {
       case 'create_delivery_order':
         await _supabase.from('delivery_orders').upsert(payload);
@@ -174,8 +180,7 @@ class DeliveryRepository {
       case 'update_delivery_status':
         await _supabase
             .from('delivery_orders')
-            .update({'status': payload['status']})
-            .eq('id', payload['id']);
+            .update({'status': payload['status']}).eq('id', payload['id']);
         break;
       default:
         throw Exception('Unknown delivery_order action: $action');

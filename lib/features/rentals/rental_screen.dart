@@ -23,21 +23,35 @@ class RentalScreen extends ConsumerStatefulWidget {
 
 class _RentalScreenState extends ConsumerState<RentalScreen> {
   late ConfettiController _confettiController;
-  final TextEditingController _pickupController = TextEditingController(text: 'My Current Location');
+  final TextEditingController _pickupController =
+      TextEditingController(text: 'My Current Location');
   final TextEditingController _dropController = TextEditingController();
   List<Map<String, dynamic>> _suggestions = [];
   bool _showSuggestions = false;
   bool _isSearching = false;
   final List<Map<String, dynamic>> _recentLocations = [
-    {'display_name': 'Koramangala 4th Block, Bengaluru', 'lat': 12.9344, 'lon': 77.6244},
-    {'display_name': 'Indiranagar Double Road, Bengaluru', 'lat': 12.9719, 'lon': 77.6412},
-    {'display_name': 'MG Road Metro Station, Bengaluru', 'lat': 12.9716, 'lon': 77.5946},
+    {
+      'display_name': 'Koramangala 4th Block, Bengaluru',
+      'lat': 12.9344,
+      'lon': 77.6244
+    },
+    {
+      'display_name': 'Indiranagar Double Road, Bengaluru',
+      'lat': 12.9719,
+      'lon': 77.6412
+    },
+    {
+      'display_name': 'MG Road Metro Station, Bengaluru',
+      'lat': 12.9716,
+      'lon': 77.5946
+    },
   ];
 
   @override
   void initState() {
     super.initState();
-    _confettiController = ConfettiController(duration: const Duration(seconds: 3));
+    _confettiController =
+        ConfettiController(duration: const Duration(seconds: 3));
   }
 
   @override
@@ -51,13 +65,14 @@ class _RentalScreenState extends ConsumerState<RentalScreen> {
   void _handleBooking() {
     final selectedVehicle = ref.read(selectedVehicleProvider);
     if (selectedVehicle == null) {
-      NavHelpers.showSnackAction(context, 'Please select a vehicle first!', icon: Iconsax.info_circle, color: AppColors.accentOrange);
+      NavHelpers.showSnackAction(context, 'Please select a vehicle first!',
+          icon: Iconsax.info_circle, color: AppColors.accentOrange);
       return;
     }
 
     _confettiController.play();
     HapticFeedback.mediumImpact();
-    
+
     Future.delayed(const Duration(seconds: 1), () {
       if (!mounted) return;
       NavHelpers.push(context, '/rental-checkout');
@@ -94,7 +109,8 @@ class _RentalScreenState extends ConsumerState<RentalScreen> {
                   clipBehavior: Clip.none,
                   children: [
                     GlassCard(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
                       borderRadius: 20,
                       opacity: 0.8,
                       child: Column(
@@ -151,13 +167,14 @@ class _RentalScreenState extends ConsumerState<RentalScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: Row(
                       children: [
-                        _buildTypeToggle('HOURLY', RentalType.hourly, rentalType),
+                        _buildTypeToggle(
+                            'HOURLY', RentalType.hourly, rentalType),
                         const SizedBox(width: 12),
                         _buildTypeToggle('DAILY', RentalType.daily, rentalType),
                       ],
                     ),
                   ),
-                  
+
                   const SizedBox(height: 16),
 
                   // Vehicle Carousel
@@ -168,10 +185,13 @@ class _RentalScreenState extends ConsumerState<RentalScreen> {
                       enlargeCenterPage: true,
                       enableInfiniteScroll: false,
                       onPageChanged: (index, reason) {
-                        ref.read(selectedVehicleProvider.notifier).state = _vehicles[index];
+                        ref.read(selectedVehicleProvider.notifier).state =
+                            _vehicles[index];
                       },
                     ),
-                    items: _vehicles.map((v) => _buildVehicleCard(v, selectedVehicle == v)).toList(),
+                    items: _vehicles
+                        .map((v) => _buildVehicleCard(v, selectedVehicle == v))
+                        .toList(),
                   ),
 
                   const SizedBox(height: 20),
@@ -180,9 +200,9 @@ class _RentalScreenState extends ConsumerState<RentalScreen> {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     child: CustomButton(
-                      label: selectedVehicle != null 
-                        ? 'BOOK ${selectedVehicle['name'].toUpperCase()} ($totalPrice)' 
-                        : 'SELECT A VEHICLE',
+                      label: selectedVehicle != null
+                          ? 'BOOK ${selectedVehicle['name'].toUpperCase()} ($totalPrice)'
+                          : 'SELECT A VEHICLE',
                       onPressed: _handleBooking,
                       backgroundColor: AppColors.primaryBlue,
                     ),
@@ -198,10 +218,15 @@ class _RentalScreenState extends ConsumerState<RentalScreen> {
             child: ConfettiWidget(
               confettiController: _confettiController,
               blastDirectionality: BlastDirectionality.explosive,
-              colors: const [Colors.blue, Colors.lightBlue, Colors.white, Colors.orange],
+              colors: const [
+                Colors.blue,
+                Colors.lightBlue,
+                Colors.white,
+                Colors.orange
+              ],
             ),
           ),
-          
+
           // Back Button
           Positioned(
             top: MediaQuery.of(context).padding.top + 10,
@@ -209,7 +234,8 @@ class _RentalScreenState extends ConsumerState<RentalScreen> {
             child: CircleAvatar(
               backgroundColor: Colors.white.withAlpha((0.9 * 255).toInt()),
               child: IconButton(
-                icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: AppColors.textPrimary),
+                icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                    size: 18, color: AppColors.textPrimary),
                 onPressed: () => NavHelpers.pop(context),
               ),
             ),
@@ -240,9 +266,19 @@ class _RentalScreenState extends ConsumerState<RentalScreen> {
         enabledBorder: InputBorder.none,
         focusedBorder: InputBorder.none,
         contentPadding: const EdgeInsets.symmetric(vertical: 12),
-        suffixIcon: _isSearching ? const SizedBox(width: 20, height: 20, child: Padding(padding: EdgeInsets.all(12), child: CircularProgressIndicator(strokeWidth: 2))) : null,
+        suffixIcon: _isSearching
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: Padding(
+                    padding: EdgeInsets.all(12),
+                    child: CircularProgressIndicator(strokeWidth: 2)))
+            : null,
       ),
-      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+      style: const TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
+          color: AppColors.textPrimary),
     );
   }
 
@@ -264,9 +300,10 @@ class _RentalScreenState extends ConsumerState<RentalScreen> {
     }
 
     setState(() => _isSearching = true);
-    final results = await ref.read(mapControllerProvider.notifier).searchPlaces(query);
+    final results =
+        await ref.read(mapControllerProvider.notifier).searchPlaces(query);
     if (!mounted) return;
-    
+
     setState(() {
       _suggestions = results;
       _showSuggestions = true;
@@ -291,11 +328,15 @@ class _RentalScreenState extends ConsumerState<RentalScreen> {
                 padding: EdgeInsets.fromLTRB(16, 12, 16, 8),
                 child: Text(
                   'RECENT SEARCHES',
-                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.textMuted, letterSpacing: 1),
+                  style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textMuted,
+                      letterSpacing: 1),
                 ),
               ),
               ..._recentLocations.map((loc) => _buildLocationItem(loc)),
-            ] else 
+            ] else
               ..._suggestions.map((s) => _buildLocationItem(s)),
           ],
         ),
@@ -315,13 +356,17 @@ class _RentalScreenState extends ConsumerState<RentalScreen> {
             color: AppColors.bgLightGrey,
             shape: BoxShape.circle,
           ),
-          child: const Icon(Iconsax.location, size: 16, color: AppColors.primaryBlue),
+          child: const Icon(Iconsax.location,
+              size: 16, color: AppColors.primaryBlue),
         ),
         title: Text(
-          loc['display_name'], 
-          maxLines: 1, 
+          loc['display_name'],
+          maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+          style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary),
         ),
         onTap: () {
           setState(() {
@@ -345,16 +390,23 @@ class _RentalScreenState extends ConsumerState<RentalScreen> {
         decoration: BoxDecoration(
           color: active ? AppColors.primaryBlue : Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: active ? AppColors.primaryBlue : AppColors.border),
-          boxShadow: active ? [
-            BoxShadow(color: AppColors.primaryBlue.withAlpha((0.3 * 255).toInt()), blurRadius: 10, offset: const Offset(0, 4))
-          ] : null,
+          border: Border.all(
+              color: active ? AppColors.primaryBlue : AppColors.border),
+          boxShadow: active
+              ? [
+                  BoxShadow(
+                      color:
+                          AppColors.primaryBlue.withAlpha((0.3 * 255).toInt()),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4))
+                ]
+              : null,
         ),
         child: Text(
           label,
           style: TextStyle(
-            fontSize: 12, 
-            fontWeight: FontWeight.w800, 
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
             color: active ? Colors.white : AppColors.textSecondary,
             letterSpacing: 0.5,
           ),
@@ -367,7 +419,9 @@ class _RentalScreenState extends ConsumerState<RentalScreen> {
     return GlassCard(
       padding: const EdgeInsets.all(12),
       opacity: isSelected ? 0.95 : 0.7,
-      border: isSelected ? Border.all(color: AppColors.primaryBlue, width: 2) : null,
+      border: isSelected
+          ? Border.all(color: AppColors.primaryBlue, width: 2)
+          : null,
       child: Column(
         children: [
           Expanded(
@@ -376,7 +430,10 @@ class _RentalScreenState extends ConsumerState<RentalScreen> {
           const SizedBox(height: 8),
           Text(
             vehicle['name'],
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.textPrimary),
+            style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: AppColors.textPrimary),
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -385,14 +442,18 @@ class _RentalScreenState extends ConsumerState<RentalScreen> {
               const SizedBox(width: 4),
               Text(
                 '${vehicle['rating']} • ${vehicle['type']}',
-                style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                style: const TextStyle(
+                    fontSize: 12, color: AppColors.textSecondary),
               ),
             ],
           ),
           const SizedBox(height: 4),
           Text(
             vehicle['price'],
-            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: AppColors.primaryBlue),
+            style: const TextStyle(
+                fontWeight: FontWeight.w900,
+                fontSize: 18,
+                color: AppColors.primaryBlue),
           ),
         ],
       ),

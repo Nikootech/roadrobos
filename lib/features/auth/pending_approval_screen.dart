@@ -13,7 +13,8 @@ class PendingApprovalScreen extends ConsumerStatefulWidget {
   const PendingApprovalScreen({super.key});
 
   @override
-  ConsumerState<PendingApprovalScreen> createState() => _PendingApprovalScreenState();
+  ConsumerState<PendingApprovalScreen> createState() =>
+      _PendingApprovalScreenState();
 }
 
 class _PendingApprovalScreenState extends ConsumerState<PendingApprovalScreen> {
@@ -25,16 +26,17 @@ class _PendingApprovalScreenState extends ConsumerState<PendingApprovalScreen> {
     if (user == null) return;
 
     setState(() => _isChecking = true);
-    
+
     try {
       // Force fetch the profile from database to get fresh approval status
       await ref.read(userProvider.notifier).fetchUserProfile(user.id);
-      
+
       final freshState = ref.read(userProvider);
       if (mounted) {
         setState(() => _isChecking = false);
         if (freshState.user != null && freshState.user!.isApproved) {
-          NavHelpers.showSuccess(context, 'Account approved! Welcome to the team.');
+          NavHelpers.showSuccess(
+              context, 'Account approved! Welcome to the team.');
           // Router handles redirecting to the employee dashboard automatically
         } else {
           NavHelpers.showSnackAction(
@@ -65,7 +67,8 @@ class _PendingApprovalScreenState extends ConsumerState<PendingApprovalScreen> {
     final userState = ref.watch(userProvider);
     final user = userState.user;
 
-    final roleName = user?.role.name.toUpperCase().replaceAll('_', ' ') ?? 'STAFF MEMBER';
+    final roleName =
+        user?.role.name.toUpperCase().replaceAll('_', ' ') ?? 'STAFF MEMBER';
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -76,7 +79,7 @@ class _PendingApprovalScreenState extends ConsumerState<PendingApprovalScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Spacer(),
-              
+
               // Animated Illustration Container
               Container(
                 width: 140,
@@ -96,9 +99,16 @@ class _PendingApprovalScreenState extends ConsumerState<PendingApprovalScreen> {
                         color: AppColors.accentOrange.withValues(alpha: 0.12),
                         shape: BoxShape.circle,
                       ),
-                    ).animate(onPlay: (controller) => controller.repeat(reverse: true))
-                     .scale(begin: const Offset(0.9, 0.9), end: const Offset(1.1, 1.1), duration: 1500.ms, curve: Curves.easeInOut),
-                    
+                    )
+                        .animate(
+                            onPlay: (controller) =>
+                                controller.repeat(reverse: true))
+                        .scale(
+                            begin: const Offset(0.9, 0.9),
+                            end: const Offset(1.1, 1.1),
+                            duration: 1500.ms,
+                            curve: Curves.easeInOut),
+
                     // Center Warning/Pending Icon
                     const Icon(
                       Iconsax.user_tick,
@@ -152,11 +162,17 @@ class _PendingApprovalScreenState extends ConsumerState<PendingApprovalScreen> {
                         children: [
                           const Text(
                             'Name',
-                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF64748B)),
+                            style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF64748B)),
                           ),
                           Text(
                             user.name,
-                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+                            style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF1E293B)),
                           ),
                         ],
                       ),
@@ -166,12 +182,17 @@ class _PendingApprovalScreenState extends ConsumerState<PendingApprovalScreen> {
                         children: [
                           const Text(
                             'Requested Role',
-                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF64748B)),
+                            style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF64748B)),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: AppColors.accentOrange.withValues(alpha: 0.1),
+                              color:
+                                  AppColors.accentOrange.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
@@ -209,10 +230,11 @@ class _PendingApprovalScreenState extends ConsumerState<PendingApprovalScreen> {
                 label: const Text('Log Out'),
                 style: TextButton.styleFrom(
                   foregroundColor: Colors.blueGrey.shade600,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 ),
               ).animate(delay: 600.ms).fadeIn(),
-              
+
               const SizedBox(height: 16),
             ],
           ),

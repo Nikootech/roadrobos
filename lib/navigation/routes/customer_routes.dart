@@ -670,12 +670,15 @@ final List<RouteBase> customerRoutes = [
       final receiverName = extra['receiverName'] as String? ?? '';
 
       if (bookingId.isEmpty || !_isValidUuid(bookingId)) {
-        final currentUserId = Supabase.instance.client.auth.currentUser?.id ?? 'demo';
-        final roomId = bookingId.isNotEmpty ? bookingId : '${currentUserId}_support';
+        final currentUserId =
+            Supabase.instance.client.auth.currentUser?.id ?? 'demo';
+        final roomId =
+            bookingId.isNotEmpty ? bookingId : '${currentUserId}_support';
         return AppTransitions.slideUp(
           child: support_chat.ChatScreen(
             roomId: roomId,
-            otherPartyName: receiverName.isNotEmpty ? receiverName : 'Support Agent',
+            otherPartyName:
+                receiverName.isNotEmpty ? receiverName : 'Support Agent',
           ),
           state: state,
         );
@@ -728,7 +731,6 @@ final List<RouteBase> customerRoutes = [
 bool _isValidUuid(String str) {
   if (str.isEmpty) return false;
   final uuidRegex = RegExp(
-    r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
-  );
+      r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
   return uuidRegex.hasMatch(str);
 }
