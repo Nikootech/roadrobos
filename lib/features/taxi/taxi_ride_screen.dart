@@ -491,49 +491,211 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
         if (state.status == RideStatus.vehicleSelection) ...[
           _buildFareEstimate(state, notifier),
           const SizedBox(height: 16),
-          // Payment methods row
+          // Interactive Payment Selector (Cash on Drop vs Pay Online)
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              const Row(children: [
-                Icon(Icons.money, color: Colors.green, size: 20),
-                SizedBox(width: 4),
-                Text('Cash', style: TextStyle(fontWeight: FontWeight.bold))
-              ]),
-              Container(width: 1, height: 20, color: Colors.grey),
-              const Row(children: [
-                Icon(Icons.local_offer, color: Colors.green, size: 20),
-                SizedBox(width: 4),
-                Text('Coupon', style: TextStyle(fontWeight: FontWeight.bold))
-              ]),
-              Container(width: 1, height: 20, color: Colors.grey),
-              const Row(children: [
-                Icon(Icons.person, color: Colors.grey, size: 20),
-                SizedBox(width: 4),
-                Text('Myself', style: TextStyle(fontWeight: FontWeight.bold))
-              ]),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    notifier.setPaymentMethod('Cash');
+                    HapticFeedback.selectionClick();
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    decoration: BoxDecoration(
+                      color: state.paymentMethod == 'Cash'
+                          ? Colors.orange.shade50
+                          : (isDark ? Colors.grey.shade900 : Colors.grey.shade50),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: state.paymentMethod == 'Cash'
+                            ? Colors.orange.shade400
+                            : (isDark ? Colors.grey.shade800 : Colors.grey.shade200),
+                        width: state.paymentMethod == 'Cash' ? 2 : 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.money_rounded,
+                          color: state.paymentMethod == 'Cash'
+                              ? Colors.orange.shade700
+                              : Colors.grey,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Cash on Drop',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: state.paymentMethod == 'Cash'
+                                ? Colors.orange.shade700
+                                : (isDark ? Colors.white70 : Colors.black87),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    notifier.setPaymentMethod('Online');
+                    HapticFeedback.selectionClick();
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    decoration: BoxDecoration(
+                      color: state.paymentMethod == 'Online'
+                          ? AppColors.primaryBlue.withValues(alpha: 0.08)
+                          : (isDark ? Colors.grey.shade900 : Colors.grey.shade50),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: state.paymentMethod == 'Online'
+                            ? AppColors.primaryBlue
+                            : (isDark ? Colors.grey.shade800 : Colors.grey.shade200),
+                        width: state.paymentMethod == 'Online' ? 2 : 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.payment_rounded,
+                          color: state.paymentMethod == 'Online'
+                              ? AppColors.primaryBlue
+                              : Colors.grey,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Pay Online',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: state.paymentMethod == 'Online'
+                                ? AppColors.primaryBlue
+                                : (isDark ? Colors.white70 : Colors.black87),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 16),
         ],
         CustomButton(
           label: state.status == RideStatus.vehicleSelection
-              ? 'Book ${state.selectedOption?.title ?? 'Ride'}'
+              ? (state.paymentMethod == 'Online'
+                  ? 'Pay & Book ${state.selectedOption?.title ?? 'Ride'}'
+                  : 'Book ${state.selectedOption?.title ?? 'Ride'}')
               : 'SELECT LOCATIONS',
           onPressed: (state.status == RideStatus.booked || _isBooking)
               ? null
               : () async {
                   _triggerHaptic();
                   if (state.status == RideStatus.vehicleSelection) {
-                    setState(() => _isBooking = true);
-                    final success = await notifier.bookRide();
-                    if (mounted) {
-                      setState(() => _isBooking = false);
-                      if (!success) {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                          content: Text('No drivers available nearby. Please try again.'),
-                          behavior: SnackBarBehavior.floating,
-                        ));
+                    try {
+                      setState(() => _isBooking = true);
+                      final success = await notifier.bookRide();
+                      if (mounted) {
+                        setState(() => _isBooking = false);
+                        if (!success) {
+                          unawaited(showDialog(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                              title: Row(children: [
+                                const Icon(Icons.location_off_rounded, color: Colors.orange),
+                                const SizedBox(width: 12),
+                                const Expanded(child: Text('No Drivers Nearby', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18))),
+                              ]),
+                              content: const Text(
+                                'All drivers in your area are currently offline. You can still book and wait — we\'ll keep searching for 10 minutes and notify you when a driver accepts.',
+                                style: TextStyle(fontSize: 14, height: 1.6),
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(ctx),
+                                  child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+                                ),
+                                TextButton(
+                                  onPressed: () async {
+                                    final mainContext = context;
+                                    final date = await showDatePicker(
+                                      context: ctx,
+                                      initialDate: DateTime.now(),
+                                      firstDate: DateTime.now(),
+                                      lastDate: DateTime.now().add(const Duration(days: 7)),
+                                    );
+                                    if (date != null && mainContext.mounted) {
+                                      final time = await showTimePicker(
+                                        context: mainContext,
+                                        initialTime: TimeOfDay.now(),
+                                      );
+                                      if (time != null && mainContext.mounted) {
+                                        final scheduledTime = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+                                        try {
+                                          await ref.read(taxiProvider.notifier).scheduleRideForLater(scheduledTime);
+                                          if (mainContext.mounted) {
+                                            Navigator.pop(ctx); // close dialog
+                                            mainContext.go('/home'); // Go to home screen
+                                            ScaffoldMessenger.of(mainContext).showSnackBar(
+                                              SnackBar(
+                                                content: Text('Ride scheduled for ${time.format(mainContext)} on ${date.day}/${date.month}'),
+                                                backgroundColor: Colors.green,
+                                              ),
+                                            );
+                                          }
+                                        } catch (e) {
+                                          if (mainContext.mounted) {
+                                            ScaffoldMessenger.of(mainContext).showSnackBar(
+                                              SnackBar(content: Text(e.toString()), backgroundColor: AppColors.dangerRed),
+                                            );
+                                          }
+                                        }
+                                      }
+                                    }
+                                  },
+                                  child: const Text('Schedule', style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.bold)),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    Navigator.pop(ctx);
+                                    // Set status back to booked so the UI transitions to tracking/searching screen
+                                    ref.read(taxiProvider.notifier).updateStatus(RideStatus.booked);
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.primaryBlue,
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  ),
+                                  child: const Text('Book Anyway'),
+                                ),
+                              ],
+                            ),
+                          ));
+                        }
+                      }
+                    } catch (e) {
+                      if (mounted) {
+                        setState(() => _isBooking = false);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(e.toString().replaceAll('Exception: ', '')),
+                            backgroundColor: AppColors.dangerRed,
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
                       }
                     }
                   } else if (state.pickupLocation != null &&
