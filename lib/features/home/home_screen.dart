@@ -258,11 +258,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           borderRadius: BorderRadius.circular(16)),
                       itemBuilder: (context) {
                         final currentLang = ref.read(languageProvider);
-                        PopupMenuItem<AppLanguage> buildItem(AppLanguage value, String title, String code) {
+                        PopupMenuItem<AppLanguage> buildItem(
+                            AppLanguage value, String title, String code) {
                           final isSelected = value == currentLang;
                           return PopupMenuItem(
                             value: value,
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
@@ -271,32 +273,43 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     Container(
                                       padding: const EdgeInsets.all(6),
                                       decoration: BoxDecoration(
-                                        color: isSelected ? AppColors.primaryBlue.withOpacity(0.1) : Colors.grey.shade100,
+                                        color: isSelected
+                                            ? AppColors.primaryBlue
+                                                .withValues(alpha: 0.1)
+                                            : Colors.grey.shade100,
                                         shape: BoxShape.circle,
                                       ),
-                                      child: Text(code, style: TextStyle(
-                                        fontSize: 10, 
-                                        fontWeight: FontWeight.bold, 
-                                        color: isSelected ? AppColors.primaryBlue : Colors.grey.shade600
-                                      )),
+                                      child: Text(code,
+                                          style: TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.bold,
+                                              color: isSelected
+                                                  ? AppColors.primaryBlue
+                                                  : Colors.grey.shade600)),
                                     ),
                                     const SizedBox(width: 12),
                                     Text(
                                       title,
                                       style: TextStyle(
-                                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                        color: isSelected ? AppColors.primaryBlue : AppColors.textPrimary,
+                                        fontWeight: isSelected
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
+                                        color: isSelected
+                                            ? AppColors.primaryBlue
+                                            : AppColors.textPrimary,
                                         fontSize: 14,
                                       ),
                                     ),
                                   ],
                                 ),
                                 if (isSelected)
-                                  const Icon(Icons.check_circle_rounded, color: AppColors.primaryBlue, size: 18),
+                                  const Icon(Icons.check_circle_rounded,
+                                      color: AppColors.primaryBlue, size: 18),
                               ],
                             ),
                           );
                         }
+
                         return [
                           buildItem(AppLanguage.en, 'English', 'EN'),
                           buildItem(AppLanguage.hi, 'हिन्दी', 'HI'),
@@ -309,14 +322,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
-                          color: AppColors.primaryBlue.withOpacity(0.1),
+                          color: AppColors.primaryBlue.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: AppColors.primaryBlue.withOpacity(0.2)),
+                          border: Border.all(
+                              color:
+                                  AppColors.primaryBlue.withValues(alpha: 0.2)),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.language_rounded, size: 14, color: AppColors.primaryBlue),
+                            const Icon(Icons.language_rounded,
+                                size: 14, color: AppColors.primaryBlue),
                             const SizedBox(width: 4),
                             Text(
                               ref.watch(languageProvider).name.toUpperCase(),
@@ -326,7 +342,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   fontSize: 12),
                             ),
                             const SizedBox(width: 2),
-                            const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: AppColors.primaryBlue),
+                            const Icon(Icons.keyboard_arrow_down_rounded,
+                                size: 16, color: AppColors.primaryBlue),
                           ],
                         ),
                       ),
