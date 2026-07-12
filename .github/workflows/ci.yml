@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: "android app"
+        working-directory: "."
     steps:
       - uses: actions/checkout@v4
 
@@ -50,7 +50,7 @@ jobs:
     needs: analyze
     defaults:
       run:
-        working-directory: "android app"
+        working-directory: "."
     steps:
       - uses: actions/checkout@v4
 
@@ -71,7 +71,7 @@ jobs:
         if: always()
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: "android app/coverage/lcov.info"
+          files: "coverage/lcov.info"
           fail_ci_if_error: false
 
   # ── 3. Build Android APK (Debug — PRs only) ──────────────────────────────────
@@ -82,7 +82,7 @@ jobs:
     if: github.event_name == 'pull_request'
     defaults:
       run:
-        working-directory: "android app"
+        working-directory: "."
     steps:
       - uses: actions/checkout@v4
 
@@ -116,7 +116,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: debug-apk-${{ github.sha }}
-          path: "android app/build/app/outputs/flutter-apk/app-debug.apk"
+          path: "build/app/outputs/flutter-apk/app-debug.apk"
           retention-days: 7
 
   # ── 4. Build Android Release AAB (main only) ──────────────────────────────────
@@ -127,7 +127,7 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     defaults:
       run:
-        working-directory: "android app"
+        working-directory: "."
     steps:
       - uses: actions/checkout@v4
 
@@ -177,7 +177,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: release-aab-${{ github.sha }}
-          path: "android app/build/app/outputs/bundle/release/app-release.aab"
+          path: "build/app/outputs/bundle/release/app-release.aab"
           retention-days: 30
 
   # ── 5. Supabase DB Migrations (main push only) ────────────────────────────────
@@ -195,7 +195,7 @@ jobs:
           version: latest
 
       - name: Run DB migrations
-        working-directory: "android app"
+        working-directory: "."
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
