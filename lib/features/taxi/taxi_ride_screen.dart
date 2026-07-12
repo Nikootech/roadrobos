@@ -186,8 +186,12 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
       });
       return;
     }
+
+    final taxiState = ref.read(taxiProvider);
+    final biasLoc = taxiState.pickupLocation;
+
     if (query.length == 2) {
-      _osmService.searchAddress(query).then((results) {
+      _osmService.searchAddress(query, biasLocation: biasLoc).then((results) {
         if (mounted) {
           setState(() {
             _apiSearchResults = results;
@@ -199,7 +203,8 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
     }
     _debounce = Timer(const Duration(milliseconds: 500), () async {
       setState(() => _isSearching = true);
-      final results = await _osmService.searchAddress(query);
+      final results =
+          await _osmService.searchAddress(query, biasLocation: biasLoc);
       if (mounted) {
         setState(() {
           _apiSearchResults = results;

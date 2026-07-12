@@ -116,8 +116,9 @@ class OSMMapsService {
     },
   ];
 
-  /// Search for addresses using Nominatim
-  Future<List<Map<String, dynamic>>> searchAddress(String query) async {
+  /// Search for addresses using Nominatim with optional bias location
+  Future<List<Map<String, dynamic>>> searchAddress(String query,
+      {LatLng? biasLocation}) async {
     if (query.length < 2) return [];
 
     final localResults = _bengaluruLocations.where((loc) {
@@ -126,6 +127,18 @@ class OSMMapsService {
       final address = loc['address'].toString().toLowerCase();
       return name.contains(q) || address.contains(q);
     }).toList();
+
+    // Sort local results by distance to the user's location if provided
+    if (biasLocation != null) {
+      const distanceCalc = Distance();
+      localResults.sort((a, b) {
+        final distA = distanceCalc.as(
+            LengthUnit.Meter, biasLocation, LatLng(a['lat'], a['lng']));
+        final distB = distanceCalc.as(
+            LengthUnit.Meter, biasLocation, LatLng(b['lat'], b['lng']));
+        return distA.compareTo(distB);
+      });
+    }
 
     if (query.length < 3) {
       return localResults;
@@ -137,9 +150,20 @@ class OSMMapsService {
           : <String, String>{
               'User-Agent': 'RoadRobosMobileApp/1.0.0 (contact@roadrobos.com)'
             };
+
+      String url =
+          '$_nominatimUrl/search?q=${Uri.encodeComponent(query)}&format=json&addressdetails=1&limit=5&countrycodes=in';
+      if (biasLocation != null) {
+        final double offset = 0.15; // roughly 15-20km bounding box for local city
+        final left = biasLocation.longitude - offset;
+        final top = biasLocation.latitude + offset;
+        final right = biasLocation.longitude + offset;
+        final bottom = biasLocation.latitude - offset;
+        url += '&viewbox=$left,$top,$right,$bottom&bounded=0';
+      }
+
       final response = await http.get(
-        Uri.parse(
-            '$_nominatimUrl/search?q=${Uri.encodeComponent(query)}&format=json&addressdetails=1&limit=5&countrycodes=in'),
+        Uri.parse(url),
         headers: headers,
       );
 

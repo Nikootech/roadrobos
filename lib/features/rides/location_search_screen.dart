@@ -108,8 +108,21 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
       return;
     }
 
+    LatLng? biasLoc;
+    if (widget.isDelivery) {
+      final deliveryState = ref.read(deliveryOrderProvider);
+      if (deliveryState.pickupLocation != null) {
+        biasLoc = deliveryState.pickupLocation;
+      }
+    } else {
+      final taxiState = ref.read(taxiProvider);
+      if (taxiState.pickupLocation != null) {
+        biasLoc = taxiState.pickupLocation;
+      }
+    }
+
     if (query.length == 2) {
-      _osmService.searchAddress(query).then((results) {
+      _osmService.searchAddress(query, biasLocation: biasLoc).then((results) {
         if (mounted) {
           setState(() {
             _searchResults = results;
@@ -122,7 +135,8 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
 
     _debounce = Timer(const Duration(milliseconds: 500), () async {
       setState(() => _isSearching = true);
-      final results = await _osmService.searchAddress(query);
+      final results =
+          await _osmService.searchAddress(query, biasLocation: biasLoc);
       if (mounted) {
         setState(() {
           _searchResults = results;

@@ -179,8 +179,20 @@ class _RentalVehicleDetailScreenState
                             });
                             return;
                           }
+
+                          // Get pickup location as bias if available
+                          final pickup = ref.read(rentalPickupLocationProvider);
+                          LatLng? biasLoc;
+                          if (pickup != null &&
+                              pickup['lat'] != null &&
+                              pickup['lng'] != null) {
+                            biasLoc = LatLng(pickup['lat'], pickup['lng']);
+                          }
+
                           if (query.length == 2) {
-                            osmService.searchAddress(query).then((searchResults) {
+                            osmService
+                                .searchAddress(query, biasLocation: biasLoc)
+                                .then((searchResults) {
                               if (ctx.mounted) {
                                 setSheetState(() {
                                   results = searchResults;
@@ -193,8 +205,8 @@ class _RentalVehicleDetailScreenState
                           debounce = Timer(const Duration(milliseconds: 500),
                               () async {
                             setSheetState(() => isSearching = true);
-                            final searchResults =
-                                await osmService.searchAddress(query);
+                            final searchResults = await osmService
+                                .searchAddress(query, biasLocation: biasLoc);
                             if (ctx.mounted) {
                               setSheetState(() {
                                 results = searchResults;
