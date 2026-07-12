@@ -39,6 +39,32 @@ class CustomTextField extends StatefulWidget {
 class _CustomTextFieldState extends State<CustomTextField> {
   bool _obscureText = true;
   bool _isFocused = false;
+  FocusNode? _localFocusNode;
+
+  FocusNode get _effectiveFocusNode =>
+      widget.focusNode ?? (_localFocusNode ??= FocusNode());
+
+  @override
+  void initState() {
+    super.initState();
+    _effectiveFocusNode.addListener(_handleFocusChange);
+    _isFocused = _effectiveFocusNode.hasFocus;
+  }
+
+  @override
+  void dispose() {
+    _effectiveFocusNode.removeListener(_handleFocusChange);
+    _localFocusNode?.dispose();
+    super.dispose();
+  }
+
+  void _handleFocusChange() {
+    if (mounted) {
+      setState(() {
+        _isFocused = _effectiveFocusNode.hasFocus;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -74,88 +100,83 @@ class _CustomTextFieldState extends State<CustomTextField> {
           ),
           const SizedBox(height: 8),
         ],
-        Focus(
-          onFocusChange: (focused) {
-            setState(() => _isFocused = focused);
-          },
-          child: TextFormField(
-            focusNode: widget.focusNode,
-            controller: widget.controller,
-            obscureText: widget.isPassword ? _obscureText : false,
-            keyboardType: widget.keyboardType,
-            validator: widget.validator,
-            onChanged: widget.onChanged,
-            maxLines: widget.maxLines,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w400,
-              color: textStyleColor,
+        TextFormField(
+          focusNode: _effectiveFocusNode,
+          controller: widget.controller,
+          obscureText: widget.isPassword ? _obscureText : false,
+          keyboardType: widget.keyboardType,
+          validator: widget.validator,
+          onChanged: widget.onChanged,
+          maxLines: widget.maxLines,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w400,
+            color: textStyleColor,
+          ),
+          decoration: InputDecoration(
+            hintText: widget.hint,
+            filled: true,
+            fillColor: _isFocused ? focusedFillColor : defaultFillColor,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 16,
             ),
-            decoration: InputDecoration(
-              hintText: widget.hint,
-              filled: true,
-              fillColor: _isFocused ? focusedFillColor : defaultFillColor,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: 16,
-              ),
-              prefixIcon: widget.prefixIcon != null
-                  ? Icon(
-                      widget.prefixIcon,
-                      color: prefixIconColor,
+            prefixIcon: widget.prefixIcon != null
+                ? Icon(
+                    widget.prefixIcon,
+                    color: prefixIconColor,
+                    size: 20,
+                  )
+                : null,
+            suffixIcon: widget.isPassword
+                ? GestureDetector(
+                    onTap: () {
+                      setState(() => _obscureText = !_obscureText);
+                    },
+                    child: Icon(
+                      _obscureText
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                      color: suffixIconColor,
                       size: 20,
-                    )
-                  : null,
-              suffixIcon: widget.isPassword
-                  ? GestureDetector(
-                      onTap: () {
-                        setState(() => _obscureText = !_obscureText);
-                      },
-                      child: Icon(
-                        _obscureText
-                            ? Icons.visibility_off_outlined
-                            : Icons.visibility_outlined,
+                    ),
+                  )
+                : widget.suffixIcon != null
+                    ? Icon(
+                        widget.suffixIcon,
                         color: suffixIconColor,
                         size: 20,
-                      ),
-                    )
-                  : widget.suffixIcon != null
-                      ? Icon(
-                          widget.suffixIcon,
-                          color: suffixIconColor,
-                          size: 20,
-                        )
-                      : null,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppTheme.radiusMD),
-                borderSide: BorderSide(color: borderCol),
+                      )
+                    : null,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppTheme.radiusMD),
+              borderSide: BorderSide(color: borderCol),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppTheme.radiusMD),
+              borderSide: BorderSide(color: borderCol),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppTheme.radiusMD),
+              borderSide: const BorderSide(
+                color: AppColors.primaryBlue,
+                width: 1.5,
               ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppTheme.radiusMD),
-                borderSide: BorderSide(color: borderCol),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppTheme.radiusMD),
-                borderSide: const BorderSide(
-                  color: AppColors.primaryBlue,
-                  width: 1.5,
-                ),
-              ),
-              errorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppTheme.radiusMD),
-                borderSide: const BorderSide(color: AppColors.errorRed),
-              ),
-              focusedErrorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppTheme.radiusMD),
-                borderSide: const BorderSide(
-                  color: AppColors.errorRed,
-                  width: 1.5,
-                ),
-              ),
-              errorStyle: const TextStyle(
-                fontSize: 12,
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppTheme.radiusMD),
+              borderSide: const BorderSide(color: AppColors.errorRed),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppTheme.radiusMD),
+              borderSide: const BorderSide(
                 color: AppColors.errorRed,
+                width: 1.5,
               ),
+            ),
+            errorStyle: const TextStyle(
+              fontSize: 12,
+              color: AppColors.errorRed,
             ),
           ),
         ),

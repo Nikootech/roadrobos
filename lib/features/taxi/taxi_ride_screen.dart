@@ -359,7 +359,10 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
   ) {
     return DraggableScrollableSheet(
       controller: _sheetController,
-      initialChildSize: state.status == RideStatus.idle ? 0.35 : 0.45,
+      initialChildSize: (state.status == RideStatus.selectingPickup ||
+              state.status == RideStatus.selectingDrop)
+          ? 0.85
+          : (state.status == RideStatus.idle ? 0.35 : 0.45),
       minChildSize: 0.3,
       maxChildSize: 0.9,
       snap: true,
