@@ -40,7 +40,7 @@ final razorpayProvider = Provider<Razorpay>((ref) {
 class PaymentService extends _$PaymentService {
   late Razorpay _razorpay;
   PaymentDetails? _currentPayment;
-  Completer<void>? _paymentCompleter;
+  Completer<String>? _paymentCompleter;
 
   SupabaseClient? _mockSupabase;
   Razorpay? _mockRazorpay;
@@ -141,7 +141,7 @@ class PaymentService extends _$PaymentService {
             debugPrint('Payment validated successfully by server.');
           }
           if (_paymentCompleter != null && !_paymentCompleter!.isCompleted) {
-            _paymentCompleter!.complete();
+            _paymentCompleter!.complete(paymentId);
           }
         } else {
           if (_paymentCompleter != null && !_paymentCompleter!.isCompleted) {
@@ -178,7 +178,7 @@ class PaymentService extends _$PaymentService {
     }
   }
 
-  Future<void> startPayment(PaymentDetails details) async {
+  Future<String> startPayment(PaymentDetails details) async {
     if (ref.read(jailbreakProvider)) {
       final context = rootNavigatorKey.currentContext;
       if (context != null && context.mounted) {
@@ -189,7 +189,7 @@ class PaymentService extends _$PaymentService {
     }
 
     _currentPayment = details;
-    _paymentCompleter = Completer<void>();
+    _paymentCompleter = Completer<String>();
 
     unawaited(Sentry.addBreadcrumb(
       Breadcrumb(

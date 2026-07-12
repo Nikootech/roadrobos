@@ -13,6 +13,7 @@ import '../core/repositories/ride_booking_repository.dart';
 import '../core/repositories/driver_repository.dart';
 import '../core/services/user_tracking_service.dart';
 import '../core/services/osm_maps_service.dart';
+import '../core/services/payment_service.dart';
 
 enum RideStatus {
   idle,
@@ -429,6 +430,29 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
       state = state.copyWith(
           rideId: bookingId, otp: generatedOtp, isOtpVerified: false);
 
+      // --- RAZORPAY PAYMENT TRIGGER ---
+      if (state.paymentMethod == 'Online') {
+        try {
+          final paymentService = ref.read(paymentServiceProvider.notifier);
+          final paymentId = await paymentService.startPayment(PaymentDetails(
+            bookingId: bookingId,
+            bookingType: BookingType.ride,
+            totalCost: booking.fare,
+            userId: booking.customerId,
+            description: 'Taxi Ride - ${state.selectedOption?.title ?? 'Standard'}',
+            contact: user.user?.phone ?? '9999999999',
+            email: user.user?.email ?? 'test@example.com',
+          ));
+          state = state.copyWith(razorpayPaymentId: paymentId);
+        } catch (e) {
+          debugPrint('Razorpay payment failed or was cancelled: $e');
+          await _cancelBookingOnBackend();
+          reset();
+          throw Exception('Payment failed or was cancelled');
+        }
+      }
+
+
       if (nearbyDrivers.isEmpty) {
         if (kDebugMode) {
           debugPrint(
@@ -611,6 +635,19 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
   void reset() {
     state = TaxiState();
     initializeLocation();
+  }
+
+  Future<void> scheduleRideForLater(DateTime scheduledTime) async {
+    final bookingId = state.rideId;
+    if (bookingId == null || bookingId.isEmpty) return;
+    
+    try {
+      await ref.read(rideBookingRepositoryProvider).updateScheduledTime(bookingId, scheduledTime);
+      reset();
+    } catch (e) {
+      debugPrint('Failed to schedule ride for later: $e');
+      throw Exception('Failed to schedule ride.');
+    }
   }
 
   @override

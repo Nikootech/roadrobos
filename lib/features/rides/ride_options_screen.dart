@@ -383,6 +383,45 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
                                                 onPressed: () => Navigator.pop(ctx),
                                                 child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
                                               ),
+                                              TextButton(
+                                                onPressed: () async {
+                                                  final date = await showDatePicker(
+                                                    context: ctx,
+                                                    initialDate: DateTime.now(),
+                                                    firstDate: DateTime.now(),
+                                                    lastDate: DateTime.now().add(const Duration(days: 7)),
+                                                  );
+                                                  if (date != null && ctx.mounted) {
+                                                    final time = await showTimePicker(
+                                                      context: ctx,
+                                                      initialTime: TimeOfDay.now(),
+                                                    );
+                                                    if (time != null && ctx.mounted) {
+                                                      final scheduledTime = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+                                                      try {
+                                                        await ref.read(taxiProvider.notifier).scheduleRideForLater(scheduledTime);
+                                                        if (ctx.mounted) {
+                                                          Navigator.pop(ctx); // close dialog
+                                                          context.go('/home'); // Go to home screen
+                                                          ScaffoldMessenger.of(context).showSnackBar(
+                                                            SnackBar(
+                                                              content: Text('Ride scheduled for ${time.format(context)} on ${date.day}/${date.month}'),
+                                                              backgroundColor: Colors.green,
+                                                            ),
+                                                          );
+                                                        }
+                                                      } catch (e) {
+                                                        if (ctx.mounted) {
+                                                          ScaffoldMessenger.of(context).showSnackBar(
+                                                            SnackBar(content: Text(e.toString()), backgroundColor: AppColors.dangerRed),
+                                                          );
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                },
+                                                child: const Text('Schedule', style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.bold)),
+                                              ),
                                               ElevatedButton(
                                                 onPressed: () {
                                                   Navigator.pop(ctx);
@@ -399,6 +438,16 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
                                           ),
                                         ));
                                       }
+                                    }
+                                  } catch (e) {
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text(e.toString().replaceAll('Exception: ', '')),
+                                          backgroundColor: AppColors.dangerRed,
+                                          behavior: SnackBarBehavior.floating,
+                                        ),
+                                      );
                                     }
                                   } finally {
                                     if (mounted) setState(() => _isBooking = false);

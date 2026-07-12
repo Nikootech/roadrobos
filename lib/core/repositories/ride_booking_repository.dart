@@ -64,6 +64,19 @@ class RideBookingRepository {
     }
   }
 
+  Future<void> updateScheduledTime(String bookingId, DateTime scheduledTime) async {
+    try {
+      await _supabase
+          .from('ride_bookings')
+          .update({
+            'scheduled_for': scheduledTime.toUtc().toIso8601String(),
+            'status': 'scheduled',
+          }).eq('id', bookingId);
+    } catch (e) {
+      throw Exception('Failed to update scheduled time: $e');
+    }
+  }
+
   Future<void> cancelBooking(String bookingId) async {
     await _supabase.from('ride_bookings').update({
       'status': 'cancelled',
