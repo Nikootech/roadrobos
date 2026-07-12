@@ -154,7 +154,7 @@ class OSMMapsService {
       String url =
           '$_nominatimUrl/search?q=${Uri.encodeComponent(query)}&format=json&addressdetails=1&limit=5&countrycodes=in';
       if (biasLocation != null) {
-        final double offset = 0.15; // roughly 15-20km bounding box for local city
+        const offset = 0.15; // roughly 15-20km bounding box for local city
         final left = biasLocation.longitude - offset;
         final top = biasLocation.latitude + offset;
         final right = biasLocation.longitude + offset;
