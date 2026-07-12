@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart';
@@ -29,9 +30,10 @@ class UserRepository {
       if (local != null) {
         debugPrint('UserRepository: Returning Cached Profile for $uid');
         // Background refresh
-        // ignore: unawaited_futures
-        _fetchAndCache(uid)
-            .catchError((e) => debugPrint('Background Fetch Error: $e'));
+        unawaited(
+          _fetchAndCache(uid)
+              .catchError((e) => debugPrint('Background Fetch Error: $e')),
+        );
         return _fromCached(local);
       }
     }
