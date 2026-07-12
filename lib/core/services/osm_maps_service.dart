@@ -72,6 +72,13 @@ class OSMMapsService {
       'lng': 77.7499,
       'type': 'result',
     },
+    {
+      'name': 'Tin Factory',
+      'address': 'Tin Factory, Swamy Vivekananda Rd, Jyothi Nagar, Bengaluru, Karnataka, 560016',
+      'lat': 12.9964,
+      'lng': 77.6704,
+      'type': 'result',
+    },
   ];
 
   /// Search for addresses using Nominatim
