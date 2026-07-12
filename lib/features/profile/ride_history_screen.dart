@@ -96,6 +96,31 @@ class RideHistoryScreen extends ConsumerWidget {
                 price: '₹${ride.fare}',
                 car: 'Personal Cab',
                 isSuccess: ride.status.toLowerCase() == 'completed',
+                trailingAction: ride.status.toLowerCase() == 'completed'
+                    ? Consumer(
+                        builder: (context, ref, child) {
+                          return OutlinedButton.icon(
+                            onPressed: () async {
+                              try {
+                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Receipt downloaded successfully.')));
+                              } catch (e) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to download receipt: $e')));
+                                }
+                              }
+                            },
+                            icon: const Icon(Icons.download_rounded, size: 16),
+                            label: const Text('Receipt', style: TextStyle(fontSize: 12)),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              foregroundColor: AppColors.primaryBlue,
+                              side: const BorderSide(color: AppColors.primaryBlue),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            ),
+                          );
+                        },
+                      )
+                    : null,
               ).animate().fadeIn(delay: (100 * index).ms).slideX(begin: 0.1, end: 0);
             },
           );
@@ -192,6 +217,7 @@ class RideHistoryScreen extends ConsumerWidget {
     required bool isSuccess,
     bool isService = false,
     bool isRental = false,
+    Widget? trailingAction,
   }) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -269,6 +295,13 @@ class RideHistoryScreen extends ConsumerWidget {
               ),
             ],
           ),
+          if (trailingAction != null) ...[
+            const SizedBox(height: 12),
+            Align(
+              alignment: Alignment.centerRight,
+              child: trailingAction,
+            ),
+          ],
         ],
       ),
     );

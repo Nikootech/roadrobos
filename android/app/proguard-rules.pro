@@ -52,3 +52,9 @@
 -dontwarn com.google.android.play.core.tasks.OnFailureListener
 -dontwarn com.google.android.play.core.tasks.OnSuccessListener
 -dontwarn com.google.android.play.core.tasks.Task
+
+# --- Flutter Background Service ---
+-keep class id.flutter.flutter_background_service.** { *; }
+
+# --- Flutter Jailbreak Detection (RootBeer) ---
+-keep class com.scottyab.rootbeer.** { *; }

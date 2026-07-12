@@ -160,25 +160,73 @@ class _BookRideScreenState extends ConsumerState<BookRideScreen> {
   }
 
   Widget _buildSearchTrigger(BuildContext context) {
-    return GestureDetector(
-      onTap: () => context.push('/taxi/search-location', extra: {'focusPickup': false}),
-      child: Container(
-        margin: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF3F4F6),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: const Row(
-          children: [
-            Icon(Iconsax.search_normal, size: 20, color: Colors.black54),
-            SizedBox(width: 12),
-            Text(
-              'Where do you want to go?',
-              style: TextStyle(fontSize: 15, color: Colors.black54, fontWeight: FontWeight.w500),
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+      child: Row(
+        children: [
+          Expanded(
+            child: GestureDetector(
+              onTap: () => context.push('/taxi/search-location', extra: {'focusPickup': false}),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF3F4F6),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Iconsax.search_normal, size: 20, color: Colors.black54),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Where to?',
+                        style: TextStyle(fontSize: 15, color: Colors.black54, fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ],
-        ),
+          ),
+          const SizedBox(width: 12),
+          GestureDetector(
+            onTap: () async {
+              final TimeOfDay? time = await showTimePicker(
+                context: context,
+                initialTime: TimeOfDay.now(),
+              );
+              if (time != null && context.mounted) {
+                final now = DateTime.now();
+                DateTime scheduledTime = DateTime(now.year, now.month, now.day, time.hour, time.minute);
+                if (scheduledTime.isBefore(now)) {
+                   scheduledTime = scheduledTime.add(const Duration(days: 1));
+                }
+                ref.read(taxiProvider.notifier).setScheduledTime(scheduledTime);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Ride scheduled for ${time.format(context)}'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              }
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF3F4F6),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Iconsax.clock, size: 20, color: Colors.black87),
+                  SizedBox(width: 6),
+                  Text('Now', style: TextStyle(fontWeight: FontWeight.w700)),
+                  Icon(Icons.arrow_drop_down, size: 16),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -206,13 +254,26 @@ class _BookRideScreenState extends ConsumerState<BookRideScreen> {
      return Material(
        color: Colors.transparent,
        child: InkWell(
-         onTap: () {
+         onTap: () async {
            final lat = loc['lat'] as double;
            final lng = loc['lng'] as double;
            final latLng = LatLng(lat, lng);
            
+           // Ensure pickup location is available
+           final currentState = ref.read(taxiProvider);
+           if (currentState.pickupLocation == null) {
+             ScaffoldMessenger.of(context).showSnackBar(
+               const SnackBar(
+                 content: Text('Please wait — fetching your current location...'),
+                 duration: Duration(seconds: 2),
+               ),
+             );
+             await ref.read(taxiProvider.notifier).initializeLocation();
+           }
+
            ref.read(taxiProvider.notifier).setDropoff(latLng, title);
-           context.push('/taxi/ride-options');
+           if (!mounted) return;
+           await context.push('/taxi/ride-options');
          },
          borderRadius: BorderRadius.circular(16),
          child: Container(

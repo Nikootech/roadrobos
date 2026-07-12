@@ -15,6 +15,7 @@ class RideBooking {
   final String? vehicleType;
   final String? otp;
   final DateTime createdAt;
+  final DateTime? scheduledFor;
 
   RideBooking({
     required this.id,
@@ -31,6 +32,7 @@ class RideBooking {
     this.vehicleType,
     this.otp,
     required this.createdAt,
+    this.scheduledFor,
   });
 
   factory RideBooking.fromMap(Map<String, dynamic> map, String documentId) {
@@ -49,6 +51,7 @@ class RideBooking {
       vehicleType: map['vehicle_type'],
       otp: map['otp']?.toString(),
       createdAt: map['created_at'] != null ? DateTime.parse(map['created_at']) : DateTime.now(),
+      scheduledFor: map['scheduled_for'] != null ? DateTime.parse(map['scheduled_for']) : null,
     );
   }
 
@@ -67,6 +70,7 @@ class RideBooking {
       'vehicle_type': vehicleType,
       'otp': otp,
       'created_at': createdAt.utcIso,
+      if (scheduledFor != null) 'scheduled_for': scheduledFor!.utcIso,
     };
   }
 }

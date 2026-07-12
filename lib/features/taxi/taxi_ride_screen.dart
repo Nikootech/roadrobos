@@ -24,6 +24,7 @@ import '../../shared/widgets/sos_button.dart';
 import 'dart:async';
 import '../../core/services/osm_maps_service.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../profile/user_provider.dart';
 import '../profile/sos_provider.dart';
 
@@ -43,6 +44,8 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
   String _searchQuery = '';
   bool _showSuggestions = false;
   bool _isPickupSearch = true;
+  int _completedRating = 0;
+  bool _isBooking = false;
 
   final OSMMapsService _osmService = OSMMapsService();
   List<Map<String, dynamic>> _apiSearchResults = [];
@@ -294,6 +297,12 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
               if (state.status == RideStatus.tracking)
                 _buildTrackingSection(state, notifier),
                 
+              if (state.status == RideStatus.atPickup)
+                _buildAtPickupSection(state, notifier),
+
+              if (state.status == RideStatus.headingToDropoff)
+                _buildHeadingToDropSection(state, notifier),
+                
               if (state.status == RideStatus.completed)
                 _buildCompletedSection(state, notifier),
             ],
@@ -368,15 +377,101 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
         ],
         CustomButton(
           label: state.status == RideStatus.vehicleSelection ? 'Book ${state.selectedOption?.title ?? 'Ride'}' : 'SELECT LOCATIONS',
-          onPressed: state.status == RideStatus.booked ? null : () {
+          onPressed: (state.status == RideStatus.booked || _isBooking) ? null : () async {
             _triggerHaptic();
             if (state.status == RideStatus.vehicleSelection) {
-              notifier.bookRide(); 
+              setState(() => _isBooking = true);
+              await notifier.bookRide(); 
+              if (mounted) setState(() => _isBooking = false);
             } else {
               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please select both locations')));
             }
           },
-          isLoading: state.status == RideStatus.booked,
+          isLoading: state.status == RideStatus.booked || _isBooking,
+        ),
+      ],
+    ).animate().fadeIn();
+  }
+
+  Widget _buildAtPickupSection(TaxiState state, TaxiNotifier notifier) {
+    return Column(
+      children: [
+        const Icon(Icons.location_on, color: Colors.green, size: 48)
+            .animate(onPlay: (c) => c.repeat(reverse: true))
+            .scale(begin: const Offset(0.9, 0.9), end: const Offset(1.1, 1.1)),
+        const SizedBox(height: 12),
+        Text(
+          '${state.roadroboName ?? 'Roadrobo'} has arrived!',
+          style: GoogleFonts.outfit(
+            fontSize: 20,
+            fontWeight: FontWeight.w900,
+            color: Colors.green,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Show OTP to driver: ${state.otp ?? '----'}',
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 24),
+        CustomButton(
+          label: 'Start Trip',
+          onPressed: () {
+            _triggerHaptic();
+            notifier.startTrip();
+          },
+          backgroundColor: Colors.green,
+        ),
+      ],
+    ).animate().fadeIn();
+  }
+
+  Widget _buildHeadingToDropSection(TaxiState state, TaxiNotifier notifier) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'On Your Way!',
+          style: GoogleFonts.outfit(
+            fontSize: 22,
+            fontWeight: FontWeight.w900,
+            color: isDark ? AppColors.textOnDark : AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            const Icon(Icons.flag, color: Colors.red),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                state.dropoffAddress ?? 'Your Destination',
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+        if (state.eta != null) ...[
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              const Icon(Icons.timer, color: AppColors.primaryBlue),
+              const SizedBox(width: 8),
+              Text(state.eta!, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.primaryBlue)),
+            ],
+          ),
+        ],
+        const SizedBox(height: 24),
+        CustomButton(
+          label: 'ARRIVED AT DESTINATION',
+          onPressed: () {
+            _triggerHaptic();
+            notifier.completeRide();
+            _showCompletionDialog(context, notifier);
+          },
+          backgroundColor: AppColors.errorRed,
         ),
       ],
     ).animate().fadeIn();
@@ -597,7 +692,10 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(state.roadroboName ?? 'Roadrobo', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                    const Text('Suzuki Gixxer • KA 01 EB 4567', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                    Text(
+                      state.selectedOption?.title ?? 'Vehicle',
+                      style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                    ),
                   ],
                 ),
               ),
@@ -660,7 +758,6 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
       ],
     ).animate().fadeIn();
   }
-
   Widget _buildCompletedSection(TaxiState state, TaxiNotifier notifier) {
     return Column(
       children: [
@@ -679,19 +776,27 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
         const SizedBox(height: 16),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(5, (index) => IconButton(
-            icon: Icon(Icons.star_border_rounded, color: Colors.amber.withValues(alpha: 0.4), size: 32),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Thank you for your rating!'), backgroundColor: AppColors.successGreen),
-              );
-            },
-          )),
+          children: List.generate(5, (index) {
+            return GestureDetector(
+              onTap: () {
+                _triggerHaptic();
+                setState(() => _completedRating = index + 1);
+              },
+              child: Icon(
+                index < _completedRating ? Icons.star_rounded : Icons.star_border_rounded,
+                color: index < _completedRating ? Colors.amber : Colors.amber.withValues(alpha: 0.3),
+                size: 36,
+              ),
+            );
+          }),
         ),
         const SizedBox(height: 32),
         CustomButton(
           label: 'BOOK NEXT RIDE',
-          onPressed: () => notifier.reset(),
+          onPressed: () {
+            notifier.reset();
+            context.go('/main/home');
+          },
         ),
       ],
     ).animate().fadeIn();
@@ -866,18 +971,39 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
                       Expanded(
                         child: CustomButton(
                           label: 'Cancel Ride',
-                          onPressed: () {
+                          onPressed: () async {
                             if (selectedReason.isEmpty) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(content: Text('Please select a reason first')),
                               );
                               return;
                             }
+                            // Log cancellation reason before resetting state
+                            final rideId = ref.read(taxiProvider).rideId;
+                            if (rideId != null && rideId.isNotEmpty) {
+                              try {
+                                await Supabase.instance.client
+                                    .from('ride_bookings')
+                                    .update({
+                                      'status': 'cancelled',
+                                      'cancellation_reason': selectedReason,
+                                      'cancelled_at': DateTime.now().toIso8601String(),
+                                    })
+                                    .eq('id', rideId);
+                              } catch (e) {
+                                debugPrint('Failed to log cancellation reason: $e');
+                              }
+                            }
                             notifier.cancelRide();
-                            Navigator.pop(bottomSheetContext);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Ride canceled: $selectedReason')),
-                            );
+                            if (context.mounted) Navigator.pop(bottomSheetContext);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Ride cancelled: $selectedReason'),
+                                  backgroundColor: Colors.redAccent,
+                                ),
+                              );
+                            }
                           },
                           backgroundColor: selectedReason.isEmpty ? Colors.grey : AppColors.errorRed,
                         ),
@@ -909,7 +1035,7 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
           try {
             await ref.read(paymentServiceProvider.notifier).startPayment(
               PaymentDetails(
-                bookingId: '00000000-0000-0000-0000-000000000000', // Taxi booking UUID
+                bookingId: state.rideId ?? '00000000-0000-0000-0000-000000000000',
                 bookingType: BookingType.ride,
                 totalCost: breakdown.totalPayable,
                 userId: userId,

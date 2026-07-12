@@ -18,6 +18,7 @@ import '../../features/home/schedule_appointment_screen.dart';
 import '../../features/home/live_service_status_screen.dart';
 import '../../features/home/service_feedback_screen.dart';
 import '../../features/rides/book_ride_screen.dart';
+import '../../features/profile/ride_history_screen.dart';
 import '../../features/rides/ride_options_screen.dart';
 import '../../features/rides/live_tracking_screen.dart';
 import '../../features/rides/ride_complete_screen.dart';
@@ -41,7 +42,6 @@ import '../../features/rentals/rental_confirmed_screen.dart';
 import '../../features/rentals/rental_terms_screen.dart';
 import '../../features/rentals/delivery_logistics_screen.dart';
 import '../../features/rentals/rental_providers.dart';
-import '../../features/profile/ride_history_screen.dart';
 import '../../features/profile/referral_screen.dart';
 import '../../features/profile/user_loyalty_screen.dart';
 import '../../features/profile/account_settings_screen.dart';
@@ -234,6 +234,13 @@ final List<RouteBase> customerRoutes = [
     path: '/book-ride',
     pageBuilder: (context, state) => AppTransitions.slideRight(
       child: const BookRideScreen(),
+      state: state,
+    ),
+  ),
+  GoRoute(
+    path: '/ride-history',
+    pageBuilder: (context, state) => AppTransitions.slideRight(
+      child: const RideHistoryScreen(),
       state: state,
     ),
   ),

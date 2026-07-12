@@ -61,6 +61,13 @@ class RideBookingRepository {
     }
   }
 
+  Future<void> cancelBooking(String bookingId) async {
+    await _supabase
+        .from('ride_bookings')
+        .update({'status': 'cancelled', 'cancelled_at': DateTime.now().toIso8601String()})
+        .eq('id', bookingId);
+  }
+
   /// Watch a specific booking for updates
   Stream<RideBooking?> watchBooking(String bookingId) {
     return _supabase

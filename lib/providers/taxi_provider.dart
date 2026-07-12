@@ -72,6 +72,11 @@ class TaxiState {
   final List<RideOption> rideOptions;
   final RideOption? selectedOption;
   final List<Map<String, dynamic>> mockLocations;
+  final String paymentMethod;
+  final double discountAmount;
+  final String? appliedPromoCode;
+  final double tipAmount;
+  final DateTime? scheduledFor;
 
   TaxiState({
     this.status = RideStatus.idle,
@@ -91,6 +96,11 @@ class TaxiState {
     this.selectedOption,
     this.mockLocations = const [],
     this.rideId,
+    this.paymentMethod = 'Cash',
+    this.discountAmount = 0.0,
+    this.appliedPromoCode,
+    this.tipAmount = 0.0,
+    this.scheduledFor,
   });
 
   TaxiState copyWith({
@@ -111,6 +121,11 @@ class TaxiState {
     RideOption? selectedOption,
     List<Map<String, dynamic>>? mockLocations,
     String? rideId,
+    String? paymentMethod,
+    double? discountAmount,
+    String? appliedPromoCode,
+    double? tipAmount,
+    DateTime? scheduledFor,
   }) {
     return TaxiState(
       status: status ?? this.status,
@@ -130,6 +145,11 @@ class TaxiState {
       selectedOption: selectedOption ?? this.selectedOption,
       mockLocations: mockLocations ?? this.mockLocations,
       rideId: rideId ?? this.rideId,
+      paymentMethod: paymentMethod ?? this.paymentMethod,
+      discountAmount: discountAmount ?? this.discountAmount,
+      appliedPromoCode: appliedPromoCode ?? this.appliedPromoCode,
+      tipAmount: tipAmount ?? this.tipAmount,
+      scheduledFor: scheduledFor ?? this.scheduledFor,
     );
   }
 }
@@ -140,6 +160,7 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
 
   StreamSubscription? _driverLocationSubscription;
   StreamSubscription? _rideSubscription;
+  Timer? _searchTimeoutTimer;
   final _trackingService = UserTrackingService();
 
   Future<void> initializeLocation() async {
@@ -244,7 +265,7 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
       pickupLocation: pickup,
       dropoffLocation: dropoff,
       roadroboLocation: const LatLng(12.9716, 77.5946), // Driver starting position
-      otp: '1234',
+      otp: (1000 + Random().nextInt(9000)).toString(),
       isOtpVerified: false,
     );
   }
@@ -311,8 +332,6 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
         return distA.compareTo(distB);
       });
 
-      final assignedDriver = nearbyDrivers.first;
-
       final random = Random();
       final generatedOtp = (1000 + random.nextInt(9000)).toString(); // 4 digit OTP
 
@@ -328,18 +347,20 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
         fare: state.selectedOption?.price ?? 0.0,
         otp: generatedOtp,
         createdAt: DateTime.now(),
+        scheduledFor: state.scheduledFor,
       );
 
       final bookingId = await ref.read(rideBookingRepositoryProvider).createRideBooking(booking);
       state = state.copyWith(rideId: bookingId, otp: generatedOtp, isOtpVerified: false);
       
-      // ignore: unawaited_futures
-      _rideSubscription?.cancel();
+      unawaited(_rideSubscription?.cancel());
       _rideSubscription = ref.read(rideBookingRepositoryProvider)
           .watchBooking(bookingId)
           .listen((updatedRide) {
             if (updatedRide != null) {
-              if (updatedRide.driverId != null && state.status == RideStatus.booked) {
+              // When a driver accepts, status changes to 'accepted'
+              if (updatedRide.status == 'accepted' && updatedRide.driverId != null &&
+                  (state.status == RideStatus.booked || state.status == RideStatus.idle)) {
                 _onDriverAssigned(updatedRide);
               }
 
@@ -351,20 +372,27 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
                 state = state.copyWith(status: RideStatus.completed);
                 _rideSubscription?.cancel();
                 _driverLocationSubscription?.cancel();
+              } else if (updatedRide.status == 'cancelled') {
+                // Booking was cancelled (e.g. 90s timeout)
+                state = state.copyWith(status: RideStatus.idle);
+                _rideSubscription?.cancel();
               }
             }
           });
 
-      // Assign the real driver (simulating the driver accepting the ride)
-      Future.delayed(const Duration(seconds: 4), () async {
+      // 90-second search timeout
+      _searchTimeoutTimer?.cancel();
+      _searchTimeoutTimer = Timer(const Duration(seconds: 90), () {
         if (state.status == RideStatus.booked) {
-          try {
-            await ref.read(driverRepositoryProvider).acceptRide(bookingId, assignedDriver.id);
-          } catch (e) {
-            debugPrint('Driver could not accept ride: $e');
-          }
+          _cancelBookingOnBackend();
+          state = state.copyWith(status: RideStatus.idle);
+          debugPrint('TaxiProvider: Driver search timed out after 90s');
         }
       });
+
+      // NOTE: NO auto-accept here. We wait for a real driver to accept via
+      // the Supabase Realtime listener above. The driver's app shows a request
+      // notification and they tap Accept, which changes status → 'accepted'.
       return true;
     } catch (e) {
       debugPrint('Error booking ride: $e');
@@ -374,6 +402,7 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
   }
 
   void _onDriverAssigned(RideBooking ride) {
+    _searchTimeoutTimer?.cancel();
     state = state.copyWith(
       status: RideStatus.tracking,
       roadroboName: 'Driver Assigned', 
@@ -393,7 +422,7 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
             final double meters = distanceCalc.as(LengthUnit.Meter, driver.currentPosition!, targetLocation);
             
             final double distanceKm = meters / 1000.0;
-            final int etaMins = (meters / 200).ceil(); // Rough estimate based on speed
+            final int etaMins = (meters / 333).ceil().clamp(1, 120);
             
             state = state.copyWith(
               roadroboLocation: driver.currentPosition,
@@ -404,6 +433,7 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
   }
 
   void completeRide() {
+    _searchTimeoutTimer?.cancel();
     state = state.copyWith(status: RideStatus.completed);
     _rideSubscription?.cancel();
     _driverLocationSubscription?.cancel();
@@ -416,6 +446,7 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
 
   @override
   void dispose() {
+    _searchTimeoutTimer?.cancel();
     _rideSubscription?.cancel();
     _driverLocationSubscription?.cancel();
     super.dispose();
@@ -495,16 +526,44 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
     state = state.copyWith(selectedOption: option);
   }
 
+  void setPaymentMethod(String method) {
+    state = state.copyWith(paymentMethod: method);
+  }
+
+  void applyPromoCode(String code, double amount) {
+    state = state.copyWith(appliedPromoCode: code, discountAmount: amount);
+  }
+
+  void setTipAmount(double amount) {
+    state = state.copyWith(tipAmount: amount);
+  }
+
+  void setScheduledTime(DateTime time) {
+    state = state.copyWith(scheduledFor: time);
+  }
+
   void setFocus(bool isPickup) {
     state = state.copyWith(status: isPickup ? RideStatus.selectingPickup : RideStatus.selectingDrop);
   }
 
   void cancelRide() {
+    _cancelBookingOnBackend();
+    _searchTimeoutTimer?.cancel();
     reset();
   }
 
+  Future<void> _cancelBookingOnBackend() async {
+    final bookingId = state.rideId;
+    if (bookingId == null || bookingId.isEmpty) return;
+    try {
+      await ref.read(rideBookingRepositoryProvider).cancelBooking(bookingId);
+    } catch (e) {
+      debugPrint('Failed to cancel booking on backend: $e');
+    }
+  }
+
   Future<bool> startSearching() async {
-    state = state.copyWith(status: RideStatus.booked);
+    // Do NOT set booked here — bookRide() handles status internally
     return await bookRide();
   }
 
@@ -525,13 +584,13 @@ final taxiProvider = StateNotifierProvider<TaxiNotifier, TaxiState>((ref) {
 });
 
 // Controllers using Provider.onDispose
-final pickupControllerProvider = Provider.autoDispose<TextEditingController>((ref) {
+final pickupControllerProvider = Provider<TextEditingController>((ref) {
   final controller = TextEditingController();
   ref.onDispose(() => controller.dispose());
   return controller;
 });
 
-final dropoffControllerProvider = Provider.autoDispose<TextEditingController>((ref) {
+final dropoffControllerProvider = Provider<TextEditingController>((ref) {
   final controller = TextEditingController();
   ref.onDispose(() => controller.dispose());
   return controller;

@@ -67,35 +67,37 @@ class DriverRepository {
     }
   }
 
-  /// Stream of pending ride requests
+  /// Stream of pending ride requests (status = 'searching')
+  /// This MUST match the status written by TaxiProvider.startSearching()
   Stream<List<RideBooking>> watchPendingRides() {
     return _supabase
         .from('ride_bookings')
         .stream(primaryKey: ['id'])
-        .eq('status', 'pending')
+        .eq('status', 'searching')
         .order('created_at')
         .map((list) {
       return list.map((map) => RideBooking.fromMap(map, map['id'].toString())).toList();
     });
   }
 
-  /// Accept a ride request
+  /// Accept a ride request — atomically assigns driver and updates status
+  /// Uses conditional update (.eq('status','searching')) to prevent race conditions
+  /// where two drivers try to accept the same ride simultaneously.
   Future<void> acceptRide(String rideId, String driverId) async {
     try {
-      // Conditional update to prevent race conditions
       final response = await _supabase
           .from('ride_bookings')
           .update({
             'driver_id': driverId,
-            'status': 'booked',
+            'status': 'accepted', // Customer listener watches for this
             'accepted_at': DateTime.now().utcIso,
           })
           .eq('id', rideId)
-          .eq('status', 'pending')
+          .eq('status', 'searching') // Only accept if still searching
           .select();
       
       if (response.isEmpty) {
-        throw Exception('Ride already taken or not found');
+        throw Exception('Ride already taken by another driver');
       }
     } catch (e) {
       throw Exception('Failed to accept ride: $e');

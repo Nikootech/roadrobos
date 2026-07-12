@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:confetti/confetti.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/custom_button.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/taxi_provider.dart';
+import '../../core/services/payment_service.dart';
+import '../../features/profile/user_provider.dart';
 
 class RideCompleteScreen extends ConsumerStatefulWidget {
   const RideCompleteScreen({super.key});
@@ -128,9 +131,21 @@ class _RideCompleteScreenState extends ConsumerState<RideCompleteScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceAround,
                           children: [
-                            _buildStatItem('Distance', '4.2 km', Icons.directions_rounded),
-                            _buildStatItem('Time', '18 mins', Icons.access_time_rounded),
-                            _buildStatItem('Co2 Saved', '1.2 kg', Icons.eco_rounded),
+                            _buildStatItem(
+                              'Distance',
+                              '${taxiState.distance.toStringAsFixed(1)} km',
+                              Icons.directions_rounded,
+                            ),
+                            _buildStatItem(
+                              'ETA',
+                              taxiState.eta ?? '-- mins',
+                              Icons.access_time_rounded,
+                            ),
+                            _buildStatItem(
+                              'Vehicle',
+                              taxiState.selectedOption?.title ?? 'Ride',
+                              Icons.electric_rickshaw,
+                            ),
                           ],
                         ),
                       ],
@@ -140,7 +155,10 @@ class _RideCompleteScreenState extends ConsumerState<RideCompleteScreen> {
                   const SizedBox(height: 40),
                   
                   // Rating Section
-                  const Text('How was your trip with Sohan?', style: TextStyle(fontWeight: FontWeight.w900, color: AppColors.primaryNavy, fontSize: 16)),
+                  Text(
+                    'How was your trip with ${taxiState.roadroboName ?? 'your driver'}?',
+                    style: const TextStyle(fontWeight: FontWeight.w900, color: AppColors.primaryNavy, fontSize: 16),
+                  ),
                   const SizedBox(height: 20),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -156,13 +174,94 @@ class _RideCompleteScreenState extends ConsumerState<RideCompleteScreen> {
                     }),
                   ),
                   
-                  const SizedBox(height: 60),
+                  const SizedBox(height: 30),
+                  
+                  // Tipping Section
+                  const Text('Add a Tip', style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.primaryNavy, fontSize: 14)),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [0.0, 20.0, 50.0, 100.0].map((tip) {
+                      final isSelected = taxiState.tipAmount == tip;
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        child: GestureDetector(
+                          onTap: () {
+                            ref.read(taxiProvider.notifier).setTipAmount(tip);
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: isSelected ? AppColors.primaryBlue : Colors.grey[100],
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: isSelected ? AppColors.primaryBlue : Colors.grey[300]!),
+                            ),
+                            child: Text(
+                              tip == 0 ? 'No Tip' : '₹${tip.toInt()}',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: isSelected ? Colors.white : Colors.grey[700],
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ).animate().fadeIn(delay: 800.ms),
+                  
+                  const SizedBox(height: 40),
                   
                   CustomButton(
-                    label: 'DONE',
-                    onPressed: () {
+                    label: taxiState.paymentMethod == 'Online' ? 'PAY ₹${(fare + taxiState.tipAmount).toStringAsFixed(0)} & FINISH' : 'DONE',
+                    onPressed: () async {
+                      if (taxiState.paymentMethod == 'Online') {
+                        final authState = ref.read(userProvider);
+                        final userId = authState.user?.id ?? 'guest';
+                        final userEmail = authState.user?.email ?? 'user@roadrobos.com';
+                        
+                          final scaffoldMessenger = ScaffoldMessenger.of(context);
+                          
+                          try {
+                            final paymentDetails = PaymentDetails(
+                              bookingId: taxiState.rideId ?? 'test_ride',
+                              bookingType: BookingType.ride,
+                              totalCost: fare + taxiState.tipAmount,
+                              userId: userId,
+                              contact: '9876543210',
+                              email: userEmail,
+                              description: 'RoadRobos Taxi Ride',
+                            );
+                            
+                            // The service throws on failure. Await blocks until success.
+                            await ref.read(paymentServiceProvider.notifier).startPayment(paymentDetails);
+                            
+                            if (!mounted) return;
+                            scaffoldMessenger.showSnackBar(
+                              const SnackBar(content: Text('Payment Successful!'), backgroundColor: Colors.green),
+                            );
+                          } catch (e) {
+                            if (!mounted) return;
+                            scaffoldMessenger.showSnackBar(
+                              SnackBar(content: Text('Payment failed: $e'), backgroundColor: Colors.red),
+                            );
+                            return; // Stop here, do not complete rating or exit
+                          }
+                      }
+                    
+                      // Submit rating to Supabase if a ride exists
+                      final rideId = ref.read(taxiProvider).rideId;
+                      if (rideId != null && rideId.isNotEmpty && _selectedRating > 0) {
+                        try {
+                          await Supabase.instance.client
+                              .from('ride_bookings')
+                              .update({'customer_rating': _selectedRating})
+                              .eq('id', rideId);
+                        } catch (e) {
+                          debugPrint('Failed to submit rating: $e');
+                        }
+                      }
                       ref.read(taxiProvider.notifier).reset();
-                      context.go('/main/home');
+                      if (context.mounted) context.go('/main/home');
                     },
                   ).animate().fadeIn(delay: 1.seconds),
                   

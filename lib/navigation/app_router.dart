@@ -21,11 +21,25 @@ export 'routes/customer_routes.dart' show shellNavigatorKey;
 // ── Compile-time demo-mode gate ──────────────────────────────────────────────
 // Pass --dart-define=DEMO_MODE_ENABLED=true at build time to enable demo paths.
 // In release builds this constant is always false regardless of dart-define.
-const bool _demoModeEnabled =
-    kDebugMode && bool.fromEnvironment('DEMO_MODE_ENABLED');
+// ignore: prefer_const_declarations
+final bool _demoModeEnabled =
+    kDebugMode && const bool.fromEnvironment('DEMO_MODE_ENABLED');
 
 
 final rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
+
+/// Maps a loaded user's role to their home route path.
+String _homeRouteForUser(AppUser user) {
+  if (user.role.isAdmin) return '/admin-home';
+  switch (user.role) {
+    case UserRole.driver:
+      return '/driver-home';
+    case UserRole.technician:
+      return '/tech-dashboard';
+    default:
+      return '/main/home';
+  }
+}
 
 class RouterNotifier extends ChangeNotifier {
   final Ref _ref;
@@ -80,7 +94,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       // NOT redirect — authState.value is null even for logged-in users.
       // Stay on the current route (return null) until the state settles.
       if (authState.isLoading) {
-        if (kDebugMode) debugPrint('Router: authState still loading — holding route.');
+        if (kDebugMode) {
+          debugPrint('Router: authState still loading — holding route.');
+        }
         return null;
       }
 
@@ -127,7 +143,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isPublicPath = publicPaths.contains(location);
 
       if (!isLoggedIn && !isPublicPath) {
-        if (kDebugMode) debugPrint('Router: unauthenticated → /auth/role-selection');
+        if (kDebugMode) {
+          debugPrint('Router: unauthenticated → /auth/role-selection');
+        }
         return '/auth/role-selection';
       }
 
@@ -135,7 +153,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (isLoggedIn && user != null) {
         if (!user.isApproved && user.role.isEmployee) {
           if (location != '/auth/pending-approval') {
-            if (kDebugMode) debugPrint('Router: Employee pending approval → /auth/pending-approval');
+            if (kDebugMode) {
+              debugPrint('Router: Employee pending approval → /auth/pending-approval');
+            }
             return '/auth/pending-approval';
           }
           return null;
@@ -145,7 +165,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (isLoggedIn && isPublicPath) {
         // Profile load error — break deadlock
         if (user == null && userState.error != null && !userState.isLoading) {
-          if (kDebugMode) debugPrint('Router: Profile load error → /auth/login');
+          if (kDebugMode) {
+            debugPrint('Router: Profile load error → /auth/login');
+          }
           return '/auth/login';
         }
 
@@ -180,25 +202,58 @@ final routerProvider = Provider<GoRouter>((ref) {
         }
       }
 
-      // -- Simple Role Guards --
+      // ── COMPREHENSIVE ROLE-BASED ROUTE GUARDS ────────────────────────────────
+      // Enforces separation between all portals. Even if a user knows the URL,
+      // they cannot access another role's screens.
       if (isLoggedIn && user != null) {
-        if ((location.startsWith('/admin-') || location.startsWith('/admin/')) && !user.role.isAdmin) {
-          return '/main/home'; // Unauthorised
+
+        // ① ADMIN guard — only admins can access /admin-* paths
+        if ((location.startsWith('/admin-') || location.startsWith('/admin/'))) {
+          if (!user.role.isAdmin) {
+            if (kDebugMode) debugPrint('Router: Non-admin blocked from $location');
+            return _homeRouteForUser(user);
+          }
         }
-        if (location.startsWith('/tech-') &&
-            user.role != UserRole.technician) {
-          return '/main/home';
+
+        // ② TECHNICIAN guard — only technicians can access /tech-* paths
+        if (location.startsWith('/tech-')) {
+          if (user.role != UserRole.technician) {
+            if (kDebugMode) debugPrint('Router: Non-tech blocked from $location');
+            return _homeRouteForUser(user);
+          }
         }
+
+        // ③ DRIVER guard — only drivers can access /driver-* paths
         if (location.startsWith('/driver-') || location.startsWith('/driver/')) {
           if (user.role != UserRole.driver) {
-            return '/main/home';
+            if (kDebugMode) debugPrint('Router: Non-driver blocked from $location');
+            return _homeRouteForUser(user);
           }
-          // Driver KYC guard
+          // Driver KYC sub-guard: must have approved KYC to proceed beyond status page
           if (user.kycStatus != 'approved' &&
               location != '/driver/kyc-status' &&
               location != '/driver/kyc-upload') {
             return '/driver/kyc-status';
           }
+        }
+
+        // ④ CUSTOMER guard — drivers/technicians/admins must not access customer flows
+        final customerPaths = [
+          '/main/',
+          '/taxi/',
+          '/rental',
+          '/delivery',
+          '/wallet',
+          '/services',
+          '/insurance',
+          '/ride-history',
+        ];
+        final isCustomerPath = customerPaths.any((p) => location.startsWith(p));
+        if (isCustomerPath && user.role != UserRole.customer) {
+          if (kDebugMode) {
+            debugPrint('Router: Non-customer (${user.role}) blocked from $location');
+          }
+          return _homeRouteForUser(user);
         }
       }
 

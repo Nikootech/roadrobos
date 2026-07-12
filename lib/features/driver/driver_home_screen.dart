@@ -10,9 +10,9 @@ import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/bottom_nav_bar.dart';
 import '../../shared/widgets/responsive_utils.dart';
 import 'providers/driver_state_provider.dart';
-import 'widgets/ride_request_overlay.dart';
 import '../../features/delivery/driver_delivery_panel.dart';
 import '../chat/providers/chat_providers.dart';
+import '../../features/profile/user_provider.dart';
 
 class DriverHomeScreen extends ConsumerStatefulWidget {
   const DriverHomeScreen({super.key});
@@ -26,7 +26,19 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
   Widget build(BuildContext context) {
     final earningsAsync = ref.watch(earningsProvider);
     final isOnline = ref.watch(mapStateProvider).isOnline;
-    final rideRequestsAsync = ref.watch(rideRequestsProvider);
+    final userAsync = ref.watch(userProvider);
+    final driverName = userAsync.user?.name ?? 'Driver';
+    final profileUrl = userAsync.user?.profilePic;
+
+    ref.listen(rideRequestsProvider, (previous, next) {
+      if (isOnline && next.hasValue && next.value != null && next.value!.isNotEmpty) {
+        final currentRequests = next.value!;
+        final previousRequests = previous?.value ?? [];
+        if (currentRequests.isNotEmpty && (previousRequests.isEmpty || currentRequests.first.id != previousRequests.first.id)) {
+          context.push('/driver-ride-request', extra: currentRequests.first);
+        }
+      }
+    });
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -54,8 +66,8 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 border: Border.all(color: AppColors.primaryBlue.withValues(alpha: 0.1), width: 2),
-                                image: const DecorationImage(
-                                  image: NetworkImage('https://i.pravatar.cc/150?u=driver'),
+                                image: DecorationImage(
+                                  image: NetworkImage(profileUrl ?? 'https://i.pravatar.cc/150?u=driver'),
                                   fit: BoxFit.cover,
                                 ),
                               ),
@@ -65,7 +77,7 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text('GOOD MORNING', style: TextStyle(fontSize: ResponsiveLayout.responsiveFontSize(context, 10), fontWeight: FontWeight.w800, color: AppColors.textSecondary, letterSpacing: 1)),
-                                Text('Rahul Sharma', style: TextStyle(fontSize: ResponsiveLayout.responsiveFontSize(context, 17), fontWeight: FontWeight.w900, color: AppColors.deepNavy, letterSpacing: -0.5)),
+                                Text(driverName, style: TextStyle(fontSize: ResponsiveLayout.responsiveFontSize(context, 17), fontWeight: FontWeight.w900, color: AppColors.deepNavy, letterSpacing: -0.5)),
                               ],
                             ),
                           ],
@@ -360,25 +372,7 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                 ),
               ],
             ),
-            rideRequestsAsync.when(
-              data: (requests) => (isOnline && requests.isNotEmpty) 
-                  ? RideRequestOverlay(
-                      request: requests.first,
-                      onAccept: () {
-                        final request = requests.first;
-                        ref.read(rideRequestsActionProvider.notifier).acceptRequest(request.id);
-                        // The repository handles the Firestore update, 
-                        // and the TaxiProvider should be watching the specific ride.
-                        context.push('/driver-assigned');
-                      },
-                      onReject: () {
-                        ref.read(rideRequestsActionProvider.notifier).rejectRequest(requests.first.id);
-                      },
-                    )
-                  : const SizedBox.shrink(),
-              loading: () => const SizedBox.shrink(),
-              error: (e, _) => const SizedBox.shrink(),
-            ),
+
             // ── Delivery request / active delivery panel ──
             if (isOnline)
               const Positioned(

@@ -9,7 +9,10 @@ allprojects {
 rootProject.buildDir = "${rootProject.projectDir}/../build"
 
 subprojects {
-    project.buildDir = "${rootProject.buildDir}/${project.name}"
+    // On Windows, Gradle fails if the plugin source (pub cache on C:) and the build
+    // output (project on E:) are on different drive roots. Fix: keep each plugin's
+    // build dir on the same drive as its own source by using projectDir as the base.
+    project.buildDir = "${project.projectDir}/build"
 
     afterEvaluate { project ->
         if (project.hasProperty('android')) {

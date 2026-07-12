@@ -41,6 +41,15 @@ class _DriverAssignedScreenState extends ConsumerState<DriverAssignedScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(taxiProvider, (previous, next) {
+      if (previous?.status != RideStatus.idle && next.status == RideStatus.idle) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Ride was cancelled by the customer.')));
+          context.pop();
+        }
+      }
+    });
+
     final taxiState = ref.watch(taxiProvider);
     final status = taxiState.status;
 
@@ -280,7 +289,7 @@ class _DriverAssignedScreenState extends ConsumerState<DriverAssignedScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Rahul Sharma', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppColors.textPrimary), maxLines: 1, overflow: TextOverflow.ellipsis),
+              Text('Passenger', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppColors.textPrimary), maxLines: 1, overflow: TextOverflow.ellipsis),
               SizedBox(height: 2),
               FittedBox(
                 fit: BoxFit.scaleDown,

@@ -17,17 +17,21 @@ class RideOptionsScreen extends ConsumerStatefulWidget {
 class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
   RideOption? _selectedRide;
 
+  String _paymentMethod = 'Cash'; // default
+
   @override
   void initState() {
     super.initState();
-    // Default selection
-    _selectedRide = RideOption(
-      id: 'bike',
-      title: 'Bike',
-      price: 47,
-      subtitle: '1 min away • Drop 1:05 pm',
-      icon: Icons.motorcycle,
-    );
+    // Defer selection to first frame so we can read provider
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final options = ref.read(taxiProvider).rideOptions;
+      if (options.isNotEmpty && mounted) {
+        setState(() {
+          _selectedRide = options.first; // use real first option with real price
+          ref.read(taxiProvider.notifier).selectOption(options.first);
+        });
+      }
+    });
   }
 
   @override
@@ -108,7 +112,10 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
                         itemCount: taxiState.rideOptions.length,
                         itemBuilder: (context, index) {
                           final option = taxiState.rideOptions[index];
-                          final isSelected = _selectedRide?.title == option.title;
+                          final isSelected = _selectedRide?.id == option.id;
+                          final hasDiscount = taxiState.discountAmount > 0;
+                          final finalPrice = hasDiscount ? (option.price - taxiState.discountAmount).clamp(0.0, double.infinity) : option.price;
+                          final originalPriceStr = hasDiscount ? '₹${option.price.toStringAsFixed(0)}' : null;
                           
                           // Use user-provided icons with fallback
                           String seats = '4';
@@ -120,13 +127,14 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
 
                           return _buildVehicleSelectableItem(
                             option.title,
-                            '₹${option.price.toStringAsFixed(0)}',
+                            '₹${finalPrice.toStringAsFixed(0)}',
                             seats,
                             option.subtitle,
                             option.assetPath,
                             fallbackIcon: option.icon,
                             badge: option.tag,
                             isSelected: isSelected,
+                            originalPriceStr: originalPriceStr,
                             onTap: () {
                               setState(() => _selectedRide = option);
                               ref.read(taxiProvider.notifier).selectOption(option);
@@ -144,11 +152,36 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          _buildFooterOption(Icons.money, 'Cash'),
+                          GestureDetector(
+                            onTap: () {
+                              setState(() => _paymentMethod = 'Cash');
+                              ref.read(taxiProvider.notifier).setPaymentMethod('Cash');
+                            },
+                            child: _buildFooterOption(
+                              Icons.money,
+                              'Cash',
+                              isSelected: _paymentMethod == 'Cash',
+                            ),
+                          ),
                           Container(width: 1, height: 20, color: Colors.grey[300]),
-                          _buildFooterOption(Icons.local_offer_outlined, 'Coupons'),
+                          GestureDetector(
+                            onTap: () {
+                              _showPromoCodeSheet(context);
+                            },
+                            child: _buildFooterOption(Icons.local_offer_outlined, 'Coupons'),
+                          ),
                           Container(width: 1, height: 20, color: Colors.grey[300]),
-                          _buildFooterOption(Icons.person_outline, 'Myself'),
+                          GestureDetector(
+                            onTap: () {
+                              setState(() => _paymentMethod = 'Myself');
+                              ref.read(taxiProvider.notifier).setPaymentMethod('Online'); // Store as Online in provider
+                            },
+                            child: _buildFooterOption(
+                              Icons.person_outline,
+                              'Myself',
+                              isSelected: _paymentMethod == 'Myself',
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -318,6 +351,7 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
     String? imagePath, {
     IconData? fallbackIcon,
     String? badge, 
+    String? originalPriceStr,
     bool isSelected = false, 
     VoidCallback? onTap
   }) {
@@ -417,23 +451,107 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
               ),
             ),
             // Price
-            Text(price, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                if (originalPriceStr != null)
+                  Text(
+                    originalPriceStr,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey,
+                      decoration: TextDecoration.lineThrough,
+                    ),
+                  ),
+                Text(
+                  price,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    color: originalPriceStr != null ? Colors.green : Colors.black,
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ).animate(target: isSelected ? 1 : 0).shimmer(color: Colors.white24).scale(begin: const Offset(1, 1), end: const Offset(1.02, 1.02)),
     );
   }
 
-  Widget _buildFooterOption(IconData icon, String label) {
+  Widget _buildFooterOption(IconData icon, String label, {bool isSelected = false}) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 20, color: Colors.black87),
+        Icon(icon, size: 20, color: isSelected ? AppColors.primaryBlue : Colors.black87),
         const SizedBox(width: 6),
-        Text(label, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+        Text(
+          label,
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: 14,
+            color: isSelected ? AppColors.primaryBlue : Colors.black87,
+          ),
+        ),
         const SizedBox(width: 2),
         const Icon(Icons.keyboard_arrow_down, size: 16, color: Colors.black54),
       ],
+    );
+  }
+
+  void _showPromoCodeSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Apply Promo Code',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  decoration: InputDecoration(
+                    hintText: 'Enter code here',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primaryBlue,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text('Apply'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

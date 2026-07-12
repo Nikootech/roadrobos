@@ -101,3 +101,8 @@ paths_to_purge.txt
 *.apk
 app-release.aab
 RoadRobos_Production.apk
+
+# Ignore Android build artifacts
+android/app/build/
+android/app/.cxx/
+

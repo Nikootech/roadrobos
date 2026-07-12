@@ -112,7 +112,7 @@ void main() {
                 url: AppConfig.supabaseUrl,
                 anonKey: AppConfig.supabaseAnonKey,
                 debug: kDebugMode,
-              ).timeout(const Duration(seconds: 4));
+              ).timeout(const Duration(seconds: 15));
               AppDebugger.logStep('Supabase', 'SUCCESS');
             } catch (e) {
               AppDebugger.logStep('Supabase', 'FAILED', error: e.toString());
