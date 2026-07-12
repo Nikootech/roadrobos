@@ -32,12 +32,48 @@ final homeOffersProvider = FutureProvider<List<BannerOffer>>((ref) async {
 final homeCategoriesProvider =
     FutureProvider<List<ServiceCategory>>((ref) async {
   ref.cacheFor(const Duration(minutes: 5));
-  return ref.watch(categoryRepositoryProvider).getCategories();
+  final categories =
+      await ref.watch(categoryRepositoryProvider).getCategories();
+
+  // Sort categories by: taxi, rental, service, insurance
+  final order = ['taxi', 'rental', 'service', 'insurance'];
+  categories.sort((a, b) {
+    final labelA = a.label.toLowerCase();
+    final labelB = b.label.toLowerCase();
+
+    int indexA = order.indexWhere((o) => labelA.contains(o));
+    int indexB = order.indexWhere((o) => labelB.contains(o));
+
+    if (indexA == -1) indexA = 999;
+    if (indexB == -1) indexB = 999;
+
+    return indexA.compareTo(indexB);
+  });
+
+  return categories;
 });
 
 final quickActionsProvider = FutureProvider<List<QuickAction>>((ref) async {
   ref.cacheFor(const Duration(minutes: 5));
-  return ref.watch(quickActionRepositoryProvider).getQuickActions();
+  final actions =
+      await ref.watch(quickActionRepositoryProvider).getQuickActions();
+
+  // Sort quick actions by: taxi, rental, service, insurance
+  final order = ['taxi', 'rental', 'service', 'insurance'];
+  actions.sort((a, b) {
+    final labelA = a.label.toLowerCase();
+    final labelB = b.label.toLowerCase();
+
+    int indexA = order.indexWhere((o) => labelA.contains(o));
+    int indexB = order.indexWhere((o) => labelB.contains(o));
+
+    if (indexA == -1) indexA = 999;
+    if (indexB == -1) indexB = 999;
+
+    return indexA.compareTo(indexB);
+  });
+
+  return actions;
 });
 
 final recentServiceBookingsProvider =
