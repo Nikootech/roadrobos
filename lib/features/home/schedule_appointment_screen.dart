@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -26,6 +27,7 @@ class _ScheduleAppointmentScreenState
     extends ConsumerState<ScheduleAppointmentScreen> {
   DateTime _selectedDate = DateTime.now().add(const Duration(days: 1));
   String _selectedTime = '';
+  String _paymentMethod = 'Online';
   @override
   void initState() {
     super.initState();
@@ -124,6 +126,108 @@ class _ScheduleAppointmentScreenState
                       );
                     }).toList(),
                   ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1, end: 0),
+                  const SizedBox(height: 32),
+                  const Text('Payment Method',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() => _paymentMethod = 'Cash');
+                            HapticFeedback.selectionClick();
+                          },
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            decoration: BoxDecoration(
+                              color: _paymentMethod == 'Cash'
+                                  ? Colors.orange.shade50
+                                  : Colors.grey.shade50,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: _paymentMethod == 'Cash'
+                                    ? Colors.orange.shade400
+                                    : Colors.grey.shade200,
+                                width: _paymentMethod == 'Cash' ? 2 : 1,
+                              ),
+                            ),
+                            child: Column(
+                              children: [
+                                Icon(
+                                  Icons.money_rounded,
+                                  color: _paymentMethod == 'Cash'
+                                      ? Colors.orange.shade700
+                                      : Colors.grey,
+                                  size: 24,
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  'Cash on Drop',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: _paymentMethod == 'Cash'
+                                        ? Colors.orange.shade700
+                                        : AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() => _paymentMethod = 'Online');
+                            HapticFeedback.selectionClick();
+                          },
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            decoration: BoxDecoration(
+                              color: _paymentMethod == 'Online'
+                                  ? AppColors.primaryBlue.withValues(alpha: 0.08)
+                                  : Colors.grey.shade50,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: _paymentMethod == 'Online'
+                                    ? AppColors.primaryBlue
+                                    : Colors.grey.shade200,
+                                width: _paymentMethod == 'Online' ? 2 : 1,
+                              ),
+                            ),
+                            child: Column(
+                              children: [
+                                Icon(
+                                  Icons.payment_rounded,
+                                  color: _paymentMethod == 'Online'
+                                      ? AppColors.primaryBlue
+                                      : Colors.grey,
+                                  size: 24,
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  'Pay Online',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: _paymentMethod == 'Online'
+                                        ? AppColors.primaryBlue
+                                        : AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ).animate().fadeIn(delay: 250.ms).slideY(begin: 0.1, end: 0),
                 ],
               ),
             ),
@@ -140,7 +244,7 @@ class _ScheduleAppointmentScreenState
               ],
             ),
             child: CustomButton(
-              label: 'Book Appointment',
+              label: _paymentMethod == 'Online' ? 'Pay & Book Appointment' : 'Book Appointment',
               onPressed: _selectedTime.isEmpty
                   ? null
                   : () async {
@@ -153,18 +257,21 @@ class _ScheduleAppointmentScreenState
                       final userId = userData?.id ?? 'demo';
 
                       try {
-                        await ref
-                            .read(paymentServiceProvider.notifier)
-                            .startPayment(PaymentDetails(
-                              contact: userData?.phone ?? '9876543210',
-                              email: userData?.email ?? 'customer@example.com',
-                              description:
-                                  'Service Booking: ${booking.packageName}',
-                              bookingId: '00000000-0000-0000-0000-000000000000',
-                              userId: userId,
-                              bookingType: BookingType.service,
-                              totalCost: breakdown.totalPayable,
-                            ));
+                        String paymentId = 'CASH_PAYMENT';
+                        if (_paymentMethod == 'Online') {
+                          paymentId = await ref
+                              .read(paymentServiceProvider.notifier)
+                              .startPayment(PaymentDetails(
+                                contact: userData?.phone ?? '9876543210',
+                                email: userData?.email ?? 'customer@example.com',
+                                description:
+                                    'Service Booking: ${booking.packageName}',
+                                bookingId: '00000000-0000-0000-0000-000000000000',
+                                userId: userId,
+                                bookingType: BookingType.service,
+                                totalCost: breakdown.totalPayable,
+                              ));
+                        }
 
                         // On success
                         final dateStr =
@@ -178,7 +285,7 @@ class _ScheduleAppointmentScreenState
                             .logTransaction(AppTransaction(
                               id: '',
                               userId: userId,
-                              razoprayPaymentId: 'VERIFIED_ON_SERVER',
+                              razoprayPaymentId: paymentId,
                               baseAmount: breakdown.baseAmount,
                               gstAmount: breakdown.gstAmount,
                               platformFee: breakdown.platformFee,
@@ -207,8 +314,11 @@ class _ScheduleAppointmentScreenState
                                   ? _selectedTime
                                   : booking.time,
                               totalCost: breakdown.totalPayable,
-                              details: {'method': 'Razorpay'},
-                              status: 'paid',
+                              details: {
+                                'method': _paymentMethod,
+                                'payment_id': paymentId,
+                              },
+                              status: _paymentMethod == 'Online' ? 'paid' : 'confirmed',
                               createdAt: DateTime.now(),
                             ));
 
@@ -222,7 +332,7 @@ class _ScheduleAppointmentScreenState
                       } catch (e) {
                         if (!context.mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text(e.toString()),
+                          content: Text(e.toString().replaceAll('Exception: ', '')),
                           backgroundColor: AppColors.errorRed,
                         ));
                       }

@@ -8,6 +8,8 @@ import '../../features/technician/technician_dashboard_screen.dart';
 import '../../features/technician/create_job_card_screen.dart';
 import '../../features/technician/tech_earnings_screen.dart';
 import '../../features/technician/spare_parts_screen.dart';
+import '../../features/technician/tech_qr_scanner_screen.dart';
+import '../../features/technician/job_detail_screen.dart';
 import '../app_transitions.dart';
 
 /// Technician portal routes.
@@ -66,6 +68,23 @@ final List<RouteBase> techRoutes = [
     path: '/tech-profile',
     pageBuilder: (context, state) => AppTransitions.fade(
       child: const TechProfileScreen(),
+      state: state,
+    ),
+  ),
+  GoRoute(
+    path: '/tech-job-detail',
+    pageBuilder: (context, state) {
+      final bookingId = state.extra as String? ?? '';
+      return AppTransitions.slideUp(
+        child: JobDetailScreen(bookingId: bookingId),
+        state: state,
+      );
+    },
+  ),
+  GoRoute(
+    path: '/tech-qr-scanner',
+    pageBuilder: (context, state) => AppTransitions.slideUp(
+      child: const TechQRScannerScreen(),
       state: state,
     ),
   ),

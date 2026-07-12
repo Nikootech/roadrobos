@@ -318,38 +318,63 @@ class _TechnicianDashboardScreenState
                                 color: Color(0xFF1A237E))),
                       ],
                     ),
-                    GestureDetector(
-                      onTap: () {
-                        HapticFeedback.lightImpact();
-                        context.push('/notifications');
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.05),
-                                blurRadius: 10)
-                          ],
-                        ),
-                        child: Stack(
-                          children: [
-                            const Icon(Icons.notifications_none_rounded,
+                    Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            HapticFeedback.lightImpact();
+                            context.push('/tech-qr-scanner');
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.05),
+                                    blurRadius: 10)
+                              ],
+                            ),
+                            child: const Icon(Icons.qr_code_scanner_rounded,
                                 color: Color(0xFF1A237E), size: 22),
-                            Positioned(
-                                right: 0,
-                                top: 0,
-                                child: Container(
-                                    width: 8,
-                                    height: 8,
-                                    decoration: const BoxDecoration(
-                                        color: Colors.red,
-                                        shape: BoxShape.circle))),
-                          ],
+                          ),
                         ),
-                      ),
+                        const SizedBox(width: 12),
+                        GestureDetector(
+                          onTap: () {
+                            HapticFeedback.lightImpact();
+                            context.push('/notifications');
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.05),
+                                    blurRadius: 10)
+                              ],
+                            ),
+                            child: Stack(
+                              children: [
+                                const Icon(Icons.notifications_none_rounded,
+                                    color: Color(0xFF1A237E), size: 22),
+                                Positioned(
+                                    right: 0,
+                                    top: 0,
+                                    child: Container(
+                                        width: 8,
+                                        height: 8,
+                                        decoration: const BoxDecoration(
+                                            color: Colors.red,
+                                            shape: BoxShape.circle))),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ).animate().fadeIn().slideX(begin: -0.1, end: 0),

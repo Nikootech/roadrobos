@@ -82,120 +82,175 @@ class ServiceHistoryScreen extends ConsumerWidget {
         isDark ? AppColors.textOnDarkMuted : AppColors.textSecondary;
     final borderCol = isDark ? Colors.transparent : AppColors.border;
 
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: cardBg,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: borderCol),
-        boxShadow: isDark
-            ? []
-            : [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                )
-              ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: AppColors.primaryBlue.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.build_rounded,
-                  color: AppColors.primaryBlue,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      service.packageName,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15,
-                        color: textCol,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      service.vehicleName,
-                      style: TextStyle(
-                        color: subTextCol,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: AppColors.primaryBlue.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  '₹${service.totalCost}',
-                  style: const TextStyle(
+    return GestureDetector(
+      onTap: () => context.push('/service-booking-detail/${service.id}'),
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: cardBg,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: borderCol),
+          boxShadow: isDark
+              ? []
+              : [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.03),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  )
+                ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryBlue.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.build_rounded,
                     color: AppColors.primaryBlue,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 13,
+                    size: 20,
                   ),
                 ),
-              ),
-            ],
-          ),
-          const Divider(height: 24, thickness: 1),
-          Row(
-            children: [
-              Icon(
-                Icons.calendar_today_rounded,
-                size: 14,
-                color: subTextCol,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                dateStr,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: subTextCol,
-                  fontWeight: FontWeight.w500,
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        service.packageName,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                          color: textCol,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              service.vehicleName,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: subTextCol,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          _buildBadge(service),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const Spacer(),
-              TextButton.icon(
-                onPressed: () => NavHelpers.showSuccess(
-                    context, 'Invoice PDF downloaded successfully!'),
-                icon: const Icon(Icons.download_rounded, size: 16),
-                label: const Text('Invoice'),
-                style: TextButton.styleFrom(
-                  foregroundColor: AppColors.primaryBlue,
+                Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  textStyle: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryBlue.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    '₹${service.totalCost}',
+                    style: const TextStyle(
+                      color: AppColors.primaryBlue,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 13,
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+            const Divider(height: 24, thickness: 1),
+            Row(
+              children: [
+                Icon(
+                  Icons.calendar_today_rounded,
+                  size: 14,
+                  color: subTextCol,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  dateStr,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: subTextCol,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const Spacer(),
+                TextButton.icon(
+                  onPressed: () => NavHelpers.showSuccess(
+                      context, 'Invoice PDF downloaded successfully!'),
+                  icon: const Icon(Icons.download_rounded, size: 16),
+                  label: const Text('Invoice'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.primaryBlue,
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    textStyle: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ).animate().fadeIn().slideY(begin: 0.1, end: 0),
+    );
+  }
+
+  Widget _buildBadge(dynamic service) {
+    final status = service.status;
+    final detailsMap = service.details is Map ? service.details as Map : {};
+    final method = detailsMap['method'] ?? 'Cash';
+    final isPaid = status == 'paid' || status == 'completed';
+
+    Color bg;
+    Color fg;
+    String label;
+
+    if (isPaid) {
+      if (method == 'Online' || method == 'Razorpay') {
+        bg = Colors.blue.shade50;
+        fg = Colors.blue.shade700;
+        label = 'Online';
+      } else {
+        bg = Colors.green.shade50;
+        fg = Colors.green.shade700;
+        label = 'Paid';
+      }
+    } else {
+      bg = Colors.orange.shade50;
+      fg = Colors.orange.shade700;
+      label = 'Pay at Center';
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(6),
       ),
-    ).animate().fadeIn().slideY(begin: 0.1, end: 0);
+      child: Text(
+        label,
+        style: TextStyle(
+          color: fg,
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
   }
 }

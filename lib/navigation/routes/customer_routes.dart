@@ -552,6 +552,16 @@ final List<RouteBase> customerRoutes = [
     ),
   ),
   GoRoute(
+    path: '/service-booking-detail/:id',
+    pageBuilder: (context, state) {
+      final id = state.pathParameters['id'] ?? '';
+      return AppTransitions.slideRight(
+        child: ServiceBookingDetailScreen(bookingId: id),
+        state: state,
+      );
+    },
+  ),
+  GoRoute(
     path: '/my-vehicles',
     pageBuilder: (context, state) => AppTransitions.slideRight(
       child: const MyVehiclesScreen(),

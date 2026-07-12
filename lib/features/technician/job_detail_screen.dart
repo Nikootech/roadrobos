@@ -92,6 +92,8 @@ class _JobDetailScreenState extends ConsumerState<JobDetailScreen> {
     }
 
     final b = _booking!;
+    final method = b.details['method'] ?? 'Cash';
+    final isCashPending = method == 'Cash' && b.status != 'paid' && b.status != 'completed';
 
     return Scaffold(
       appBar: AppBar(
@@ -114,6 +116,48 @@ class _JobDetailScreenState extends ConsumerState<JobDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (isCashPending) ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.orange.shade300),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.warning_amber_rounded, color: Colors.orange.shade800),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'CASH COLLECTION PENDING',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.orange.shade800,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Please collect ₹${b.totalCost} at the counter.',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.orange.shade900,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
             _buildCard('Service Details', [
               _buildRow('Package', b.packageName),
               _buildRow('Date', b.date),
@@ -153,6 +197,49 @@ class _JobDetailScreenState extends ConsumerState<JobDetailScreen> {
             ),
             const SizedBox(height: 24),
             _buildActionButtons(b.status),
+            if (isCashPending) ...[
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.monetization_on_rounded),
+                  label: const Text('Collect Cash & Mark Paid', style: TextStyle(fontWeight: FontWeight.bold)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange.shade700,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: () async {
+                    final messenger = ScaffoldMessenger.of(context);
+                    final navigator = Navigator.of(context);
+                    unawaited(showDialog(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (_) => const Center(child: CircularProgressIndicator()),
+                    ));
+                    try {
+                      await ref.read(serviceBookingRepositoryProvider).collectCashPayment(b.id);
+                      if (mounted) {
+                        navigator.pop(); // close loader
+                        messenger.showSnackBar(const SnackBar(
+                          content: Text('Payment successfully collected and marked paid!'),
+                          backgroundColor: Colors.green,
+                        ));
+                      }
+                    } catch (e) {
+                      if (mounted) {
+                        navigator.pop(); // close loader
+                        messenger.showSnackBar(SnackBar(
+                          content: Text('Failed to collect cash: $e'),
+                          backgroundColor: Colors.red,
+                        ));
+                      }
+                    }
+                  },
+                ),
+              ),
+            ],
           ],
         ),
       ),

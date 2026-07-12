@@ -89,4 +89,21 @@ class ServiceBookingRepository {
       throw Exception('Failed to fetch bookings for date: $e');
     }
   }
+
+  Future<void> collectCashPayment(String bookingId) async {
+    try {
+      await _supabase
+          .from('service_bookings')
+          .update({
+            'status': 'paid',
+            'details': {
+              'method': 'Cash',
+              'payment_status': 'collected',
+              'collected_at': DateTime.now().toIso8601String(),
+            }
+          }).eq('id', bookingId);
+    } catch (e) {
+      throw Exception('Failed to collect cash payment: $e');
+    }
+  }
 }

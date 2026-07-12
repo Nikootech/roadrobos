@@ -8,140 +8,228 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/models/service_booking.dart';
 import '../../core/models/user_role.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/repositories/service_booking_repository.dart';
 import '../profile/user_provider.dart';
 
 class ServiceBookingDetailScreen extends ConsumerWidget {
-  final ServiceBooking booking;
+  final ServiceBooking? booking;
+  final String? bookingId;
 
-  const ServiceBookingDetailScreen({super.key, required this.booking});
+  const ServiceBookingDetailScreen({
+    super.key,
+    this.booking,
+    this.bookingId,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final userState = ref.watch(userProvider);
     final currentUser = userState.user;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final effectiveId = booking?.id ?? bookingId ?? '';
 
-    if (currentUser != null) {
-      final isCustomer = currentUser.id == booking.customerId;
-      final isTechnician = currentUser.id == booking.techId;
-      final isAdmin = currentUser.role.isAdmin;
+    return StreamBuilder<ServiceBooking>(
+      stream: ref.watch(serviceBookingRepositoryProvider).streamBookingStatus(effectiveId),
+      initialData: booking,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting && snapshot.data == null) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        if (snapshot.hasError || !snapshot.hasData) {
+          return const Scaffold(
+            body: Center(child: Text('Booking details not found')),
+          );
+        }
+        final b = snapshot.data!;
 
-      if (!isCustomer && !isTechnician && !isAdmin) {
+        if (currentUser != null) {
+          final isCustomer = currentUser.id == b.customerId;
+          final isTechnician = currentUser.id == b.techId;
+          final isAdmin = currentUser.role.isAdmin;
+
+          if (!isCustomer && !isTechnician && !isAdmin) {
+            return Scaffold(
+              backgroundColor: AppColors.bgLightAlt,
+              appBar: AppBar(
+                backgroundColor: Colors.white,
+                elevation: 0,
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                      size: 20, color: AppColors.textPrimary),
+                  onPressed: () => context.pop(),
+                ),
+                title: const Text('Access Denied'),
+              ),
+              body: const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(24.0),
+                  child: Text(
+                    'You are not authorized to view this booking.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        fontSize: 16,
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            );
+          }
+        }
+
+        final statusColor = _statusColor(b.status);
+        final statusLabel = b.status.toUpperCase();
+
+        final method = b.details['method'] ?? 'Cash';
+        final isCashPending = method == 'Cash' && b.status != 'paid' && b.status != 'completed';
+
         return Scaffold(
           backgroundColor: AppColors.bgLightAlt,
           appBar: AppBar(
             backgroundColor: Colors.white,
             elevation: 0,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                  size: 20, color: AppColors.textPrimary),
-              onPressed: () => context.pop(),
-            ),
-            title: const Text('Access Denied'),
-          ),
-          body: const Center(
-            child: Padding(
-              padding: EdgeInsets.all(24.0),
-              child: Text(
-                'You are not authorized to view this booking.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                    fontSize: 16,
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.bold),
+            leading: GestureDetector(
+              onTap: () {
+                HapticFeedback.lightImpact();
+                if (context.canPop()) {
+                  context.pop();
+                } else {
+                  context.go('/main/home');
+                }
+              },
+              child: const Padding(
+                padding: EdgeInsets.all(8),
+                child: Icon(Icons.arrow_back_ios_new_rounded,
+                    size: 20, color: AppColors.textPrimary),
               ),
+            ),
+            title: Text(
+              'Booking Details',
+              style: GoogleFonts.outfit(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            centerTitle: false,
+          ),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── Status Badge ──
+                _buildStatusBadge(statusLabel, statusColor),
+                const SizedBox(height: 16),
+
+                // ── Booking Summary Card ──
+                _buildSummaryCard(context, b),
+                const SizedBox(height: 16),
+
+                // ── Status Timeline ──
+                _buildStatusTimeline(b.status),
+                const SizedBox(height: 16),
+
+                // ── Schedule Info ──
+                _buildInfoCard(
+                  title: 'Schedule',
+                  icon: Icons.calendar_today_rounded,
+                  color: AppColors.primaryBlue,
+                  children: [
+                    _infoRow('Date', b.date.isNotEmpty ? b.date : '—'),
+                    _infoRow('Time', b.time.isNotEmpty ? b.time : '—'),
+                    if (b.address != null && b.address!.isNotEmpty)
+                      _infoRow('Address', b.address!),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                // ── Payment Info ──
+                _buildInfoCard(
+                  title: 'Payment',
+                  icon: Icons.receipt_long_rounded,
+                  color: AppColors.accentOrange,
+                  children: [
+                    _infoRow('Package', b.packageName),
+                    _infoRow('Method', method),
+                    _infoRow('Total', '₹${b.totalCost.toStringAsFixed(2)}'),
+                    _infoRow('Booking ID',
+                        '#${b.id.length > 8 ? b.id.substring(0, 8).toUpperCase() : b.id.toUpperCase()}'),
+                  ],
+                ),
+
+                if (isCashPending) ...[
+                  const SizedBox(height: 16),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 20,
+                            offset: const Offset(0, 8)),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        const Row(
+                          children: [
+                            Icon(Icons.qr_code_2_rounded, color: AppColors.primaryBlue, size: 24),
+                            SizedBox(width: 12),
+                            Text(
+                              'Payment Ticket QR',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const Divider(height: 24),
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.shade200, width: 1.5),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: CustomPaint(
+                            size: const Size(140, 140),
+                            painter: QRPainter(isDark: isDark),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Present this QR code to the service center employee to pay cash and check in.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: AppColors.textSecondary,
+                            height: 1.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 24),
+
+                // ── Action Buttons ──
+                if (b.status == 'pending' || b.status == 'confirmed')
+                  _buildRescheduleButton(context),
+                const SizedBox(height: 12),
+                _buildBackButton(context),
+                const SizedBox(height: 40),
+              ],
             ),
           ),
         );
-      }
-    }
-
-    final statusColor = _statusColor(booking.status);
-    final statusLabel = booking.status.toUpperCase();
-
-    return Scaffold(
-      backgroundColor: AppColors.bgLightAlt,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: GestureDetector(
-          onTap: () {
-            HapticFeedback.lightImpact();
-            if (context.canPop()) {
-              context.pop();
-            } else {
-              context.go('/main/home');
-            }
-          },
-          child: const Padding(
-            padding: EdgeInsets.all(8),
-            child: Icon(Icons.arrow_back_ios_new_rounded,
-                size: 20, color: AppColors.textPrimary),
-          ),
-        ),
-        title: Text(
-          'Booking Details',
-          style: GoogleFonts.outfit(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        centerTitle: false,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Status Badge ──
-            _buildStatusBadge(statusLabel, statusColor),
-            const SizedBox(height: 16),
-
-            // ── Booking Summary Card ──
-            _buildSummaryCard(context),
-            const SizedBox(height: 16),
-
-            // ── Status Timeline ──
-            _buildStatusTimeline(booking.status),
-            const SizedBox(height: 16),
-
-            // ── Schedule Info ──
-            _buildInfoCard(
-              title: 'Schedule',
-              icon: Icons.calendar_today_rounded,
-              color: AppColors.primaryBlue,
-              children: [
-                _infoRow('Date', booking.date.isNotEmpty ? booking.date : '—'),
-                _infoRow('Time', booking.time.isNotEmpty ? booking.time : '—'),
-                if (booking.address != null && booking.address!.isNotEmpty)
-                  _infoRow('Address', booking.address!),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // ── Payment Info ──
-            _buildInfoCard(
-              title: 'Payment',
-              icon: Icons.receipt_long_rounded,
-              color: AppColors.accentOrange,
-              children: [
-                _infoRow('Package', booking.packageName),
-                _infoRow('Total', '₹${booking.totalCost.toStringAsFixed(2)}'),
-                _infoRow('Booking ID',
-                    '#${booking.id.length > 8 ? booking.id.substring(0, 8).toUpperCase() : booking.id.toUpperCase()}'),
-              ],
-            ),
-            const SizedBox(height: 24),
-
-            // ── Action Buttons ──
-            if (booking.status == 'pending' || booking.status == 'confirmed')
-              _buildRescheduleButton(context),
-            const SizedBox(height: 12),
-            _buildBackButton(context),
-            const SizedBox(height: 40),
-          ],
-        ),
-      ),
+      },
     );
   }
 
@@ -174,7 +262,7 @@ class ServiceBookingDetailScreen extends ConsumerWidget {
     ).animate().fadeIn(duration: 400.ms);
   }
 
-  Widget _buildSummaryCard(BuildContext context) {
+  Widget _buildSummaryCard(BuildContext context, ServiceBooking b) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -197,7 +285,7 @@ class ServiceBookingDetailScreen extends ConsumerWidget {
               borderRadius: BorderRadius.circular(16),
             ),
             child: Icon(
-              booking.vehicleName.toLowerCase().contains('car')
+              b.vehicleName.toLowerCase().contains('car')
                   ? Icons.directions_car_rounded
                   : Icons.pedal_bike_rounded,
               color: AppColors.primaryBlue,
@@ -210,7 +298,7 @@ class ServiceBookingDetailScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  booking.packageName,
+                  b.packageName,
                   style: GoogleFonts.outfit(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -218,7 +306,7 @@ class ServiceBookingDetailScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${booking.vehicleName} • ${booking.vehiclePlate}',
+                  '${b.vehicleName} • ${b.vehiclePlate}',
                   style: const TextStyle(
                       fontSize: 13, color: AppColors.textSecondary),
                 ),
@@ -226,7 +314,7 @@ class ServiceBookingDetailScreen extends ConsumerWidget {
             ),
           ),
           Text(
-            '₹${booking.totalCost.toStringAsFixed(0)}',
+            '₹${b.totalCost.toStringAsFixed(0)}',
             style: GoogleFonts.outfit(
                 fontSize: 22,
                 fontWeight: FontWeight.w800,
@@ -473,4 +561,84 @@ class _TimelineStep {
   final IconData icon;
   final bool done;
   _TimelineStep(this.label, this.icon, this.done);
+}
+
+class QRPainter extends CustomPainter {
+  final bool isDark;
+
+  QRPainter({required this.isDark});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = isDark ? Colors.white : Colors.black
+      ..style = PaintingStyle.fill;
+
+    // Outer framing corners
+    const double frameWidth = 35;
+    const double strokeWidth = 5;
+    final framePaint = Paint()
+      ..color = isDark ? Colors.white70 : Colors.black87
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth;
+
+    // Top-Left Frame
+    canvas.drawRect(Rect.fromLTWH(0, 0, frameWidth, frameWidth), framePaint);
+    canvas.drawRect(Rect.fromLTWH(frameWidth/4, frameWidth/4, frameWidth/2, frameWidth/2), paint);
+
+    // Top-Right Frame
+    canvas.drawRect(Rect.fromLTWH(size.width - frameWidth, 0, frameWidth, frameWidth), framePaint);
+    canvas.drawRect(Rect.fromLTWH(size.width - frameWidth + frameWidth/4, frameWidth/4, frameWidth/2, frameWidth/2), paint);
+
+    // Bottom-Left Frame
+    canvas.drawRect(Rect.fromLTWH(0, size.height - frameWidth, frameWidth, frameWidth), framePaint);
+    canvas.drawRect(Rect.fromLTWH(frameWidth/4, size.height - frameWidth + frameWidth/4, frameWidth/2, frameWidth/2), paint);
+
+    // Drawing some mock pixels
+    final mockPixels = [
+      // row 1
+      Offset(size.width * 0.4, size.height * 0.1),
+      Offset(size.width * 0.5, size.height * 0.1),
+      // row 2
+      Offset(size.width * 0.45, size.height * 0.2),
+      Offset(size.width * 0.55, size.height * 0.2),
+      // row 3
+      Offset(size.width * 0.1, size.height * 0.4),
+      Offset(size.width * 0.2, size.height * 0.4),
+      Offset(size.width * 0.4, size.height * 0.4),
+      Offset(size.width * 0.6, size.height * 0.4),
+      Offset(size.width * 0.8, size.height * 0.4),
+      Offset(size.width * 0.9, size.height * 0.4),
+      // row 4
+      Offset(size.width * 0.15, size.height * 0.5),
+      Offset(size.width * 0.35, size.height * 0.5),
+      Offset(size.width * 0.5, size.height * 0.5),
+      Offset(size.width * 0.7, size.height * 0.5),
+      // row 5
+      Offset(size.width * 0.4, size.height * 0.6),
+      Offset(size.width * 0.5, size.height * 0.6),
+      Offset(size.width * 0.8, size.height * 0.6),
+      Offset(size.width * 0.9, size.height * 0.6),
+      // row 6
+      Offset(size.width * 0.45, size.height * 0.7),
+      Offset(size.width * 0.55, size.height * 0.7),
+      Offset(size.width * 0.65, size.height * 0.7),
+      // row 7
+      Offset(size.width * 0.8, size.height * 0.8),
+      Offset(size.width * 0.85, size.height * 0.9),
+    ];
+
+    for (var offset in mockPixels) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(center: offset, width: 10, height: 10),
+          const Radius.circular(2),
+        ),
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
