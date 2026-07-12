@@ -179,10 +179,21 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
 
   void _onSearchChanged(String query) {
     if (_debounce?.isActive ?? false) _debounce?.cancel();
-    if (query.length < 3) {
+    if (query.length < 2) {
       setState(() {
         _apiSearchResults = [];
         _isSearching = false;
+      });
+      return;
+    }
+    if (query.length == 2) {
+      _osmService.searchAddress(query).then((results) {
+        if (mounted) {
+          setState(() {
+            _apiSearchResults = results;
+            _isSearching = false;
+          });
+        }
       });
       return;
     }

@@ -172,10 +172,21 @@ class _RentalVehicleDetailScreenState
                         ),
                         onChanged: (query) {
                           debounce?.cancel();
-                          if (query.length < 3) {
+                          if (query.length < 2) {
                             setSheetState(() {
                               results = [];
                               isSearching = false;
+                            });
+                            return;
+                          }
+                          if (query.length == 2) {
+                            osmService.searchAddress(query).then((searchResults) {
+                              if (ctx.mounted) {
+                                setSheetState(() {
+                                  results = searchResults;
+                                  isSearching = false;
+                                });
+                              }
                             });
                             return;
                           }

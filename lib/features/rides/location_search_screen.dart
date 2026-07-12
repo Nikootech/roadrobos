@@ -100,10 +100,22 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
     final query = _pickupFocusNode.hasFocus
         ? _pickupController.text
         : _dropoffController.text;
-    if (query.length < 3) {
+    if (query.length < 2) {
       setState(() {
         _searchResults = [];
         _isSearching = false;
+      });
+      return;
+    }
+
+    if (query.length == 2) {
+      _osmService.searchAddress(query).then((results) {
+        if (mounted) {
+          setState(() {
+            _searchResults = results;
+            _isSearching = false;
+          });
+        }
       });
       return;
     }

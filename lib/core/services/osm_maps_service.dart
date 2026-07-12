@@ -79,11 +79,46 @@ class OSMMapsService {
       'lng': 77.6704,
       'type': 'result',
     },
+    {
+      'name': 'KR Puram',
+      'address': 'Krishnarajapuram (KR Puram), Outer Ring Rd, Bengaluru, Karnataka, 560036',
+      'lat': 13.0040,
+      'lng': 77.6780,
+      'type': 'result',
+    },
+    {
+      'name': 'KR Market',
+      'address': 'Krishna Rajendra (KR) Market, Kalasipalya, Bengaluru, Karnataka, 560002',
+      'lat': 12.9650,
+      'lng': 77.5760,
+      'type': 'result',
+    },
+    {
+      'name': 'KR Road',
+      'address': 'Krishna Rajendra (KR) Road, Basavanagudi, Bengaluru, Karnataka, 560004',
+      'lat': 12.9416,
+      'lng': 77.5739,
+      'type': 'result',
+    },
+    {
+      'name': 'KR Circle',
+      'address': 'Krishnarajendra (KR) Circle, Ambedkar Veedhi, Bengaluru, Karnataka, 560001',
+      'lat': 12.9734,
+      'lng': 77.5912,
+      'type': 'result',
+    },
+    {
+      'name': 'KR Layout',
+      'address': 'KR Layout, JP Nagar Phase 6, Bengaluru, Karnataka, 560078',
+      'lat': 12.9062,
+      'lng': 77.5816,
+      'type': 'result',
+    },
   ];
 
   /// Search for addresses using Nominatim
   Future<List<Map<String, dynamic>>> searchAddress(String query) async {
-    if (query.length < 3) return [];
+    if (query.length < 2) return [];
 
     final localResults = _bengaluruLocations.where((loc) {
       final q = query.toLowerCase();
@@ -91,6 +126,10 @@ class OSMMapsService {
       final address = loc['address'].toString().toLowerCase();
       return name.contains(q) || address.contains(q);
     }).toList();
+
+    if (query.length < 3) {
+      return localResults;
+    }
 
     try {
       final headers = kIsWeb
