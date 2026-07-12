@@ -458,17 +458,30 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
               Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                 decoration: BoxDecoration(
-                  color: AppColors.primaryBlue.withValues(alpha: 0.1),
+                  gradient: const LinearGradient(
+                    colors: [
+                      Color(0xFF10B981),
+                      Color(0xFF059669),
+                    ],
+                  ),
                   borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF10B981).withValues(alpha: 0.3),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    )
+                  ],
                 ),
-                child: const Text(
-                  AppStrings.change,
-                  style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.primaryBlue),
+                child: Text(
+                  AppStrings.change.toUpperCase(),
+                  style: GoogleFonts.outfit(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      letterSpacing: 0.5),
                 ),
               ),
             ],
@@ -562,21 +575,38 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
-                      color: AppColors.primaryBlue.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12)),
+                    gradient: const LinearGradient(
+                      colors: [
+                        AppColors.primaryBlue,
+                        AppColors.primaryBlueDark,
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primaryBlue.withValues(alpha: 0.3),
+                        blurRadius: 6,
+                        offset: const Offset(0, 3),
+                      )
+                    ],
+                  ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const Icon(Icons.add_circle_outline_rounded,
-                          size: 18, color: AppColors.primaryBlue),
+                          size: 18, color: Colors.white),
                       const SizedBox(width: 8),
                       Flexible(
-                        child: Text(l10n.get('top_up'),
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.primaryBlue)),
+                        child: Text(
+                          l10n.get('top_up'),
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.outfit(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white),
+                        ),
                       )
                     ],
                   ),
@@ -805,16 +835,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildQuickActionItem(QuickAction action) {
-    final rawColor = IconHelper.getColor(action.color);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // In light theme, make pastel/light colors darker and more vibrant for contrast.
-    Color color = rawColor;
-    if (!isDark) {
-      final hsl = HSLColor.fromColor(rawColor);
-      if (hsl.lightness > 0.6) {
-        color = hsl.withLightness(0.4).withSaturation(0.85).toColor();
-      }
+    // Curated high-contrast premium colors for light/dark mode
+    Color color;
+    final label = action.label.toLowerCase();
+    if (label.contains('taxi')) {
+      color = const Color(0xFFF59E0B);
+    } else if (label.contains('rental')) {
+      color = const Color(0xFF3B82F6);
+    } else if (label.contains('service')) {
+      color = const Color(0xFFEF4444);
+    } else if (label.contains('insurance')) {
+      color = const Color(0xFF10B981);
+    } else {
+      color = IconHelper.getColor(action.color);
     }
 
     return GestureDetector(
@@ -854,18 +889,38 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             width: 60,
             height: 60,
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(20),
+              gradient: LinearGradient(
+                colors: [
+                  color,
+                  color.withValues(alpha: 0.8),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.35),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                )
+              ],
             ),
-            child:
-                Icon(IconHelper.getIcon(action.icon), color: color, size: 28),
+            child: Icon(
+              IconHelper.getIcon(action.icon),
+              color: Colors.white,
+              size: 26,
+            ),
           ),
           const SizedBox(height: 8),
-          Text(action.label,
-              style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary)),
+          Text(
+            action.label,
+            style: GoogleFonts.outfit(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: isDark ? AppColors.textOnDark : AppColors.textPrimary,
+            ),
+          ),
         ],
       ),
     );
@@ -1042,8 +1097,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 itemBuilder: (context, index) {
                   final cat = categories[index];
                   final icon = IconHelper.getIcon(cat.icon);
-                  const color =
-                      AppColors.primaryBlue; // Default theme color for grid
+
+                  // Curated high-contrast premium colors for light/dark mode
+                  Color catColor;
+                  final label = cat.label.toLowerCase();
+                  if (label.contains('repair') || label.contains('service')) {
+                    catColor = const Color(0xFFEF4444);
+                  } else if (label.contains('rental')) {
+                    catColor = const Color(0xFF3B82F6);
+                  } else if (label.contains('ev')) {
+                    catColor = const Color(0xFFF59E0B);
+                  } else {
+                    catColor = const Color(0xFF10B981);
+                  }
+
                   final route = _getCategoryRoute(cat.label);
 
                   return GestureDetector(
@@ -1074,28 +1141,40 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     },
                     child: Container(
                       decoration: BoxDecoration(
-                        color: color.withValues(alpha: 0.1),
+                        color: catColor.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: color.withValues(alpha: 0.2)),
+                        border: Border.all(
+                          color: catColor.withValues(alpha: 0.35),
+                          width: 1.5,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: catColor.withValues(alpha: 0.05),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          )
+                        ],
                       ),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(icon,
-                              color: color,
-                              size: ResponsiveLayout.isSmallPhone(context)
-                                  ? 18
-                                  : 22),
+                          Icon(
+                            icon,
+                            color: catColor,
+                            size: ResponsiveLayout.isSmallPhone(context)
+                                ? 18
+                                : 22,
+                          ),
                           const SizedBox(height: 8),
                           Text(
                             cat.label,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
+                            style: GoogleFonts.outfit(
                               fontSize: ResponsiveLayout.responsiveFontSize(
-                                  context, 10),
-                              fontWeight: FontWeight.w600,
-                              color: color,
+                                  context, 11),
+                              fontWeight: FontWeight.w700,
+                              color: catColor,
                             ),
                           ),
                         ],
