@@ -382,6 +382,78 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget _buildGreetingSection(WidgetRef ref) {
     final selectedVehicle = ref.watch(vehicleProvider);
     final allVehicles = ref.watch(allVehiclesProvider);
+    final hasVehicle = allVehicles.isNotEmpty && selectedVehicle.id != 'placeholder';
+
+    // If no vehicles registered, show an "Add Vehicle" prompt card
+    if (!hasVehicle) {
+      return Padding(
+        padding: ResponsiveLayout.responsivePadding(context,
+                horizontal: 20, vertical: 16)
+            .copyWith(bottom: 0),
+        child: GestureDetector(
+          onTap: () => context.push('/add-vehicle'),
+          child: GlassCard(
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: AppColors.bgSkyLight,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.add_circle_outline_rounded,
+                      color: AppColors.primaryBlue, size: 22),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('No Vehicle Added',
+                          style: GoogleFonts.outfit(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary)),
+                      const SizedBox(height: 2),
+                      Text('Tap to add your car or bike',
+                          style: GoogleFonts.outfit(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.textSecondary)),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF6366F1), Color(0xFF4F46E5)],
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF6366F1).withValues(alpha: 0.3),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      )
+                    ],
+                  ),
+                  child: Text(
+                    'ADD',
+                    style: GoogleFonts.outfit(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                        letterSpacing: 0.5),
+                  ),
+                ),
+              ],
+            ),
+          ).animate().fadeIn(duration: 500.ms).slideY(begin: 0.1, end: 0),
+        ),
+      );
+    }
 
     return Padding(
       padding: ResponsiveLayout.responsivePadding(context,
@@ -389,6 +461,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           .copyWith(bottom: 0),
       child: GestureDetector(
         onTap: () {
+
           showModalBottomSheet(
             context: context,
             backgroundColor: Colors.transparent,
@@ -903,8 +976,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _buildQuickActionItem(QuickAction action) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     // Curated high-contrast premium colors for light/dark mode
     Color color;
     final label = action.label.toLowerCase();
@@ -986,7 +1057,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             style: GoogleFonts.outfit(
               fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: isDark ? AppColors.textOnDark : AppColors.textPrimary,
+              color: AppColors.textPrimary,
             ),
           ),
         ],

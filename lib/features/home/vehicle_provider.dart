@@ -55,16 +55,19 @@ class AllVehiclesNotifier extends StateNotifier<List<Vehicle>> {
             year: 2022,
             type: 'Car')
       ];
+      // Auto-select the demo vehicle
+      ref.read(vehicleProvider.notifier).setVehicle(state.first);
       return;
     }
 
-    try {
+      try {
       final repo = ref.read(userVehicleRepositoryProvider);
       _subscription = repo.getUserVehiclesStream(userId).listen(
         (vehicles) {
           state = vehicles;
-          if (vehicles.isNotEmpty &&
-              ref.read(vehicleProvider).id == 'placeholder') {
+          // Auto-select first vehicle if none selected yet
+          final currentId = ref.read(vehicleProvider).id;
+          if (vehicles.isNotEmpty && (currentId == 'placeholder' || currentId.isEmpty)) {
             ref.read(vehicleProvider.notifier).setVehicle(vehicles.first);
           }
         },
@@ -88,6 +91,11 @@ class AllVehiclesNotifier extends StateNotifier<List<Vehicle>> {
     final userState = ref.read(userProvider);
     if (userState.user != null) {
       ref.read(userVehicleRepositoryProvider).addVehicle(vehicle);
+    }
+    // If this is the first vehicle ever added, auto-select it
+    final currentId = ref.read(vehicleProvider).id;
+    if (currentId == 'placeholder' || state.length == 1) {
+      ref.read(vehicleProvider.notifier).setVehicle(vehicle);
     }
   }
 }

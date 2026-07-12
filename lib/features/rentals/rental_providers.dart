@@ -65,22 +65,26 @@ class ActiveRentalNotifier extends StateNotifier<ActiveRental?> {
   Future<void> completePayment({
     required double totalCost,
     required PaymentService paymentService,
+    String method = 'Online',
   }) async {
     if (state != null) {
       final user = ref.read(userProvider).user;
       final custId = user?.id ?? 'demo';
 
       try {
-        await paymentService.startPayment(PaymentDetails(
-          bookingId:
-              '00000000-0000-0000-0000-000000000000', // Typically generated before payment
-          bookingType: BookingType.rental,
-          totalCost: totalCost,
-          userId: custId,
-          contact: user?.phone ?? '9876543210',
-          email: user?.email ?? 'customer@example.com',
-          description: 'Vehicle Rental Payment',
-        ));
+        String paymentId = 'CASH_PAYMENT';
+        if (method == 'Online') {
+          paymentId = await paymentService.startPayment(PaymentDetails(
+            bookingId:
+                '00000000-0000-0000-0000-000000000000', // Typically generated before payment
+            bookingType: BookingType.rental,
+            totalCost: totalCost,
+            userId: custId,
+            contact: user?.phone ?? '9876543210',
+            email: user?.email ?? 'customer@example.com',
+            description: 'Vehicle Rental Payment',
+          ));
+        }
 
         // Safeguard: Only save to Supabase if we have a real UUID
         if (custId != 'demo' && !custId.startsWith('demo')) {
@@ -93,14 +97,14 @@ class ActiveRentalNotifier extends StateNotifier<ActiveRental?> {
                   startTime: state!.startTime,
                   duration: state!.duration.inHours,
                   totalCost: totalCost,
-                  details: {'method': 'Razorpay'},
-                  status: 'paid'));
+                  details: {'method': method, 'payment_id': paymentId},
+                  status: method == 'Online' ? 'paid' : 'confirmed'));
         }
 
         _timer?.cancel();
         _timer = null;
 
-        state = state!.copyWith(status: RentalStatus.paid);
+        state = state!.copyWith(status: method == 'Online' ? RentalStatus.paid : RentalStatus.active);
       } catch (e) {
         throw Exception('Payment flow failed: $e');
       }

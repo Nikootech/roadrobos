@@ -23,6 +23,7 @@ class RentalCheckoutScreen extends ConsumerStatefulWidget {
 
 class _RentalCheckoutScreenState extends ConsumerState<RentalCheckoutScreen> {
   bool _includeInsurance = true;
+  String _paymentMethod = 'Online';
 
   @override
   void initState() {
@@ -210,6 +211,107 @@ class _RentalCheckoutScreenState extends ConsumerState<RentalCheckoutScreen> {
                   const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             ),
 
+             const SizedBox(height: 32),
+            _buildSectionHeader('Payment Method'),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() => _paymentMethod = 'Cash');
+                      HapticFeedback.selectionClick();
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      decoration: BoxDecoration(
+                        color: _paymentMethod == 'Cash'
+                            ? Colors.orange.shade50
+                            : (isDark ? AppColors.bgDarkSurface : Colors.grey.shade50),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: _paymentMethod == 'Cash'
+                              ? Colors.orange.shade400
+                              : (isDark ? Colors.grey.shade800 : Colors.grey.shade200),
+                          width: _paymentMethod == 'Cash' ? 2 : 1,
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.money_rounded,
+                            color: _paymentMethod == 'Cash'
+                                ? Colors.orange.shade700
+                                : Colors.grey,
+                            size: 24,
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Pay at Pickup',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: _paymentMethod == 'Cash'
+                                  ? Colors.orange.shade700
+                                  : textSecondaryColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() => _paymentMethod = 'Online');
+                      HapticFeedback.selectionClick();
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      decoration: BoxDecoration(
+                        color: _paymentMethod == 'Online'
+                            ? AppColors.primaryBlue.withValues(alpha: 0.08)
+                            : (isDark ? AppColors.bgDarkSurface : Colors.grey.shade50),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: _paymentMethod == 'Online'
+                              ? AppColors.primaryBlue
+                              : (isDark ? Colors.grey.shade800 : Colors.grey.shade200),
+                          width: _paymentMethod == 'Online' ? 2 : 1,
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.payment_rounded,
+                            color: _paymentMethod == 'Online'
+                                ? AppColors.primaryBlue
+                                : Colors.grey,
+                            size: 24,
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Pay Online',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: _paymentMethod == 'Online'
+                                  ? AppColors.primaryBlue
+                                  : textSecondaryColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
             const SizedBox(height: 32),
             _buildSectionHeader('Price Summary'),
             const SizedBox(height: 12),
@@ -259,7 +361,9 @@ class _RentalCheckoutScreenState extends ConsumerState<RentalCheckoutScreen> {
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(color: isDark ? AppColors.bgDarkDeep : Colors.white),
         child: CustomButton(
-          label: 'PAY ₹${breakdown.totalPayable.round()}',
+          label: _paymentMethod == 'Online'
+              ? 'PAY ₹${breakdown.totalPayable.round()}'
+              : 'CONFIRM BOOKING',
           onPressed: () async {
             // ignore: unawaited_futures
             HapticFeedback.heavyImpact();
@@ -268,54 +372,46 @@ class _RentalCheckoutScreenState extends ConsumerState<RentalCheckoutScreen> {
             final userId = userData?.id ?? 'demo';
 
             try {
-              await ref
-                  .read(paymentServiceProvider.notifier)
-                  .startPayment(PaymentDetails(
-                    contact: userData?.phone ?? '9876543210',
-                    email: userData?.email ?? 'customer@example.com',
-                    description: 'Vehicle Rental: ${selectedVehicle?['name']}',
-                    bookingId: '00000000-0000-0000-0000-000000000000',
-                    userId: userId,
-                    bookingType: BookingType.rental,
-                    totalCost: breakdown.totalPayable,
-                  ));
-
-              // 1. Log detailed transaction
-              await ref
-                  .read(transactionRepositoryProvider)
-                  .logTransaction(AppTransaction(
-                    id: '',
-                    userId: userId,
-                    razoprayPaymentId: 'VERIFIED_ON_SERVER',
-                    baseAmount: breakdown.baseAmount,
-                    gstAmount: breakdown.gstAmount,
-                    platformFee: breakdown.platformFee,
-                    handlingCharges: breakdown.handlingCharges,
-                    totalAmount: breakdown.totalPayable,
-                    description: 'Vehicle Rental: ${selectedVehicle?['name']}',
-                    timestamp: DateTime.now(),
-                  ));
-
-              // 2. Start the rental state
+              // 1. Start the rental state
               if (selectedVehicle != null) {
                 ref.read(activeRentalProvider.notifier).startRental(
                       selectedVehicle,
                       const Duration(hours: 2), // Demo limit
                     );
 
+                // 2. Complete payment (will trigger Razorpay if Online, or complete directly if Cash)
                 await ref.read(activeRentalProvider.notifier).completePayment(
                       totalCost: breakdown.totalPayable,
                       paymentService: ref.read(paymentServiceProvider.notifier),
+                      method: _paymentMethod,
                     );
+
+                // 3. Log detailed transaction
+                await ref
+                    .read(transactionRepositoryProvider)
+                    .logTransaction(AppTransaction(
+                      id: '',
+                      userId: userId,
+                      razoprayPaymentId: _paymentMethod == 'Online' ? 'VERIFIED_ON_SERVER' : 'CASH_PAYMENT',
+                      baseAmount: breakdown.baseAmount,
+                      gstAmount: breakdown.gstAmount,
+                      platformFee: breakdown.platformFee,
+                      handlingCharges: breakdown.handlingCharges,
+                      totalAmount: breakdown.totalPayable,
+                      description: 'Vehicle Rental: ${selectedVehicle['name']}',
+                      timestamp: DateTime.now(),
+                    ));
 
                 if (!context.mounted) return;
                 // ignore: unawaited_futures
                 context.push('/rental-confirmed');
               }
             } catch (e) {
+              // Reset state on failure so UI is consistent
+              ref.read(activeRentalProvider.notifier).clearRental();
               if (!context.mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: Text(e.toString()),
+                content: Text(e.toString().replaceAll('Exception: ', '')),
                 backgroundColor: AppColors.errorRed,
               ));
             }
