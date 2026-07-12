@@ -249,34 +249,85 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       onSelected: (AppLanguage lang) {
                         ref.read(languageProvider.notifier).setLanguage(lang);
                       },
-                      offset: const Offset(0, 40),
+                      offset: const Offset(0, 45),
+                      color: Colors.white,
+                      surfaceTintColor: Colors.transparent,
+                      elevation: 8,
+                      shadowColor: Colors.black26,
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                      itemBuilder: (context) => [
-                        const PopupMenuItem(
-                            value: AppLanguage.en, child: Text('English (EN)')),
-                        const PopupMenuItem(
-                            value: AppLanguage.hi, child: Text('हिन्दी (HI)')),
-                        const PopupMenuItem(
-                            value: AppLanguage.kn, child: Text('ಕನ್ನಡ (KN)')),
-                        const PopupMenuItem(
-                            value: AppLanguage.ta, child: Text('தமிழ் (TA)')),
-                        const PopupMenuItem(
-                            value: AppLanguage.te, child: Text('తెలుగు (TE)')),
-                      ],
+                          borderRadius: BorderRadius.circular(16)),
+                      itemBuilder: (context) {
+                        final currentLang = ref.read(languageProvider);
+                        PopupMenuItem<AppLanguage> buildItem(AppLanguage value, String title, String code) {
+                          final isSelected = value == currentLang;
+                          return PopupMenuItem(
+                            value: value,
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(6),
+                                      decoration: BoxDecoration(
+                                        color: isSelected ? AppColors.primaryBlue.withOpacity(0.1) : Colors.grey.shade100,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Text(code, style: TextStyle(
+                                        fontSize: 10, 
+                                        fontWeight: FontWeight.bold, 
+                                        color: isSelected ? AppColors.primaryBlue : Colors.grey.shade600
+                                      )),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      title,
+                                      style: TextStyle(
+                                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                        color: isSelected ? AppColors.primaryBlue : AppColors.textPrimary,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                if (isSelected)
+                                  const Icon(Icons.check_circle_rounded, color: AppColors.primaryBlue, size: 18),
+                              ],
+                            ),
+                          );
+                        }
+                        return [
+                          buildItem(AppLanguage.en, 'English', 'EN'),
+                          buildItem(AppLanguage.hi, 'हिन्दी', 'HI'),
+                          buildItem(AppLanguage.kn, 'ಕನ್ನಡ', 'KN'),
+                          buildItem(AppLanguage.ta, 'தமிழ்', 'TA'),
+                          buildItem(AppLanguage.te, 'తెలుగు', 'TE'),
+                        ];
+                      },
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
+                            horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
-                          color: AppColors.bgSkyLight,
-                          borderRadius: BorderRadius.circular(8),
+                          color: AppColors.primaryBlue.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: AppColors.primaryBlue.withOpacity(0.2)),
                         ),
-                        child: Text(
-                          ref.watch(languageProvider).name.toUpperCase(),
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primaryBlue,
-                              fontSize: 12),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.language_rounded, size: 14, color: AppColors.primaryBlue),
+                            const SizedBox(width: 4),
+                            Text(
+                              ref.watch(languageProvider).name.toUpperCase(),
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primaryBlue,
+                                  fontSize: 12),
+                            ),
+                            const SizedBox(width: 2),
+                            const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: AppColors.primaryBlue),
+                          ],
                         ),
                       ),
                     ),
