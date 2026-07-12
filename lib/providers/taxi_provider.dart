@@ -427,10 +427,22 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
           // After 2 seconds, simulate driver acceptance
           Future.delayed(const Duration(seconds: 2), () {
             if (state.status == RideStatus.booked) {
-              final mockRide = booking.copyWith(
+              final mockRide = RideBooking(
                 id: bookingId,
+                customerId: booking.customerId,
                 driverId: 'mock_driver_${selectedVehicle}_123',
+                pickupAddress: booking.pickupAddress,
+                destinationAddress: booking.destinationAddress,
+                pickupLat: booking.pickupLat,
+                pickupLng: booking.pickupLng,
+                destLat: booking.destLat,
+                destLng: booking.destLng,
                 status: 'accepted',
+                fare: booking.fare,
+                otp: booking.otp,
+                createdAt: booking.createdAt,
+                scheduledFor: booking.scheduledFor,
+                vehicleType: selectedVehicle,
               );
               _onDriverAssigned(mockRide);
             }
