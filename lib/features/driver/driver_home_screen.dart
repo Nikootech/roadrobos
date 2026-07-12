@@ -12,6 +12,7 @@ import 'providers/driver_state_provider.dart';
 import '../../features/delivery/driver_delivery_panel.dart';
 import '../chat/providers/chat_providers.dart';
 import '../../features/profile/user_provider.dart';
+import '../../core/services/language_service.dart';
 
 class DriverHomeScreen extends ConsumerStatefulWidget {
   const DriverHomeScreen({super.key});
@@ -28,6 +29,7 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
     final userAsync = ref.watch(userProvider);
     final driverName = userAsync.user?.name ?? 'Driver';
     final profileUrl = userAsync.user?.profilePic;
+    final l10n = ref.watch(l10nProvider);
 
     ref.listen(rideRequestsProvider, (previous, next) {
       if (isOnline &&
@@ -85,7 +87,7 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('GOOD MORNING',
+                                Text(l10n.greeting.toUpperCase(),
                                     style: TextStyle(
                                         fontSize:
                                             ResponsiveLayout.responsiveFontSize(

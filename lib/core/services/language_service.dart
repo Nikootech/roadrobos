@@ -41,6 +41,8 @@ class Lo {
     AppLanguage.en: {
       'welcome': 'Welcome Back!',
       'good_morning': 'Good Morning,',
+      'good_afternoon': 'Good Afternoon,',
+      'good_evening': 'Good Evening,',
       'wallet_balance': 'Wallet Balance',
       'top_up': 'Top Up',
       'quick_actions': 'Quick Actions',
@@ -52,6 +54,8 @@ class Lo {
     AppLanguage.hi: {
       'welcome': 'स्वागत है!',
       'good_morning': 'शुभ प्रभात,',
+      'good_afternoon': 'शुभ दोपहर,',
+      'good_evening': 'शुभ संध्या,',
       'wallet_balance': 'वॉलेट बैलेंस',
       'top_up': 'टॉप अप',
       'quick_actions': 'त्वरित सेवाएँ',
@@ -63,6 +67,8 @@ class Lo {
     AppLanguage.kn: {
       'welcome': 'ಮತ್ತೆ ಸ್ವಾಗತ!',
       'good_morning': 'ಶುಭೋದಯ,',
+      'good_afternoon': 'ಶುಭ ಮಧ್ಯಾಹ್ನ,',
+      'good_evening': 'ಶುಭ ಸಂಜೆ,',
       'wallet_balance': 'ವಾಲೆಟ್ ಬ್ಯಾಲೆನ್ಸ್',
       'top_up': 'ಟಾಪ್ ಅಪ್',
       'quick_actions': 'ತ್ವರಿತ ಕ್ರಿಯೆಗಳು',
@@ -74,6 +80,8 @@ class Lo {
     AppLanguage.ta: {
       'welcome': 'மீண்டும் நல்வரவு!',
       'good_morning': 'காலை வணக்கம்,',
+      'good_afternoon': 'மதிய வணக்கம்,',
+      'good_evening': 'மாலை வணக்கம்,',
       'wallet_balance': 'வாலட் இருப்பு',
       'top_up': 'டாப் அப்',
       'quick_actions': 'விரைவான செயல்கள்',
@@ -85,6 +93,8 @@ class Lo {
     AppLanguage.te: {
       'welcome': 'మరలా స్వాగతం!',
       'good_morning': 'శుభోదయం,',
+      'good_afternoon': 'శుభ మధ్యాహ్నం,',
+      'good_evening': 'శుభ సాయంత్రం,',
       'wallet_balance': 'వాలెట్ బ్యాలెన్స్',
       'top_up': 'టాప్ అప్',
       'quick_actions': 'త్వరిత చర్యలు',
@@ -96,6 +106,13 @@ class Lo {
   };
 
   String get(String key) => _localizedValues[lang]?[key] ?? key;
+
+  String get greeting {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return get('good_morning');
+    if (hour < 17) return get('good_afternoon');
+    return get('good_evening');
+  }
 }
 
 final l10nProvider = Provider<Lo>((ref) {

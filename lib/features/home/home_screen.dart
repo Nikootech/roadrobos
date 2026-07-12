@@ -297,7 +297,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             Align(
               alignment: Alignment.centerRight,
               child: Text(
-                '${l10n.get('good_morning')} ${userName.split(' ')[0]}',
+                '${l10n.greeting} ${userName.split(' ')[0]}',
                 style: GoogleFonts.outfit(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,

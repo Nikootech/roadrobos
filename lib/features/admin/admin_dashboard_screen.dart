@@ -9,6 +9,7 @@ import '../../shared/widgets/custom_button.dart';
 import '../../shared/widgets/shimmer_loading.dart';
 import 'admin_providers.dart';
 import '../../core/repositories/admin_ops_repository.dart';
+import '../../core/services/language_service.dart';
 
 /// Admin Dashboard Overview matching Figma Screen [87]
 class AdminDashboardScreen extends ConsumerStatefulWidget {
@@ -137,6 +138,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = ref.watch(l10nProvider);
     return Scaffold(
       backgroundColor: AppColors.bgLightGrey,
       appBar: AppBar(
@@ -167,7 +169,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
             ),
             const SizedBox(width: 16),
             Text(
-              'Good Morning, Alex', // Static for now as per design
+              '${l10n.greeting} Alex', // Static for now as per design
               style: GoogleFonts.inter(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,

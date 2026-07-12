@@ -9,6 +9,7 @@ import 'technician_provider.dart';
 import '../profile/user_provider.dart';
 import 'widgets/service_team_alert_monitor.dart';
 import '../../core/services/tracking_service.dart';
+import '../../core/services/language_service.dart';
 
 class TechnicianDashboardScreen extends ConsumerStatefulWidget {
   const TechnicianDashboardScreen({super.key});
@@ -284,6 +285,7 @@ class _TechnicianDashboardScreenState
     final user = ref.watch(userProvider);
     final jobs = ref.watch(technicianProvider);
     final activeJob = ref.watch(selectedJobProvider);
+    final l10n = ref.watch(l10nProvider);
 
     final pendingJobs = jobs.where((j) => j.status != 'COMPLETED').toList();
 
@@ -309,7 +311,7 @@ class _TechnicianDashboardScreenState
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                            'Good Morning, ${user.user?.name.split(' ')[0] ?? 'Technician'}',
+                            '${l10n.greeting} ${user.user?.name.split(' ')[0] ?? 'Technician'}',
                             style: const TextStyle(
                                 fontSize: 22,
                                 fontWeight: FontWeight.w900,
