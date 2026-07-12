@@ -280,11 +280,14 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget>
     }
 
     // Route Midpoint Duration Badge
-    if (!widget.isTracking && _routePoints.isNotEmpty && taxiState.distance > 0 && taxiState.status == RideStatus.vehicleSelection) {
+    if (!widget.isTracking &&
+        _routePoints.isNotEmpty &&
+        taxiState.distance > 0 &&
+        taxiState.status == RideStatus.vehicleSelection) {
       final middleIndex = _routePoints.length ~/ 2;
       final midPoint = _routePoints[middleIndex];
       final durationMins = (taxiState.distance * 2.5).round().clamp(2, 120);
-      
+
       markers.add(
         Marker(
           point: midPoint,
@@ -323,10 +326,13 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget>
     }
 
     // Live Tracking ETA Badge
-    if (widget.isTracking && _routePoints.isNotEmpty && taxiState.eta != null && taxiState.eta != 'Arrived') {
+    if (widget.isTracking &&
+        _routePoints.isNotEmpty &&
+        taxiState.eta != null &&
+        taxiState.eta != 'Arrived') {
       final middleIndex = _routePoints.length ~/ 2;
       final midPoint = _routePoints[middleIndex];
-      
+
       markers.add(
         Marker(
           point: midPoint,
@@ -352,7 +358,9 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget>
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    taxiState.eta!.split(' • ').last, // Extracts just the "10 mins" part
+                    taxiState.eta!
+                        .split(' • ')
+                        .last, // Extracts just the "10 mins" part
                     style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
