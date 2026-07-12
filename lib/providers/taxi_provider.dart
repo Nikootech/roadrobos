@@ -408,9 +408,12 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
       final generatedOtp =
           (1000 + random.nextInt(9000)).toString(); // 4 digit OTP
 
+      final isDemoUser = user.user?.id == null || user.user!.id == 'demo';
+      final custId = isDemoUser ? '00000000-0000-0000-0000-000000000000' : user.user!.id;
+
       final booking = RideBooking(
         id: '',
-        customerId: user.user?.id ?? 'demo',
+        customerId: custId,
         pickupAddress: state.pickupAddress ?? 'Origin',
         destinationAddress: state.dropoffAddress ?? 'Destination',
         pickupLat: state.pickupLocation!.latitude,
@@ -424,33 +427,57 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
         paymentMethod: state.paymentMethod, // pass selected method
       );
 
-      final bookingId = await ref
-          .read(rideBookingRepositoryProvider)
-          .createRideBooking(booking);
-      state = state.copyWith(
-          rideId: bookingId, otp: generatedOtp, isOtpVerified: false);
-
-      // --- RAZORPAY PAYMENT TRIGGER ---
+      // 1. Complete payment (will trigger Razorpay if Online, or complete directly if Cash)
+      String paymentId = 'CASH_PAYMENT';
       if (state.paymentMethod == 'Online') {
         try {
           final paymentService = ref.read(paymentServiceProvider.notifier);
-          final paymentId = await paymentService.startPayment(PaymentDetails(
-            bookingId: bookingId,
+          paymentId = await paymentService.startPayment(PaymentDetails(
+            bookingId: '00000000-0000-0000-0000-000000000000', // Typically generated before payment
             bookingType: BookingType.ride,
             totalCost: booking.fare,
-            userId: booking.customerId,
+            userId: custId,
             description: 'Taxi Ride - ${state.selectedOption?.title ?? 'Standard'}',
             contact: user.user?.phone ?? '9999999999',
             email: user.user?.email ?? 'test@example.com',
           ));
-          state = state.copyWith(razorpayPaymentId: paymentId);
         } catch (e) {
           debugPrint('Razorpay payment failed or was cancelled: $e');
-          await _cancelBookingOnBackend();
           reset();
           throw Exception('Payment failed or was cancelled');
         }
       }
+
+      // 2. Safeguard: Only save to Supabase if we have a real UUID
+      String bookingId = '00000000-0000-0000-0000-000000000000';
+      if (!isDemoUser) {
+        final bookingWithPayment = RideBooking(
+          id: '',
+          customerId: custId,
+          pickupAddress: booking.pickupAddress,
+          destinationAddress: booking.destinationAddress,
+          pickupLat: booking.pickupLat,
+          pickupLng: booking.pickupLng,
+          destLat: booking.destLat,
+          destLng: booking.destLng,
+          fare: booking.fare,
+          otp: booking.otp,
+          createdAt: booking.createdAt,
+          scheduledFor: booking.scheduledFor,
+          paymentMethod: booking.paymentMethod,
+          razorpayPaymentId: state.paymentMethod == 'Online' ? paymentId : null,
+          status: state.paymentMethod == 'Online' ? 'paid' : 'searching',
+        );
+        bookingId = await ref
+            .read(rideBookingRepositoryProvider)
+            .createRideBooking(bookingWithPayment);
+      }
+
+      state = state.copyWith(
+          rideId: bookingId,
+          otp: generatedOtp,
+          isOtpVerified: false,
+          razorpayPaymentId: state.paymentMethod == 'Online' ? paymentId : null);
 
 
       if (nearbyDrivers.isEmpty) {
@@ -642,7 +669,9 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
     if (bookingId == null || bookingId.isEmpty) return;
     
     try {
-      await ref.read(rideBookingRepositoryProvider).updateScheduledTime(bookingId, scheduledTime);
+      if (bookingId != '00000000-0000-0000-0000-000000000000') {
+        await ref.read(rideBookingRepositoryProvider).updateScheduledTime(bookingId, scheduledTime);
+      }
       reset();
     } catch (e) {
       debugPrint('Failed to schedule ride for later: $e');

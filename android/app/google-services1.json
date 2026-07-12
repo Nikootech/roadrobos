@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "542549978836",
+    "firebase_url": "https://roadrobos-prod-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "roadrobos-prod",
+    "storage_bucket": "roadrobos-prod.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:542549978836:android:01511e6fb66b5612571541",
+        "android_client_info": {
+          "package_name": "com.roadrobos.roadrobos"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "542549978836-l55rm9ftucubic1ibc3domifpgc8ikst.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA-4xugCfeTYzUmavXEfhOThQLQaczhQoQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "542549978836-l55rm9ftucubic1ibc3domifpgc8ikst.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "542549978836-4hemooorhcc62v77kgqaltivaagr1iih.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.roadrobos.roadrobos"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

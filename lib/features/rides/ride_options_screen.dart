@@ -66,8 +66,8 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
 
           // 3. Draggable Vehicles Sheet (Rapido Style)
           DraggableScrollableSheet(
-            initialChildSize: 0.45,
-            minChildSize: 0.4,
+            initialChildSize: 0.55,
+            minChildSize: 0.45,
             maxChildSize: 0.9,
             builder: (context, scrollController) {
               return Container(
@@ -377,7 +377,8 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
 
                     // Book Button
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                      padding: EdgeInsets.fromLTRB(
+                          20, 0, 20, 20 + MediaQuery.of(context).padding.bottom),
                       child: Container(
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(32),
@@ -478,7 +479,7 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
                                                           Navigator.pop(
                                                               ctx); // close dialog
                                                           context.go(
-                                                              '/home'); // Go to home screen
+                                                              '/main/home'); // Go to home screen
                                                           ScaffoldMessenger.of(
                                                                   context)
                                                               .showSnackBar(
@@ -551,8 +552,9 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
                                       );
                                     }
                                   } finally {
-                                    if (mounted)
+                                    if (mounted) {
                                       setState(() => _isBooking = false);
+                                    }
                                   }
                                 },
                           style: ElevatedButton.styleFrom(

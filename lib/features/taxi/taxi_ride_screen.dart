@@ -673,7 +673,7 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
                                           if (mainContext.mounted) {
                                             Navigator.pop(ctx); // close dialog
                                             mainContext.go(
-                                                '/home'); // Go to home screen
+                                                '/main/home'); // Go to home screen
                                             ScaffoldMessenger.of(mainContext)
                                                 .showSnackBar(
                                               SnackBar(
