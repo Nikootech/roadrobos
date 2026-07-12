@@ -506,12 +506,16 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
                     decoration: BoxDecoration(
                       color: state.paymentMethod == 'Cash'
                           ? Colors.orange.shade50
-                          : (isDark ? Colors.grey.shade900 : Colors.grey.shade50),
+                          : (isDark
+                              ? Colors.grey.shade900
+                              : Colors.grey.shade50),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: state.paymentMethod == 'Cash'
                             ? Colors.orange.shade400
-                            : (isDark ? Colors.grey.shade800 : Colors.grey.shade200),
+                            : (isDark
+                                ? Colors.grey.shade800
+                                : Colors.grey.shade200),
                         width: state.paymentMethod == 'Cash' ? 2 : 1,
                       ),
                     ),
@@ -554,12 +558,16 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
                     decoration: BoxDecoration(
                       color: state.paymentMethod == 'Online'
                           ? AppColors.primaryBlue.withValues(alpha: 0.08)
-                          : (isDark ? Colors.grey.shade900 : Colors.grey.shade50),
+                          : (isDark
+                              ? Colors.grey.shade900
+                              : Colors.grey.shade50),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: state.paymentMethod == 'Online'
                             ? AppColors.primaryBlue
-                            : (isDark ? Colors.grey.shade800 : Colors.grey.shade200),
+                            : (isDark
+                                ? Colors.grey.shade800
+                                : Colors.grey.shade200),
                         width: state.paymentMethod == 'Online' ? 2 : 1,
                       ),
                     ),
@@ -613,11 +621,17 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
                           unawaited(showDialog(
                             context: context,
                             builder: (ctx) => AlertDialog(
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                              title: Row(children: [
-                                const Icon(Icons.location_off_rounded, color: Colors.orange),
-                                const SizedBox(width: 12),
-                                const Expanded(child: Text('No Drivers Nearby', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18))),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(24)),
+                              title: const Row(children: [
+                                Icon(Icons.location_off_rounded,
+                                    color: Colors.orange),
+                                SizedBox(width: 12),
+                                Expanded(
+                                    child: Text('No Drivers Nearby',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.w900,
+                                            fontSize: 18))),
                               ]),
                               content: const Text(
                                 'All drivers in your area are currently offline. You can still book and wait — we\'ll keep searching for 10 minutes and notify you when a driver accepts.',
@@ -626,7 +640,8 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
                               actions: [
                                 TextButton(
                                   onPressed: () => Navigator.pop(ctx),
-                                  child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+                                  child: const Text('Cancel',
+                                      style: TextStyle(color: Colors.grey)),
                                 ),
                                 TextButton(
                                   onPressed: () async {
@@ -635,7 +650,8 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
                                       context: ctx,
                                       initialDate: DateTime.now(),
                                       firstDate: DateTime.now(),
-                                      lastDate: DateTime.now().add(const Duration(days: 7)),
+                                      lastDate: DateTime.now()
+                                          .add(const Duration(days: 7)),
                                     );
                                     if (date != null && mainContext.mounted) {
                                       final time = await showTimePicker(
@@ -643,41 +659,63 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
                                         initialTime: TimeOfDay.now(),
                                       );
                                       if (time != null && mainContext.mounted) {
-                                        final scheduledTime = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+                                        final scheduledTime = DateTime(
+                                            date.year,
+                                            date.month,
+                                            date.day,
+                                            time.hour,
+                                            time.minute);
                                         try {
-                                          await ref.read(taxiProvider.notifier).scheduleRideForLater(scheduledTime);
+                                          await ref
+                                              .read(taxiProvider.notifier)
+                                              .scheduleRideForLater(
+                                                  scheduledTime);
                                           if (mainContext.mounted) {
                                             Navigator.pop(ctx); // close dialog
-                                            mainContext.go('/home'); // Go to home screen
-                                            ScaffoldMessenger.of(mainContext).showSnackBar(
+                                            mainContext.go(
+                                                '/home'); // Go to home screen
+                                            ScaffoldMessenger.of(mainContext)
+                                                .showSnackBar(
                                               SnackBar(
-                                                content: Text('Ride scheduled for ${time.format(mainContext)} on ${date.day}/${date.month}'),
+                                                content: Text(
+                                                    'Ride scheduled for ${time.format(mainContext)} on ${date.day}/${date.month}'),
                                                 backgroundColor: Colors.green,
                                               ),
                                             );
                                           }
                                         } catch (e) {
                                           if (mainContext.mounted) {
-                                            ScaffoldMessenger.of(mainContext).showSnackBar(
-                                              SnackBar(content: Text(e.toString()), backgroundColor: AppColors.dangerRed),
+                                            ScaffoldMessenger.of(mainContext)
+                                                .showSnackBar(
+                                              SnackBar(
+                                                  content: Text(e.toString()),
+                                                  backgroundColor:
+                                                      AppColors.dangerRed),
                                             );
                                           }
                                         }
                                       }
                                     }
                                   },
-                                  child: const Text('Schedule', style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.bold)),
+                                  child: const Text('Schedule',
+                                      style: TextStyle(
+                                          color: AppColors.primaryBlue,
+                                          fontWeight: FontWeight.bold)),
                                 ),
                                 ElevatedButton(
                                   onPressed: () {
                                     Navigator.pop(ctx);
                                     // Set status back to booked so the UI transitions to tracking/searching screen
-                                    ref.read(taxiProvider.notifier).updateStatus(RideStatus.booked);
+                                    ref
+                                        .read(taxiProvider.notifier)
+                                        .updateStatus(RideStatus.booked);
                                   },
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: AppColors.primaryBlue,
                                     foregroundColor: Colors.white,
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(12)),
                                   ),
                                   child: const Text('Book Anyway'),
                                 ),
@@ -691,7 +729,8 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
                         setState(() => _isBooking = false);
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text(e.toString().replaceAll('Exception: ', '')),
+                            content: Text(
+                                e.toString().replaceAll('Exception: ', '')),
                             backgroundColor: AppColors.dangerRed,
                             behavior: SnackBarBehavior.floating,
                           ),

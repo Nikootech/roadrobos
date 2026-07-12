@@ -49,6 +49,7 @@ dependencies:
   latlong2: ^0.9.1
   http: ^1.2.1
   geolocator: ^11.0.0
+  js: ^0.6.7
   confetti: ^0.7.0
   crypto: ^3.0.3                  # SHA-256 for cache key hashing (N3)
   uuid: ^4.3.3                    # UUID v4 for idempotency keys (N5)

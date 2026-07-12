@@ -7,6 +7,8 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 import '../../core/config/app_config.dart';
 import '../security/jailbreak_guard.dart';
 import '../../navigation/app_router.dart';
+import 'payment_web_helper.dart' if (dart.library.js) 'payment_web_helper_web.dart' as web_helper;
+
 
 part 'payment_service.g.dart';
 
@@ -248,6 +250,40 @@ class PaymentService extends _$PaymentService {
           const {},
         ));
       });
+      return _paymentCompleter!.future;
+    }
+
+    if (kIsWeb) {
+      try {
+        web_helper.payWithRazorpayWeb(
+          apiKey: apiKey,
+          amountInPaise: amountInPaise,
+          orderId: orderId,
+          description: details.description,
+          contact: details.contact,
+          email: details.email,
+          onSuccess: (paymentId, orderId, signature) {
+            _handlePaymentSuccess(PaymentSuccessResponse(
+              paymentId,
+              orderId,
+              signature,
+              const {},
+            ));
+          },
+          onFailure: (errorMsg) {
+            _handlePaymentError(PaymentFailureResponse(
+              2, // Code for error
+              errorMsg,
+              const {},
+            ));
+          },
+        );
+      } catch (e) {
+        debugPrint('Error starting Razorpay Web: $e');
+        if (!_paymentCompleter!.isCompleted) {
+          _paymentCompleter!.completeError(e.toString());
+        }
+      }
       return _paymentCompleter!.future;
     }
 

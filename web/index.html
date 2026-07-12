@@ -153,6 +153,27 @@
       document.body.style.background = 'transparent';
     }
   </script>
+
+  <!-- Razorpay Web SDK integration -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <script>
+    window.payWithRazorpayWeb = function(options, onSuccess, onFailure) {
+      options.handler = function(response) {
+        onSuccess(response.razorpay_payment_id, response.razorpay_order_id, response.razorpay_signature);
+      };
+      options.modal = {
+        ondismiss: function() {
+          onFailure("Payment cancelled by user");
+        }
+      };
+      try {
+        var rzp = new Razorpay(options);
+        rzp.open();
+      } catch (e) {
+        onFailure(e.message || "Failed to initialize Razorpay checkout popup");
+      }
+    };
+  </script>
 </head>
 <body>
 

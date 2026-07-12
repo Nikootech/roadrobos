@@ -62,8 +62,7 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen>
     return '${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
   }
 
-  double get _countdownProgress =>
-      _remainingSeconds / _searchDurationSeconds;
+  double get _countdownProgress => _remainingSeconds / _searchDurationSeconds;
 
   @override
   Widget build(BuildContext context) {
@@ -97,8 +96,7 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen>
           ),
 
           // 2. Searching Full Screen
-          if (isSearching)
-            _buildSearchingOverlay(context, taxiState),
+          if (isSearching) _buildSearchingOverlay(context, taxiState),
 
           // 3. Header Status (Pill style) — only when driver is assigned
           if (!isSearching && !isOffline)
@@ -239,8 +237,8 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen>
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: _remainingSeconds <= 60
                           ? Colors.red.shade50
@@ -293,13 +291,13 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen>
                         alignment: Alignment.center,
                         children: [
                           // Background circle
-                          SizedBox(
+                          const SizedBox(
                             width: 160,
                             height: 160,
                             child: CircularProgressIndicator(
                               value: 1.0,
                               strokeWidth: 8,
-                              color: const Color(0xFFF3F4F6),
+                              color: Color(0xFFF3F4F6),
                             ),
                           ),
                           // Progress ring
@@ -342,12 +340,10 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen>
                           ),
                         ],
                       ),
-                    )
-                        .animate(onPlay: (c) => c.repeat(reverse: true))
-                        .scale(
-                            begin: const Offset(0.97, 0.97),
-                            end: const Offset(1.03, 1.03),
-                            duration: 1200.ms),
+                    ).animate(onPlay: (c) => c.repeat(reverse: true)).scale(
+                        begin: const Offset(0.97, 0.97),
+                        end: const Offset(1.03, 1.03),
+                        duration: 1200.ms),
 
                     const SizedBox(height: 32),
 
@@ -526,9 +522,7 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen>
                     content: Text(isOnline
                         ? '✅ Ride cancelled. Refund initiated successfully!'
                         : '✅ Ride cancelled.'),
-                    backgroundColor:
-                        isOnline ? Colors.green : Colors.redAccent,
-                    duration: const Duration(seconds: 4),
+                    backgroundColor: isOnline ? Colors.green : Colors.redAccent,
                   ),
                 );
                 context.go('/main/home');
@@ -585,8 +579,7 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen>
               context.go('/main/home');
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor:
-                  wasOnline ? Colors.green : AppColors.primaryBlue,
+              backgroundColor: wasOnline ? Colors.green : AppColors.primaryBlue,
               foregroundColor: Colors.white,
               minimumSize: const Size(double.infinity, 48),
               shape: RoundedRectangleBorder(

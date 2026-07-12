@@ -10,7 +10,8 @@ class TechQRScannerScreen extends ConsumerStatefulWidget {
   const TechQRScannerScreen({super.key});
 
   @override
-  ConsumerState<TechQRScannerScreen> createState() => _TechQRScannerScreenState();
+  ConsumerState<TechQRScannerScreen> createState() =>
+      _TechQRScannerScreenState();
 }
 
 class _TechQRScannerScreenState extends ConsumerState<TechQRScannerScreen>
@@ -72,9 +73,13 @@ class _TechQRScannerScreenState extends ConsumerState<TechQRScannerScreen>
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.qr_code_scanner_rounded, size: 64, color: Colors.green)
+            const Icon(Icons.qr_code_scanner_rounded,
+                    size: 64, color: Colors.green)
                 .animate(onPlay: (c) => c.repeat())
-                .scale(begin: const Offset(0.9, 0.9), end: const Offset(1.1, 1.1), duration: 500.ms),
+                .scale(
+                    begin: const Offset(0.9, 0.9),
+                    end: const Offset(1.1, 1.1),
+                    duration: 500.ms),
             const SizedBox(height: 20),
             const Text(
               'Ticket Scanned Successfully!',
@@ -83,7 +88,8 @@ class _TechQRScannerScreenState extends ConsumerState<TechQRScannerScreen>
             const SizedBox(height: 8),
             Text(
               '$packageName - $vehicle',
-              style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+              style:
+                  const TextStyle(fontSize: 13, color: AppColors.textSecondary),
             ),
             const SizedBox(height: 24),
             const SizedBox(
@@ -154,7 +160,6 @@ class _TechQRScannerScreenState extends ConsumerState<TechQRScannerScreen>
                   // Scanner Frame Targets
                   Positioned.fill(
                     child: Align(
-                      alignment: Alignment.center,
                       child: Container(
                         width: 180,
                         height: 180,
@@ -197,8 +202,8 @@ class _TechQRScannerScreenState extends ConsumerState<TechQRScannerScreen>
                       width: 190,
                       height: 190,
                       decoration: const BoxDecoration(
-                        // Add fancy framing corners
-                      ),
+                          // Add fancy framing corners
+                          ),
                     ),
                   ),
                 ],
@@ -224,7 +229,8 @@ class _TechQRScannerScreenState extends ConsumerState<TechQRScannerScreen>
             child: Container(
               decoration: BoxDecoration(
                 color: isDark ? AppColors.bgDarkCard : Colors.white,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(24)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -236,7 +242,9 @@ class _TechQRScannerScreenState extends ConsumerState<TechQRScannerScreen>
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
-                        color: isDark ? AppColors.textOnDarkMuted : AppColors.textSecondary,
+                        color: isDark
+                            ? AppColors.textOnDarkMuted
+                            : AppColors.textSecondary,
                         letterSpacing: 1.1,
                       ),
                     ),
@@ -268,38 +276,52 @@ class _TechQRScannerScreenState extends ConsumerState<TechQRScannerScreen>
                                 ),
                               )
                             : ListView.separated(
-                                padding: const EdgeInsets.symmetric(horizontal: 24),
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 24),
                                 itemCount: _pendingBookings.length,
                                 separatorBuilder: (_, __) => Divider(
-                                  color: isDark ? Colors.grey.shade800 : Colors.grey.shade100,
+                                  color: isDark
+                                      ? Colors.grey.shade800
+                                      : Colors.grey.shade100,
                                 ),
                                 itemBuilder: (context, index) {
                                   final b = _pendingBookings[index];
                                   final bookingId = b['id'].toString();
-                                  final packageName = b['package_name'] ?? 'Service';
-                                  final vehicle = b['vehicle_name'] ?? 'Vehicle';
+                                  final packageName =
+                                      b['package_name'] ?? 'Service';
+                                  final vehicle =
+                                      b['vehicle_name'] ?? 'Vehicle';
                                   final cost = b['total_cost'] ?? 0.0;
-                                  final method = (b['details'] as Map?)?['method'] ?? 'Cash';
+                                  final method =
+                                      (b['details'] as Map?)?['method'] ??
+                                          'Cash';
                                   final date = b['booking_date'] ?? '';
 
                                   return ListTile(
                                     contentPadding: EdgeInsets.zero,
                                     leading: CircleAvatar(
-                                      backgroundColor: AppColors.primaryBlue.withValues(alpha: 0.1),
-                                      child: const Icon(Icons.directions_car_filled_rounded,
-                                          color: AppColors.primaryBlue, size: 20),
+                                      backgroundColor: AppColors.primaryBlue
+                                          .withValues(alpha: 0.1),
+                                      child: const Icon(
+                                          Icons.directions_car_filled_rounded,
+                                          color: AppColors.primaryBlue,
+                                          size: 20),
                                     ),
                                     title: Text(
                                       '$packageName ($vehicle)',
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 14,
-                                        color: isDark ? Colors.white : AppColors.textPrimary,
+                                        color: isDark
+                                            ? Colors.white
+                                            : AppColors.textPrimary,
                                       ),
                                     ),
                                     subtitle: Text(
                                       'Date: $date | Method: $method',
-                                      style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                                      style: const TextStyle(
+                                          fontSize: 12,
+                                          color: AppColors.textSecondary),
                                     ),
                                     trailing: Text(
                                       '₹${cost.toInt()}',
@@ -308,7 +330,8 @@ class _TechQRScannerScreenState extends ConsumerState<TechQRScannerScreen>
                                         color: AppColors.primaryBlue,
                                       ),
                                     ),
-                                    onTap: () => _simulateScan(bookingId, packageName, vehicle),
+                                    onTap: () => _simulateScan(
+                                        bookingId, packageName, vehicle),
                                   );
                                 },
                               ),

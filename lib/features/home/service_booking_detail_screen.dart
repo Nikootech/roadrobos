@@ -29,10 +29,13 @@ class ServiceBookingDetailScreen extends ConsumerWidget {
     final effectiveId = booking?.id ?? bookingId ?? '';
 
     return StreamBuilder<ServiceBooking>(
-      stream: ref.watch(serviceBookingRepositoryProvider).streamBookingStatus(effectiveId),
+      stream: ref
+          .watch(serviceBookingRepositoryProvider)
+          .streamBookingStatus(effectiveId),
       initialData: booking,
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting && snapshot.data == null) {
+        if (snapshot.connectionState == ConnectionState.waiting &&
+            snapshot.data == null) {
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
@@ -83,7 +86,8 @@ class ServiceBookingDetailScreen extends ConsumerWidget {
         final statusLabel = b.status.toUpperCase();
 
         final method = b.details['method'] ?? 'Cash';
-        final isCashPending = method == 'Cash' && b.status != 'paid' && b.status != 'completed';
+        final isCashPending =
+            method == 'Cash' && b.status != 'paid' && b.status != 'completed';
 
         return Scaffold(
           backgroundColor: AppColors.bgLightAlt,
@@ -179,7 +183,8 @@ class ServiceBookingDetailScreen extends ConsumerWidget {
                       children: [
                         const Row(
                           children: [
-                            Icon(Icons.qr_code_2_rounded, color: AppColors.primaryBlue, size: 24),
+                            Icon(Icons.qr_code_2_rounded,
+                                color: AppColors.primaryBlue, size: 24),
                             SizedBox(width: 12),
                             Text(
                               'Payment Ticket QR',
@@ -195,7 +200,8 @@ class ServiceBookingDetailScreen extends ConsumerWidget {
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey.shade200, width: 1.5),
+                            border: Border.all(
+                                color: Colors.grey.shade200, width: 1.5),
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: CustomPaint(
@@ -584,16 +590,30 @@ class QRPainter extends CustomPainter {
       ..strokeWidth = strokeWidth;
 
     // Top-Left Frame
-    canvas.drawRect(Rect.fromLTWH(0, 0, frameWidth, frameWidth), framePaint);
-    canvas.drawRect(Rect.fromLTWH(frameWidth/4, frameWidth/4, frameWidth/2, frameWidth/2), paint);
+    canvas.drawRect(
+        const Rect.fromLTWH(0, 0, frameWidth, frameWidth), framePaint);
+    canvas.drawRect(
+        const Rect.fromLTWH(
+            frameWidth / 4, frameWidth / 4, frameWidth / 2, frameWidth / 2),
+        paint);
 
     // Top-Right Frame
-    canvas.drawRect(Rect.fromLTWH(size.width - frameWidth, 0, frameWidth, frameWidth), framePaint);
-    canvas.drawRect(Rect.fromLTWH(size.width - frameWidth + frameWidth/4, frameWidth/4, frameWidth/2, frameWidth/2), paint);
+    canvas.drawRect(
+        Rect.fromLTWH(size.width - frameWidth, 0, frameWidth, frameWidth),
+        framePaint);
+    canvas.drawRect(
+        Rect.fromLTWH(size.width - frameWidth + frameWidth / 4, frameWidth / 4,
+            frameWidth / 2, frameWidth / 2),
+        paint);
 
     // Bottom-Left Frame
-    canvas.drawRect(Rect.fromLTWH(0, size.height - frameWidth, frameWidth, frameWidth), framePaint);
-    canvas.drawRect(Rect.fromLTWH(frameWidth/4, size.height - frameWidth + frameWidth/4, frameWidth/2, frameWidth/2), paint);
+    canvas.drawRect(
+        Rect.fromLTWH(0, size.height - frameWidth, frameWidth, frameWidth),
+        framePaint);
+    canvas.drawRect(
+        Rect.fromLTWH(frameWidth / 4, size.height - frameWidth + frameWidth / 4,
+            frameWidth / 2, frameWidth / 2),
+        paint);
 
     // Drawing some mock pixels
     final mockPixels = [
