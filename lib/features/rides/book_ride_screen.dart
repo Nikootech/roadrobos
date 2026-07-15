@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:iconsax/iconsax.dart';
 import 'package:go_router/go_router.dart';
-import 'package:latlong2/latlong.dart';
 import '../../shared/widgets/live_map_widget.dart';
 import '../../navigation/nav_helpers.dart';
 import '../../providers/taxi_provider.dart';
@@ -41,31 +39,40 @@ class _BookRideScreenState extends ConsumerState<BookRideScreen> {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          // 1. Background Map
+          // 1. Background Map — wrapped in RepaintBoundary to prevent
+          //    map tile repaints when the bottom sheet is dragging.
           Positioned.fill(
-            child: LiveMapWidget(
-              height: MediaQuery.of(context).size.height,
-              showLiveIndicator: false,
+            child: RepaintBoundary(
+              child: LiveMapWidget(
+                height: MediaQuery.of(context).size.height,
+                showLiveIndicator: false,
+              ),
             ),
           ),
 
           // 2. Floating Header & Pickup Pill
           _buildFloatingHeader(context, taxiState),
 
-          // 3. Draggable Quick Sheet
-          DraggableScrollableSheet(
-            controller: _sheetController,
-            initialChildSize: 0.38,
-            minChildSize: 0.38,
-            maxChildSize: 0.7,
-            snap: true,
-            snapSizes: const [0.38, 0.7],
-            builder: (context, scrollController) {
+          // 3. Draggable Bottom Sheet — snap points feel natural
+          Builder(
+            builder: (context) {
+              final screenHeight = MediaQuery.of(context).size.height;
+              final double initialSize = screenHeight < 850 ? 0.58 : 0.45;
+              final double minSize = screenHeight < 850 ? 0.48 : 0.45;
+              
+              return DraggableScrollableSheet(
+                controller: _sheetController,
+                initialChildSize: initialSize,
+                minChildSize: minSize,
+                maxChildSize: 0.9,
+                snapSizes: [minSize, 0.75, 0.9],
+                snap: true,
+                builder: (context, scrollController) {
               return Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(28)),
+                      const BorderRadius.vertical(top: Radius.circular(32)),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.1),
@@ -74,32 +81,187 @@ class _BookRideScreenState extends ConsumerState<BookRideScreen> {
                     ),
                   ],
                 ),
-                child: CustomScrollView(
+                child: SingleChildScrollView(
                   controller: scrollController,
-                  slivers: [
-                    SliverToBoxAdapter(
-                      child: Column(
-                        children: [
-                          Container(
-                            margin: const EdgeInsets.only(top: 12, bottom: 8),
-                            width: 36,
-                            height: 4,
-                            decoration: BoxDecoration(
-                                color: Colors.grey[300],
-                                borderRadius: BorderRadius.circular(2)),
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Drag handle
+                      Center(
+                        child: Container(
+                          width: 40,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(2),
                           ),
-                          _buildSearchTrigger(context),
-                        ],
+                        ),
                       ),
-                    ),
-                    SliverToBoxAdapter(child: _buildRecentList()),
-                    const SliverToBoxAdapter(child: SizedBox(height: 80)),
-                  ],
+                      const SizedBox(height: 20),
+                      const Text(
+                        'Plan Your Ride',
+                        style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.black),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Pickup Location
+                      const Text(
+                        'Pickup Location',
+                        style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black54),
+                      ),
+                      const SizedBox(height: 8),
+                      Semantics(
+                        label: 'Set pickup location',
+                        button: true,
+                        child: GestureDetector(
+                          onTap: () => context.push('/taxi/search-location',
+                              extra: {'focusPickup': true}),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 14),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF3F4F6),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: Colors.grey.shade200),
+                            ),
+                            child: Row(
+                              children: [
+                                // Show spinner while GPS is detecting
+                                if (taxiState.isLoadingLocation)
+                                  const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.green,
+                                    ),
+                                  )
+                                else
+                                  const Icon(Icons.circle_outlined,
+                                      size: 16, color: Colors.green),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                    child: Text(
+                                  taxiState.isLoadingLocation
+                                      ? 'Detecting your location...'
+                                      : (taxiState.pickupAddress ??
+                                          'Set pickup location'),
+                                  style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.black87),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                )),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Destination
+                      const Text(
+                        'Destination',
+                        style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black54),
+                      ),
+                      const SizedBox(height: 8),
+                      Semantics(
+                        label: 'Set destination',
+                        button: true,
+                        child: GestureDetector(
+                          onTap: () => context.push('/taxi/search-location',
+                              extra: {'focusPickup': false}),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 14),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF3F4F6),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: Colors.grey.shade200),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.location_on_outlined,
+                                    size: 16, color: Colors.red),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    taxiState.dropoffAddress ?? 'Where to?',
+                                    style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: taxiState.dropoffAddress == null
+                                            ? Colors.black45
+                                            : Colors.black87),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // CTA Button — label reflects what happens next
+                      Semantics(
+                        label: taxiState.dropoffLocation != null
+                            ? 'View ride options'
+                            : 'Select destination',
+                        button: true,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            if (taxiState.dropoffLocation == null) {
+                              context.push('/taxi/search-location',
+                                  extra: {'focusPickup': false});
+                            } else {
+                              context.push('/taxi/ride-options');
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF22C55E),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30)),
+                            elevation: 0,
+                          ),
+                          child: Text(
+                            // Contextual label: changes once destination is set
+                            taxiState.dropoffLocation != null
+                                ? 'VIEW RIDE OPTIONS'
+                                : 'SELECT DESTINATION',
+                            style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.5),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                  ),
                 ),
               );
             },
-          ),
-        ],
+          );
+        },
+      ),
+    ],
       ),
     );
   }
@@ -113,248 +275,91 @@ class _BookRideScreenState extends ConsumerState<BookRideScreen> {
         children: [
           Row(
             children: [
-              GestureDetector(
-                onTap: () => NavHelpers.pop(context),
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: const BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(color: Colors.black12, blurRadius: 8)
-                      ]),
-                  child: const Icon(Icons.arrow_back_rounded,
-                      size: 20, color: Colors.black87),
+              Semantics(
+                label: 'Go back',
+                button: true,
+                child: GestureDetector(
+                  onTap: () => NavHelpers.pop(context),
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(color: Colors.black12, blurRadius: 8)
+                        ]),
+                    child: const Icon(Icons.arrow_back_rounded,
+                        size: 20, color: Colors.black87),
+                  ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 100),
-          GestureDetector(
-            onTap: () => context
-                .push('/taxi/search-location', extra: {'focusPickup': true}),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(30),
-                boxShadow: [
-                  BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 15)
-                ],
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 8,
-                    height: 8,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF22C55E),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                            color: Color(0x6622C55E),
-                            blurRadius: 8,
-                            spreadRadius: 2),
-                      ],
-                    ),
-                  )
-                      .animate(
-                          onPlay: (controller) =>
-                              controller.repeat(reverse: true))
-                      .scale(
-                          begin: const Offset(0.8, 0.8),
-                          end: const Offset(1.2, 1.2),
-                          duration: 1000.ms)
-                      .boxShadow(
-                          begin: const BoxShadow(
-                              color: Color(0x3322C55E), blurRadius: 4),
-                          end: const BoxShadow(
-                              color: Color(0x8822C55E), blurRadius: 12),
-                          duration: 1000.ms),
-                  const SizedBox(width: 10),
-                  Flexible(
-                    child: Text(
-                      state.pickupAddress ?? 'Detecting Location...',
-                      style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ).animate().fadeIn().scale(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSearchTrigger(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-      child: Row(
-        children: [
-          Expanded(
-            child: GestureDetector(
+          // Pickup pill — only show when not loading and location known
+          if (!state.isLoadingLocation && state.pickupAddress != null)
+            GestureDetector(
               onTap: () => context
-                  .push('/taxi/search-location', extra: {'focusPickup': false}),
+                  .push('/taxi/search-location', extra: {'focusPickup': true}),
               child: Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF3F4F6),
-                  borderRadius: BorderRadius.circular(16),
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(30),
+                  boxShadow: [
+                    BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 15)
+                  ],
                 ),
-                child: const Row(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Iconsax.search_normal,
-                        size: 20, color: Colors.black54),
-                    SizedBox(width: 12),
-                    Expanded(
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF22C55E),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                              color: Color(0x6622C55E),
+                              blurRadius: 8,
+                              spreadRadius: 2),
+                        ],
+                      ),
+                    )
+                        .animate(
+                            onPlay: (controller) =>
+                                controller.repeat(reverse: true))
+                        .scale(
+                            begin: const Offset(0.8, 0.8),
+                            end: const Offset(1.2, 1.2),
+                            duration: 1000.ms)
+                        .boxShadow(
+                            begin: const BoxShadow(
+                                color: Color(0x3322C55E), blurRadius: 4),
+                            end: const BoxShadow(
+                                color: Color(0x8822C55E), blurRadius: 12),
+                            duration: 1000.ms),
+                    const SizedBox(width: 10),
+                    Flexible(
                       child: Text(
-                        'Where to?',
-                        style: TextStyle(
-                            fontSize: 15,
-                            color: Colors.black54,
-                            fontWeight: FontWeight.w500),
+                        state.pickupAddress!,
+                        style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
                 ),
               ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          GestureDetector(
-            onTap: () async {
-              final TimeOfDay? time = await showTimePicker(
-                context: context,
-                initialTime: TimeOfDay.now(),
-              );
-              if (time != null && context.mounted) {
-                final now = DateTime.now();
-                DateTime scheduledTime = DateTime(
-                    now.year, now.month, now.day, time.hour, time.minute);
-                if (scheduledTime.isBefore(now)) {
-                  scheduledTime = scheduledTime.add(const Duration(days: 1));
-                }
-                ref.read(taxiProvider.notifier).setScheduledTime(scheduledTime);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Ride scheduled for ${time.format(context)}'),
-                    backgroundColor: Colors.green,
-                  ),
-                );
-              }
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF3F4F6),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: const Row(
-                children: [
-                  Icon(Iconsax.clock, size: 20, color: Colors.black87),
-                  SizedBox(width: 6),
-                  Text('Now', style: TextStyle(fontWeight: FontWeight.w700)),
-                  Icon(Icons.arrow_drop_down, size: 16),
-                ],
-              ),
-            ),
-          ),
+            ).animate().fadeIn().scale(),
         ],
-      ),
-    );
-  }
-
-  Widget _buildRecentList() {
-    final mockLocations = ref.read(taxiProvider).mockLocations;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('Recent Locations',
-              style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF374151))),
-          const SizedBox(height: 16),
-          ...mockLocations.take(3).map((loc) => _buildRecommendedItem(loc)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRecommendedItem(Map<String, dynamic> loc) {
-    final String title = loc['name']!;
-    final String subtitle = loc['address']!;
-    final String distance = loc['distance']!;
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () async {
-          final lat = loc['lat'] as double;
-          final lng = loc['lng'] as double;
-          final latLng = LatLng(lat, lng);
-
-          // Ensure pickup location is available
-          final currentState = ref.read(taxiProvider);
-          if (currentState.pickupLocation == null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content:
-                    Text('Please wait — fetching your current location...'),
-                duration: Duration(seconds: 2),
-              ),
-            );
-            await ref.read(taxiProvider.notifier).initializeLocation();
-          }
-
-          ref.read(taxiProvider.notifier).setDropoff(latLng, title);
-          if (!mounted) return;
-          await context.push('/taxi/ride-options');
-        },
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF9FAFB),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Row(
-            children: [
-              const Icon(Iconsax.location, color: Colors.black45, size: 20),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w800, fontSize: 14)),
-                    Text(subtitle,
-                        style: const TextStyle(
-                            color: Colors.black45, fontSize: 11)),
-                  ],
-                ),
-              ),
-              Text(distance,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 11,
-                      color: Colors.black38)),
-            ],
-          ),
-        ),
       ),
     );
   }

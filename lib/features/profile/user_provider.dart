@@ -188,6 +188,7 @@ class UserNotifier extends StateNotifier<UserState> {
   }
 
   Future<bool> _checkDeviceSession(AppUser user) async {
+    if (kIsWeb) return true;
     if (user.id.startsWith('demo_')) return true;
 
     final localDeviceId =
@@ -309,20 +310,44 @@ class UserNotifier extends StateNotifier<UserState> {
         // Check if the user selected a new role from RoleSelectionScreen
         final savedRoleName =
             await _ref.read(localStorageServiceProvider).getSelectedRole();
+
+        bool isNewSignup = false;
+        if (currentSupabaseUser?.createdAt != null) {
+          try {
+            final authCreatedAt = DateTime.parse(currentSupabaseUser!.createdAt);
+            if (DateTime.now().toUtc().difference(authCreatedAt.toUtc()).inSeconds.abs() < 43200) {
+              isNewSignup = true;
+            }
+          } catch (_) {}
+        }
+        if (user.createdAt != null) {
+          try {
+            if (DateTime.now().toUtc().difference(user.createdAt!.toUtc()).inSeconds.abs() < 43200) {
+              isNewSignup = true;
+            }
+          } catch (_) {}
+        }
+
         if (savedRoleName != null && savedRoleName.isNotEmpty) {
           final selectedRole = UserRole.values.firstWhere(
             (e) => e.name == savedRoleName,
             orElse: () => user!.role,
           );
 
-          // Allow switching role if the user is not an admin
-          if (user.role != selectedRole && !user.role.isAdmin) {
+          // Allow setting the role ONLY if this is a brand new signup.
+          // For returning users, the role is permanent and cannot be modified.
+          // We also guard by ensuring the DB role is currently the default 'customer'.
+          if (isNewSignup && user.role == UserRole.customer && user.role != selectedRole && !user.role.isAdmin) {
             updatedRole = selectedRole;
             updatedApproval = (selectedRole != UserRole.technician &&
                 selectedRole != UserRole.admin);
             needsUpdate = true;
           }
         }
+
+        // Clear the local cache now so stale values never bleed into future
+        // profile fetches (e.g. after logout and re-login on the same device).
+        unawaited(_ref.read(localStorageServiceProvider).clearSelectedRole());
 
         final oauthName = currentSupabaseUser?.userMetadata?['full_name'] ??
             currentSupabaseUser?.userMetadata?['name'];
@@ -660,8 +685,13 @@ class UserNotifier extends StateNotifier<UserState> {
 
   Future<void> logout() async {
     await _authService.signOut();
+    final storage = _ref.read(localStorageServiceProvider);
     // Clear the cached home route so the next user doesn't get a stale redirect
-    unawaited(_ref.read(localStorageServiceProvider).clearLastHomeRoute());
+    unawaited(storage.clearLastHomeRoute());
+    // ── CRITICAL: Clear the selected_role so that when a DIFFERENT user logs in
+    // on the same device they are always shown the role-selection screen and
+    // the stale role is NEVER applied to the new account. ─────────────────────
+    unawaited(storage.clearSelectedRole());
     state = UserState();
     Sentry.configureScope((scope) => scope.setUser(null));
   }

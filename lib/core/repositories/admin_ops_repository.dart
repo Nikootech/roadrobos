@@ -143,6 +143,20 @@ class AdminOpsRepository {
     }
   }
 
+  /// Acknowledge emergency alert
+  Future<void> acknowledgeEmergencyAlert(String id) async {
+    try {
+      await _supabase
+          .from('emergency_alerts')
+          .update({
+            'is_acknowledged': true,
+          })
+          .eq('id', id);
+    } catch (e) {
+      throw AdminOpsRepositoryException('Failed to acknowledge alert', e);
+    }
+  }
+
   /// Real-time driver operations metrics
   Stream<Map<String, dynamic>> watchDriverMetrics() {
     return _supabase

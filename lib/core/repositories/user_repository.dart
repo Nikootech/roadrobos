@@ -105,21 +105,15 @@ class UserRepository {
 
     try {
       final userMap = user.toMap();
-      debugPrint('UserRepository: Updating Profile [ID: ${user.id}]: $userMap');
+      debugPrint('UserRepository: Saving Profile [ID: ${user.id}]: $userMap');
 
       try {
-        // Explicit update is often safer for RLS 'update' policies than 'upsert'
-        final response = await _supabase
-            .from('profiles')
-            .update(userMap)
-            .eq('id', user.id)
-            .select()
-            .maybeSingle();
-
-        if (response == null) {
-          await _supabase.from('profiles').upsert(
+        final exists = await userExists(user.id);
+        if (exists) {
+          await _supabase.from('profiles').update(userMap).eq('id', user.id);
+        } else {
+          await _supabase.from('profiles').insert(
                 userMap..addEntries([MapEntry('id', user.id)]),
-                onConflict: 'id',
               );
         }
       } catch (e) {
@@ -128,13 +122,20 @@ class UserRepository {
           debugPrint(
               'UserRepository: 400 Bad Request with full payload. Trying safe payload.');
           // If 400 Bad Request, it usually means a column doesn't exist (e.g. role, email)
-          // Try updating only safe fields
+          // Try updating/inserting only safe fields
           final safeMap = {
             'name': user.name,
             'phone': user.phone,
           };
 
-          await _supabase.from('profiles').update(safeMap).eq('id', user.id);
+          final exists = await userExists(user.id);
+          if (exists) {
+            await _supabase.from('profiles').update(safeMap).eq('id', user.id);
+          } else {
+            await _supabase.from('profiles').insert(
+                  safeMap..addEntries([MapEntry('id', user.id)]),
+                );
+          }
         } else {
           rethrow;
         }

@@ -56,6 +56,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
       // ── Not logged in ──────────────────────────────────────────────────────
       if (authState.value == null) {
+        // If there is an active code exchange in the URL, wait for it
+        final hasCode = Uri.base.queryParameters.containsKey('code');
+        if (hasCode && elapsed < 4000) {
+          continue; // Keep waiting for token exchange
+        }
+
         _navigationHandled = true;
         final isFirstLaunch = await localStorage.isFirstLaunch();
 

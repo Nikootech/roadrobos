@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:iconsax/iconsax.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/glass_card.dart';
 import '../../shared/widgets/custom_button.dart';
 import '../../shared/widgets/shimmer_loading.dart';
+import '../../shared/widgets/responsive_utils.dart';
+import '../../features/profile/user_provider.dart';
 import 'admin_providers.dart';
 import '../../core/repositories/admin_ops_repository.dart';
 import '../../core/services/language_service.dart';
@@ -21,6 +25,148 @@ class AdminDashboardScreen extends ConsumerStatefulWidget {
 }
 
 class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
+  void _showEmergencyAlertDetails(EmergencyAlert alert) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (sheetContext) => Container(
+        height: MediaQuery.of(sheetContext).size.height * 0.55,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+        ),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                    color: AppColors.border,
+                    borderRadius: BorderRadius.circular(2)),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                      color: AppColors.dangerRed.withValues(alpha: 0.1),
+                      shape: BoxShape.circle),
+                  child: const Icon(Icons.emergency_rounded,
+                      color: AppColors.dangerRed, size: 28),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('🚨 Roadside Emergency SOS',
+                          style: GoogleFonts.outfit(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.dangerRed)),
+                      Text('User ID: ${alert.userId.length > 8 ? alert.userId.substring(0, 8).toUpperCase() : alert.userId}',
+                          style: const TextStyle(
+                              fontSize: 14, color: AppColors.textSecondary)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            const Divider(),
+            const SizedBox(height: 24),
+            _buildDetailRow(
+                'Reported Location/Coordinates',
+                alert.message,
+                Icons.location_on_rounded),
+            const SizedBox(height: 16),
+            _buildDetailRow(
+                'Triggered At',
+                '${alert.timestamp.day}/${alert.timestamp.month}/${alert.timestamp.year} at ${alert.timestamp.hour.toString().padLeft(2, '0')}:${alert.timestamp.minute.toString().padLeft(2, '0')}',
+                Icons.access_time_rounded),
+            const Spacer(),
+            SizedBox(
+              width: double.infinity,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(sheetContext),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        side: const BorderSide(color: AppColors.border),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16)),
+                      ),
+                      child: const Text('Close',
+                          style: TextStyle(
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        final scaffoldMessenger = ScaffoldMessenger.of(sheetContext);
+                        Navigator.pop(sheetContext);
+                        await HapticFeedback.mediumImpact();
+                        try {
+                          await ref
+                              .read(adminOpsRepositoryProvider)
+                              .acknowledgeEmergencyAlert(alert.id);
+                          scaffoldMessenger.showSnackBar(
+                            SnackBar(
+                              content: const Row(
+                                children: [
+                                  Icon(Icons.check_circle_rounded,
+                                      color: Colors.white),
+                                  SizedBox(width: 12),
+                                  Text('SOS emergency alert acknowledged.'),
+                                ],
+                              ),
+                              backgroundColor: AppColors.primaryBlue,
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                            ),
+                          );
+                        } catch (e) {
+                          scaffoldMessenger.showSnackBar(
+                            SnackBar(
+                              content: Text('Error acknowledging alert: $e'),
+                              backgroundColor: AppColors.dangerRed,
+                            ),
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.dangerRed,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16)),
+                      ),
+                      child: const Text('Acknowledge SOS',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _showSystemAlertDetails() {
     showModalBottomSheet(
       context: context,
@@ -139,6 +285,11 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = ref.watch(l10nProvider);
+    final userState = ref.watch(userProvider);
+    final userName = userState.user?.name ?? 'Admin';
+    final firstName = userName.split(' ')[0];
+    final imageUrl = userState.profileImageUrl;
+
     return Scaffold(
       backgroundColor: AppColors.bgLightGrey,
       appBar: AppBar(
@@ -150,27 +301,33 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
             Container(
               width: 40,
               height: 40,
-              decoration: const BoxDecoration(
-                color: Color(0xFFFDE6D5), // Soft peach for avatar
+              decoration: BoxDecoration(
+                color: const Color(0xFFFDE6D5), // Soft peach for avatar
                 shape: BoxShape.circle,
+                border: Border.all(
+                  color: AppColors.primaryBlue.withValues(alpha: 0.1),
+                  width: 1.5,
+                ),
               ),
               child: ClipOval(
                 child: Center(
-                  child: Image.network(
-                    'https://i.pravatar.cc/150?img=12', // Placeholder avatar
-                    width: 40,
-                    height: 40,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) =>
-                        const Icon(Icons.person, color: Colors.orange),
-                  ),
+                  child: imageUrl.isNotEmpty
+                      ? Image.network(
+                          imageUrl,
+                          width: 40,
+                          height: 40,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Icon(Icons.person, color: Colors.orange),
+                        )
+                      : const Icon(Icons.person, color: Colors.orange),
                 ),
               ),
             ),
             const SizedBox(width: 16),
             Text(
-              '${l10n.greeting} Alex', // Static for now as per design
-              style: GoogleFonts.inter(
+              '${l10n.greeting} $firstName',
+              style: GoogleFonts.outfit(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: AppColors.textPrimary),
@@ -179,15 +336,18 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications_none_rounded,
-                color: AppColors.textPrimary, size: 28),
-            onPressed: () => context.push('/notifications'),
+            icon: const Icon(Iconsax.notification,
+                color: AppColors.textPrimary, size: 24),
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              context.push('/notifications');
+            },
           ),
           const SizedBox(width: 8),
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: ResponsiveLayout.responsivePadding(context, horizontal: 16, vertical: 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -196,11 +356,15 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                   data: (alerts) {
                     if (alerts.isEmpty) return const SizedBox.shrink();
                     final latest = alerts.first;
+                    final shortUserId = latest.userId.length > 8
+                        ? latest.userId.substring(0, 8).toUpperCase()
+                        : latest.userId;
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 24),
                       child: InkWell(
                         onTap: () {
-                          // Logic to view details
+                          HapticFeedback.mediumImpact();
+                          _showEmergencyAlertDetails(latest);
                         },
                         borderRadius: BorderRadius.circular(20),
                         child: Container(
@@ -236,7 +400,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                                                 color: AppColors.dangerRed,
                                                 fontSize: 16)),
                                         Text(
-                                            '${latest.timestamp.hour}:${latest.timestamp.minute}',
+                                            '${latest.timestamp.hour.toString().padLeft(2, '0')}:${latest.timestamp.minute.toString().padLeft(2, '0')}',
                                             style: const TextStyle(
                                                 fontSize: 12,
                                                 fontWeight: FontWeight.bold,
@@ -244,7 +408,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                                       ],
                                     ),
                                     const SizedBox(height: 4),
-                                    Text('User: ${latest.userId}',
+                                    Text('User: $shortUserId',
                                         style: const TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 14)),
@@ -272,7 +436,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
 
             // System Health Card
             GlassCard(
-              padding: const EdgeInsets.all(20),
+              padding: ResponsiveLayout.responsivePadding(context, horizontal: 20, vertical: 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -285,8 +449,8 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                               color: AppColors.successDark, size: 24),
                           const SizedBox(width: 12),
                           Text('System Health',
-                              style: GoogleFonts.inter(
-                                  fontSize: 18,
+                              style: GoogleFonts.outfit(
+                                  fontSize: ResponsiveLayout.responsiveFontSize(context, 18),
                                   fontWeight: FontWeight.w700,
                                   color: AppColors.textPrimary)),
                         ],
@@ -301,9 +465,9 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                                 shape: BoxShape.circle),
                           ),
                           const SizedBox(width: 6),
-                          const Text('Live',
+                          Text('Live',
                               style: TextStyle(
-                                  fontSize: 12,
+                                  fontSize: ResponsiveLayout.responsiveFontSize(context, 12),
                                   fontWeight: FontWeight.w600,
                                   color: AppColors.textSecondary)),
                         ],
@@ -322,17 +486,18 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  const Row(
+                  Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text('92% Active',
                           style: TextStyle(
-                              fontSize: 13,
+                              fontSize: ResponsiveLayout.responsiveFontSize(context, 13),
                               color: AppColors.textSecondary,
                               fontWeight: FontWeight.w500)),
                       Text('All systems operational.',
                           style: TextStyle(
-                              fontSize: 13, color: AppColors.textSecondary)),
+                              fontSize: ResponsiveLayout.responsiveFontSize(context, 13),
+                              color: AppColors.textSecondary)),
                     ],
                   ),
                 ],
@@ -383,24 +548,28 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                   title: 'Revenue',
                   subtitle: 'Analytics',
                   icon: Icons.bar_chart_rounded,
+                  color: const Color(0xFF3B82F6), // Vibrant Blue
                   onTap: () => context.push('/admin-revenue-referral'),
                 ),
                 _QuickActionCard(
                   title: 'Rides Map',
                   subtitle: 'Real-time',
                   icon: Icons.map_rounded,
+                  color: const Color(0xFF0D9488), // Clean Teal
                   onTap: () => context.push('/admin-active-rides'),
                 ),
                 _QuickActionCard(
                   title: 'Logistics',
                   subtitle: 'Hub Mgmt',
                   icon: Icons.warehouse_rounded,
+                  color: const Color(0xFFD97706), // Warm Amber
                   onTap: () => context.push('/admin-logistics-hub'),
                 ),
                 _QuickActionCard(
                   title: 'Permissions',
                   subtitle: 'Manage Roles',
                   icon: Icons.admin_panel_settings_rounded,
+                  color: const Color(0xFF6366F1), // Modern Indigo
                   onTap: () => context.push('/admin-management'),
                 ),
               ],
@@ -418,24 +587,28 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                   title: 'Approvals',
                   subtitle: 'Maker Checker',
                   icon: Icons.check_circle_outline_rounded,
+                  color: const Color(0xFF10B981), // Emerald Green
                   onTap: () => context.push('/admin-approvals'),
                 ),
                 _QuickActionCard(
                   title: 'Feedback',
                   subtitle: 'Sentiments',
                   icon: Icons.rate_review_rounded,
+                  color: const Color(0xFFEC4899), // Premium Pink
                   onTap: () => context.push('/admin-feedback-analytics'),
                 ),
                 _QuickActionCard(
                   title: 'Offers',
                   subtitle: 'Coupons',
                   icon: Icons.local_offer_rounded,
+                  color: const Color(0xFFF59E0B), // Warm Orange
                   onTap: () => context.push('/admin-manage-offers'),
                 ),
                 _QuickActionCard(
                   title: 'Audit Logs',
                   subtitle: 'Activity Trail',
                   icon: Icons.history_rounded,
+                  color: const Color(0xFF64748B), // Slate Grey
                   onTap: () => context.push('/admin/audit-logs'),
                 ),
               ],
@@ -501,23 +674,26 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
 
   Widget _buildStatCard(String title, String value) {
     return GlassCard(
+      padding: ResponsiveLayout.responsivePadding(context, horizontal: 16, vertical: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(title,
-              style: const TextStyle(
-                  fontSize: 14,
+              style: TextStyle(
+                  fontSize: ResponsiveLayout.responsiveFontSize(context, 13),
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.w500)),
           const SizedBox(height: 8),
           Text(value,
-              style: GoogleFonts.inter(
-                  fontSize: 28,
+              style: GoogleFonts.outfit(
+                  fontSize: ResponsiveLayout.responsiveFontSize(context, 26),
                   fontWeight: FontWeight.w800,
                   color: AppColors.textPrimary)),
           const Spacer(),
-          const Text('Updated just now',
-              style: TextStyle(fontSize: 11, color: AppColors.successDark)),
+          Text('Updated just now',
+              style: TextStyle(
+                  fontSize: ResponsiveLayout.responsiveFontSize(context, 10),
+                  color: AppColors.successDark)),
         ],
       ),
     );
@@ -529,32 +705,37 @@ class _QuickActionCard extends StatelessWidget {
   final String subtitle;
   final IconData icon;
   final VoidCallback onTap;
+  final Color color;
 
   const _QuickActionCard({
     required this.title,
     required this.subtitle,
     required this.icon,
     required this.onTap,
+    required this.color,
   });
 
   @override
   Widget build(BuildContext context) {
     return GlassCard(
-      onTap: onTap,
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onTap();
+      },
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.successDark.withValues(alpha: 0.15),
+              color: color.withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, color: AppColors.successDark, size: 24),
+            child: Icon(icon, color: color, size: 24),
           ),
           const SizedBox(height: 16),
           Text(title,
-              style: GoogleFonts.inter(
+              style: GoogleFonts.outfit(
                   fontSize: 15,
                   fontWeight: FontWeight.bold,
                   color: AppColors.textPrimary)),
@@ -647,6 +828,12 @@ class _CustomerOperationsCard extends ConsumerWidget {
                   separatorBuilder: (_, __) => const Divider(height: 1),
                   itemBuilder: (context, i) {
                     final ride = data.recentRides[i];
+                    final shortRideId = ride.id.length > 6
+                        ? ride.id.substring(0, 6).toUpperCase()
+                        : ride.id;
+                    final shortCustId = ride.customer.length > 6
+                        ? ride.customer.substring(0, 6).toUpperCase()
+                        : ride.customer;
                     return Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       child: Row(
@@ -655,7 +842,7 @@ class _CustomerOperationsCard extends ConsumerWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('${ride.id} - ${ride.customer}',
+                                Text('Order #$shortRideId • Cust: $shortCustId',
                                     style: const TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 13)),

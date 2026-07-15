@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/repositories/kyc_repository.dart';
 import '../../../features/profile/user_provider.dart';
 import '../../../shared/widgets/custom_button.dart';
@@ -25,137 +26,156 @@ class KycStatusScreen extends ConsumerWidget {
     // Refresh profile on build to get latest kyc_status if we want
     // But stream below handles document details
 
-    return Scaffold(
-      backgroundColor: AppColors.bgLightGrey,
-      appBar: AppBar(
-        title: const Text('KYC Status',
-            style: TextStyle(
-                color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        automaticallyImplyLeading:
-            false, // Prevent going back to unauthorized routes
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout, color: AppColors.textPrimary),
-            onPressed: () {
-              ref.read(userProvider.notifier).logout();
-            },
-          )
-        ],
-      ),
-      body: StreamBuilder<List<Map<String, dynamic>>>(
-        stream: ref.read(kycRepositoryProvider).streamKycUpdates(userId),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting &&
-              !snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          final docs = snapshot.data ?? [];
-
-          if (docs.isEmpty) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.assignment_ind_outlined,
-                        size: 80, color: AppColors.textMuted),
-                    const SizedBox(height: 16),
-                    const Text('No documents uploaded',
-                        style: TextStyle(
-                            fontSize: 20, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 8),
-                    const Text(
-                        'Please upload your KYC documents to activate your driver account.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: AppColors.textSecondary)),
-                    const SizedBox(height: 32),
+    return Theme(
+      data: AppTheme.lightTheme,
+      child: Scaffold(
+        backgroundColor: AppColors.bgLightGrey,
+        appBar: AppBar(
+          title: const Text('KYC Status',
+              style: TextStyle(
+                  color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
+          backgroundColor: Colors.white,
+          elevation: 0,
+          automaticallyImplyLeading:
+              false, // Prevent going back to unauthorized routes
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.logout, color: AppColors.textPrimary),
+              onPressed: () {
+                ref.read(userProvider.notifier).logout();
+              },
+            )
+          ],
+        ),
+        body: StreamBuilder<List<Map<String, dynamic>>>(
+          stream: ref.read(kycRepositoryProvider).streamKycUpdates(userId),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting &&
+                !snapshot.hasData) {
+              return const Center(child: CircularProgressIndicator());
+            }
+  
+            final docs = snapshot.data ?? [];
+  
+            if (docs.isEmpty) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.assignment_ind_outlined,
+                          size: 80, color: AppColors.textMuted),
+                      const SizedBox(height: 16),
+                      const Text('No documents uploaded',
+                          style: TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 8),
+                      const Text(
+                          'Please upload your KYC documents to activate your driver account.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: AppColors.textSecondary)),
+                      const SizedBox(height: 32),
+                      CustomButton(
+                        label: 'START KYC',
+                        onPressed: () => context.push('/driver/kyc-upload'),
+                      ),
+                    ],
+                  ).animate().fadeIn(),
+                ),
+              );
+            }
+  
+            final allApproved = docs.length >= 4 &&
+                docs.every((doc) => doc['status'] == 'approved');
+            final profileApproved = userState.user?.kycStatus == 'approved';
+  
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (allApproved || profileApproved) ...[
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.brandGreen.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppColors.brandGreen),
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(Icons.check_circle,
+                              color: AppColors.brandGreen, size: 32),
+                          SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Verification Complete',
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                        color: AppColors.brandGreen)),
+                                SizedBox(height: 4),
+                                Text(
+                                    'Your account has been fully verified. You can now access the dashboard.',
+                                    style: TextStyle(
+                                        fontSize: 13,
+                                        color: AppColors.textPrimary)),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ).animate().scale(),
+                    const SizedBox(height: 24),
                     CustomButton(
-                      label: 'START KYC',
-                      onPressed: () => context.push('/driver/kyc-upload'),
+                      label: 'ENTER DASHBOARD',
+                      onPressed: () {
+                        // Profile provider needs to be refreshed so router passes the guard
+                        ref
+                            .read(userProvider.notifier)
+                            .fetchUserProfile(userId)
+                            .then((_) {
+                          final freshUser = ref.read(userProvider).user;
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Refreshed: Role=${freshUser?.role.name}, KYC=${freshUser?.kycStatus}, Approved=${freshUser?.isApproved}'),
+                                backgroundColor: AppColors.brandGreen,
+                              ),
+                            );
+                            context.go('/driver-home');
+                          }
+                        }).catchError((e) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Error entering dashboard: $e'),
+                                backgroundColor: AppColors.errorRed,
+                              ),
+                            );
+                          }
+                        });
+                      },
                     ),
+                    const SizedBox(height: 32),
                   ],
-                ).animate().fadeIn(),
+                  const Text(
+                    'Uploaded Documents',
+                    style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary),
+                  ),
+                  const SizedBox(height: 16),
+                  ...docs.map((doc) => _buildStatusCard(context, doc)),
+                ],
               ),
             );
-          }
-
-          final allApproved = docs.length >= 4 &&
-              docs.every((doc) => doc['status'] == 'approved');
-          final profileApproved = userState.user?.kycStatus == 'approved';
-
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (allApproved || profileApproved) ...[
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppColors.brandGreen.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppColors.brandGreen),
-                    ),
-                    child: const Row(
-                      children: [
-                        Icon(Icons.check_circle,
-                            color: AppColors.brandGreen, size: 32),
-                        SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Verification Complete',
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                      color: AppColors.brandGreen)),
-                              SizedBox(height: 4),
-                              Text(
-                                  'Your account has been fully verified. You can now access the dashboard.',
-                                  style: TextStyle(
-                                      fontSize: 13,
-                                      color: AppColors.textPrimary)),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ).animate().scale(),
-                  const SizedBox(height: 24),
-                  CustomButton(
-                    label: 'ENTER DASHBOARD',
-                    onPressed: () {
-                      // Profile provider needs to be refreshed so router passes the guard
-                      ref
-                          .read(userProvider.notifier)
-                          .fetchUserProfile(userId)
-                          .then((_) {
-                        if (context.mounted) {
-                          context.go('/driver-home');
-                        }
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 32),
-                ],
-                const Text(
-                  'Uploaded Documents',
-                  style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary),
-                ),
-                const SizedBox(height: 16),
-                ...docs.map((doc) => _buildStatusCard(context, doc)),
-              ],
-            ),
-          );
-        },
+          },
+        ),
       ),
     );
   }

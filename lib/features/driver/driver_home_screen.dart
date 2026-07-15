@@ -13,6 +13,8 @@ import '../../features/delivery/driver_delivery_panel.dart';
 import '../chat/providers/chat_providers.dart';
 import '../../features/profile/user_provider.dart';
 import '../../core/services/language_service.dart';
+import '../../core/repositories/ride_booking_repository.dart';
+import '../../core/models/ride_booking.dart';
 
 class DriverHomeScreen extends ConsumerStatefulWidget {
   const DriverHomeScreen({super.key});
@@ -22,6 +24,37 @@ class DriverHomeScreen extends ConsumerStatefulWidget {
 }
 
 class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
+  List<RideBooking> _recentRides = [];
+  bool _isLoadingRides = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchRecentRides();
+  }
+
+  Future<void> _fetchRecentRides() async {
+    try {
+      final user = ref.read(userProvider);
+      final driverId = user.user?.id ?? 'demo';
+      final rides = await ref
+          .read(rideBookingRepositoryProvider)
+          .getPagedDriverRides(driverId, limit: 1);
+      if (mounted) {
+        setState(() {
+          _recentRides = rides;
+          _isLoadingRides = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _isLoadingRides = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final earningsAsync = ref.watch(earningsProvider);
@@ -411,43 +444,69 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                                     ),
                                     const SizedBox(height: 12),
                                     earningsAsync.when(
-                                      data: (earnings) => FittedBox(
-                                        fit: BoxFit.scaleDown,
-                                        alignment: Alignment.centerLeft,
-                                        child: Row(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.end,
-                                          children: [
-                                            const Padding(
-                                                padding: EdgeInsets.only(
-                                                    bottom: 8.0),
-                                                child: Text('₹',
+                                      data: (earnings) => Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          FittedBox(
+                                            fit: BoxFit.scaleDown,
+                                            alignment: Alignment.centerLeft,
+                                            child: Row(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.end,
+                                              children: [
+                                                const Padding(
+                                                    padding: EdgeInsets.only(
+                                                        bottom: 8.0),
+                                                    child: Text('₹',
+                                                        style: TextStyle(
+                                                            color: Colors.white,
+                                                            fontSize: 24,
+                                                            fontWeight:
+                                                                FontWeight.w900))),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                    '${earnings.todayEarnings.toInt()}',
                                                     style: TextStyle(
                                                         color: Colors.white,
-                                                        fontSize: 24,
-                                                        fontWeight:
-                                                            FontWeight.w900))),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                                '${earnings.todayEarnings.toInt()}',
-                                                style: TextStyle(
-                                                    color: Colors.white,
-                                                    fontSize: ResponsiveLayout
-                                                        .responsiveFontSize(
-                                                            context, 48),
-                                                    fontWeight: FontWeight.w900,
-                                                    letterSpacing: -1.5)),
-                                            const Padding(
-                                                padding: EdgeInsets.only(
-                                                    bottom: 8.0),
-                                                child: Text('.50',
-                                                    style: TextStyle(
-                                                        color: Colors.white70,
-                                                        fontSize: 22,
-                                                        fontWeight:
-                                                            FontWeight.w800))),
-                                          ],
-                                        ),
+                                                        fontSize: ResponsiveLayout
+                                                            .responsiveFontSize(
+                                                                context, 48),
+                                                        fontWeight: FontWeight.w900,
+                                                        letterSpacing: -1.5)),
+                                                const Padding(
+                                                    padding: EdgeInsets.only(
+                                                        bottom: 8.0),
+                                                    child: Text('.50',
+                                                        style: TextStyle(
+                                                            color: Colors.white70,
+                                                            fontSize: 22,
+                                                            fontWeight:
+                                                                FontWeight.w800))),
+                                              ],
+                                            ),
+                                          ),
+                                          const SizedBox(height: 32),
+                                          Row(
+                                            children: [
+                                              _buildMiniStat(
+                                                  Iconsax.car,
+                                                  earnings.totalRides.toString(),
+                                                  'RIDES'),
+                                              Container(
+                                                  width: 1,
+                                                  height: 24,
+                                                  color: Colors.white24,
+                                                  margin: const EdgeInsets
+                                                      .symmetric(
+                                                          horizontal: 20)),
+                                              _buildMiniStat(
+                                                  Iconsax.timer_1,
+                                                  earnings.onlineTime,
+                                                  'ONLINE'),
+                                            ],
+                                          ),
+                                        ],
                                       ),
                                       loading: () =>
                                           const CircularProgressIndicator(
@@ -455,21 +514,6 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                                       error: (e, _) => const Text('Error',
                                           style:
                                               TextStyle(color: Colors.white)),
-                                    ),
-                                    const SizedBox(height: 32),
-                                    Row(
-                                      children: [
-                                        _buildMiniStat(
-                                            Iconsax.car, '7', 'RIDES'),
-                                        Container(
-                                            width: 1,
-                                            height: 24,
-                                            color: Colors.white24,
-                                            margin: const EdgeInsets.symmetric(
-                                                horizontal: 20)),
-                                        _buildMiniStat(
-                                            Iconsax.timer_1, '4.2h', 'ONLINE'),
-                                      ],
                                     ),
                                   ],
                                 ),
@@ -570,8 +614,26 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                           ],
                         ),
                         const SizedBox(height: 12),
-                        _buildRecentRide('Indiranagar to Koramangala',
-                            'Today, 10:23 AM', '₹185.00', 'Completed'),
+                        if (_isLoadingRides)
+                          const Center(child: CircularProgressIndicator())
+                        else if (_recentRides.isEmpty)
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 20),
+                            child: Center(
+                              child: Text(
+                                'No recent rides found',
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                            ),
+                          )
+                        else ...[
+                          _buildRecentRide(
+                            '${_recentRides.first.pickupAddress.split(',').first} to ${_recentRides.first.destinationAddress.split(',').first}',
+                            "${_recentRides.first.createdAt.day}/${_recentRides.first.createdAt.month} ${_recentRides.first.createdAt.hour}:${_recentRides.first.createdAt.minute.toString().padLeft(2, '0')}",
+                            '₹${_recentRides.first.fare.toStringAsFixed(2)}',
+                            _recentRides.first.status.toUpperCase(),
+                          ),
+                        ],
                         const SizedBox(height: 100),
                       ],
                     ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.1),

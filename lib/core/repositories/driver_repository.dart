@@ -12,6 +12,9 @@ class DriverRepository {
 
   /// Stream of a specific driver's profile
   Stream<DriverModel?> watchDriver(String uid) {
+    if (uid == 'demo' || uid.isEmpty) {
+      return Stream.value(null);
+    }
     return _supabase
         .from('drivers')
         .stream(primaryKey: ['id'])
@@ -150,6 +153,7 @@ class DriverRepository {
     required String vehicleModel,
     required String chassisNumber,
     required String licenseNumber,
+    Map<String, String>? documentUrls,
     String approvalStatus =
         'approved', // Auto-approve by default per new requirement
   }) async {
@@ -165,6 +169,9 @@ class DriverRepository {
         'is_online': false,
         'today_earnings': 0.0,
         'created_at': DateTime.now().utcIso,
+        // Store document URLs (JSONB) for admin verification
+        if (documentUrls != null && documentUrls.isNotEmpty)
+          'document_urls': documentUrls,
       });
       return true;
     } catch (e) {

@@ -193,7 +193,10 @@ class AuthService {
   /// Uses Supabase updateUser — no email link needed.
   Future<void> updatePassword(String newPassword) async {
     final response = await _supabase.auth.updateUser(
-      sb.UserAttributes(password: newPassword),
+      sb.UserAttributes(
+        password: newPassword,
+        data: const {'has_password': true},
+      ),
     );
     if (response.user == null) {
       throw Exception('Password update failed — please try again.');
@@ -277,6 +280,11 @@ class AuthService {
               .maybeSingle();
 
           final prefs = await SharedPreferences.getInstance();
+          // SECURITY: Only use the locally saved role if it was EXPLICITLY set
+          // during THIS login session (i.e. the user just picked it on the
+          // role-selection screen). If it is null the previous user's role was
+          // cleared on logout — fall back to 'customer' so the new user is
+          // never assigned the wrong role by accident.
           final savedRoleName = prefs.getString('selected_role') ?? 'customer';
           final isApproved = savedRoleName != 'technician';
 
@@ -375,6 +383,23 @@ class AuthService {
     } catch (e) {
       if (kDebugMode) debugPrint('Google Sign-In Error: $e');
       rethrow;
+    }
+  }
+
+  /// Checks if an email is registered in our profiles database.
+  Future<bool> isEmailRegistered(String email) async {
+    try {
+      final response = await _supabase
+          .from('profiles')
+          .select('id')
+          .eq('email', email)
+          .maybeSingle();
+      return response != null;
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('AuthService: isEmailRegistered failed: $e');
+      }
+      return false;
     }
   }
 

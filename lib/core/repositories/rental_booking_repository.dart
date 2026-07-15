@@ -32,6 +32,17 @@ class RentalBookingRepository {
     }
   }
 
+  Future<void> updateRentalDetails(
+      String bookingId, Map<String, dynamic> details) async {
+    try {
+      await _supabase
+          .from('rental_bookings')
+          .update({'details': details}).eq('id', bookingId);
+    } catch (e) {
+      throw Exception('Failed to update rental details: $e');
+    }
+  }
+
   Future<List<RentalBooking>> getPagedCustomerRentals(String customerId,
       {int limit = 20, int offset = 0}) async {
     try {

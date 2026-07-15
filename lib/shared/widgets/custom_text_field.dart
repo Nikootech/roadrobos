@@ -17,6 +17,8 @@ class CustomTextField extends StatefulWidget {
   final int maxLines;
   final FocusNode? focusNode;
 
+  final bool forceLightMode;
+
   const CustomTextField({
     super.key,
     this.label,
@@ -30,6 +32,7 @@ class CustomTextField extends StatefulWidget {
     this.onChanged,
     this.maxLines = 1,
     this.focusNode,
+    this.forceLightMode = false,
   });
 
   @override
@@ -68,7 +71,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isDark = !widget.forceLightMode && (Theme.of(context).brightness == Brightness.dark);
     final textStyleColor =
         isDark ? AppColors.textOnDark : AppColors.textPrimary;
     final defaultFillColor =

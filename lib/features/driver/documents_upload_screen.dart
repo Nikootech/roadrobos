@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -43,23 +45,56 @@ class _DocumentsUploadScreenState extends ConsumerState<DocumentsUploadScreen> {
   };
 
   final Map<String, bool> _uploadingDocs = {};
+  // Stores the Supabase Storage public URLs for each uploaded document.
+  final Map<String, String> _docUrls = {};
   final ImagePicker _picker = ImagePicker();
 
+  /// Picks an image and uploads it to Supabase Storage (bucket: driver-documents).
+  /// Stores the returned public URL in [_docUrls] for use at submit time.
   Future<void> _pickDocument(String key) async {
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
-      // ignore: unawaited_futures
-      HapticFeedback.mediumImpact();
-      setState(() => _uploadingDocs[key] = true);
-      // Simulate network upload with shimmer
-      await Future.delayed(const Duration(milliseconds: 1500));
+    final XFile? image = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80, // Compress to reduce upload size
+    );
+    if (image == null) return;
+
+    unawaited(HapticFeedback.mediumImpact());
+    setState(() => _uploadingDocs[key] = true);
+
+    try {
+      final userState = ref.read(userProvider);
+      final userId = userState.user?.id ?? 'demo';
+      final ext = image.path.split('.').last;
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      // Path: driver-documents/{userId}/{docKey}/{timestamp}.jpg
+      final storagePath =
+          '$userId/${key.replaceAll('/', '_')}/$timestamp.$ext';
+
+      await Supabase.instance.client.storage
+          .from('driver-documents')
+          .upload(storagePath, File(image.path));
+
+      final publicUrl = Supabase.instance.client.storage
+          .from('driver-documents')
+          .getPublicUrl(storagePath);
+
       if (mounted) {
         setState(() {
-          _docs[key] = image;
+          _docs[key] = image; // keep for local preview
+          _docUrls[key] = publicUrl; // URL for DB submission
           _uploadingDocs[key] = false;
         });
-        // ignore: unawaited_futures
-        HapticFeedback.lightImpact();
+        unawaited(HapticFeedback.lightImpact());
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _uploadingDocs[key] = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Upload failed for $key: ${e.toString()}'),
+            backgroundColor: AppColors.dangerRed,
+          ),
+        );
       }
     }
   }
@@ -70,7 +105,8 @@ class _DocumentsUploadScreenState extends ConsumerState<DocumentsUploadScreen> {
         _bikeModelController.text.isNotEmpty &&
         _chassisController.text.isNotEmpty &&
         _licenseController.text.isNotEmpty &&
-        !_docs.values.contains(null);
+        // All documents must be uploaded to Supabase Storage (URL present)
+        _docs.keys.every((k) => _docUrls.containsKey(k));
   }
 
   @override
@@ -267,6 +303,8 @@ class _DocumentsUploadScreenState extends ConsumerState<DocumentsUploadScreen> {
                               vehicleModel: _bikeModelController.text,
                               chassisNumber: _chassisController.text,
                               licenseNumber: _licenseController.text,
+                              // Pass Supabase Storage URLs for admin review
+                              documentUrls: Map<String, String>.from(_docUrls),
                             );
 
                         if (!mounted) return;

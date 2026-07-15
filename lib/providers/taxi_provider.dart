@@ -15,6 +15,11 @@ import '../core/services/user_tracking_service.dart';
 import '../core/services/osm_maps_service.dart';
 import '../core/services/payment_service.dart';
 
+// Sentinel object used by TaxiState.copyWith() to distinguish "clear this
+// nullable field" from "leave it unchanged". Pass _kClear for any nullable
+// parameter you want to set to null.
+const Object _kClear = Object();
+
 enum RideStatus {
   idle,
   selectingPickup,
@@ -80,6 +85,8 @@ class TaxiState {
   final DateTime? scheduledFor;
   final String? razorpayPaymentId; // stored after online payment
   final bool refundInitiated;       // true after auto-refund triggered
+  final bool isLoadingLocation;     // true while GPS is being fetched
+  final bool isLoadingOptions;      // true while ride options are loading
 
   TaxiState({
     this.status = RideStatus.idle,
@@ -106,59 +113,111 @@ class TaxiState {
     this.scheduledFor,
     this.razorpayPaymentId,
     this.refundInitiated = false,
+    this.isLoadingLocation = false,
+    this.isLoadingOptions = false,
   });
 
+  // Use [_kClear] as the value for a nullable parameter to explicitly null it.
+  // Example: state.copyWith(dropoffAddress: _kClear)
   TaxiState copyWith({
     RideStatus? status,
-    LatLng? pickupLocation,
-    LatLng? dropoffLocation,
-    LatLng? roadroboLocation,
-    String? pickupAddress,
-    String? dropoffAddress,
-    String? roadroboName,
-    String? driverId,
-    String? eta,
+    Object? pickupLocation = _kClear,
+    Object? dropoffLocation = _kClear,
+    Object? roadroboLocation = _kClear,
+    Object? pickupAddress = _kClear,
+    Object? dropoffAddress = _kClear,
+    Object? roadroboName = _kClear,
+    Object? driverId = _kClear,
+    Object? eta = _kClear,
     double? distance,
-    String? otp,
+    Object? otp = _kClear,
     bool? isOtpVerified,
     List<NearbyVehicle>? nearbyVehicles,
     List<RideOption>? rideOptions,
-    RideOption? selectedOption,
+    Object? selectedOption = _kClear,
     List<Map<String, dynamic>>? mockLocations,
-    String? rideId,
+    Object? rideId = _kClear,
     String? paymentMethod,
     double? discountAmount,
-    String? appliedPromoCode,
+    Object? appliedPromoCode = _kClear,
     double? tipAmount,
-    DateTime? scheduledFor,
-    String? razorpayPaymentId,
+    Object? scheduledFor = _kClear,
+    Object? razorpayPaymentId = _kClear,
     bool? refundInitiated,
+    bool? isLoadingLocation,
+    bool? isLoadingOptions,
   }) {
     return TaxiState(
       status: status ?? this.status,
-      pickupLocation: pickupLocation ?? this.pickupLocation,
-      dropoffLocation: dropoffLocation ?? this.dropoffLocation,
-      roadroboLocation: roadroboLocation ?? this.roadroboLocation,
-      pickupAddress: pickupAddress ?? this.pickupAddress,
-      dropoffAddress: dropoffAddress ?? this.dropoffAddress,
-      roadroboName: roadroboName ?? this.roadroboName,
-      driverId: driverId ?? this.driverId,
-      eta: eta ?? this.eta,
+      pickupLocation: identical(pickupLocation, _kClear)
+          ? this.pickupLocation
+          : pickupLocation as LatLng?,
+      dropoffLocation: identical(dropoffLocation, _kClear)
+          ? this.dropoffLocation
+          : dropoffLocation as LatLng?,
+      roadroboLocation: identical(roadroboLocation, _kClear)
+          ? this.roadroboLocation
+          : roadroboLocation as LatLng?,
+      pickupAddress: identical(pickupAddress, _kClear)
+          ? this.pickupAddress
+          : pickupAddress as String?,
+      dropoffAddress: identical(dropoffAddress, _kClear)
+          ? this.dropoffAddress
+          : dropoffAddress as String?,
+      roadroboName: identical(roadroboName, _kClear)
+          ? this.roadroboName
+          : roadroboName as String?,
+      driverId: identical(driverId, _kClear) ? this.driverId : driverId as String?,
+      eta: identical(eta, _kClear) ? this.eta : eta as String?,
       distance: distance ?? this.distance,
-      otp: otp ?? this.otp,
+      otp: identical(otp, _kClear) ? this.otp : otp as String?,
       isOtpVerified: isOtpVerified ?? this.isOtpVerified,
       nearbyVehicles: nearbyVehicles ?? this.nearbyVehicles,
       rideOptions: rideOptions ?? this.rideOptions,
-      selectedOption: selectedOption ?? this.selectedOption,
+      selectedOption: identical(selectedOption, _kClear)
+          ? this.selectedOption
+          : selectedOption as RideOption?,
       mockLocations: mockLocations ?? this.mockLocations,
-      rideId: rideId ?? this.rideId,
+      rideId: identical(rideId, _kClear) ? this.rideId : rideId as String?,
       paymentMethod: paymentMethod ?? this.paymentMethod,
       discountAmount: discountAmount ?? this.discountAmount,
-      appliedPromoCode: appliedPromoCode ?? this.appliedPromoCode,
+      appliedPromoCode: identical(appliedPromoCode, _kClear)
+          ? this.appliedPromoCode
+          : appliedPromoCode as String?,
       tipAmount: tipAmount ?? this.tipAmount,
-      scheduledFor: scheduledFor ?? this.scheduledFor,
-      razorpayPaymentId: razorpayPaymentId ?? this.razorpayPaymentId,
+      scheduledFor: identical(scheduledFor, _kClear)
+          ? this.scheduledFor
+          : scheduledFor as DateTime?,
+      razorpayPaymentId: identical(razorpayPaymentId, _kClear)
+          ? this.razorpayPaymentId
+          : razorpayPaymentId as String?,
       refundInitiated: refundInitiated ?? this.refundInitiated,
+      isLoadingLocation: isLoadingLocation ?? this.isLoadingLocation,
+      isLoadingOptions: isLoadingOptions ?? this.isLoadingOptions,
+    );
+  }
+
+  /// Clears all trip-specific fields while keeping identity fields.
+  TaxiState clearTrip() {
+    return copyWith(
+      dropoffLocation: null,
+      dropoffAddress: null,
+      roadroboLocation: null,
+      roadroboName: null,
+      driverId: null,
+      rideId: null,
+      eta: null,
+      otp: null,
+      isOtpVerified: false,
+      distance: 0.0,
+      selectedOption: null,
+      razorpayPaymentId: null,
+      refundInitiated: false,
+      scheduledFor: null,
+      appliedPromoCode: null,
+      discountAmount: 0.0,
+      tipAmount: 0.0,
+      status: RideStatus.idle,
     );
   }
 }
@@ -170,9 +229,15 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
   StreamSubscription? _driverLocationSubscription;
   StreamSubscription? _rideSubscription;
   Timer? _searchTimeoutTimer;
+  Timer? _mockMovementTimer; // tracks Timer.periodic for simulated driver movement
+  Timer? _distanceDebounce;  // debounce for _calculateDistance()
   final _trackingService = UserTrackingService();
+  // Single OSMMapsService instance — avoid creating per-call
+  final _osmService = OSMMapsService();
 
   Future<void> initializeLocation() async {
+    // Show spinner while fetching GPS
+    state = state.copyWith(isLoadingLocation: true);
     try {
       final bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
@@ -197,76 +262,57 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
       final location = await _trackingService.getCurrentLocation() ??
           const LatLng(12.9716, 77.5946);
 
-      // Auto fetch address
-      final osmService = OSMMapsService();
-      final address = await osmService.getAddressFromCoords(location);
+      // Use the singleton _osmService — no new instance per call
+      final address = await _osmService.getAddressFromCoords(location);
 
+      if (!mounted) return;
       state = state.copyWith(
+        isLoadingLocation: false,
         pickupLocation: location,
         pickupAddress: address ?? 'Current Location',
-        mockLocations: [
-          {
-            'name': 'MG Road',
-            'address': 'MG Road, Bengaluru',
-            'distance': '2.4 km',
-            'lat': 12.9716,
-            'lng': 77.5946
-          },
-          {
-            'name': 'Indiranagar',
-            'address': 'Indiranagar, Bengaluru',
-            'distance': '4.1 km',
-            'lat': 12.9719,
-            'lng': 77.6412
-          },
-          {
-            'name': 'Koramangala',
-            'address': 'Koramangala, Bengaluru',
-            'distance': '5.8 km',
-            'lat': 12.9352,
-            'lng': 77.6245
-          },
-        ],
+        mockLocations: _defaultSuggestions,
       );
-      // _generateNearbyVehicles(location); // Removed as requested
       _generateRideOptions();
     } catch (e) {
-      debugPrint('Error initializing location: $e');
+      if (kDebugMode) debugPrint('Error initializing location: $e');
       _setFallbackLocation();
     }
   }
+
+  // Default location suggestions shown before real history is loaded
+  static const List<Map<String, dynamic>> _defaultSuggestions = [
+    {
+      'name': 'MG Road',
+      'address': 'MG Road, Bengaluru',
+      'distance': '2.4 km',
+      'lat': 12.9716,
+      'lng': 77.5946,
+    },
+    {
+      'name': 'Indiranagar',
+      'address': 'Indiranagar, Bengaluru',
+      'distance': '4.1 km',
+      'lat': 12.9719,
+      'lng': 77.6412,
+    },
+    {
+      'name': 'Koramangala',
+      'address': 'Koramangala, Bengaluru',
+      'distance': '5.8 km',
+      'lat': 12.9352,
+      'lng': 77.6245,
+    },
+  ];
 
   void _setFallbackLocation() {
     // Default to Bengaluru center if location fails
     const location = LatLng(12.9716, 77.5946);
     state = state.copyWith(
+      isLoadingLocation: false,
       pickupLocation: location,
       pickupAddress: 'Bengaluru, Karnataka',
-      mockLocations: [
-        {
-          'name': 'MG Road',
-          'address': 'MG Road, Bengaluru',
-          'distance': '2.4 km',
-          'lat': 12.9716,
-          'lng': 77.5946
-        },
-        {
-          'name': 'Indiranagar',
-          'address': 'Indiranagar, Bengaluru',
-          'distance': '4.1 km',
-          'lat': 12.9719,
-          'lng': 77.6412
-        },
-        {
-          'name': 'Koramangala',
-          'address': 'Koramangala, Bengaluru',
-          'distance': '5.8 km',
-          'lat': 12.9352,
-          'lng': 77.6245
-        },
-      ],
+      mockLocations: _defaultSuggestions,
     );
-    // _generateNearbyVehicles(location); // Removed as requested
     _generateRideOptions();
   }
 
@@ -291,16 +337,26 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
     _calculateDistance();
   }
 
-  void _calculateDistance() async {
-    if (state.pickupLocation != null && state.dropoffLocation != null) {
-      final osmService = OSMMapsService();
-      final route = await osmService.getRoute(
-          state.pickupLocation!, state.dropoffLocation!);
-      final distanceKm = osmService.calculateDistanceInKm(route);
-
-      state = state.copyWith(distance: distanceKm);
-      _generateRideOptions(distanceKm);
-    }
+  void _calculateDistance() {
+    // Debounce: cancel any pending calculation before scheduling a new one.
+    // This prevents rapid-fire API calls if pickup/dropoff are set quickly.
+    _distanceDebounce?.cancel();
+    _distanceDebounce = Timer(const Duration(milliseconds: 400), () async {
+      if (state.pickupLocation == null || state.dropoffLocation == null) return;
+      if (!mounted) return;
+      state = state.copyWith(isLoadingOptions: true);
+      try {
+        final route = await _osmService.getRoute(
+            state.pickupLocation!, state.dropoffLocation!);
+        final distanceKm = _osmService.calculateDistanceInKm(route);
+        if (!mounted) return;
+        state = state.copyWith(distance: distanceKm, isLoadingOptions: false);
+        _generateRideOptions(distanceKm);
+      } catch (e) {
+        if (kDebugMode) debugPrint('Distance calc error: $e');
+        if (mounted) state = state.copyWith(isLoadingOptions: false);
+      }
+    });
   }
 
   void updateStatus(RideStatus status) {
@@ -338,13 +394,15 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
   void startTrip() {
     if (state.isOtpVerified) {
       state = state.copyWith(status: RideStatus.headingToDropoff);
-      
+
       if (state.driverId != null && state.driverId!.startsWith('mock_')) {
-        // Start simulated movement to destination
+        // Simulate movement to destination — tracked so it can be cancelled
         final startPos = state.pickupLocation!;
         int steps = 0;
         const totalSteps = 10;
-        Timer.periodic(const Duration(seconds: 2), (timer) {
+        _mockMovementTimer?.cancel();
+        _mockMovementTimer =
+            Timer.periodic(const Duration(seconds: 2), (timer) {
           if (!mounted || state.status != RideStatus.headingToDropoff) {
             timer.cancel();
             return;
@@ -443,7 +501,7 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
           ));
         } catch (e) {
           debugPrint('Razorpay payment failed or was cancelled: $e');
-          reset();
+          state = state.copyWith(status: RideStatus.vehicleSelection);
           throw Exception('Payment failed or was cancelled');
         }
       }
@@ -481,38 +539,41 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
 
 
       if (nearbyDrivers.isEmpty) {
-        if (kDebugMode) {
-          debugPrint(
-              'No real online/nearby drivers found. Running in simulated driver mode for local testing...');
+        // In production (or when _simulateMockDriver is false): signal UI to
+        // show the schedule-or-cancel dialog. No driver auto-assignment.
+        if (kDebugMode && _simulateMockDriver) {
+          if (kDebugMode) {
+            debugPrint(
+                'TaxiProvider [DEBUG]: No real drivers — simulating mock driver. '
+                'Set _simulateMockDriver=false to test production path.');
+          }
           // After 2 seconds, simulate driver acceptance
           Future.delayed(const Duration(seconds: 2), () {
-            if (state.status == RideStatus.booked) {
-              final mockRide = RideBooking(
-                id: bookingId,
-                customerId: booking.customerId,
-                driverId: 'mock_driver_${selectedVehicle}_123',
-                pickupAddress: booking.pickupAddress,
-                destinationAddress: booking.destinationAddress,
-                pickupLat: booking.pickupLat,
-                pickupLng: booking.pickupLng,
-                destLat: booking.destLat,
-                destLng: booking.destLng,
-                status: 'accepted',
-                fare: booking.fare,
-                otp: booking.otp,
-                createdAt: booking.createdAt,
-                scheduledFor: booking.scheduledFor,
-                vehicleType: selectedVehicle,
-              );
-              _onDriverAssigned(mockRide);
-            }
+            if (!mounted || state.status != RideStatus.booked) return;
+            final mockRide = RideBooking(
+              id: bookingId,
+              customerId: booking.customerId,
+              driverId: 'mock_driver_${selectedVehicle}_123',
+              pickupAddress: booking.pickupAddress,
+              destinationAddress: booking.destinationAddress,
+              pickupLat: booking.pickupLat,
+              pickupLng: booking.pickupLng,
+              destLat: booking.destLat,
+              destLng: booking.destLng,
+              status: 'accepted',
+              fare: booking.fare,
+              otp: booking.otp,
+              createdAt: booking.createdAt,
+              scheduledFor: booking.scheduledFor,
+              vehicleType: selectedVehicle,
+            );
+            _onDriverAssigned(mockRide);
           });
           return true;
-        } else {
-          // In production: signal the UI so it can show the schedule-or-cancel dialog
-          state = state.copyWith(status: RideStatus.noDriversFound);
-          return false;
         }
+        // Production path — automatically cancel and refund
+        await cancelAndRefund();
+        throw Exception('Rider is not available');
       }
 
       // Sort closest driver first
@@ -555,12 +616,13 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
         }
       });
 
-      // 10-minute search timeout with auto-cancel and refund
+      // 90-second search timeout
       _searchTimeoutTimer?.cancel();
-      _searchTimeoutTimer = Timer(const Duration(minutes: 10), () {
+      _searchTimeoutTimer = Timer(const Duration(seconds: 90), () {
         if (state.status == RideStatus.booked) {
-          debugPrint('TaxiProvider: No driver accepted in 10 minutes — auto-cancelling');
-          _autoCancelAndRefund();
+          _cancelBookingOnBackend();
+          state = state.copyWith(status: RideStatus.idle);
+          debugPrint('TaxiProvider: Driver search timed out after 90s');
         }
       });
 
@@ -571,7 +633,7 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
     } catch (e) {
       debugPrint('Error booking ride: $e');
       state = state.copyWith(status: RideStatus.vehicleSelection);
-      return false;
+      rethrow;
     }
   }
 
@@ -587,7 +649,7 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
 
     _driverLocationSubscription?.cancel();
     if (ride.driverId!.startsWith('mock_')) {
-      // Simulate driver location updates locally
+      // Simulate driver approaching pickup — tracked for proper cancellation
       final startPos = LatLng(
         state.pickupLocation!.latitude + 0.015,
         state.pickupLocation!.longitude - 0.015,
@@ -596,7 +658,9 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
 
       int steps = 0;
       const totalSteps = 10;
-      Timer.periodic(const Duration(seconds: 2), (timer) {
+      _mockMovementTimer?.cancel();
+      _mockMovementTimer =
+          Timer.periodic(const Duration(seconds: 2), (timer) {
         if (!mounted || state.status != RideStatus.tracking) {
           timer.cancel();
           return;
@@ -654,14 +718,26 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
 
   void completeRide() {
     _searchTimeoutTimer?.cancel();
+    _mockMovementTimer?.cancel();
     state = state.copyWith(status: RideStatus.completed);
     _rideSubscription?.cancel();
     _driverLocationSubscription?.cancel();
   }
 
   void reset() {
-    state = TaxiState();
-    initializeLocation();
+    // Use clearTrip() to only reset trip-specific fields, preserving
+    // the user's pickup location so they don't have to re-detect GPS.
+    final currentPickup = state.pickupLocation;
+    final currentPickupAddress = state.pickupAddress;
+    final currentMock = state.mockLocations;
+    final currentPaymentMethod = state.paymentMethod;
+    state = TaxiState(
+      pickupLocation: currentPickup,
+      pickupAddress: currentPickupAddress,
+      mockLocations: currentMock,
+      paymentMethod: currentPaymentMethod,
+    );
+    _generateRideOptions();
   }
 
   Future<void> scheduleRideForLater(DateTime scheduledTime) async {
@@ -679,9 +755,15 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
     }
   }
 
+  // Toggle to false in debug to exercise the production 'no drivers' path.
+  // Always false in release (the kDebugMode guard prevents it from mattering).
+  static const bool _simulateMockDriver = kDebugMode;
+
   @override
   void dispose() {
     _searchTimeoutTimer?.cancel();
+    _mockMovementTimer?.cancel();
+    _distanceDebounce?.cancel();
     _rideSubscription?.cancel();
     _driverLocationSubscription?.cancel();
     super.dispose();
@@ -787,9 +869,7 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
   }
 
   void cancelRide() {
-    _cancelBookingOnBackend();
-    _searchTimeoutTimer?.cancel();
-    reset();
+    cancelAndRefund();
   }
 
   /// Called when user manually cancels or 10-min timer fires.
@@ -816,19 +896,16 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
           },
         );
         state = state.copyWith(refundInitiated: true);
-        debugPrint('Refund initiated for payment $payId');
+        if (kDebugMode) debugPrint('Refund initiated for payment $payId');
       } catch (e) {
-        debugPrint('Refund initiation failed: $e');
+        if (kDebugMode) debugPrint('Refund initiation failed: $e');
       }
     }
 
     reset();
   }
 
-  /// Auto-triggered after 10-minute timeout with no driver.
-  void _autoCancelAndRefund() {
-    cancelAndRefund();
-  }
+
 
   Future<void> _cancelBookingOnBackend() async {
     final bookingId = state.rideId;
@@ -836,7 +913,7 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
     try {
       await ref.read(rideBookingRepositoryProvider).cancelBooking(bookingId);
     } catch (e) {
-      debugPrint('Failed to cancel booking on backend: $e');
+      if (kDebugMode) debugPrint('Failed to cancel booking on backend: $e');
     }
   }
 

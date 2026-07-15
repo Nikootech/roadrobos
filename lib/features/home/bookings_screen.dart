@@ -321,6 +321,8 @@ class BookingsScreen extends ConsumerWidget {
         return AppColors.primaryBlue;
       case 'cancelled':
         return AppColors.dangerRed;
+      case 'payment_pending':
+        return Colors.orange;
       default:
         return AppColors.warningAmber;
     }

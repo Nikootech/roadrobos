@@ -130,7 +130,9 @@ final emergencyAlertsProvider = StreamProvider<List<EmergencyAlert>>((ref) {
       .stream(primaryKey: ['id'])
       .order('created_at')
       .limit(5)
-      .map((list) => list.map((data) {
+      .map((list) => list
+          .where((data) => !(data['is_acknowledged'] ?? false))
+          .map((data) {
             return EmergencyAlert(
               data['id'].toString(),
               data['user_id'] ?? 'Unknown',

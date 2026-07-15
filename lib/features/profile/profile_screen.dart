@@ -19,6 +19,26 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(userProvider);
+    final isGold = user.points > 5000;
+    final isSilver = user.points > 2000;
+
+    final LinearGradient cardGradient = isGold
+        ? const LinearGradient(
+            colors: [Color(0xFFF59E0B), Color(0xFFD97706), Color(0xFF92400E)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          )
+        : (isSilver
+            ? const LinearGradient(
+                colors: [Color(0xFF94A3B8), Color(0xFF64748B), Color(0xFF334155)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              )
+            : const LinearGradient(
+                colors: [Color(0xFFB45309), Color(0xFF78350F), Color(0xFF451A03)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ));
 
     return Scaffold(
       backgroundColor: AppColors.bgLightGrey,
@@ -60,20 +80,22 @@ class ProfileScreen extends ConsumerWidget {
             ),
           ),
 
-          // Membership Card
+          // Membership Card (Premium luxury gradient card)
           SliverToBoxAdapter(
             child: Container(
               margin: const EdgeInsets.fromLTRB(16, 24, 16, 0),
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.border),
+                gradient: cardGradient,
+                borderRadius: BorderRadius.circular(32),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.03),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
+                    color: (isGold
+                            ? const Color(0xFFD97706)
+                            : (isSilver ? const Color(0xFF64748B) : const Color(0xFF78350F)))
+                        .withValues(alpha: 0.35),
+                    blurRadius: 24,
+                    offset: const Offset(0, 12),
                   ),
                 ],
               ),
@@ -100,17 +122,17 @@ class ProfileScreen extends ConsumerWidget {
                           }
                         },
                         child: Container(
-                          width: 64,
-                          height: 64,
+                          width: 68,
+                          height: 68,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(
-                                color: AppColors.warningAmber, width: 2),
+                                color: Colors.white, width: 2.5),
                           ),
                           child: AppAvatar(
                             imageUrl: user.profileImageUrl,
-                            radius: 30,
-                            backgroundColor: AppColors.bgSkyLight,
+                            radius: 32,
+                            backgroundColor: Colors.white.withValues(alpha: 0.2),
                           ),
                         ),
                       ),
@@ -124,35 +146,36 @@ class ProfileScreen extends ConsumerWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.textPrimary),
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                  letterSpacing: -0.3),
                             ),
                             const SizedBox(height: 4),
                             Row(
                               children: [
                                 Icon(Icons.star_rounded,
                                     size: 16,
-                                    color: user.points > 5000
-                                        ? AppColors.warningAmber
-                                        : (user.points > 2000
-                                            ? Colors.grey.shade400
-                                            : Colors.brown.shade400)),
+                                    color: isGold
+                                        ? const Color(0xFFFDE047)
+                                        : (isSilver
+                                            ? Colors.grey.shade200
+                                            : Colors.orange.shade300)),
                                 const SizedBox(width: 4),
                                 Text(
-                                  user.points > 5000
+                                  isGold
                                       ? 'Gold Member'
-                                      : (user.points > 2000
+                                      : (isSilver
                                           ? 'Silver Member'
                                           : 'Bronze Member'),
                                   style: TextStyle(
                                       fontSize: 13,
-                                      fontWeight: FontWeight.w600,
-                                      color: user.points > 5000
-                                          ? AppColors.warningAmber
-                                          : (user.points > 2000
-                                              ? Colors.grey.shade400
-                                              : Colors.brown.shade400)),
+                                      fontWeight: FontWeight.w800,
+                                      color: isGold
+                                          ? const Color(0xFFFDE047)
+                                          : (isSilver
+                                              ? Colors.grey.shade200
+                                              : Colors.orange.shade200)),
                                 ),
                               ],
                             ),
@@ -161,13 +184,15 @@ class ProfileScreen extends ConsumerWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
-                  // Points display
+                  const SizedBox(height: 24),
+                  // Loyalty Points Display (Glassmorphism layout)
                   Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(18),
                     decoration: BoxDecoration(
-                      color: AppColors.bgLightGrey,
-                      borderRadius: BorderRadius.circular(12),
+                      color: Colors.white.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.2), width: 1.5),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -178,51 +203,57 @@ class ProfileScreen extends ConsumerWidget {
                             const Text(AppStrings.loyaltyPoints,
                                 style: TextStyle(
                                     fontSize: 12,
-                                    color: AppColors.textSecondary)),
-                            const SizedBox(height: 4),
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white70)),
+                            const SizedBox(height: 6),
                             FittedBox(
                               fit: BoxFit.scaleDown,
                               alignment: Alignment.centerLeft,
                               child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
                                   Text(
                                     user.points.toString().replaceAllMapped(
                                         RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
                                         (Match m) => '${m.group(1) ?? ''},'),
                                     style: const TextStyle(
-                                        fontSize: 28,
-                                        fontWeight: FontWeight.w700,
-                                        color: AppColors.warningAmber),
+                                        fontSize: 30,
+                                        fontWeight: FontWeight.w900,
+                                        color: Colors.white),
                                   ),
-                                  const SizedBox(width: 14),
-                                  const Text('pts',
-                                      style: TextStyle(
-                                          fontSize: 14,
-                                          color: AppColors.textSecondary)),
+                                  const SizedBox(width: 8),
+                                  const Padding(
+                                    padding: EdgeInsets.only(bottom: 4.0),
+                                    child: Text('pts',
+                                        style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.white70)),
+                                  ),
                                 ],
                               ),
                             ),
                           ],
                         ),
                         SizedBox(
-                          width: 56,
-                          height: 56,
+                          width: 58,
+                          height: 58,
                           child: Stack(
                             alignment: Alignment.center,
                             children: [
                               CircularProgressIndicator(
                                 value: (user.points % 1000) / 1000,
-                                strokeWidth: 4,
-                                backgroundColor: AppColors.bgSkyLight,
+                                strokeWidth: 4.5,
+                                backgroundColor: Colors.white.withValues(alpha: 0.15),
                                 valueColor: const AlwaysStoppedAnimation(
-                                    AppColors.warningAmber),
+                                    Colors.white),
                               ),
                               Text(
                                   '${((user.points % 1000) / 10).toStringAsFixed(0)}%',
                                   style: const TextStyle(
                                       fontSize: 13,
-                                      fontWeight: FontWeight.w700,
-                                      color: AppColors.warningAmber)),
+                                      fontWeight: FontWeight.w800,
+                                      color: Colors.white)),
                             ],
                           ),
                         ),
@@ -237,16 +268,19 @@ class ProfileScreen extends ConsumerWidget {
           // Loyalty Benefits
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
+              padding: const EdgeInsets.fromLTRB(16, 28, 16, 0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Your Gold Privileges',
-                      style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary)),
-                  const SizedBox(height: 12),
+                  Text(
+                    isGold ? 'Your Gold Privileges' : 'Your Member Privileges',
+                    style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
+                        letterSpacing: -0.2),
+                  ),
+                  const SizedBox(height: 14),
                   Row(
                     children: [
                       _buildBenefitCard(Icons.confirmation_num_rounded,
@@ -261,7 +295,7 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                 ],
               ),
-            ).animate(delay: 200.ms).fadeIn(),
+            ).animate(delay: 150.ms).fadeIn(),
           ),
 
           // Profile Actions
@@ -311,45 +345,54 @@ class ProfileScreen extends ConsumerWidget {
                       'Terms of Service',
                       'Read our terms and conditions',
                       () => context.push('/terms-of-service')),
-                  const SizedBox(height: 12),
+                  
+                  const SizedBox(height: 8),
+
                   // Logout button
-                  GestureDetector(
-                    onTap: () async {
-                      // ignore: unawaited_futures
-                      HapticFeedback.mediumImpact();
-                      await ref.read(userProvider.notifier).logout();
-                      if (context.mounted) context.go('/auth/login');
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppColors.dangerRed.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                            color: AppColors.dangerRed.withValues(alpha: 0.2)),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.logout_rounded,
-                              color: AppColors.dangerRed, size: 22),
-                          const SizedBox(width: 14),
-                          const Text(AppStrings.logout,
-                              style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.dangerRed)),
-                          const Spacer(),
-                          Icon(Icons.arrow_forward_ios_rounded,
-                              size: 14,
-                              color:
-                                  AppColors.dangerRed.withValues(alpha: 0.5)),
-                        ],
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: AppColors.dangerRed.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(22),
+                      border: Border.all(
+                          color: AppColors.dangerRed.withValues(alpha: 0.15)),
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () async {
+                          await HapticFeedback.mediumImpact();
+                          await ref.read(userProvider.notifier).logout();
+                          if (context.mounted) context.go('/auth/login');
+                        },
+                        borderRadius: BorderRadius.circular(22),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.logout_rounded,
+                                  color: AppColors.dangerRed, size: 22),
+                              const SizedBox(width: 16),
+                              const Text(
+                                AppStrings.logout,
+                                style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppColors.dangerRed),
+                              ),
+                              const Spacer(),
+                              Icon(Icons.arrow_forward_ios_rounded,
+                                  size: 14,
+                                  color: AppColors.dangerRed.withValues(alpha: 0.5)),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ],
               ),
-            ).animate(delay: 300.ms).fadeIn(),
+            ).animate(delay: 250.ms).fadeIn(),
           ),
 
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
@@ -361,24 +404,41 @@ class ProfileScreen extends ConsumerWidget {
   Widget _buildBenefitCard(IconData icon, String label, Color color) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
         decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: color.withValues(alpha: 0.2))),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+                color: AppColors.border.withValues(alpha: 0.5)),
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              )
+            ]),
         child: Column(
           children: [
-            Icon(icon, color: color, size: 24),
-            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.08),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 24),
+            ),
+            const SizedBox(height: 12),
             FittedBox(
               fit: BoxFit.scaleDown,
-              child: Text(label,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: color,
-                      height: 1.3)),
+              child: Text(
+                label,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                    height: 1.3),
+              ),
             ),
           ],
         ),
@@ -388,48 +448,71 @@ class ProfileScreen extends ConsumerWidget {
 
   Widget _buildMenuItem(
       IconData icon, String title, String subtitle, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.lightImpact();
-        onTap();
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                  color: AppColors.bgSkyLight,
-                  borderRadius: BorderRadius.circular(12)),
-              child: Icon(icon, color: AppColors.primaryBlue, size: 20),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title,
-                      style: const TextStyle(
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+            color: AppColors.border.withValues(alpha: 0.6)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.01),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          )
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            HapticFeedback.lightImpact();
+            onTap();
+          },
+          borderRadius: BorderRadius.circular(22),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.brandGreen.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Icon(icon, color: AppColors.brandGreen, size: 20),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
                           fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
                           fontWeight: FontWeight.w500,
-                          color: AppColors.textPrimary)),
-                  Text(subtitle,
-                      style: const TextStyle(
-                          fontSize: 12, color: AppColors.textSecondary)),
-                ],
-              ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.arrow_forward_ios_rounded,
+                    size: 14, color: AppColors.textMuted),
+              ],
             ),
-            const Icon(Icons.arrow_forward_ios_rounded,
-                size: 14, color: AppColors.textMuted),
-          ],
+          ),
         ),
       ),
     );

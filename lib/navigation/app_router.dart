@@ -45,6 +45,7 @@ class RouterNotifier extends ChangeNotifier {
   RouterNotifier(this._ref) {
     _ref.listen(authNotifierProvider, (_, __) => notifyListeners());
     _ref.listen(userProvider, (_, __) => notifyListeners());
+    _ref.listen(passwordRecoveryProvider, (_, __) => notifyListeners());
   }
 }
 
@@ -65,6 +66,14 @@ final routerProvider = Provider<GoRouter>((ref) {
 
     // Auth guard and navigation redirect logic
     redirect: (context, state) {
+      // Check if starting up with recovery link on web/deeplink
+      final uri = Uri.base;
+      if (uri.fragment.contains('type=recovery') ||
+          uri.fragment.contains('recovery_token') ||
+          uri.queryParameters['type'] == 'recovery') {
+        ref.read(passwordRecoveryProvider.notifier).state = true;
+      }
+
       // If we are recovering password, force /reset-password
       final isRecovering = ref.read(passwordRecoveryProvider);
       if (isRecovering) {

@@ -39,6 +39,9 @@ class RideBookingRepository {
   Future<List<RideBooking>> getPagedCustomerRides(String customerId,
       {int limit = 20, int offset = 0}) async {
     try {
+      if (customerId == 'demo' || customerId.isEmpty) {
+        return [];
+      }
       final response = await _supabase
           .from('ride_bookings')
           .select()
@@ -51,6 +54,27 @@ class RideBookingRepository {
           .toList();
     } catch (e) {
       throw Exception('Failed to fetch rides: $e');
+    }
+  }
+
+  Future<List<RideBooking>> getPagedDriverRides(String driverId,
+      {int limit = 20, int offset = 0}) async {
+    try {
+      if (driverId == 'demo' || driverId.isEmpty) {
+        return [];
+      }
+      final response = await _supabase
+          .from('ride_bookings')
+          .select()
+          .eq('driver_id', driverId)
+          .order('created_at', ascending: false)
+          .range(offset, offset + limit - 1);
+
+      return response
+          .map((map) => RideBooking.fromMap(map, map['id'].toString()))
+          .toList();
+    } catch (e) {
+      throw Exception('Failed to fetch driver rides: $e');
     }
   }
 

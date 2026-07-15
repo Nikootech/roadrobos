@@ -54,6 +54,13 @@ class LocalStorageService {
     await prefs.setString(_keySelectedRole, roleName);
   }
 
+  /// Clear the selected role (called on logout to prevent role leaking to the
+  /// next user who signs in on this device).
+  Future<void> clearSelectedRole() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_keySelectedRole);
+  }
+
   /// Set multi-device logout flag
   Future<void> setMultiDeviceLogout(bool val) async {
     final prefs = await SharedPreferences.getInstance();

@@ -8,6 +8,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/repositories/storage_repository.dart';
 import '../../../core/repositories/kyc_repository.dart';
 import '../../../core/services/auth_service.dart';
@@ -181,95 +182,98 @@ class _KycUploadScreenState extends ConsumerState<KycUploadScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.bgLightGrey,
-      appBar: AppBar(
-        title: const Text('Driver KYC',
-            style: TextStyle(
-                color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
-      ),
-      body: Stepper(
-        currentStep: _currentStep,
-        onStepTapped: (step) => setState(() => _currentStep = step),
-        onStepContinue: _isUploading ? null : _submitStep,
-        onStepCancel:
-            _currentStep > 0 ? () => setState(() => _currentStep--) : null,
-        controlsBuilder: (context, details) {
-          return Padding(
-            padding: const EdgeInsets.only(top: 16.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: CustomButton(
-                    label: _currentStep == 3 ? 'FINISH' : 'UPLOAD & CONTINUE',
-                    onPressed: details.onStepContinue,
-                    isLoading: _isUploading,
+    return Theme(
+      data: AppTheme.lightTheme,
+      child: Scaffold(
+        backgroundColor: AppColors.bgLightGrey,
+        appBar: AppBar(
+          title: const Text('Driver KYC',
+              style: TextStyle(
+                  color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
+          backgroundColor: Colors.white,
+          elevation: 0,
+          iconTheme: const IconThemeData(color: AppColors.textPrimary),
+        ),
+        body: Stepper(
+          currentStep: _currentStep,
+          onStepTapped: (step) => setState(() => _currentStep = step),
+          onStepContinue: _isUploading ? null : _submitStep,
+          onStepCancel:
+              _currentStep > 0 ? () => setState(() => _currentStep--) : null,
+          controlsBuilder: (context, details) {
+            return Padding(
+              padding: const EdgeInsets.only(top: 16.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: CustomButton(
+                      label: _currentStep == 3 ? 'FINISH' : 'UPLOAD & CONTINUE',
+                      onPressed: details.onStepContinue,
+                      isLoading: _isUploading,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
+            );
+          },
+          steps: [
+            Step(
+              title: const Text('Aadhaar Card'),
+              content: Column(
+                children: [
+                  _buildUploadCard('Aadhaar Front', _aadharFront,
+                      () => _pickImage('aadhar_front')),
+                  const SizedBox(height: 16),
+                  _buildUploadCard('Aadhaar Back', _aadharBack,
+                      () => _pickImage('aadhar_back')),
+                ],
+              ).animate().fade(),
+              isActive: _currentStep >= 0,
+              state: _currentStep > 0 ? StepState.complete : StepState.indexed,
             ),
-          );
-        },
-        steps: [
-          Step(
-            title: const Text('Aadhaar Card'),
-            content: Column(
-              children: [
-                _buildUploadCard('Aadhaar Front', _aadharFront,
-                    () => _pickImage('aadhar_front')),
-                const SizedBox(height: 16),
-                _buildUploadCard('Aadhaar Back', _aadharBack,
-                    () => _pickImage('aadhar_back')),
-              ],
-            ).animate().fade(),
-            isActive: _currentStep >= 0,
-            state: _currentStep > 0 ? StepState.complete : StepState.indexed,
-          ),
-          Step(
-            title: const Text('Driving License'),
-            content: Column(
-              children: [
-                _buildUploadCard(
-                    'License Front', _dlFront, () => _pickImage('dl_front')),
-                const SizedBox(height: 16),
-                _buildUploadCard(
-                    'License Back', _dlBack, () => _pickImage('dl_back')),
-              ],
-            ).animate().fade(),
-            isActive: _currentStep >= 1,
-            state: _currentStep > 1 ? StepState.complete : StepState.indexed,
-          ),
-          Step(
-            title: const Text('Vehicle RC'),
-            content: Column(
-              children: [
-                _buildUploadCard('Vehicle RC Photo', _vehicleRc,
-                    () => _pickImage('vehicle_rc')),
-              ],
-            ).animate().fade(),
-            isActive: _currentStep >= 2,
-            state: _currentStep > 2 ? StepState.complete : StepState.indexed,
-          ),
-          Step(
-            title: const Text('Selfie with Aadhaar'),
-            content: Column(
-              children: [
-                const Text(
-                    'Please take a clear selfie holding your Aadhaar card next to your face.',
-                    style: TextStyle(
-                        color: AppColors.textSecondary, fontSize: 13)),
-                const SizedBox(height: 16),
-                _buildUploadCard('Selfie', _selfie,
-                    () => _pickImage('selfie', useCamera: true)),
-              ],
-            ).animate().fade(),
-            isActive: _currentStep >= 3,
-            state: _currentStep > 3 ? StepState.complete : StepState.indexed,
-          ),
-        ],
+            Step(
+              title: const Text('Driving License'),
+              content: Column(
+                children: [
+                  _buildUploadCard(
+                      'License Front', _dlFront, () => _pickImage('dl_front')),
+                  const SizedBox(height: 16),
+                  _buildUploadCard(
+                      'License Back', _dlBack, () => _pickImage('dl_back')),
+                ],
+              ).animate().fade(),
+              isActive: _currentStep >= 1,
+              state: _currentStep > 1 ? StepState.complete : StepState.indexed,
+            ),
+            Step(
+              title: const Text('Vehicle RC'),
+              content: Column(
+                children: [
+                  _buildUploadCard('Vehicle RC Photo', _vehicleRc,
+                      () => _pickImage('vehicle_rc')),
+                ],
+              ).animate().fade(),
+              isActive: _currentStep >= 2,
+              state: _currentStep > 2 ? StepState.complete : StepState.indexed,
+            ),
+            Step(
+              title: const Text('Selfie with Aadhaar'),
+              content: Column(
+                children: [
+                  const Text(
+                      'Please take a clear selfie holding your Aadhaar card next to your face.',
+                      style: TextStyle(
+                          color: AppColors.textSecondary, fontSize: 13)),
+                  const SizedBox(height: 16),
+                  _buildUploadCard('Selfie', _selfie,
+                      () => _pickImage('selfie', useCamera: true)),
+                ],
+              ).animate().fade(),
+              isActive: _currentStep >= 3,
+              state: _currentStep > 3 ? StepState.complete : StepState.indexed,
+            ),
+          ],
+        ),
       ),
     );
   }

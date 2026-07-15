@@ -158,14 +158,28 @@ final deliveryOrderProvider =
     StateNotifierProvider<DeliveryOrderNotifier, DeliveryFormState>(
         (ref) => DeliveryOrderNotifier(ref));
 
+// Helper to validate UUID format before calling Supabase streams
+bool _isValidUuid(String? id) {
+  if (id == null) return false;
+  final regExp = RegExp(
+      r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$');
+  return regExp.hasMatch(id);
+}
+
 // ── Customer: real-time order tracking ───────────────────────────────────────
 final deliveryTrackingProvider =
     StreamProvider.family<DeliveryOrder?, String>((ref, orderId) {
+  if (!_isValidUuid(orderId)) {
+    return const Stream.empty();
+  }
   return ref.watch(deliveryRepositoryProvider).streamOrderUpdates(orderId);
 });
 
 final deliveryDriverLocationProvider =
     StreamProvider.family<Map<String, double>?, String>((ref, driverId) {
+  if (!_isValidUuid(driverId)) {
+    return const Stream.empty();
+  }
   return ref.watch(deliveryRepositoryProvider).streamDriverLocation(driverId);
 });
 
@@ -178,19 +192,22 @@ final pendingDeliveryRequestsProvider =
 // ── Driver: active delivery (currently accepted / in progress) ───────────────
 class ActiveDeliveryNotifier extends StateNotifier<DeliveryOrder?> {
   final Ref ref;
+  final String? driverId;
   StreamSubscription<DeliveryOrder?>? _sub;
 
-  ActiveDeliveryNotifier(this.ref) : super(null) {
+  ActiveDeliveryNotifier(this.ref, this.driverId) : super(null) {
     _init();
   }
 
   void _init() {
-    final user = ref.read(userProvider).user;
-    final driverId = user?.id ?? 'demo';
+    if (driverId == null || !_isValidUuid(driverId)) {
+      state = null;
+      return;
+    }
     _sub?.cancel();
     _sub = ref
         .read(deliveryRepositoryProvider)
-        .streamDriverActiveOrder(driverId)
+        .streamDriverActiveOrder(driverId!)
         .listen((order) {
       if (mounted) state = order;
     });
@@ -198,9 +215,10 @@ class ActiveDeliveryNotifier extends StateNotifier<DeliveryOrder?> {
 
   /// Accept a pending delivery request
   Future<void> acceptDelivery(DeliveryOrder order) async {
-    final user = ref.read(userProvider).user;
-    final driverId = user?.id ?? 'demo';
-    await ref.read(deliveryRepositoryProvider).acceptOrder(order.id, driverId);
+    if (driverId == null || !_isValidUuid(driverId)) {
+      throw Exception('Cannot accept delivery: Driver ID is invalid or missing.');
+    }
+    await ref.read(deliveryRepositoryProvider).acceptOrder(order.id, driverId!);
   }
 
   /// Mark as picked up
@@ -252,5 +270,10 @@ class ActiveDeliveryNotifier extends StateNotifier<DeliveryOrder?> {
 }
 
 final activeDeliveryProvider =
-    StateNotifierProvider<ActiveDeliveryNotifier, DeliveryOrder?>(
-        (ref) => ActiveDeliveryNotifier(ref));
+    StateNotifierProvider<ActiveDeliveryNotifier, DeliveryOrder?>((ref) {
+  final user = ref.watch(userProvider).user;
+  return ActiveDeliveryNotifier(ref, user?.id);
+});
+
+/// Set of delivery order IDs that this driver has locally declined/ignored
+final declinedOrderIdsProvider = StateProvider<Set<String>>((ref) => {});

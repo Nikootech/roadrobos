@@ -228,6 +228,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         hint: 'Enter your full name',
                         prefixIcon: Iconsax.user,
                         controller: _nameController,
+                        forceLightMode: true,
                         validator: (value) =>
                             value == null || value.isEmpty ? 'Required' : null,
                       ),
@@ -238,6 +239,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         prefixIcon: Iconsax.sms,
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
+                        forceLightMode: true,
                         validator: (value) =>
                             value == null || !value.contains('@')
                                 ? 'Invalid email'
@@ -250,6 +252,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         prefixIcon: Iconsax.call,
                         controller: _phoneController,
                         keyboardType: TextInputType.phone,
+                        forceLightMode: true,
                         validator: (value) =>
                             value == null || value.length != 10
                                 ? 'Invalid phone'
@@ -262,6 +265,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         prefixIcon: Iconsax.lock,
                         isPassword: true,
                         controller: _passwordController,
+                        forceLightMode: true,
                         validator: (value) => value == null || value.length < 6
                             ? 'Too short'
                             : null,
@@ -273,6 +277,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         prefixIcon: Iconsax.lock,
                         isPassword: true,
                         controller: _confirmPasswordController,
+                        forceLightMode: true,
                         validator: (value) => value != _passwordController.text
                             ? 'Not match'
                             : null,

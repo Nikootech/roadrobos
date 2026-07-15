@@ -78,6 +78,7 @@ final quickActionsProvider = FutureProvider<List<QuickAction>>((ref) async {
 
 final recentServiceBookingsProvider =
     FutureProvider<List<ServiceBooking>>((ref) {
+  ref.cacheFor(const Duration(minutes: 5));
   final user = ref.watch(userProvider).user;
   if (user == null || user.id.startsWith('demo') || user.id == 'demo') {
     return Future.value([]);

@@ -11,8 +11,7 @@ class NavItemData {
       {required this.icon, required this.activeIcon, required this.label});
 }
 
-/// Premium Unified Driver Bottom Navigation Bar — Sliding Indicator Edition
-/// Resolves centering issues and provides a highly interactive "Technician-Plus" UI.
+/// Premium Unified Bottom Navigation Bar — Active Pill Indicator Edition
 class CustomBottomNavBar extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
@@ -28,76 +27,86 @@ class CustomBottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 80,
-      decoration: const BoxDecoration(
+      height: 76,
+      decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(top: BorderSide(color: Color(0xFFF1F2F4))),
+        border: const Border(top: BorderSide(color: Color(0xFFEEF0F3))),
         boxShadow: [
           BoxShadow(
-            color: Colors.black12,
-            blurRadius: 10,
-            offset: Offset(0, -2),
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 16,
+            offset: const Offset(0, -4),
           )
         ],
       ),
       child: SafeArea(
-        child: Row(
-          children: List.generate(items.length, (index) {
-            final item = items[index];
-            final isActive = currentIndex == index;
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          child: Row(
+            children: List.generate(items.length, (index) {
+              final item = items[index];
+              final isActive = currentIndex == index;
 
-            return Expanded(
-              child: GestureDetector(
-                onTap: () {
-                  if (!isActive) {
-                    HapticFeedback.lightImpact();
-                    onTap(index);
-                  }
-                },
-                behavior: HitTestBehavior.opaque,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Icon Section
-                    SizedBox(
-                      height: 40,
-                      child: Center(
-                        child: Transform.translate(
-                          // PRECISION VISUAL COMPENSATION:
-                          // The Filled Wallet (wallet5) is more lopsided than the Unfilled Wallet (wallet).
-                          // We apply a 7px shift only when active to maintain perfect centering across states.
-                          offset: Offset(
-                              item.label == 'Earnings'
-                                  ? (isActive ? 7.0 : 0.0)
-                                  : 0.0,
-                              0.0),
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    if (!isActive) {
+                      HapticFeedback.selectionClick();
+                      onTap(index);
+                    }
+                  },
+                  behavior: HitTestBehavior.opaque,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Icon with animated pill background
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 220),
+                        curve: Curves.easeOutCubic,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: isActive ? 16 : 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isActive
+                              ? AppColors.primaryBlue.withValues(alpha: 0.12)
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 200),
                           child: Icon(
                             isActive ? item.activeIcon : item.icon,
+                            key: ValueKey('${item.label}_$isActive'),
                             color: isActive
                                 ? AppColors.primaryBlue
-                                : Colors.grey.withValues(alpha: 0.8),
-                            size: 24,
+                                : const Color(0xFFB0B5BE),
+                            size: 22,
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 2),
-                    // Label
-                    Text(
-                      item.label,
-                      style: TextStyle(
-                        fontSize: 10.5,
-                        fontWeight:
-                            isActive ? FontWeight.w900 : FontWeight.w600,
-                        color: isActive ? AppColors.primaryBlue : Colors.grey,
-                        letterSpacing: 0.1,
+                      const SizedBox(height: 3),
+                      // Label
+                      AnimatedDefaultTextStyle(
+                        duration: const Duration(milliseconds: 200),
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          fontWeight:
+                              isActive ? FontWeight.w700 : FontWeight.w500,
+                          color: isActive
+                              ? AppColors.primaryBlue
+                              : const Color(0xFFB0B5BE),
+                          letterSpacing: 0.1,
+                        ),
+                        child: Text(item.label),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            );
-          }),
+              );
+            }),
+          ),
         ),
       ),
     );

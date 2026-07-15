@@ -219,6 +219,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                         prefixIcon: Iconsax.lock,
                         isPassword: true,
                         controller: _passwordController,
+                        forceLightMode: true,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Password is required';
@@ -236,6 +237,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                         prefixIcon: Iconsax.lock,
                         isPassword: true,
                         controller: _confirmPasswordController,
+                        forceLightMode: true,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Please confirm your password';

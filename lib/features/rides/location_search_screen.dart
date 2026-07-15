@@ -416,160 +416,23 @@ class _LocationSearchScreenState extends ConsumerState<LocationSearchScreen> {
         ref.read(taxiProvider.notifier).setPickup(latLng, name);
         _dropoffFocusNode.requestFocus();
       } else {
+        // Ensure pickup location is set
+        final currentState = ref.read(taxiProvider);
+        if (currentState.pickupLocation == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Please wait — fetching your current location...'),
+              duration: Duration(seconds: 2),
+            ),
+          );
+          return;
+        }
         _dropoffController.text = name;
         ref.read(taxiProvider.notifier).setDropoff(latLng, name);
-        _showPlanRideCard(); // Show Image 1 UI card before going to full ride options
+        context.pop();
+        context.push('/taxi/ride-options');
       }
     }
   }
 
-  // To implement the "Plan Your Ride" card from Image 1
-  void _showPlanRideCard() {
-    final taxiState = ref.read(taxiProvider);
-
-    // We show a bottom sheet over the map
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        padding: const EdgeInsets.all(24),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            const Text('Plan Your Ride',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
-            const SizedBox(height: 24),
-
-            // Locations
-            const Text('Pickup Location',
-                style: TextStyle(fontSize: 12, color: Colors.black54)),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.shade300),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.location_on_outlined,
-                      size: 20, color: Colors.grey),
-                  const SizedBox(width: 12),
-                  Text(taxiState.pickupAddress ?? 'Current Location',
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.w600)),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            const Text('Destination',
-                style: TextStyle(fontSize: 12, color: Colors.black54)),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.shade300),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.route_outlined,
-                      size: 20, color: Colors.grey),
-                  const SizedBox(width: 12),
-                  Text(taxiState.dropoffAddress ?? 'Destination',
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.w600)),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 24),
-            // Fare and Distance
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.green.shade50,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Estimated Fare',
-                          style:
-                              TextStyle(fontSize: 12, color: Colors.black54)),
-                      const SizedBox(height: 4),
-                      Consumer(builder: (context, r, _) {
-                        // Listen to provider to get updated distance/price calculation
-                        final state = r.watch(taxiProvider);
-                        final distance = state.distance;
-                        final minFare = (70 + (22 * distance)) * 0.8;
-                        final maxFare = (70 + (22 * distance)) * 1.2;
-                        return Text(
-                            '₹ ${minFare.toStringAsFixed(0)} - ${maxFare.toStringAsFixed(0)}',
-                            style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.green.shade800));
-                      }),
-                    ],
-                  ),
-                  Consumer(builder: (context, r, _) {
-                    final state = r.watch(taxiProvider);
-                    return Text('${state.distance.toStringAsFixed(1)} km',
-                        style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.black87));
-                  }),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(ctx);
-                context.push('/taxi/ride-options');
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor:
-                    const Color(0xFF22C55E), // Green matching image 1
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30)),
-                elevation: 0,
-              ),
-              child: const Text('BOOK NOW',
-                  style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.0)),
-            ),
-            const SizedBox(height: 16),
-          ],
-        ),
-      ),
-    );
-  }
 }

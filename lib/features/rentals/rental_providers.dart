@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:async';
 import '../../core/repositories/rental_booking_repository.dart';
@@ -67,48 +68,81 @@ class ActiveRentalNotifier extends StateNotifier<ActiveRental?> {
     required PaymentService paymentService,
     String method = 'Online',
   }) async {
-    if (state != null) {
-      final user = ref.read(userProvider).user;
-      final custId = user?.id ?? 'demo';
+    if (state == null) return;
 
+    final user = ref.read(userProvider).user;
+    final custId = user?.id ?? 'demo';
+    final isRealUser = custId != 'demo' && !custId.startsWith('demo');
+
+    // Step 1: Create booking in DB with 'payment_pending' status BEFORE opening payment
+    // This ensures we have a record to update/cancel if payment fails.
+    String? bookingId;
+    if (isRealUser) {
       try {
-        String paymentId = 'CASH_PAYMENT';
-        if (method == 'Online') {
-          paymentId = await paymentService.startPayment(PaymentDetails(
-            bookingId:
-                '00000000-0000-0000-0000-000000000000', // Typically generated before payment
-            bookingType: BookingType.rental,
-            totalCost: totalCost,
-            userId: custId,
-            contact: user?.phone ?? '9876543210',
-            email: user?.email ?? 'customer@example.com',
-            description: 'Vehicle Rental Payment',
-          ));
-        }
-
-        // Safeguard: Only save to Supabase if we have a real UUID
-        if (custId != 'demo' && !custId.startsWith('demo')) {
-          await ref.read(rentalBookingRepositoryProvider).createRentalBooking(
-              RentalBooking(
-                  id: '',
-                  customerId: custId,
-                  vehicleName: state!.vehicle['name'] ?? 'Unknown',
-                  rentalType: 'hourly',
-                  startTime: state!.startTime,
-                  duration: state!.duration.inHours,
-                  totalCost: totalCost,
-                  details: {'method': method, 'payment_id': paymentId},
-                  status: method == 'Online' ? 'paid' : 'confirmed'));
-        }
-
-        _timer?.cancel();
-        _timer = null;
-
-        state = state!.copyWith(status: method == 'Online' ? RentalStatus.paid : RentalStatus.active);
+        bookingId = await ref.read(rentalBookingRepositoryProvider).createRentalBooking(
+            RentalBooking(
+                id: '',
+                customerId: custId,
+                vehicleName: state!.vehicle['name'] ?? 'Unknown',
+                rentalType: 'hourly',
+                startTime: state!.startTime,
+                duration: state!.duration.inHours,
+                totalCost: totalCost,
+                details: {'method': method},
+                status: 'payment_pending'));
       } catch (e) {
+        throw Exception('Failed to create booking record: $e');
+      }
+    }
+
+    // Step 2: Attempt payment
+    String paymentId = 'CASH_PAYMENT';
+    if (method == 'Online') {
+      try {
+        paymentId = await paymentService.startPayment(PaymentDetails(
+          bookingId: bookingId ?? '00000000-0000-0000-0000-000000000000',
+          bookingType: BookingType.rental,
+          totalCost: totalCost,
+          userId: custId,
+          contact: user?.phone ?? '9876543210',
+          email: user?.email ?? 'customer@example.com',
+          description: 'Vehicle Rental Payment',
+        ));
+      } catch (e) {
+        // Payment cancelled or failed — update booking status to 'cancelled' in DB
+        if (isRealUser && bookingId != null) {
+          try {
+            await ref
+                .read(rentalBookingRepositoryProvider)
+                .updateRentalStatus(bookingId, 'cancelled');
+          } catch (_) {
+            // Best-effort cancel; don't mask the original payment error
+          }
+        }
         throw Exception('Payment flow failed: $e');
       }
     }
+
+    // Step 3: Payment succeeded — update booking status to confirmed/paid
+    if (isRealUser && bookingId != null) {
+      final confirmedStatus = method == 'Online' ? 'paid' : 'confirmed';
+      try {
+        await ref
+            .read(rentalBookingRepositoryProvider)
+            .updateRentalStatus(bookingId, confirmedStatus);
+        // Also update the payment_id in details
+        await ref
+            .read(rentalBookingRepositoryProvider)
+            .updateRentalDetails(bookingId, {'method': method, 'payment_id': paymentId});
+      } catch (e) {
+        // Log but don't fail — payment already succeeded
+        debugPrint('Warning: Could not update rental status after payment: $e');
+      }
+    }
+
+    _timer?.cancel();
+    _timer = null;
+    state = state!.copyWith(status: method == 'Online' ? RentalStatus.paid : RentalStatus.active);
   }
 
   void clearRental() {

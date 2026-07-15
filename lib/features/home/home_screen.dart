@@ -22,6 +22,8 @@ import '../profile/user_provider.dart';
 import '../rentals/rental_providers.dart';
 import '../technician/technician_provider.dart';
 import '../../core/repositories/wallet_repository.dart';
+import '../../core/models/wallet_model.dart';
+
 import '../../core/services/language_service.dart';
 import '../../core/models/user_role.dart';
 import '../../core/providers/rbac_provider.dart';
@@ -63,7 +65,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final user = ref.watch(userProvider).user;
 
     final Widget scaffold = Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.bgLightSurface,
       body: RefreshIndicator(
         color: AppColors.primaryBlue,
         onRefresh: () async {
@@ -100,50 +102,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             fontWeight: FontWeight.w800,
                             color: AppColors.textPrimary)),
                     const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 12,
-                      runSpacing: 12,
-                      children: [
-                        _buildMoreTile(
-                            context,
-                            'Add Vehicle',
-                            Icons.add_circle_outline_rounded,
-                            const Color(0xFF3B82F6),
-                            '/add-vehicle'),
-                        _buildMoreTile(
-                            context,
-                            'Loyalty',
-                            Icons.card_membership_rounded,
-                            const Color(0xFFF97316),
-                            '/loyalty'),
-                        _buildMoreTile(context, 'Send Package', Iconsax.box,
-                            const Color(0xFF6366F1), '/delivery/create'),
-                        _buildMoreTile(
-                            context,
-                            'Help',
-                            Iconsax.message_question,
-                            const Color(0xFF8B5CF6),
-                            '/help-center'),
-                        _buildMoreTile(
-                            context,
-                            'History',
-                            Icons.history_rounded,
-                            const Color(0xFFF97316),
-                            '/ride-history'),
-                        _buildMoreTile(
-                            context,
-                            'Referral',
-                            Icons.card_giftcard_rounded,
-                            const Color(0xFFEC4899),
-                            '/referral'),
-                        _buildMoreTile(
-                            context,
-                            'Emergency',
-                            Iconsax.shield_slash,
-                            AppColors.dangerRed,
-                            '/sos-setup'),
-                      ],
-                    ),
+                    _buildMoreServicesGrid(context),
                   ],
                 ),
               ),
@@ -363,7 +322,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
             const SizedBox(height: 8),
             Align(
-              alignment: Alignment.centerRight,
+              alignment: Alignment.centerLeft,
               child: Text(
                 '${l10n.greeting} ${userName.split(' ')[0]}',
                 style: GoogleFonts.outfit(
@@ -637,7 +596,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final userId = user?.id;
     final walletAsync = userId != null && !userId.startsWith('demo')
         ? ref.watch(walletStreamProvider(userId))
-        : const AsyncValue.loading();
+        : const AsyncValue<Wallet?>.data(null);
     final l10n = ref.watch(l10nProvider);
 
     return Padding(
@@ -924,8 +883,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     .toList(),
               );
             },
-            loading: () => const SizedBox(
-                height: 80, child: Center(child: CircularProgressIndicator())),
+            loading: () => const SizedBox.shrink(),
             error: (err, _) => const SizedBox.shrink(),
           ),
         ],
@@ -1188,6 +1146,35 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
   }
 
+  /// Returns (iconColor, containerBgColor) for each service category.
+  /// Each category gets a unique curated color that's visually distinct
+  /// and harmonious with the brand green palette.
+  (Color, Color) _getCategoryStyle(String label) {
+    final l = label.toLowerCase();
+    if (l.contains('rental')) {
+      return (const Color(0xFF3B82F6), const Color(0xFFEFF6FF));
+    } else if (l.contains('ev')) {
+      return (const Color(0xFFF59E0B), const Color(0xFFFFFBEB));
+    } else if (l.contains('water')) {
+      return (const Color(0xFF06B6D4), const Color(0xFFECFEFF));
+    } else if (l.contains('repair')) {
+      return (const Color(0xFFEF4444), const Color(0xFFFEF2F2));
+    } else if (l.contains('logistic') || l.contains('delivery')) {
+      return (const Color(0xFF8B5CF6), const Color(0xFFF5F3FF));
+    } else if (l.contains('oil') || l.contains('fluid')) {
+      return (const Color(0xFFF97316), const Color(0xFFFFF7ED));
+    } else if (l.contains('ac') || l.contains('climate') || l.contains('air')) {
+      return (const Color(0xFF10B981), const Color(0xFFECFDF5));
+    } else if (l.contains('tyre') || l.contains('wheel') || l.contains('tire')) {
+      return (const Color(0xFF64748B), const Color(0xFFF8FAFC));
+    } else if (l.contains('electrical') || l.contains('electric')) {
+      return (const Color(0xFFF59E0B), const Color(0xFFFFFBEB));
+    } else if (l.contains('service')) {
+      return (const Color(0xFFEF4444), const Color(0xFFFEF2F2));
+    }
+    return (AppColors.primaryBlue, AppColors.bgSkyLight);
+  }
+
   Widget _buildExploreGrid() {
     final categoriesAsync = ref.watch(homeCategoriesProvider);
 
@@ -1201,22 +1188,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Explore Services',
-                  style: TextStyle(
-                      fontSize:
-                          ResponsiveLayout.responsiveFontSize(context, 18),
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary)),
+              Text(
+                'Explore Services',
+                style: GoogleFonts.outfit(
+                  fontSize: ResponsiveLayout.responsiveFontSize(context, 18),
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                ),
+              ),
               GestureDetector(
-                  onTap: () {
-                    HapticFeedback.lightImpact();
-                    context.go('/main/explore');
-                  },
-                  child: const Text(AppStrings.viewAll,
-                      style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.primaryBlue))),
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  context.go('/main/explore');
+                },
+                behavior: HitTestBehavior.opaque,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                  child: Text(
+                    AppStrings.viewAll,
+                    style: GoogleFonts.outfit(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.primaryBlue,
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -1226,9 +1223,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               return GridView.builder(
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: ResponsiveLayout.isTablet(context) ? 6 : 4,
-                  mainAxisSpacing: 12,
-                  crossAxisSpacing: 12,
-                  childAspectRatio: 0.75,
+                  mainAxisSpacing: 10,
+                  crossAxisSpacing: 10,
+                  childAspectRatio: 0.82,
                 ),
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -1236,24 +1233,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 itemBuilder: (context, index) {
                   final cat = categories[index];
                   final icon = IconHelper.getIcon(cat.icon);
-
-                  // Curated high-contrast premium colors for light/dark mode
-                  Color catColor;
-                  final label = cat.label.toLowerCase();
-                  if (label.contains('repair') || label.contains('service')) {
-                    catColor = const Color(0xFFEF4444);
-                  } else if (label.contains('rental')) {
-                    catColor = const Color(0xFF3B82F6);
-                  } else if (label.contains('ev')) {
-                    catColor = const Color(0xFFF59E0B);
-                  } else {
-                    catColor = const Color(0xFF10B981);
-                  }
-
                   final route = _getCategoryRoute(cat.label);
+                  final (iconColor, containerBg) = _getCategoryStyle(cat.label);
 
                   return GestureDetector(
                     onTap: () {
+                      HapticFeedback.lightImpact();
                       if (route == '/bike-service') {
                         final bikes = ref
                             .read(allVehiclesProvider)
@@ -1280,40 +1265,53 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     },
                     child: Container(
                       decoration: BoxDecoration(
-                        color: catColor.withValues(alpha: 0.12),
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: catColor.withValues(alpha: 0.35),
-                          width: 1.5,
+                          color: AppColors.border,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: catColor.withValues(alpha: 0.05),
-                            blurRadius: 4,
+                            color: Colors.black.withValues(alpha: 0.06),
+                            blurRadius: 8,
                             offset: const Offset(0, 2),
-                          )
+                          ),
                         ],
                       ),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
-                            icon,
-                            color: catColor,
-                            size: ResponsiveLayout.isSmallPhone(context)
-                                ? 18
-                                : 22,
+                          // Icon inside a colored rounded container
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: containerBg,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              icon,
+                              color: iconColor,
+                              size: ResponsiveLayout.isSmallPhone(context)
+                                  ? 18
+                                  : 20,
+                            ),
                           ),
                           const SizedBox(height: 8),
-                          Text(
-                            cat.label,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.outfit(
-                              fontSize: ResponsiveLayout.responsiveFontSize(
-                                  context, 11),
-                              fontWeight: FontWeight.w700,
-                              color: catColor,
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            child: Text(
+                              cat.label,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.outfit(
+                                fontSize: ResponsiveLayout.responsiveFontSize(
+                                    context, 10.5),
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textPrimary,
+                                height: 1.2,
+                              ),
                             ),
                           ),
                         ],
@@ -1328,10 +1326,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 },
               );
             },
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (err, stack) => Center(
-                child: Text('Error loading categories: $err',
-                    style: const TextStyle(color: AppColors.textSecondary))),
+            loading: () => const SizedBox.shrink(),
+            error: (err, stack) => const SizedBox.shrink(),
           ),
         ],
       ),
@@ -1488,11 +1484,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   );
                 },
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (err, stack) => Center(
-                    child: Text('Error loading offers: $err',
-                        style:
-                            const TextStyle(color: AppColors.textSecondary))),
+                loading: () => const SizedBox.shrink(),
+                error: (err, stack) => const SizedBox.shrink(),
               )
               .animate(delay: 800.ms)
               .fadeIn(duration: 500.ms)
@@ -1502,33 +1495,100 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  /// More Services — unified GridView with premium card design
+  Widget _buildMoreServicesGrid(BuildContext context) {
+    const items = <_MoreTileData>[
+      _MoreTileData('Add Vehicle', Icons.add_circle_outline_rounded,
+          Color(0xFF3B82F6), '/add-vehicle'),
+      _MoreTileData('Loyalty', Icons.card_membership_rounded,
+          Color(0xFFF97316), '/loyalty'),
+      _MoreTileData(
+          'Send Package', Iconsax.box, Color(0xFF8B5CF6), '/delivery/create'),
+      _MoreTileData('Help', Iconsax.message_question, Color(0xFF1B8A5A),
+          '/help-center'),
+      _MoreTileData('History', Icons.history_rounded, Color(0xFFF97316),
+          '/ride-history'),
+      _MoreTileData('Referral', Icons.card_giftcard_rounded,
+          Color(0xFFEC4899), '/referral'),
+      _MoreTileData(
+          'Emergency', Iconsax.shield_slash, AppColors.dangerRed, '/sos-setup'),
+    ];
+
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: ResponsiveLayout.isTablet(context) ? 4 : 3,
+        mainAxisSpacing: 10,
+        crossAxisSpacing: 10,
+        childAspectRatio: 1.05,
+      ),
+      itemCount: items.length,
+      itemBuilder: (context, index) {
+        final item = items[index];
+        return _buildMoreTile(
+            context, item.label, item.icon, item.color, item.route, index);
+      },
+    );
+  }
+
   Widget _buildMoreTile(BuildContext context, String label, IconData icon,
-      Color color, String route) {
-    final double padding =
-        ResponsiveLayout.responsivePadding(context, horizontal: 20).horizontal;
-    return SizedBox(
-      width: (MediaQuery.of(context).size.width - padding - 24.5) / 3,
-      child: GestureDetector(
-        onTap: () => context.push(route),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: color.withValues(alpha: 0.2)),
-          ),
-          child: Column(
-            children: [
-              Icon(icon, color: color, size: 24),
-              const SizedBox(height: 8),
-              Text(label,
-                  style: TextStyle(
-                      fontSize: 11, fontWeight: FontWeight.w600, color: color)),
-            ],
-          ),
+      Color color, String route, int index) {
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        context.push(route);
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.border),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: color, size: 22),
+            ),
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              child: Text(
+                label,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.outfit(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                  height: 1.2,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
-    );
+    )
+        .animate(delay: (100 + index * 50).ms)
+        .fadeIn(duration: 350.ms)
+        .scale(
+            begin: const Offset(0.9, 0.9),
+            end: const Offset(1.0, 1.0));
   }
 
   Widget _buildRoleCard(BuildContext context, String label, IconData icon,
@@ -1576,4 +1636,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
     );
   }
+}
+
+/// Simple data class for "More Services" grid tiles.
+class _MoreTileData {
+  final String label;
+  final IconData icon;
+  final Color color;
+  final String route;
+  const _MoreTileData(this.label, this.icon, this.color, this.route);
 }

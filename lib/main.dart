@@ -122,16 +122,12 @@ void main() {
               AppDebugger.logStep('Supabase', 'SUCCESS');
             } catch (e) {
               AppDebugger.logStep('Supabase', 'FAILED', error: e.toString());
-              // Fallback initialization to construct a valid client singleton
-              // and prevent crashes when other services read Supabase.instance.client
-              try {
-                await Supabase.initialize(
-                  url: 'https://placeholder.supabase.co',
-                  anonKey:
-                      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsYWNlaG9sZGVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwNDc1NzMsImV4cCI6MjA5MTYyMzU3M30.VuJ13qv1rEyJyfdAvpCI_qUvPSQPcZqbluLWWo4loBM',
-                  debug: kDebugMode,
-                );
-              } catch (_) {}
+              // Do NOT use hardcoded placeholder credentials in fallback —
+              // just skip init. Screens that need Supabase will handle
+              // the uninitialized state via error boundaries.
+              if (kDebugMode) {
+                debugPrint('Supabase init failed: $e. Running in offline mode.');
+              }
             }
           })(),
           (() async {
@@ -173,7 +169,9 @@ void main() {
         await SentryFlutter.init(
           (options) {
             options.dsn = sentryDsn;
-            options.tracesSampleRate = 1.0;
+            // 20% sample rate in production to control cost.
+            // Use 1.0 only in debug/staging environments.
+            options.tracesSampleRate = kDebugMode ? 1.0 : 0.2;
           },
           appRunner: () => runApp(UncontrolledProviderScope(
             container: container,

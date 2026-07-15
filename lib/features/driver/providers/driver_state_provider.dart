@@ -2,9 +2,13 @@
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:async';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/repositories/driver_repository.dart';
 import '../../../features/profile/user_provider.dart';
 import '../../../core/models/driver_model.dart';
+import '../../../core/models/ride_booking.dart';
+import '../../../core/models/user_role.dart';
+import '../../../core/repositories/user_repository.dart';
 import '../../../core/services/notification_service.dart';
 
 enum VerificationStatus { pending, approved, rejected }
@@ -52,13 +56,24 @@ final verificationActionProvider =
 // Mock Earnings Provider (Rewired to real driver stats)
 class DriverEarnings {
   final double todayEarnings;
+  final double weeklyEarnings;
   final double bonusTarget;
   final double bonusAchieved;
+  final int totalRides;
+  final int weeklyRides;
+  final String onlineTime;
+  final String acceptanceRate;
 
-  DriverEarnings(
-      {required this.todayEarnings,
-      required this.bonusTarget,
-      required this.bonusAchieved});
+  DriverEarnings({
+    required this.todayEarnings,
+    required this.weeklyEarnings,
+    required this.bonusTarget,
+    required this.bonusAchieved,
+    required this.totalRides,
+    required this.weeklyRides,
+    required this.onlineTime,
+    required this.acceptanceRate,
+  });
 }
 
 final earningsProvider = StreamProvider<DriverEarnings>((ref) {
@@ -70,8 +85,13 @@ final earningsProvider = StreamProvider<DriverEarnings>((ref) {
       .map((driver) {
     return DriverEarnings(
       todayEarnings: driver?.todayEarnings ?? 0.0,
+      weeklyEarnings: driver?.weeklyEarnings ?? 0.0,
       bonusTarget: 1050.0,
       bonusAchieved: (driver?.todayEarnings ?? 0.0) % 1050,
+      totalRides: driver?.totalRides ?? 0,
+      weeklyRides: driver?.weeklyRides ?? 0,
+      onlineTime: driver?.onlineTime ?? '0h',
+      acceptanceRate: driver?.acceptanceRate ?? '100%',
     );
   });
 });
@@ -111,6 +131,34 @@ final rideRequestsProvider = StreamProvider<List<RideRequest>>((ref) {
             ))
         .toList();
   });
+});
+
+// Stream of the driver's active trip from Supabase
+final driverActiveTripProvider = StreamProvider<RideBooking?>((ref) {
+  final user = ref.watch(userProvider);
+  final driverId = user.user?.id ?? 'demo';
+
+  if (driverId == 'demo') {
+    return Stream.value(null);
+  }
+
+  return Supabase.instance.client
+      .from('ride_bookings')
+      .stream(primaryKey: ['id'])
+      .eq('driver_id', driverId)
+      .map((list) {
+        final activeRides = list
+            .map((map) => RideBooking.fromMap(map, map['id'].toString()))
+            .where((booking) =>
+                booking.status != 'completed' &&
+                booking.status != 'cancelled');
+        return activeRides.isNotEmpty ? activeRides.first : null;
+      });
+});
+
+// Stream of passenger/customer profile
+final passengerProfileProvider = StreamProvider.family<AppUser?, String>((ref, customerId) {
+  return ref.watch(userRepositoryProvider).getUserStream(customerId);
 });
 
 // Wrapper Notifier to handle Actions (Accept/Reject)

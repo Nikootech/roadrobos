@@ -142,12 +142,12 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
                 ref
                     .read(taxiProvider.notifier)
                     .updateStatus(RideStatus.vehicleSelection);
-                _sheetController.animateTo(0.45,
+                _sheetController.animateTo(0.93,
                     duration: const Duration(milliseconds: 300),
                     curve: Curves.easeOut);
               } else {
                 ref.read(taxiProvider.notifier).updateStatus(RideStatus.idle);
-                _sheetController.animateTo(0.35,
+                _sheetController.animateTo(0.48,
                     duration: const Duration(milliseconds: 300),
                     curve: Curves.easeOut);
               }
@@ -184,12 +184,12 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
                 ref
                     .read(taxiProvider.notifier)
                     .updateStatus(RideStatus.vehicleSelection);
-                _sheetController.animateTo(0.45,
+                _sheetController.animateTo(0.93,
                     duration: const Duration(milliseconds: 300),
                     curve: Curves.easeOut);
               } else {
                 ref.read(taxiProvider.notifier).updateStatus(RideStatus.idle);
-                _sheetController.animateTo(0.35,
+                _sheetController.animateTo(0.48,
                     duration: const Duration(milliseconds: 300),
                     curve: Curves.easeOut);
               }
@@ -257,6 +257,47 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
     final pickupController = ref.watch(pickupControllerProvider);
     final dropoffController = ref.watch(dropoffControllerProvider);
     final isOffline = ref.watch(connectivityProvider).value ?? false;
+
+    ref.listen<TaxiState>(taxiProvider, (previous, next) {
+      if (next.refundInitiated && !(previous?.refundInitiated ?? false)) {
+        final isOnline = next.paymentMethod == 'Online';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(isOnline
+                ? 'Rider is not available. Refund has been initiated automatically.'
+                : 'Rider is not available. Search cancelled.'),
+            backgroundColor: Colors.orange.shade800,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+
+      if (previous?.status != next.status) {
+        double targetSize = 0.52;
+        if (next.status == RideStatus.selectingPickup ||
+            next.status == RideStatus.selectingDrop) {
+          targetSize = 0.85;
+        } else if (next.status == RideStatus.vehicleSelection) {
+          targetSize = 0.93;
+        } else if (next.status == RideStatus.idle) {
+          final height = MediaQuery.of(context).size.height;
+          targetSize = height < 850 ? 0.6 : 0.48;
+        } else {
+          final height = MediaQuery.of(context).size.height;
+          targetSize = height < 850 ? 0.65 : 0.52;
+        }
+        
+        try {
+          if (_sheetController.isAttached) {
+            _sheetController.animateTo(
+              targetSize,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+            );
+          }
+        } catch (_) {}
+      }
+    });
 
     // Sync controllers with state
     // Sync controllers with state ONLY if they are not currently focused to avoid jitter
@@ -389,14 +430,32 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
     TextEditingController pickupCtrl,
     TextEditingController dropoffCtrl,
   ) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    
+    // Compute responsive sheet sizes to prevent content truncation on smaller mobile screens
+    final double initialSize;
+    final double minSize;
+    
+    if (state.status == RideStatus.selectingPickup ||
+        state.status == RideStatus.selectingDrop) {
+      initialSize = 0.85;
+      minSize = 0.5;
+    } else if (state.status == RideStatus.vehicleSelection) {
+      initialSize = 0.93;
+      minSize = 0.7;
+    } else if (state.status == RideStatus.idle) {
+      initialSize = screenHeight < 850 ? 0.6 : 0.48;
+      minSize = screenHeight < 850 ? 0.5 : 0.4;
+    } else { // booked, tracking, completed, etc.
+      initialSize = screenHeight < 850 ? 0.65 : 0.52;
+      minSize = screenHeight < 850 ? 0.55 : 0.45;
+    }
+
     return DraggableScrollableSheet(
       controller: _sheetController,
-      initialChildSize: (state.status == RideStatus.selectingPickup ||
-              state.status == RideStatus.selectingDrop)
-          ? 0.85
-          : (state.status == RideStatus.idle ? 0.35 : 0.45),
-      minChildSize: 0.3,
-      maxChildSize: 0.9,
+      initialChildSize: initialSize,
+      minChildSize: minSize,
+      maxChildSize: 0.95,
       snap: true,
       builder: (context, scrollController) {
         return Container(
@@ -453,153 +512,51 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
             color: isDark ? AppColors.textOnDark : AppColors.textPrimary,
           ),
         ),
-        const SizedBox(height: 24),
-        CustomTextField(
-          label: 'Pickup Location',
-          hint: 'Select pickup point',
-          controller: pCtrl,
-          prefixIcon: Iconsax.location,
-          focusNode: _pickupFocusNode,
-          onChanged: (val) {
-            setState(() {
-              _searchQuery = val;
-              _showSuggestions = true;
-            });
-            _onSearchChanged(val);
-            notifier.updateStatus(RideStatus.selectingPickup);
-          },
-        ),
-        const SizedBox(height: 16),
-        CustomTextField(
-          label: 'Destination',
-          hint: 'Where to?',
-          controller: dCtrl,
-          prefixIcon: Iconsax.routing,
-          focusNode: _dropoffFocusNode,
-          onChanged: (val) {
-            setState(() {
-              _searchQuery = val;
-              _showSuggestions = true;
-            });
-            _onSearchChanged(val);
-            notifier.updateStatus(RideStatus.selectingDrop);
-          },
-        ),
+        const SizedBox(height: 14),
+        if (state.status == RideStatus.vehicleSelection) ...[
+          _buildCollapsedRouteCard(state, notifier),
+        ] else ...[
+          CustomTextField(
+            label: 'Pickup Location',
+            hint: 'Select pickup point',
+            controller: pCtrl,
+            prefixIcon: Iconsax.location,
+            focusNode: _pickupFocusNode,
+            onChanged: (val) {
+              setState(() {
+                _searchQuery = val;
+                _showSuggestions = true;
+              });
+              _onSearchChanged(val);
+              notifier.updateStatus(RideStatus.selectingPickup);
+            },
+          ),
+          const SizedBox(height: 10),
+          CustomTextField(
+            label: 'Destination',
+            hint: 'Where to?',
+            controller: dCtrl,
+            prefixIcon: Iconsax.routing,
+            focusNode: _dropoffFocusNode,
+            onChanged: (val) {
+              setState(() {
+                _searchQuery = val;
+                _showSuggestions = true;
+              });
+              _onSearchChanged(val);
+              notifier.updateStatus(RideStatus.selectingDrop);
+            },
+          ),
+        ],
         if (_showSuggestions)
           _buildSuggestionsSection(state, notifier, pCtrl, dCtrl),
-        const SizedBox(height: 32),
+        const SizedBox(height: 14),
         if (state.status == RideStatus.vehicleSelection) ...[
           _buildFareEstimate(state, notifier),
-          const SizedBox(height: 16),
+          const SizedBox(height: 10),
           // Interactive Payment Selector (Cash on Drop vs Pay Online)
-          Row(
-            children: [
-              Expanded(
-                child: GestureDetector(
-                  onTap: () {
-                    notifier.setPaymentMethod('Cash');
-                    HapticFeedback.selectionClick();
-                  },
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    decoration: BoxDecoration(
-                      color: state.paymentMethod == 'Cash'
-                          ? Colors.orange.shade50
-                          : (isDark
-                              ? Colors.grey.shade900
-                              : Colors.grey.shade50),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: state.paymentMethod == 'Cash'
-                            ? Colors.orange.shade400
-                            : (isDark
-                                ? Colors.grey.shade800
-                                : Colors.grey.shade200),
-                        width: state.paymentMethod == 'Cash' ? 2 : 1,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.money_rounded,
-                          color: state.paymentMethod == 'Cash'
-                              ? Colors.orange.shade700
-                              : Colors.grey,
-                          size: 18,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          'Cash on Drop',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: state.paymentMethod == 'Cash'
-                                ? Colors.orange.shade700
-                                : (isDark ? Colors.white70 : Colors.black87),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: GestureDetector(
-                  onTap: () {
-                    notifier.setPaymentMethod('Online');
-                    HapticFeedback.selectionClick();
-                  },
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    decoration: BoxDecoration(
-                      color: state.paymentMethod == 'Online'
-                          ? AppColors.primaryBlue.withValues(alpha: 0.08)
-                          : (isDark
-                              ? Colors.grey.shade900
-                              : Colors.grey.shade50),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: state.paymentMethod == 'Online'
-                            ? AppColors.primaryBlue
-                            : (isDark
-                                ? Colors.grey.shade800
-                                : Colors.grey.shade200),
-                        width: state.paymentMethod == 'Online' ? 2 : 1,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.payment_rounded,
-                          color: state.paymentMethod == 'Online'
-                              ? AppColors.primaryBlue
-                              : Colors.grey,
-                          size: 18,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          'Pay Online',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: state.paymentMethod == 'Online'
-                                ? AppColors.primaryBlue
-                                : (isDark ? Colors.white70 : Colors.black87),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
+          _buildPaymentSelector(state, notifier),
+          const SizedBox(height: 12),
         ],
         CustomButton(
           label: state.status == RideStatus.vehicleSelection
@@ -945,8 +902,12 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
                     _showSuggestions = false;
                     _searchQuery = '';
                   });
+                  final isPickupSet = _isPickupSearch ? true : (state.pickupLocation != null);
+                  final isDropSet = !_isPickupSearch ? true : (state.dropoffLocation != null);
+                  final nextStatusIsVehicleSelection = isPickupSet && isDropSet;
+
                   _sheetController.animateTo(
-                    state.status == RideStatus.vehicleSelection ? 0.45 : 0.35,
+                    nextStatusIsVehicleSelection ? 0.88 : 0.48,
                     duration: const Duration(milliseconds: 300),
                     curve: Curves.easeOut,
                   );
@@ -956,6 +917,292 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildPaymentSelector(TaxiState state, TaxiNotifier notifier) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isCash = state.paymentMethod == 'Cash';
+    
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF0F172A) : Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? Colors.grey.shade800 : Colors.grey.shade300,
+        ),
+      ),
+      child: Row(
+        children: [
+          // 1. Cash on Drop
+          Expanded(
+            child: GestureDetector(
+              onTap: () {
+                notifier.setPaymentMethod('Cash');
+                HapticFeedback.selectionClick();
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: isCash
+                      ? (isDark ? Colors.grey.shade900 : Colors.white)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: isCash
+                      ? [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.08),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          )
+                        ]
+                      : [],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.money_rounded,
+                      color: isCash
+                          ? AppColors.primaryBlue
+                          : (isDark ? Colors.grey.shade600 : Colors.grey.shade500),
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Cash on Drop',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: isCash
+                            ? (isDark ? Colors.white : AppColors.textPrimary)
+                            : (isDark ? Colors.grey.shade500 : Colors.grey.shade600),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          
+          // 2. Pay Online
+          Expanded(
+            child: GestureDetector(
+              onTap: () {
+                notifier.setPaymentMethod('Online');
+                HapticFeedback.selectionClick();
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: !isCash
+                      ? (isDark ? Colors.grey.shade900 : Colors.white)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: !isCash
+                      ? [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.08),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          )
+                        ]
+                      : [],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.payment_rounded,
+                      color: !isCash
+                          ? AppColors.primaryBlue
+                          : (isDark ? Colors.grey.shade600 : Colors.grey.shade500),
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Pay Online',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: !isCash
+                            ? (isDark ? Colors.white : AppColors.textPrimary)
+                            : (isDark ? Colors.grey.shade500 : Colors.grey.shade600),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _getTagBgColor(String tag, bool isDark) {
+    switch (tag.toLowerCase()) {
+      case 'cheapest':
+        return isDark ? Colors.blue.shade900.withValues(alpha: 0.4) : Colors.blue.shade50;
+      case 'eco':
+        return isDark ? const Color(0xFF065F46).withValues(alpha: 0.4) : const Color(0xFFD1FAE5);
+      case 'quickest':
+        return isDark ? Colors.amber.shade900.withValues(alpha: 0.4) : Colors.amber.shade50;
+      default:
+        return AppColors.primaryBlue.withValues(alpha: 0.1);
+    }
+  }
+
+  Color _getTagTextColor(String tag, bool isDark) {
+    switch (tag.toLowerCase()) {
+      case 'cheapest':
+        return isDark ? Colors.blue.shade200 : Colors.blue.shade700;
+      case 'eco':
+        return isDark ? const Color(0xFFA7F3D0) : const Color(0xFF047857);
+      case 'quickest':
+        return isDark ? Colors.amber.shade200 : Colors.amber.shade700;
+      default:
+        return AppColors.primaryBlue;
+    }
+  }
+
+  Widget _buildCollapsedRouteCard(TaxiState state, TaxiNotifier notifier) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return GestureDetector(
+      onTap: () {
+        notifier.updateStatus(RideStatus.selectingDrop);
+        _sheetController.animateTo(0.85,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut);
+        _dropoffFocusNode.requestFocus();
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.bgDarkCard : Colors.grey.shade50,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
+            width: 1.5,
+          ),
+          boxShadow: [
+            if (!isDark)
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.02),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              )
+          ],
+        ),
+        child: Row(
+          children: [
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(
+                    color: Colors.green,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                Container(
+                  width: 2,
+                  height: 18,
+                  color: isDark ? Colors.grey.shade800 : Colors.grey.shade300,
+                ),
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    state.pickupAddress ?? 'Select Pickup Location',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white70 : AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    state.dropoffAddress ?? 'Select Destination',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white : AppColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Icon(
+              Icons.edit_location_alt_outlined,
+              color: isDark ? Colors.grey.shade600 : Colors.grey.shade400,
+              size: 18,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVehicleIcon(RideOption option, bool isSelected) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    IconData iconData;
+    if (option.id == 'bike') {
+      iconData = Icons.two_wheeler_rounded;
+    } else if (option.id == 'auto' || option.id == 'auto_sharing') {
+      iconData = Icons.electric_rickshaw_rounded;
+    } else {
+      iconData = Icons.directions_car_rounded;
+    }
+
+    return Container(
+      width: 46,
+      height: 46,
+      decoration: BoxDecoration(
+        color: isSelected
+            ? AppColors.primaryBlue.withValues(alpha: 0.15)
+            : (isDark ? Colors.grey.shade900 : Colors.grey.shade100),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isSelected
+              ? AppColors.primaryBlue
+              : (isDark ? Colors.grey.shade800 : Colors.grey.shade200),
+          width: 1.5,
+        ),
+      ),
+      child: Center(
+        child: Icon(
+          iconData,
+          size: 24,
+          color: isSelected
+              ? AppColors.primaryBlue
+              : (isDark ? Colors.white70 : AppColors.primaryNavy),
+        ),
+      ),
     );
   }
 
@@ -975,8 +1222,7 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
         shrinkWrap: true,
         padding: EdgeInsets.zero,
         itemCount: state.rideOptions.length,
-        separatorBuilder: (context, index) => Divider(
-            height: 1, color: isDark ? Colors.grey[800] : Colors.grey[200]),
+        separatorBuilder: (context, index) => const SizedBox(height: 8),
         itemBuilder: (context, index) {
           final option = state.rideOptions[index];
           final isSelected = state.selectedOption?.id == option.id;
@@ -984,25 +1230,22 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
           return GestureDetector(
             onTap: () => notifier.selectOption(option),
             child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
               decoration: BoxDecoration(
                 color: isSelected
                     ? AppColors.primaryBlue.withValues(alpha: 0.1)
-                    : Colors.transparent,
-                borderRadius: BorderRadius.circular(12),
+                    : (isDark ? const Color(0xFF0F172A).withValues(alpha: 0.3) : Colors.grey.shade50),
+                borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color:
-                      isSelected ? AppColors.primaryBlue : Colors.transparent,
+                  color: isSelected
+                      ? AppColors.primaryBlue
+                      : (isDark ? Colors.grey.shade900 : Colors.grey.shade200),
+                  width: isSelected ? 1.8 : 1.5,
                 ),
               ),
               child: Row(
                 children: [
-                  if (option.assetPath != null)
-                    Image.asset(option.assetPath!, width: 40, height: 40)
-                  else
-                    Icon(option.icon,
-                        size: 40,
-                        color: isDark ? Colors.white : AppColors.primaryNavy),
+                  _buildVehicleIcon(option, isSelected),
                   const SizedBox(width: 16),
                   Expanded(
                     child: Column(
@@ -1011,9 +1254,9 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
                         Row(
                           children: [
                             Text(option.title,
-                                style: TextStyle(
+                                style: GoogleFonts.inter(
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 16,
+                                    fontSize: 15,
                                     color: isDark
                                         ? Colors.white
                                         : AppColors.textPrimary)),
@@ -1021,15 +1264,15 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
                               const SizedBox(width: 8),
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 6, vertical: 2),
+                                    horizontal: 8, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: AppColors.primaryBlue,
-                                  borderRadius: BorderRadius.circular(4),
+                                  color: _getTagBgColor(option.tag!, isDark),
+                                  borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(option.tag!,
-                                    style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 10,
+                                    style: TextStyle(
+                                        color: _getTagTextColor(option.tag!, isDark),
+                                        fontSize: 9,
                                         fontWeight: FontWeight.bold)),
                               ),
                             ]
@@ -1037,8 +1280,8 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(option.subtitle,
-                            style: TextStyle(
-                                fontSize: 12,
+                            style: GoogleFonts.inter(
+                                fontSize: 11,
                                 color: isDark
                                     ? Colors.grey[400]
                                     : AppColors.textSecondary)),
@@ -1046,7 +1289,7 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
                     ),
                   ),
                   Text('₹${option.price.toInt()}',
-                      style: TextStyle(
+                      style: GoogleFonts.inter(
                           fontWeight: FontWeight.w900,
                           fontSize: 16,
                           color:
@@ -1211,9 +1454,22 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
         const SizedBox(height: 32),
         CustomButton(
           label: 'BOOK NEXT RIDE',
-          onPressed: () {
+          onPressed: () async {
+            final rideId = state.rideId;
+            if (rideId != null && rideId.isNotEmpty && _completedRating > 0) {
+              try {
+                await Supabase.instance.client
+                    .from('ride_bookings')
+                    .update({'customer_rating': _completedRating}).eq(
+                        'id', rideId);
+              } catch (e) {
+                debugPrint('Failed to submit rating: $e');
+              }
+            }
             notifier.reset();
-            context.go('/main/home');
+            if (mounted) {
+              context.go('/main/home');
+            }
           },
         ),
       ],
@@ -1484,11 +1740,13 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
           final userId = userData?.id ?? 'demo';
 
           try {
+            if (state.rideId == null || state.rideId!.isEmpty) {
+              throw Exception('No active ride booking ID found to process payment.');
+            }
             await ref
                 .read(paymentServiceProvider.notifier)
                 .startPayment(PaymentDetails(
-                  bookingId:
-                      state.rideId ?? '00000000-0000-0000-0000-000000000000',
+                  bookingId: state.rideId!,
                   bookingType: BookingType.ride,
                   totalCost: breakdown.totalPayable,
                   userId: userId,

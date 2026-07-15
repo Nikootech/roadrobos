@@ -1,17 +1,58 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
-import '../../core/theme/app_colors.dart';
-import '../../shared/widgets/bottom_nav_bar.dart';
+import 'package:intl/intl.dart';
 
-/// Driver Earnings Screen — Premium Overhaul
-class EarningsScreen extends StatelessWidget {
+import '../../core/theme/app_colors.dart';
+import '../../core/repositories/ride_booking_repository.dart';
+import '../../core/models/ride_booking.dart';
+import '../../features/profile/user_provider.dart';
+import '../../shared/widgets/bottom_nav_bar.dart';
+import 'providers/driver_state_provider.dart';
+
+/// Driver Earnings Screen — connected to real Supabase driver stream data.
+class EarningsScreen extends ConsumerStatefulWidget {
   const EarningsScreen({super.key});
 
   @override
+  ConsumerState<EarningsScreen> createState() => _EarningsScreenState();
+}
+
+class _EarningsScreenState extends ConsumerState<EarningsScreen> {
+  List<RideBooking> _rides = [];
+  bool _isLoadingRides = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchRides();
+  }
+
+  Future<void> _fetchRides() async {
+    try {
+      final user = ref.read(userProvider);
+      final driverId = user.user?.id ?? 'demo';
+      final rides = await ref
+          .read(rideBookingRepositoryProvider)
+          .getPagedDriverRides(driverId);
+      if (mounted) {
+        setState(() {
+          _rides = rides.where((r) => r.status == 'completed').toList();
+          _isLoadingRides = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isLoadingRides = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final earningsAsync = ref.watch(earningsProvider);
+
     return Scaffold(
       backgroundColor: AppColors.bgLightGrey,
       appBar: AppBar(
@@ -28,9 +69,10 @@ class EarningsScreen extends StatelessWidget {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Iconsax.calendar, color: Colors.white),
+            icon: const Icon(Iconsax.refresh, color: Colors.white),
             onPressed: () {
               HapticFeedback.lightImpact();
+              _fetchRides();
             },
           ),
           const SizedBox(width: 8),
@@ -38,166 +80,207 @@ class EarningsScreen extends StatelessWidget {
       ),
       body: Column(
         children: [
-          // Top Summary (Premium Navy Card)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.fromLTRB(24, 8, 24, 40),
-            decoration: const BoxDecoration(
-              color: AppColors.deepNavy,
-              borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(40),
-                  bottomRight: Radius.circular(40)),
-            ),
-            child: Column(
-              children: [
-                const Text('TOTAL BALANCE',
-                    style: TextStyle(
-                        color: Colors.white54,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 1.5)),
-                const SizedBox(height: 12),
-                const Text('₹12,450.00',
-                    style: TextStyle(
+          // Top Summary — real data from earningsProvider stream
+          earningsAsync.when(
+            loading: () => const LinearProgressIndicator(
+                color: AppColors.brandGreen, minHeight: 3),
+            error: (_, __) => const SizedBox.shrink(),
+            data: (earnings) => Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(24, 8, 24, 40),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppColors.deepNavy,
+                    Color(0xFF004D32),
+                    AppColors.brandGreen
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+                borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(40),
+                    bottomRight: Radius.circular(40)),
+              ),
+              child: Column(
+                children: [
+                  const Text('TOTAL EARNINGS TODAY',
+                      style: TextStyle(
+                          color: Colors.white54,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 1.5)),
+                  const SizedBox(height: 12),
+                  Text(
+                    NumberFormat.simpleCurrency(name: 'INR')
+                        .format(earnings.todayEarnings),
+                    style: const TextStyle(
                         color: Colors.white,
                         fontSize: 44,
-                        fontWeight: FontWeight.w900)),
-                const SizedBox(height: 32),
-                Row(
-                  children: [
-                    _buildQuickStat(Iconsax.car, 'Rides', '42'),
-                    _buildDivider(),
-                    _buildQuickStat(Iconsax.clock, 'Online', '38h'),
-                    _buildDivider(),
-                    _buildQuickStat(Iconsax.star, 'Rating', '4.9'),
-                  ],
-                ),
-                const SizedBox(height: 32),
-                GestureDetector(
-                  onTap: () {
-                    HapticFeedback.mediumImpact();
-                    context.push('/driver-bank-withdrawal');
-                  },
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 18),
-                    alignment: Alignment.center,
+                        fontWeight: FontWeight.w900),
+                  ),
+                  const SizedBox(height: 32),
+                  // Glassmorphism stats row — real values
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 18, horizontal: 12),
                     decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: const [
-                        BoxShadow(
-                            color: Colors.black26,
-                            blurRadius: 20,
-                            offset: Offset(0, 10))
+                      color: Colors.white.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.15), width: 1.5),
+                    ),
+                    child: Row(
+                      children: [
+                        _buildQuickStat(
+                            Iconsax.car, 'Rides', '${earnings.totalRides}'),
+                        _buildDivider(),
+                        _buildQuickStat(
+                            Iconsax.clock, 'Online', earnings.onlineTime),
+                        _buildDivider(),
+                        _buildQuickStat(Iconsax.chart_1, 'Accept',
+                            earnings.acceptanceRate),
                       ],
                     ),
-                    child: const Text('Cash Out to Bank',
-                        style: TextStyle(
-                            color: AppColors.deepNavy,
-                            fontWeight: FontWeight.w900,
-                            fontSize: 16)),
                   ),
-                ).animate().scale(delay: 400.ms),
-              ],
-            ),
-          ).animate().slideY(begin: -0.1, end: 0, duration: 600.ms),
+                  const SizedBox(height: 32),
+                  GestureDetector(
+                    onTap: () {
+                      HapticFeedback.mediumImpact();
+                      context.push('/driver-bank-withdrawal');
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(22),
+                        boxShadow: [
+                          BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.1),
+                              blurRadius: 20,
+                              offset: const Offset(0, 10))
+                        ],
+                      ),
+                      child: const Text('Cash Out to Bank',
+                          style: TextStyle(
+                              color: AppColors.deepNavy,
+                              fontWeight: FontWeight.w900,
+                              fontSize: 16)),
+                    ),
+                  ).animate().scale(delay: 400.ms),
+                ],
+              ),
+            ).animate().slideY(begin: -0.1, end: 0, duration: 600.ms),
+          ),
 
-          // Payout History & Charts
+          // Payout History — real completed rides from Supabase
           Expanded(
-            child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-              children: [
-                const Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Payout History',
-                        style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w900,
-                            color: AppColors.textPrimary,
-                            letterSpacing: -0.5)),
-                    Icon(Iconsax.filter,
-                        color: AppColors.textPrimary, size: 20),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                _buildPremiumPayoutRow('Oct 16 - Oct 22', '₹12,450',
-                    'Processing', AppColors.warningAmber),
-                _buildPremiumPayoutRow('Oct 09 - Oct 15', '₹14,200',
-                    'Deposited', AppColors.successGreen),
-                _buildPremiumPayoutRow('Oct 02 - Oct 08', '₹11,800',
-                    'Deposited', AppColors.successGreen),
-
-                const SizedBox(height: 48),
-                const Text('Weekly Performance',
-                    style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w900,
-                        color: AppColors.textPrimary,
-                        letterSpacing: -0.5)),
-                const SizedBox(height: 24),
-                // Premium Chart Area
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(28),
-                    border: Border.all(
-                        color: AppColors.border.withValues(alpha: 0.5)),
-                    boxShadow: [
-                      BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.03),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10))
-                    ],
-                  ),
-                  child: Column(
+            child: _isLoadingRides
+                ? const Center(
+                    child: CircularProgressIndicator(
+                        color: AppColors.primaryBlue))
+                : ListView(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 24, vertical: 32),
                     children: [
-                      SizedBox(
-                        height: 160,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            _buildPremiumBar('Mon', 0.6),
-                            _buildPremiumBar('Tue', 0.8),
-                            _buildPremiumBar('Wed', 0.4),
-                            _buildPremiumBar('Thu', 0.94, isMax: true),
-                            _buildPremiumBar('Fri', 0.7),
-                            _buildPremiumBar('Sat', 0.85),
-                            _buildPremiumBar('Sun', 0.3),
-                          ],
-                        ),
+                      const Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('Completed Rides',
+                              style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w900,
+                                  color: AppColors.textPrimary,
+                                  letterSpacing: -0.5)),
+                          Icon(Iconsax.filter,
+                              color: AppColors.textPrimary, size: 20),
+                        ],
                       ),
                       const SizedBox(height: 24),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
-                        decoration: BoxDecoration(
-                            color:
-                                AppColors.successGreen.withValues(alpha: 0.05),
-                            borderRadius: BorderRadius.circular(12)),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.trending_up_rounded,
-                                size: 16, color: AppColors.successGreen),
-                            SizedBox(width: 10),
-                            Text('You earned 12% more than last week',
+                      if (_rides.isEmpty)
+                        const Center(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(vertical: 32),
+                            child: Text('No completed rides yet.',
                                 style: TextStyle(
-                                    fontSize: 12,
-                                    color: AppColors.successGreen,
-                                    fontWeight: FontWeight.w700)),
+                                    color: AppColors.textMuted,
+                                    fontWeight: FontWeight.w600)),
+                          ),
+                        )
+                      else
+                        ..._rides.map((ride) {
+                          final dateStr = DateFormat('MMM dd, yyyy').format(
+                              ride.createdAt.toLocal());
+                          return _buildPremiumPayoutRow(
+                            dateStr,
+                            NumberFormat.simpleCurrency(name: 'INR')
+                                .format(ride.fare),
+                            'Completed',
+                            AppColors.successGreen,
+                          );
+                        }),
+
+                      const SizedBox(height: 48),
+                      // Weekly earnings summary
+                      earningsAsync.maybeWhen(
+                        data: (earnings) => Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Weekly Overview',
+                                style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w900,
+                                    color: AppColors.textPrimary,
+                                    letterSpacing: -0.5)),
+                            const SizedBox(height: 24),
+                            Container(
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(24),
+                                border: Border.all(
+                                    color:
+                                        AppColors.border.withValues(alpha: 0.5)),
+                                boxShadow: [
+                                  BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.03),
+                                      blurRadius: 20,
+                                      offset: const Offset(0, 10))
+                                ],
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceAround,
+                                children: [
+                                  _buildWeeklyStat(
+                                    'Weekly Rides',
+                                    '${earnings.weeklyRides}',
+                                    Iconsax.car,
+                                    AppColors.primaryBlue,
+                                  ),
+                                  Container(
+                                      width: 1,
+                                      height: 48,
+                                      color: AppColors.border),
+                                  _buildWeeklyStat(
+                                    'Weekly Earnings',
+                                    NumberFormat.compactSimpleCurrency(
+                                            name: 'INR', decimalDigits: 0)
+                                        .format(earnings.weeklyEarnings),
+                                    Iconsax.wallet,
+                                    AppColors.successGreen,
+                                  ),
+                                ],
+                              ),
+                            ),
                           ],
                         ),
+                        orElse: () => const SizedBox.shrink(),
                       ),
                     ],
                   ),
-                ).animate(delay: 600.ms).fadeIn().slideY(begin: 0.1, end: 0),
-              ],
-            ),
           )
         ],
       ),
@@ -234,7 +317,7 @@ class EarningsScreen extends StatelessWidget {
           Text(value,
               style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 18,
+                  fontSize: 16,
                   fontWeight: FontWeight.w900)),
           Text(label,
               style: const TextStyle(
@@ -251,90 +334,113 @@ class EarningsScreen extends StatelessWidget {
     return Container(width: 1, height: 30, color: Colors.white12);
   }
 
+  Widget _buildWeeklyStat(
+      String label, String value, IconData icon, Color color) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(12)),
+          child: Icon(icon, color: color, size: 20),
+        ),
+        const SizedBox(height: 10),
+        Text(value,
+            style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+                color: AppColors.textPrimary)),
+        Text(label,
+            style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 11,
+                fontWeight: FontWeight.w600)),
+      ],
+    );
+  }
+
   Widget _buildPremiumPayoutRow(
       String date, String amount, String status, Color color) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10)
+          BoxShadow(
+              color: Colors.black.withValues(alpha: 0.02),
+              blurRadius: 16,
+              offset: const Offset(0, 4))
         ],
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.1),
-                      shape: BoxShape.circle),
-                  child:
-                      Icon(Iconsax.empty_wallet_tick, color: color, size: 20)),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(date,
-                      style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary)),
-                  const SizedBox(height: 2),
-                  Text(status,
-                      style: TextStyle(
-                          fontSize: 11,
-                          color: color,
-                          fontWeight: FontWeight.w700)),
-                ],
-              ),
-            ],
-          ),
-          Text(amount,
-              style: const TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w900,
-                  color: AppColors.deepNavy)),
-        ],
-      ),
-    ).animate().fadeIn().slideX(begin: 0.05, end: 0);
-  }
-
-  Widget _buildPremiumBar(String day, double percent, {bool isMax = false}) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        Container(
-          width: 32,
-          height: 100 * percent,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: isMax
-                  ? [
-                      AppColors.primaryBlue,
-                      AppColors.primaryBlue.withValues(alpha: 0.7)
-                    ]
-                  : [
-                      AppColors.primaryBlue.withValues(alpha: 0.2),
-                      AppColors.primaryBlue.withValues(alpha: 0.1)
-                    ],
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(22),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(22),
+          onTap: () => HapticFeedback.selectionClick(),
+          child: Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                            color: color.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(16)),
+                        child: Icon(Iconsax.empty_wallet_tick,
+                            color: color, size: 20)),
+                    const SizedBox(width: 14),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(date,
+                            style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.textPrimary)),
+                        const SizedBox(height: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: color.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(status,
+                              style: TextStyle(
+                                  fontSize: 11,
+                                  color: color,
+                                  fontWeight: FontWeight.w800)),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(amount,
+                        style: const TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w900,
+                            color: AppColors.deepNavy)),
+                    const SizedBox(height: 4),
+                    const Icon(Icons.arrow_forward_ios_rounded,
+                        size: 12, color: AppColors.textMuted),
+                  ],
+                ),
+              ],
             ),
-            borderRadius: BorderRadius.circular(8),
           ),
         ),
-        const SizedBox(height: 12),
-        Text(day,
-            style: TextStyle(
-                fontSize: 12,
-                color: isMax ? AppColors.textPrimary : AppColors.textSecondary,
-                fontWeight: isMax ? FontWeight.w900 : FontWeight.w600)),
-      ],
-    );
+      ),
+    ).animate().fadeIn().slideX(begin: 0.05, end: 0);
   }
 }

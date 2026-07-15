@@ -1,17 +1,68 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/bottom_nav_bar.dart';
+import '../../core/repositories/ride_booking_repository.dart';
+import '../../core/models/ride_booking.dart';
+import '../../features/profile/user_provider.dart';
 
-/// Driver Rides Screen matching Figma Screen [21]: My Rides History (Driver View)
-class DriverRidesScreen extends StatelessWidget {
+/// Driver Rides Screen showing My Rides History (Driver View) from Supabase
+class DriverRidesScreen extends ConsumerStatefulWidget {
   const DriverRidesScreen({super.key});
 
   @override
+  ConsumerState<DriverRidesScreen> createState() => _DriverRidesScreenState();
+}
+
+class _DriverRidesScreenState extends ConsumerState<DriverRidesScreen> {
+  bool _isLoading = true;
+  List<RideBooking> _rides = [];
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchRides();
+  }
+
+  Future<void> _fetchRides() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+    try {
+      final user = ref.read(userProvider);
+      final driverId = user.user?.id ?? 'demo';
+      final rides = await ref
+          .read(rideBookingRepositoryProvider)
+          .getPagedDriverRides(driverId, limit: 50);
+      if (mounted) {
+        setState(() {
+          _rides = rides;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final completedRides =
+        _rides.where((r) => r.status == 'completed').toList();
+    final cancelledRides =
+        _rides.where((r) => r.status == 'cancelled').toList();
+
     return DefaultTabController(
       length: 2,
       child: Scaffold(
@@ -32,8 +83,11 @@ class DriverRidesScreen extends StatelessWidget {
           ),
           actions: [
             IconButton(
-              icon: const Icon(Iconsax.filter, color: AppColors.textPrimary),
-              onPressed: () => HapticFeedback.lightImpact(),
+              icon: const Icon(Iconsax.refresh, color: AppColors.textPrimary),
+              onPressed: () {
+                HapticFeedback.lightImpact();
+                _fetchRides();
+              },
             ),
             const SizedBox(width: 8),
           ],
@@ -73,63 +127,80 @@ class DriverRidesScreen extends StatelessWidget {
             ),
           ),
         ),
-        body: TabBarView(
-          children: [
-            // Completed Tab
-            ListView(
-              padding: const EdgeInsets.all(20),
-              children: [
-                _buildPremiumRideCard(
-                  context,
-                  passenger: 'Rahul Sharma',
-                  date: 'Today, 10:30 AM',
-                  fare: '₹145.50',
-                  status: 'COMPLETED',
-                  statusColor: AppColors.successGreen,
-                  pickup: 'Vidyut Nagar, Delhi',
-                  drop: 'Indira Gandhi Int\'l Airport',
-                ),
-                _buildPremiumRideCard(
-                  context,
-                  passenger: 'Priya Verma',
-                  date: 'Yesterday, 06:15 PM',
-                  fare: '₹280.00',
-                  status: 'COMPLETED',
-                  statusColor: AppColors.successGreen,
-                  pickup: 'Sector 15, Gurgaon',
-                  drop: 'Cyber City, Gurgaon',
-                ),
-                _buildPremiumRideCard(
-                  context,
-                  passenger: 'Amit Singh',
-                  date: '24 Oct, 02:45 PM',
-                  fare: '₹110.00',
-                  status: 'COMPLETED',
-                  statusColor: AppColors.successGreen,
-                  pickup: 'Rajouri Garden',
-                  drop: 'Connaught Place',
-                ),
-              ],
-            ).animate().fadeIn(duration: 400.ms),
+        body: _isLoading
+            ? const Center(
+                child: CircularProgressIndicator(color: AppColors.primaryBlue),
+              )
+            : _error != null
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text('Failed to load rides: $_error',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(color: Colors.red)),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: _fetchRides,
+                            child: const Text('Retry'),
+                          )
+                        ],
+                      ),
+                    ),
+                  )
+                : TabBarView(
+                    children: [
+                      // Completed Tab
+                      completedRides.isEmpty
+                          ? const Center(child: Text('No completed rides.'))
+                          : ListView.builder(
+                              padding: const EdgeInsets.all(20),
+                              itemCount: completedRides.length,
+                              itemBuilder: (context, index) {
+                                final r = completedRides[index];
+                                final timeStr =
+                                    "${r.createdAt.day}/${r.createdAt.month}/${r.createdAt.year} ${r.createdAt.hour.toString().padLeft(2, '0')}:${r.createdAt.minute.toString().padLeft(2, '0')}";
+                                return _buildPremiumRideCard(
+                                  context,
+                                  passenger:
+                                      'Customer ${r.customerId.substring(0, 4).toUpperCase()}',
+                                  date: timeStr,
+                                  fare: '₹${r.fare.toStringAsFixed(2)}',
+                                  status: 'COMPLETED',
+                                  statusColor: AppColors.successGreen,
+                                  pickup: r.pickupAddress,
+                                  drop: r.destinationAddress,
+                                );
+                              },
+                            ).animate().fadeIn(duration: 400.ms),
 
-            // Cancelled Tab
-            ListView(
-              padding: const EdgeInsets.all(20),
-              children: [
-                _buildPremiumRideCard(
-                  context,
-                  passenger: 'Sunil Kumar',
-                  date: '23 Oct, 11:20 AM',
-                  fare: '₹0.00',
-                  status: 'CANCELLED',
-                  statusColor: AppColors.dangerRed,
-                  pickup: 'Noida City Center',
-                  drop: 'Okhla Phase 3',
-                ),
-              ],
-            ).animate().fadeIn(duration: 400.ms),
-          ],
-        ),
+                      // Cancelled Tab
+                      cancelledRides.isEmpty
+                          ? const Center(child: Text('No cancelled rides.'))
+                          : ListView.builder(
+                              padding: const EdgeInsets.all(20),
+                              itemCount: cancelledRides.length,
+                              itemBuilder: (context, index) {
+                                final r = cancelledRides[index];
+                                final timeStr =
+                                    "${r.createdAt.day}/${r.createdAt.month}/${r.createdAt.year} ${r.createdAt.hour.toString().padLeft(2, '0')}:${r.createdAt.minute.toString().padLeft(2, '0')}";
+                                return _buildPremiumRideCard(
+                                  context,
+                                  passenger:
+                                      'Customer ${r.customerId.substring(0, 4).toUpperCase()}',
+                                  date: timeStr,
+                                  fare: '₹${r.fare.toStringAsFixed(2)}',
+                                  status: 'CANCELLED',
+                                  statusColor: AppColors.dangerRed,
+                                  pickup: r.pickupAddress,
+                                  drop: r.destinationAddress,
+                                );
+                              },
+                            ).animate().fadeIn(duration: 400.ms),
+                    ],
+                  ),
         bottomNavigationBar: CustomBottomNavBar(
           currentIndex: 2,
           items: const [
@@ -185,7 +256,6 @@ class DriverRidesScreen extends StatelessWidget {
         child: InkWell(
           onTap: () {
             HapticFeedback.selectionClick();
-            // Could navigate to details here
           },
           borderRadius: BorderRadius.circular(24),
           child: Padding(
@@ -244,7 +314,7 @@ class DriverRidesScreen extends StatelessWidget {
                 const SizedBox(height: 16),
                 const Divider(color: AppColors.bgLightGrey, height: 1),
                 const SizedBox(height: 16),
-                // Trip Trail (Figma Style)
+                // Trip Trail
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

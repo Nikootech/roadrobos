@@ -15,25 +15,40 @@ class RideOptionsScreen extends ConsumerStatefulWidget {
   ConsumerState<RideOptionsScreen> createState() => _RideOptionsScreenState();
 }
 
-class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
-  RideOption? _selectedRide;
-  String _paymentMethod = 'Cash'; // default
+class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen>
+    with TickerProviderStateMixin {
+  // Local UI-only state — provider is the single source of truth for selection
   bool _isBooking = false;
+  final DraggableScrollableController _sheetController =
+      DraggableScrollableController();
 
   @override
   void initState() {
     super.initState();
-    // Defer selection to first frame so we can read provider
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final options = ref.read(taxiProvider).rideOptions;
       if (options.isNotEmpty && mounted) {
-        setState(() {
-          _selectedRide =
-              options.first; // use real first option with real price
-          ref.read(taxiProvider.notifier).selectOption(options.first);
-        });
+        // Select first option via provider — no local state duplication
+        ref.read(taxiProvider.notifier).selectOption(options.first);
       }
+
+      // Auto-slide up sheet after landing
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (_sheetController.isAttached && mounted) {
+          _sheetController.animateTo(
+            0.85,
+            duration: const Duration(milliseconds: 600),
+            curve: Curves.easeOutCubic,
+          );
+        }
+      });
     });
+  }
+
+  @override
+  void dispose() {
+    _sheetController.dispose();
+    super.dispose();
   }
 
   @override
@@ -52,24 +67,109 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
             ),
           ),
 
-          // 2. Floating Header Over Map
-          SafeArea(
-            child: Column(
+          // 2. Floating Header with Back Button and Route Info Card
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 16,
+            left: 16,
+            right: 16,
+            child: Row(
               children: [
-                _buildMapAddressControls(context, taxiState),
-                const Spacer(),
-                _buildAddStopButton(),
-                const SizedBox(height: 10),
+                // Back Button
+                Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 8)],
+                  ),
+                  child: IconButton(
+                    onPressed: () => context.pop(),
+                    icon: const Icon(Icons.arrow_back, color: Colors.black),
+                    style: IconButton.styleFrom(
+                      padding: const EdgeInsets.all(12),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                
+                // Route Card
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: const [
+                        BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, 2))
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.circle, size: 8, color: Colors.green),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                taxiState.pickupAddress ?? 'Pickup Location',
+                                style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.black87),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 3, top: 2, bottom: 2),
+                          child: Container(
+                            width: 2,
+                            height: 6,
+                            color: Colors.black12,
+                          ),
+                        ),
+                        Row(
+                          children: [
+                            const Icon(Icons.location_on, size: 10, color: Colors.red),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                taxiState.dropoffAddress ?? 'Destination',
+                                style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.black87),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
 
-          // 3. Draggable Vehicles Sheet (Rapido Style)
-          DraggableScrollableSheet(
-            initialChildSize: 0.55,
-            minChildSize: 0.45,
-            maxChildSize: 0.9,
-            builder: (context, scrollController) {
+          Builder(
+            builder: (context) {
+              final screenHeight = MediaQuery.of(context).size.height;
+              final double initialSize = screenHeight < 850 ? 0.58 : 0.45;
+              final double minSize = screenHeight < 850 ? 0.48 : 0.4;
+              
+              return DraggableScrollableSheet(
+                controller: _sheetController,
+                initialChildSize: initialSize,
+                minChildSize: minSize,
+                maxChildSize: 0.85,
+                snap: true,
+                snapSizes: [minSize, 0.85],
+                builder: (context, scrollController) {
               return Container(
                 decoration: const BoxDecoration(
                   color: Colors.white,
@@ -77,15 +177,18 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
                   boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 20)],
                 ),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Drag handle
-                    Container(
-                      margin: const EdgeInsets.symmetric(vertical: 12),
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                          color: Colors.grey[300],
-                          borderRadius: BorderRadius.circular(2)),
+                    Center(
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(vertical: 12),
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(2)),
+                      ),
                     ),
 
                     // Title and Distance (Image 3)
@@ -97,7 +200,7 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
                         children: [
                           const Text('Suggested rides',
                               style: TextStyle(
-                                  fontSize: 18, fontWeight: FontWeight.w900)),
+                                  fontSize: 16, fontWeight: FontWeight.w900)),
                           Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 10, vertical: 4),
@@ -125,14 +228,18 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
                         itemCount: taxiState.rideOptions.length,
                         itemBuilder: (context, index) {
                           final option = taxiState.rideOptions[index];
-                          final isSelected = _selectedRide?.id == option.id;
-                          final hasDiscount = taxiState.discountAmount > 0;
+                          // Provider is the single source of truth for selection
+                          final isSelected =
+                              taxiState.selectedOption?.id == option.id;
+                          // Only show discount on the selected option
+                          final hasDiscount =
+                              isSelected && taxiState.discountAmount > 0;
                           final finalPrice = hasDiscount
                               ? (option.price - taxiState.discountAmount)
                                   .clamp(0.0, double.infinity)
                               : option.price;
                           final originalPriceStr = hasDiscount
-                              ? '₹${option.price.toStringAsFixed(0)}'
+                              ? '\u20B9${option.price.toStringAsFixed(0)}'
                               : null;
 
                           // Use user-provided icons with fallback
@@ -145,7 +252,7 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
 
                           return _buildVehicleSelectableItem(
                             option.title,
-                            '₹${finalPrice.toStringAsFixed(0)}',
+                            '\u20B9${finalPrice.toStringAsFixed(0)}',
                             seats,
                             option.subtitle,
                             option.assetPath,
@@ -154,11 +261,18 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
                             isSelected: isSelected,
                             originalPriceStr: originalPriceStr,
                             onTap: () {
-                              setState(() => _selectedRide = option);
+                              // Update provider — no local setState for selection
                               ref
                                   .read(taxiProvider.notifier)
                                   .selectOption(option);
                               HapticFeedback.selectionClick();
+                              if (_sheetController.isAttached) {
+                                _sheetController.animateTo(
+                                  0.85,
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeOutCubic,
+                                );
+                              }
                             },
                           );
                         },
@@ -187,7 +301,6 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
                               Expanded(
                                 child: GestureDetector(
                                   onTap: () {
-                                    setState(() => _paymentMethod = 'Cash');
                                     ref
                                         .read(taxiProvider.notifier)
                                         .setPaymentMethod('Cash');
@@ -198,22 +311,22 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
                                     padding: const EdgeInsets.symmetric(
                                         vertical: 14),
                                     decoration: BoxDecoration(
-                                      color: _paymentMethod == 'Cash'
+                                      color: taxiState.paymentMethod == 'Cash'
                                           ? Colors.orange.shade50
                                           : Colors.grey.shade50,
                                       borderRadius: BorderRadius.circular(16),
                                       border: Border.all(
-                                        color: _paymentMethod == 'Cash'
+                                        color: taxiState.paymentMethod == 'Cash'
                                             ? Colors.orange.shade400
                                             : Colors.grey.shade200,
-                                        width: _paymentMethod == 'Cash' ? 2 : 1,
+                                        width: taxiState.paymentMethod == 'Cash' ? 2 : 1,
                                       ),
                                     ),
                                     child: Column(
                                       children: [
                                         Icon(
                                           Icons.money_rounded,
-                                          color: _paymentMethod == 'Cash'
+                                          color: taxiState.paymentMethod == 'Cash'
                                               ? Colors.orange.shade700
                                               : Colors.grey,
                                           size: 28,
@@ -224,12 +337,12 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
                                           style: TextStyle(
                                             fontSize: 12,
                                             fontWeight: FontWeight.w700,
-                                            color: _paymentMethod == 'Cash'
+                                            color: taxiState.paymentMethod == 'Cash'
                                                 ? Colors.orange.shade700
                                                 : Colors.grey.shade600,
                                           ),
                                         ),
-                                        if (_paymentMethod == 'Cash')
+                                        if (taxiState.paymentMethod == 'Cash')
                                           Padding(
                                             padding:
                                                 const EdgeInsets.only(top: 4),
@@ -261,7 +374,6 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
                               Expanded(
                                 child: GestureDetector(
                                   onTap: () {
-                                    setState(() => _paymentMethod = 'Online');
                                     ref
                                         .read(taxiProvider.notifier)
                                         .setPaymentMethod('Online');
@@ -272,24 +384,24 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
                                     padding: const EdgeInsets.symmetric(
                                         vertical: 14),
                                     decoration: BoxDecoration(
-                                      color: _paymentMethod == 'Online'
+                                      color: taxiState.paymentMethod == 'Online'
                                           ? AppColors.primaryBlue
                                               .withValues(alpha: 0.06)
                                           : Colors.grey.shade50,
                                       borderRadius: BorderRadius.circular(16),
                                       border: Border.all(
-                                        color: _paymentMethod == 'Online'
+                                        color: taxiState.paymentMethod == 'Online'
                                             ? AppColors.primaryBlue
                                             : Colors.grey.shade200,
                                         width:
-                                            _paymentMethod == 'Online' ? 2 : 1,
+                                            taxiState.paymentMethod == 'Online' ? 2 : 1,
                                       ),
                                     ),
                                     child: Column(
                                       children: [
                                         Icon(
                                           Icons.payment_rounded,
-                                          color: _paymentMethod == 'Online'
+                                          color: taxiState.paymentMethod == 'Online'
                                               ? AppColors.primaryBlue
                                               : Colors.grey,
                                           size: 28,
@@ -300,7 +412,7 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
                                           style: TextStyle(
                                             fontSize: 12,
                                             fontWeight: FontWeight.w700,
-                                            color: _paymentMethod == 'Online'
+                                            color: taxiState.paymentMethod == 'Online'
                                                 ? AppColors.primaryBlue
                                                 : Colors.grey.shade600,
                                           ),
@@ -308,7 +420,7 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
                                         Padding(
                                           padding:
                                               const EdgeInsets.only(top: 4),
-                                          child: _paymentMethod == 'Online'
+                                          child: taxiState.paymentMethod == 'Online'
                                               ? Container(
                                                   padding: const EdgeInsets
                                                       .symmetric(
@@ -395,18 +507,23 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
                           onPressed: _isBooking
                               ? null
                               : () async {
-                                  if (_selectedRide == null) return;
+                                  // Guard: need a selected option
+                                  final selectedOption =
+                                      taxiState.selectedOption;
+                                  if (selectedOption == null) return;
                                   setState(() => _isBooking = true);
                                   try {
                                     ref
                                         .read(taxiProvider.notifier)
-                                        .selectOption(_selectedRide!);
+                                        .selectOption(selectedOption);
                                     final success = await ref
                                         .read(taxiProvider.notifier)
                                         .startSearching();
                                     if (success) {
                                       if (context.mounted) {
-                                        await context.push('/taxi/tracking');
+                                        // Navigate to live tracking screen
+                                        // (not home — user needs to see driver search)
+                                        context.go('/taxi/tracking');
                                       }
                                     } else {
                                       if (context.mounted) {
@@ -518,8 +635,8 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
                                               ElevatedButton(
                                                 onPressed: () {
                                                   Navigator.pop(ctx);
-                                                  context
-                                                      .push('/taxi/tracking');
+                                                  // Navigate to live tracking — user is still searching
+                                                  context.go('/taxi/tracking');
                                                 },
                                                 style: ElevatedButton.styleFrom(
                                                   backgroundColor:
@@ -576,16 +693,16 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Icon(
-                                      _paymentMethod == 'Online'
+                                      taxiState.paymentMethod == 'Online'
                                           ? Icons.payment_rounded
                                           : Icons.money_rounded,
                                       size: 20,
                                     ),
                                     const SizedBox(width: 8),
                                     Text(
-                                      _paymentMethod == 'Online'
-                                          ? 'Pay & Book ${_selectedRide?.title ?? ''}'
-                                          : 'Book ${_selectedRide?.title ?? 'Any'}',
+                                      taxiState.paymentMethod == 'Online'
+                                          ? 'Pay & Book ${taxiState.selectedOption?.title ?? ''}'
+                                          : 'Book ${taxiState.selectedOption?.title ?? 'Any'}',
                                       style: const TextStyle(
                                           fontSize: 18,
                                           fontWeight: FontWeight.w900,
@@ -600,117 +717,14 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen> {
                 ),
               );
             },
-          ),
-        ],
+          );
+        },
+      ),
+    ],
       ),
     );
   }
 
-  Widget _buildMapAddressControls(BuildContext context, TaxiState state) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              // Back Button
-              IconButton(
-                onPressed: () => context.pop(),
-                icon: const Icon(Icons.arrow_back),
-                style: IconButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: Colors.black,
-                  padding: const EdgeInsets.all(12),
-                ),
-              ),
-              const Spacer(),
-              // Pickup Pill
-              Flexible(
-                child: _buildAddressPill(
-                    context, state.pickupAddress ?? 'Pick-up'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Flexible(
-                child: _buildAddressPill(
-                    context, state.dropoffAddress ?? 'Destination',
-                    isPickup: false),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAddressPill(BuildContext context, String address,
-      {bool isPickup = true}) {
-    return GestureDetector(
-      onTap: () {
-        ref.read(taxiProvider.notifier).setFocus(isPickup);
-        context.pop();
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              isPickup ? Icons.circle : Icons.location_on,
-              color: isPickup ? Colors.green : Colors.red,
-              size: 14,
-            ),
-            const SizedBox(width: 8),
-            Flexible(
-              child: Text(
-                address,
-                style:
-                    const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            const Icon(Icons.edit_location_alt_rounded,
-                size: 16, color: AppColors.primaryBlue),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAddStopButton() {
-    return Container(
-      margin: const EdgeInsets.only(right: 16),
-      child: Align(
-        alignment: Alignment.centerRight,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(30),
-            boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
-          ),
-          child: const Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.add, size: 18, color: Colors.black),
-              SizedBox(width: 8),
-              Text('Add stop', style: TextStyle(fontWeight: FontWeight.bold)),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
   Widget _buildVehicleSelectableItem(
       String name, String price, String seats, String eta, String? imagePath,

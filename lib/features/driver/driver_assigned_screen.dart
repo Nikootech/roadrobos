@@ -4,11 +4,17 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/custom_button.dart';
 import '../../shared/widgets/live_map_widget.dart';
 import '../../shared/widgets/glass_card.dart';
-import '../../providers/taxi_provider.dart';
+import '../../core/models/ride_booking.dart';
+import '../../core/repositories/driver_repository.dart';
+import '../../core/models/user_role.dart';
+import 'providers/driver_state_provider.dart';
 
 /// Driver Assigned Screen matching Rapido Captain Logic — Premium Overhaul
 class DriverAssignedScreen extends ConsumerStatefulWidget {
@@ -29,160 +35,196 @@ class _DriverAssignedScreenState extends ConsumerState<DriverAssignedScreen> {
     super.dispose();
   }
 
-  void _handleOtpSubmit() {
-    final success =
-        ref.read(taxiProvider.notifier).verifyOtp(_otpController.text);
-    if (success) {
+  // Validates OTP and atomically starts the trip on the backend.
+  // Must be async so we can await the DB write and surface errors to the driver.
+  Future<void> _handleOtpSubmit(RideBooking booking) async {
+    if (_otpController.text == booking.otp) {
       setState(() => _showOtpError = false);
-      HapticFeedback.mediumImpact();
+      await HapticFeedback.mediumImpact();
+      try {
+        await ref
+            .read(driverRepositoryProvider)
+            .updateTripStatus(booking.id, 'started');
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to start trip: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     } else {
       setState(() => _showOtpError = true);
-      HapticFeedback.vibrate();
+      await HapticFeedback.vibrate();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    ref.listen(taxiProvider, (previous, next) {
-      if (previous?.status != RideStatus.idle &&
-          next.status == RideStatus.idle) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-              content: Text('Ride was cancelled by the customer.')));
-          context.pop();
-        }
-      }
-    });
+    final activeTripAsync = ref.watch(driverActiveTripProvider);
 
-    final taxiState = ref.watch(taxiProvider);
-    final status = taxiState.status;
-
-    return Scaffold(
-      backgroundColor: AppColors.bgLightGrey,
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          // Map Background Section
-          Positioned.fill(
-            child: LiveMapWidget(
-              height: MediaQuery.of(context).size.height,
-              roadroboLocation: taxiState.roadroboLocation,
-              pickupLocation: taxiState.pickupLocation,
-              isTracking: true,
-              isDriver: true,
+    return activeTripAsync.when(
+      loading: () => const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(color: AppColors.primaryBlue),
+        ),
+      ),
+      error: (error, stack) => Scaffold(
+        body: Center(
+          child: Text('Error: $error', style: const TextStyle(color: Colors.red)),
+        ),
+      ),
+      data: (booking) {
+        if (booking == null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Trip completed or cancelled.')),
+              );
+              context.pop();
+            }
+          });
+          return const Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(color: AppColors.primaryBlue),
             ),
-          ),
+          );
+        }
 
-          // Top Controls
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: SafeArea(
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _buildFloatingButton(Icons.arrow_back_ios_new_rounded,
-                        onTap: () => context.pop()),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: AppColors.deepNavy,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: const [
-                          BoxShadow(color: Colors.black26, blurRadius: 10)
-                        ],
-                      ),
-                      child: const Row(
-                        children: [
-                          Icon(Icons.directions_rounded,
-                              color: Colors.white, size: 18),
-                          SizedBox(width: 8),
-                          Text('NAVIGATE',
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 12,
-                                  letterSpacing: 0.5)),
-                        ],
-                      ),
-                    ).animate().fadeIn().scale(),
-                  ],
+        final passengerAsync =
+            ref.watch(passengerProfileProvider(booking.customerId));
+        final passenger = passengerAsync.value;
+        final driverMapState = ref.watch(mapStateProvider);
+        final driverLoc = LatLng(driverMapState.lat, driverMapState.lng);
+
+        return Scaffold(
+          backgroundColor: AppColors.bgLightGrey,
+          body: Stack(
+            fit: StackFit.expand,
+            children: [
+              // Map Background Section
+              Positioned.fill(
+                child: LiveMapWidget(
+                  height: MediaQuery.of(context).size.height,
+                  roadroboLocation: driverLoc,
+                  pickupLocation: LatLng(booking.pickupLat, booking.pickupLng),
+                  isTracking: true,
+                  isDriver: true,
                 ),
               ),
-            ),
-          ),
 
-          // Sliding Trip Info Sheet
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(32),
-                    topRight: Radius.circular(32)),
-                boxShadow: [
-                  BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 20,
-                      offset: Offset(0, -5))
-                ],
+              // Top Controls
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _buildFloatingButton(Icons.arrow_back_ios_new_rounded,
+                            onTap: () => context.pop()),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: AppColors.deepNavy,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: const [
+                              BoxShadow(color: Colors.black26, blurRadius: 10)
+                            ],
+                          ),
+                          child: const Row(
+                            children: [
+                              Icon(Icons.directions_rounded,
+                                  color: Colors.white, size: 18),
+                              SizedBox(width: 8),
+                              Text('NAVIGATE',
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 12,
+                                      letterSpacing: 0.5)),
+                            ],
+                          ),
+                        ).animate().fadeIn().scale(),
+                      ],
+                    ),
+                  ),
+                ),
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                      width: 48,
-                      height: 6,
-                      decoration: BoxDecoration(
-                          color: AppColors.bgLightGrey,
-                          borderRadius: BorderRadius.circular(10))),
-                  const SizedBox(height: 24),
-                  _buildTripStatusHeader(taxiState),
-                  const SizedBox(height: 28),
-                  if (status == RideStatus.atPickup && !taxiState.isOtpVerified)
-                    _buildOtpSection()
-                  else
-                    _buildRouteInfo(taxiState),
-                  const SizedBox(height: 24),
-                  const Divider(height: 1),
-                  const SizedBox(height: 24),
-                  _buildPassengerInfo(taxiState),
-                  const SizedBox(height: 32),
-                  _buildActionButton(taxiState),
-                ],
-              ),
-            ).animate().slideY(
-                begin: 0.5,
-                end: 0,
-                duration: 800.ms,
-                curve: Curves.easeOutQuart),
-          )
-        ],
-      ),
+
+              // Sliding Trip Info Sheet
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(32),
+                        topRight: Radius.circular(32)),
+                    boxShadow: [
+                      BoxShadow(
+                          color: Colors.black12,
+                          blurRadius: 20,
+                          offset: Offset(0, -5))
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                          width: 48,
+                          height: 6,
+                          decoration: BoxDecoration(
+                              color: AppColors.bgLightGrey,
+                              borderRadius: BorderRadius.circular(10))),
+                      const SizedBox(height: 24),
+                      _buildTripStatusHeader(booking),
+                      const SizedBox(height: 28),
+                      if (booking.status == 'arrived')
+                        _buildOtpSection(booking)
+                      else
+                        _buildRouteInfo(booking),
+                      const SizedBox(height: 24),
+                      const Divider(height: 1),
+                      const SizedBox(height: 24),
+                      _buildPassengerInfo(booking, passenger),
+                      const SizedBox(height: 32),
+                      _buildActionButton(booking),
+                    ],
+                  ),
+                ).animate().slideY(
+                    begin: 0.5,
+                    end: 0,
+                    duration: 800.ms,
+                    curve: Curves.easeOutQuart),
+              )
+            ],
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildTripStatusHeader(TaxiState state) {
+  Widget _buildTripStatusHeader(RideBooking booking) {
     String title = 'Picking up passenger';
-    String subtitle = state.eta ?? 'Calculating...';
+    String subtitle = 'Arriving at pickup';
     Color accentColor = AppColors.primaryBlue;
 
-    if (state.status == RideStatus.atPickup) {
-      title = state.isOtpVerified ? 'OTP Verified' : 'Waiting at pickup';
-      subtitle = 'Arrived at pickup point';
+    if (booking.status == 'arrived') {
+      title = 'Waiting at pickup';
+      subtitle = 'Ask for OTP to start trip';
       accentColor = AppColors.successGreen;
-    } else if (state.status == RideStatus.headingToDropoff) {
-      title = 'In Trip';
-      subtitle = 'Heading to destination';
+    } else if (booking.status == 'started') {
+      title = 'Heading to Dropoff';
+      subtitle = 'Drive safely';
       accentColor = AppColors.accentOrange;
     }
 
@@ -239,7 +281,7 @@ class _DriverAssignedScreenState extends ConsumerState<DriverAssignedScreen> {
             borderRadius: BorderRadius.circular(20),
           ),
           child: Icon(
-            state.status == RideStatus.headingToDropoff
+            booking.status == 'started'
                 ? Icons.location_on_rounded
                 : Icons.directions_car_rounded,
             color: accentColor,
@@ -250,7 +292,7 @@ class _DriverAssignedScreenState extends ConsumerState<DriverAssignedScreen> {
     );
   }
 
-  Widget _buildOtpSection() {
+  Widget _buildOtpSection(RideBooking booking) {
     return Column(
       children: [
         GlassCard(
@@ -283,7 +325,7 @@ class _DriverAssignedScreenState extends ConsumerState<DriverAssignedScreen> {
                 ),
                 onChanged: (val) {
                   if (val.length == 4) {
-                    _handleOtpSubmit();
+                    _handleOtpSubmit(booking);
                   }
                 },
               ),
@@ -303,7 +345,8 @@ class _DriverAssignedScreenState extends ConsumerState<DriverAssignedScreen> {
     ).animate().fadeIn().scale();
   }
 
-  Widget _buildRouteInfo(TaxiState state) {
+  Widget _buildRouteInfo(RideBooking booking) {
+    final showDrop = booking.status == 'started';
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
@@ -314,16 +357,12 @@ class _DriverAssignedScreenState extends ConsumerState<DriverAssignedScreen> {
       child: Row(
         children: [
           Icon(Icons.location_on_rounded,
-              color: state.status == RideStatus.headingToDropoff
-                  ? AppColors.dangerRed
-                  : AppColors.successGreen,
+              color: showDrop ? AppColors.dangerRed : AppColors.successGreen,
               size: 18),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              state.status == RideStatus.headingToDropoff
-                  ? (state.dropoffAddress ?? 'Terminal 3, IGI Airport')
-                  : (state.pickupAddress ?? 'MG Road, Delhi'),
+              showDrop ? booking.destinationAddress : booking.pickupAddress,
               style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -331,7 +370,7 @@ class _DriverAssignedScreenState extends ConsumerState<DriverAssignedScreen> {
             ),
           ),
           Text(
-            state.status == RideStatus.headingToDropoff ? 'DROP OFF' : 'PICKUP',
+            showDrop ? 'DROP OFF' : 'PICKUP',
             style: const TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w800,
@@ -343,7 +382,7 @@ class _DriverAssignedScreenState extends ConsumerState<DriverAssignedScreen> {
     );
   }
 
-  Widget _buildPassengerInfo(TaxiState state) {
+  Widget _buildPassengerInfo(RideBooking booking, AppUser? passenger) {
     return Row(
       children: [
         Container(
@@ -359,30 +398,30 @@ class _DriverAssignedScreenState extends ConsumerState<DriverAssignedScreen> {
           ),
         ),
         const SizedBox(width: 16),
-        const Expanded(
+        Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Passenger',
-                  style: TextStyle(
+              Text(passenger?.name ?? 'Passenger',
+                  style: const TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.w800,
                       color: AppColors.textPrimary),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis),
-              SizedBox(height: 2),
+              const SizedBox(height: 2),
               FittedBox(
                 fit: BoxFit.scaleDown,
                 alignment: Alignment.centerLeft,
                 child: Row(
                   children: [
-                    Icon(Icons.star_rounded, color: Colors.orange, size: 14),
-                    SizedBox(width: 4),
-                    Text('4.8 • ',
+                    const Icon(Icons.star_rounded, color: Colors.orange, size: 14),
+                    const SizedBox(width: 4),
+                    const Text('4.8 • ',
                         style: TextStyle(
                             fontSize: 12, fontWeight: FontWeight.w600)),
-                    Text('Wallet Payment',
-                        style: TextStyle(
+                    Text('${booking.paymentMethod} Payment',
+                        style: const TextStyle(
                             fontSize: 12,
                             color: AppColors.textSecondary,
                             fontWeight: FontWeight.w500)),
@@ -392,41 +431,79 @@ class _DriverAssignedScreenState extends ConsumerState<DriverAssignedScreen> {
             ],
           ),
         ),
-        _buildActionIcon(Iconsax.message, AppColors.primaryBlue, () => {}),
+        _buildActionIcon(Iconsax.message, AppColors.primaryBlue, () {
+          context.push('/chat', extra: {
+            'bookingId': booking.id,
+            'receiverId': booking.customerId,
+            'receiverName': passenger?.name ?? 'Passenger',
+          });
+        }),
         const SizedBox(width: 12),
-        _buildActionIcon(Iconsax.call, AppColors.successGreen, () => {}),
+        _buildActionIcon(Iconsax.call, AppColors.successGreen, () async {
+          final phone = passenger?.phone ?? '+919876543210';
+          final uri = Uri(scheme: 'tel', path: phone);
+          if (await canLaunchUrl(uri)) {
+            await launchUrl(uri);
+          } else {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Cannot open dialer on this device')),
+              );
+            }
+          }
+        }),
       ],
     );
   }
 
-  Widget _buildActionButton(TaxiState state) {
+  Widget _buildActionButton(RideBooking booking) {
     String label = 'I\'VE ARRIVED';
     Color color = AppColors.primaryBlue;
-    VoidCallback onPressed =
-        () => ref.read(taxiProvider.notifier).arriveAtPickup();
-
-    if (state.status == RideStatus.atPickup) {
-      if (!state.isOtpVerified) {
-        label = 'ENTER OTP TO START';
-        color = AppColors.textMuted;
-        onPressed = () {}; // Managed by TextField onChanged
-      } else {
-        label = 'START TRIP';
-        color = AppColors.successGreen;
-        onPressed = () => ref.read(taxiProvider.notifier).startTrip();
+    // I'VE ARRIVED — awaited so DB and UI are always in sync.
+    VoidCallback onPressed = () async {
+      try {
+        await ref
+            .read(driverRepositoryProvider)
+            .updateTripStatus(booking.id, 'arrived');
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update status: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
-    } else if (state.status == RideStatus.headingToDropoff) {
+    };
+
+    if (booking.status == 'arrived') {
+      label = 'ENTER OTP TO START';
+      color = AppColors.textMuted;
+      onPressed = () {}; // Managed by OTP entry input field
+    } else if (booking.status == 'started') {
       label = 'COMPLETE TRIP';
       color = AppColors.deepNavy;
-      onPressed = () {
-        ref.read(taxiProvider.notifier).completeRide();
-        context.pop();
+      onPressed = () async {
+        try {
+          await ref
+              .read(driverRepositoryProvider)
+              .updateTripStatus(booking.id, 'completed');
+          if (mounted) context.pop();
+        } catch (e) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to complete trip: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       };
     }
 
     return CustomButton(
       label: label,
-      onPressed: onPressed,
+      onPressed: booking.status == 'arrived' ? null : onPressed,
       backgroundColor: color,
     ).animate().scale(delay: 500.ms);
   }

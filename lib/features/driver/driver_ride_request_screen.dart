@@ -33,7 +33,11 @@ class _DriverRideRequestScreenState
     _progressController = AnimationController(
         vsync: this, duration: const Duration(seconds: _timeoutSeconds))
       ..forward().then((_) {
-        if (mounted) context.pop();
+        // Guard: widget may have been disposed before the 60-second timer fired
+        // (e.g. driver accepted/declined manually). Calling pop() on a dead
+        // context causes a "deactivated widget" exception.
+        if (!mounted) return;
+        context.pop();
       });
     Future.delayed(
         const Duration(milliseconds: 300), () => HapticFeedback.vibrate());

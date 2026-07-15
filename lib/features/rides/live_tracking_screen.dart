@@ -72,7 +72,22 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen>
           next.status == RideStatus.idle) {
         _countdownTimer?.cancel();
         if (mounted) {
-          _showCancelledDialog(wasOnline: previous?.paymentMethod == 'Online');
+          final wasOnline = previous?.paymentMethod == 'Online';
+          if (wasOnline) {
+            _showCancelledDialog(wasOnline: true);
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('No drivers available nearby. Please try again.'),
+                backgroundColor: Colors.deepOrange,
+              ),
+            );
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/main/home');
+            }
+          }
         }
       }
     });
@@ -149,8 +164,40 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen>
               left: 20,
               child: GestureDetector(
                 onTap: () async {
-                  ref.read(taxiProvider.notifier).cancelRide();
-                  if (context.mounted) {
+                  // Show confirmation dialog before cancelling an active ride
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20)),
+                      title: const Text('Cancel Ride?',
+                          style: TextStyle(fontWeight: FontWeight.w900)),
+                      content: const Text(
+                        'Are you sure you want to cancel this ride? '
+                        'This may incur a cancellation fee.',
+                        style: TextStyle(fontSize: 14, height: 1.6),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, false),
+                          child: const Text('Keep Ride',
+                              style: TextStyle(fontWeight: FontWeight.bold)),
+                        ),
+                        ElevatedButton(
+                          onPressed: () => Navigator.pop(ctx, true),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                          ),
+                          child: const Text('Cancel Ride'),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (confirmed == true && context.mounted) {
+                    ref.read(taxiProvider.notifier).cancelRide();
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text('Ride cancelled'),
@@ -515,16 +562,23 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen>
             onPressed: () async {
               Navigator.pop(ctx);
               _countdownTimer?.cancel();
+
+              // Capture messenger BEFORE the async gap so it's safe to use
+              // even if the widget rebuilds or the context changes.
+              final messenger = ScaffoldMessenger.of(context);
+
               await ref.read(taxiProvider.notifier).cancelAndRefund();
+
+              messenger.showSnackBar(
+                SnackBar(
+                  content: Text(isOnline
+                      ? '✅ Ride cancelled. Refund initiated successfully!'
+                      : '✅ Ride cancelled.'),
+                  backgroundColor: isOnline ? Colors.green : Colors.redAccent,
+                ),
+              );
+
               if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(isOnline
-                        ? '✅ Ride cancelled. Refund initiated successfully!'
-                        : '✅ Ride cancelled.'),
-                    backgroundColor: isOnline ? Colors.green : Colors.redAccent,
-                  ),
-                );
                 context.go('/main/home');
               }
             },
@@ -855,22 +909,38 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen>
                               color: Colors.green)),
                     ],
                   ),
-                  if (state.status == RideStatus.atPickup)
-                    ElevatedButton(
-                      onPressed: () =>
-                          ref.read(taxiProvider.notifier).startTrip(),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        foregroundColor: Colors.white,
+                  if (state.status == RideStatus.atPickup) ...[
+                    if (state.driverId?.startsWith('mock_') ?? false)
+                      ElevatedButton(
+                        onPressed: () =>
+                            ref.read(taxiProvider.notifier).startTrip(),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 32, vertical: 16),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16)),
+                        ),
+                        child: const Text('Start Trip',
+                            style: TextStyle(
+                                fontWeight: FontWeight.w900, fontSize: 18)),
+                      )
+                    else
+                      Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 32, vertical: 16),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16)),
-                      ),
-                      child: const Text('Start Trip',
+                            horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                            color: Colors.green.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12)),
+                        child: const Text(
+                          'Waiting for driver...',
                           style: TextStyle(
-                              fontWeight: FontWeight.w900, fontSize: 18)),
-                    ),
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green),
+                        ),
+                      ),
+                  ],
                 ] else if (state.status == RideStatus.headingToDropoff) ...[
                   Expanded(
                     child: Column(
@@ -893,20 +963,35 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen>
                     ),
                   ),
                   const SizedBox(width: 12),
-                  ElevatedButton(
-                    onPressed: () => context.push('/taxi/complete'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryNavy,
-                      foregroundColor: Colors.white,
+                  if (state.driverId?.startsWith('mock_') ?? false)
+                    ElevatedButton(
+                      onPressed: () => context.push('/taxi/complete'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primaryNavy,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 24, vertical: 16),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16)),
+                      ),
+                      child: const Text('Finish Trip',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w900, fontSize: 16)),
+                    )
+                  else
+                    Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 24, vertical: 16),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16)),
-                    ),
-                    child: const Text('Finish Trip',
+                          horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                          color: AppColors.primaryNavy.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12)),
+                      child: const Text(
+                        'On the way...',
                         style: TextStyle(
-                            fontWeight: FontWeight.w900, fontSize: 16)),
-                  ),
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primaryNavy),
+                      ),
+                    ),
                 ] else ...[
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

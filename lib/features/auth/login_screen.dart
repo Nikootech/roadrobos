@@ -122,10 +122,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   void _handleEmailLogin() async {
     setState(() => _isLoading = true);
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
     try {
       await ref.read(authServiceProvider).signInWithEmail(
-            _emailController.text.trim(),
-            _passwordController.text.trim(),
+            email,
+            password,
           );
 
       unawaited(Sentry.addBreadcrumb(
@@ -142,15 +144,56 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      unawaited(Sentry.addBreadcrumb(
-        Breadcrumb(
-          message: 'Login failed',
-          category: 'auth',
-          level: SentryLevel.warning,
-          data: {'method': 'email', 'error': e.toString()},
-        ),
-      ));
-      NavHelpers.showError(context, 'Login Failed: $e');
+
+      final authService = ref.read(authServiceProvider);
+      final isRegistered = await authService.isEmailRegistered(email);
+
+      if (!mounted) return;
+
+      if (isRegistered) {
+        // Show custom dialog helping the user resolve Google vs Email login
+        unawaited(showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: const Row(
+              children: [
+                Icon(Icons.info_outline_rounded, color: AppColors.primaryBlue),
+                SizedBox(width: 8),
+                Text('Sign In Help', style: TextStyle(fontWeight: FontWeight.bold)),
+              ],
+            ),
+            content: Text(
+              'We found a RoadRobos account linked to "$email".\n\n'
+              'If you originally signed up using Google, please tap "Continue with Google" to log in.\n\n'
+              'If you would like to set a password to log in with email directly, tap "Set Password" to receive a reset link.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  _handleForgotPassword();
+                },
+                child: const Text('Set Password', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primaryBlue)),
+              ),
+            ],
+          ),
+        ));
+      } else {
+        unawaited(Sentry.addBreadcrumb(
+          Breadcrumb(
+            message: 'Login failed',
+            category: 'auth',
+            level: SentryLevel.warning,
+            data: {'method': 'email', 'error': e.toString()},
+          ),
+        ));
+        NavHelpers.showError(context, 'Login Failed: $e');
+      }
     }
   }
 
@@ -613,6 +656,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         prefixIcon: Iconsax.sms,
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
+                        forceLightMode: true,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Email is required';
@@ -631,6 +675,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         prefixIcon: Iconsax.lock,
                         isPassword: true,
                         controller: _passwordController,
+                        forceLightMode: true,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Password is required';

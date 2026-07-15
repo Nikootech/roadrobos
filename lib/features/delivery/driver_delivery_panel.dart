@@ -27,31 +27,41 @@ class DriverDeliveryPanel extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final activeDelivery = ref.watch(activeDeliveryProvider);
     final pendingAsync = ref.watch(pendingDeliveryRequestsProvider);
+    final declinedIds = ref.watch(declinedOrderIdsProvider);
 
     // Show active delivery actions first
     if (activeDelivery != null) {
       return _ActiveDeliveryCard(order: activeDelivery);
     }
 
-    // Otherwise show first pending request
+    // Otherwise show first pending request (ignoring locally declined ones)
     return pendingAsync.when(
       loading: () => const SizedBox.shrink(),
       error: (_, __) => const SizedBox.shrink(),
       data: (pending) {
-        if (pending.isEmpty) return const SizedBox.shrink();
-        return _IncomingRequestCard(order: pending.first);
+        final visible = pending.where((o) => !declinedIds.contains(o.id)).toList();
+        if (visible.isEmpty) return const SizedBox.shrink();
+        return _IncomingRequestCard(order: visible.first);
       },
     );
   }
 }
 
 // ── Incoming Request Card ─────────────────────────────────────────────────────
-class _IncomingRequestCard extends ConsumerWidget {
+class _IncomingRequestCard extends ConsumerStatefulWidget {
   final DeliveryOrder order;
   const _IncomingRequestCard({required this.order});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_IncomingRequestCard> createState() => _IncomingRequestCardState();
+}
+
+class _IncomingRequestCardState extends ConsumerState<_IncomingRequestCard> {
+  bool _isAccepting = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final order = widget.order;
     final notifier = ref.read(activeDeliveryProvider.notifier);
 
     return Container(
@@ -162,7 +172,9 @@ class _IncomingRequestCard extends ConsumerWidget {
                 child: TextButton(
                   onPressed: () {
                     HapticFeedback.lightImpact();
-                    // Dismiss without accepting (no Supabase write needed)
+                    ref
+                        .read(declinedOrderIdsProvider.notifier)
+                        .update((set) => {...set, order.id});
                   },
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
@@ -179,11 +191,31 @@ class _IncomingRequestCard extends ConsumerWidget {
               Expanded(
                 child: CustomButton(
                   label: 'ACCEPT',
+                  isLoading: _isAccepting,
                   backgroundColor: const Color(0xFF6366F1),
-                  onPressed: () async {
-                    unawaited(HapticFeedback.heavyImpact());
-                    await notifier.acceptDelivery(order);
-                  },
+                  onPressed: _isAccepting
+                      ? null
+                      : () async {
+                          unawaited(HapticFeedback.heavyImpact());
+                          setState(() => _isAccepting = true);
+                          try {
+                            await notifier.acceptDelivery(order);
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Failed to accept: $e'),
+                                  backgroundColor: AppColors.dangerRed,
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                            }
+                          } finally {
+                            if (mounted) {
+                              setState(() => _isAccepting = false);
+                            }
+                          }
+                        },
                 )
                     .animate(onPlay: (c) => c.repeat(reverse: true))
                     .shimmer(delay: 1.seconds, duration: 1.5.seconds),

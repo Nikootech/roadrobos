@@ -7,6 +7,7 @@ import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/bottom_nav_bar.dart';
 import '../profile/user_provider.dart';
 import '../../core/repositories/ratings_repository.dart';
+import 'providers/driver_state_provider.dart';
 
 /// Driver Profile Screen — Premium Overhaul with Real Data
 class DriverProfileScreen extends ConsumerWidget {
@@ -23,6 +24,9 @@ class DriverProfileScreen extends ConsumerWidget {
     final ratingData = ratingAsyncValue.value;
     final String avgRatingStr = ratingData?['avg_score']?.toString() ?? '5.0';
     final int reviewsCount = ratingData?['total_reviews'] ?? 0;
+
+    // Watch real-time online status
+    final isOnline = ref.watch(mapStateProvider).isOnline;
 
     return Scaffold(
       backgroundColor: AppColors.bgLightGrey,
@@ -56,17 +60,22 @@ class DriverProfileScreen extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
         child: Column(
           children: [
-            // Profile Card (Premium)
+            // Profile Card (Premium Overhaul)
             Container(
+              width: double.infinity,
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(32),
-                boxShadow: const [
+                border: Border.all(
+                    color: AppColors.brandGreen.withValues(alpha: 0.08),
+                    width: 1.5),
+                boxShadow: [
                   BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 20,
-                      offset: Offset(0, 10))
+                    color: AppColors.brandGreen.withValues(alpha: 0.04),
+                    blurRadius: 24,
+                    offset: const Offset(0, 12),
+                  )
                 ],
               ),
               child: Column(
@@ -74,14 +83,17 @@ class DriverProfileScreen extends ConsumerWidget {
                   Stack(
                     alignment: Alignment.bottomRight,
                     children: [
+                      // Pulse effect container around the avatar
                       Container(
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
-                              color:
-                                  AppColors.primaryBlue.withValues(alpha: 0.2),
-                              width: 2),
+                            color: isOnline
+                                ? AppColors.successGreen.withValues(alpha: 0.3)
+                                : AppColors.textMuted.withValues(alpha: 0.2),
+                            width: 3,
+                          ),
                         ),
                         child: CircleAvatar(
                           radius: 54,
@@ -91,75 +103,114 @@ class DriverProfileScreen extends ConsumerWidget {
                               : const NetworkImage(
                                   'https://i.pravatar.cc/150?u=roadrobo'),
                         ),
-                      ),
+                      )
+                          .animate(onPlay: (controller) => controller.repeat(reverse: true))
+                          .boxShadow(
+                            begin: BoxShadow(
+                              color: isOnline
+                                  ? AppColors.successGreen.withValues(alpha: 0.15)
+                                  : Colors.transparent,
+                              blurRadius: 4,
+                            ),
+                            end: BoxShadow(
+                              color: isOnline
+                                  ? AppColors.successGreen.withValues(alpha: 0.45)
+                                  : Colors.transparent,
+                              blurRadius: 18,
+                              spreadRadius: 4,
+                            ),
+                            duration: 1800.ms,
+                            curve: Curves.easeInOut,
+                          ),
+                      // Verified + Status Indicator Badge
                       Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: const BoxDecoration(
-                            color: AppColors.successGreen,
-                            shape: BoxShape.circle),
-                        child: const Icon(Icons.check,
-                            color: Colors.white, size: 14),
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: isOnline ? AppColors.successGreen : AppColors.textMuted,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
+                        child: Icon(
+                          isOnline ? Icons.check : Icons.power_settings_new_rounded,
+                          color: Colors.white,
+                          size: 14,
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 20),
-                  Text(name,
-                      style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w900,
-                          color: AppColors.textPrimary)),
+                  Text(
+                    name,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
                   const SizedBox(height: 4),
-                  const Text('Senior Roadrobo • ID: BLR-49281',
-                      style: TextStyle(
-                          color: AppColors.textSecondary,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13)),
-                  const SizedBox(height: 16),
+                  const Text(
+                    'Senior Roadrobo • ID: BLR-49281',
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  // Sleek Status Chip
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      color: AppColors.successGreen.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
+                      color: (isOnline ? AppColors.successGreen : AppColors.textMuted)
+                          .withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: (isOnline ? AppColors.successGreen : AppColors.textMuted)
+                            .withValues(alpha: 0.2)),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Container(
-                            width: 8,
-                            height: 8,
-                            decoration: const BoxDecoration(
-                                color: AppColors.successGreen,
-                                shape: BoxShape.circle)),
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: isOnline ? AppColors.successGreen : AppColors.textMuted,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
                         const SizedBox(width: 8),
-                        const Text('ONLINE & ACTIVE',
-                            style: TextStyle(
-                                color: AppColors.successGreen,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 0.5)),
+                        Text(
+                          isOnline ? 'ONLINE & ACTIVE' : 'OFFLINE',
+                          style: TextStyle(
+                            color: isOnline ? AppColors.successGreen : AppColors.textSecondary,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
                       ],
                     ),
                   ),
                 ],
               ),
-            ).animate().fadeIn().slideY(begin: 0.1, end: 0),
+            ).animate().fadeIn().slideY(begin: 0.08, end: 0, duration: 400.ms),
 
             const SizedBox(height: 24),
 
-            // Stats Grid
+            // Stats Grid (Premium visual cards)
             Row(
               children: [
                 _buildStat('Rides', (user?.totalRides ?? 0).toString(),
-                    Icons.directions_car_rounded, AppColors.primaryBlue),
+                    Icons.directions_car_rounded, AppColors.brandGreen),
                 const SizedBox(width: 12),
                 _buildStat(
                     'Rating', avgRatingStr, Icons.star_rounded, Colors.orange),
                 const SizedBox(width: 12),
                 _buildStat('Exp', '3y', Icons.workspace_premium_rounded,
-                    AppColors.successGreen),
+                    AppColors.accentOrange),
               ],
-            ).animate().fadeIn(delay: 200.ms),
+            ).animate().fadeIn(delay: 150.ms, duration: 400.ms),
 
             const SizedBox(height: 24),
 
@@ -211,8 +262,7 @@ class DriverProfileScreen extends ConsumerWidget {
               width: double.infinity,
               child: TextButton(
                 onPressed: () async {
-                  // ignore: unawaited_futures
-                  HapticFeedback.heavyImpact();
+                  await HapticFeedback.heavyImpact();
                   await ref.read(userProvider.notifier).logout();
                   if (context.mounted) context.go('/auth/login');
                 },
@@ -283,26 +333,45 @@ class DriverProfileScreen extends ConsumerWidget {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+              color: AppColors.border.withValues(alpha: 0.5)),
           boxShadow: [
             BoxShadow(
-                color: Colors.black.withValues(alpha: 0.02), blurRadius: 10)
+              color: Colors.black.withValues(alpha: 0.01),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            )
           ],
         ),
         child: Column(
           children: [
-            Icon(icon, color: color, size: 20),
-            const SizedBox(height: 8),
-            Text(value,
-                style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w900,
-                    color: AppColors.textPrimary)),
-            Text(label,
-                style: const TextStyle(
-                    fontSize: 10,
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.w600)),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 20),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w900,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 11,
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ],
         ),
       ),
@@ -315,9 +384,15 @@ class DriverProfileScreen extends ConsumerWidget {
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+            color: AppColors.border.withValues(alpha: 0.6)),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10)
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.01),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          )
         ],
       ),
       child: Material(
@@ -327,38 +402,49 @@ class DriverProfileScreen extends ConsumerWidget {
             HapticFeedback.lightImpact();
             onTap();
           },
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(22),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(10),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                      color: AppColors.bgLightGrey,
-                      borderRadius: BorderRadius.circular(12)),
-                  child: Icon(icon, color: AppColors.deepNavy, size: 22),
+                    color: AppColors.brandGreen.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Icon(icon, color: AppColors.brandGreen, size: 22),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(title,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.textPrimary,
-                              fontSize: 15)),
-                      Text(subtitle,
-                          style: const TextStyle(
-                              fontSize: 12,
-                              color: AppColors.textSecondary,
-                              fontWeight: FontWeight.w500)),
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                          fontSize: 15,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                     ],
                   ),
                 ),
-                const Icon(Icons.arrow_forward_ios_rounded,
-                    size: 14, color: AppColors.textMuted),
+                const Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 14,
+                  color: AppColors.textMuted,
+                ),
               ],
             ),
           ),
@@ -542,16 +628,29 @@ class DriverProfileScreen extends ConsumerWidget {
           width: 24,
           height: 140 * percentage,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  AppColors.primaryBlue,
-                  AppColors.primaryBlue.withValues(alpha: 0.6)
-                ]),
-            borderRadius: BorderRadius.circular(8),
+            gradient: const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                AppColors.brandGreen,
+                AppColors.brandGreenMid,
+              ],
+            ),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.brandGreen.withValues(alpha: 0.2),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              )
+            ],
           ),
-        ).animate().scaleY(begin: 0, end: 1),
+        ).animate().scaleY(
+              begin: 0,
+              end: 1,
+              duration: 600.ms,
+              curve: Curves.easeOutBack,
+            ),
         const SizedBox(height: 8),
         Text(label,
             style: const TextStyle(
@@ -575,7 +674,7 @@ class DriverProfileScreen extends ConsumerWidget {
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
                 color: Colors.white, borderRadius: BorderRadius.circular(12)),
-            child: Icon(icon, color: AppColors.primaryBlue, size: 20),
+            child: Icon(icon, color: AppColors.brandGreen, size: 20),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -609,37 +708,74 @@ class DriverProfileScreen extends ConsumerWidget {
       String name, String rating, String time, String comment) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-          border: Border.all(color: AppColors.bgLightGrey),
-          borderRadius: BorderRadius.circular(20)),
+        color: Colors.white,
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.01),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          )
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            Text(name,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                name,
                 style: const TextStyle(
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
-                    fontSize: 15)),
-            Text(time,
-                style:
-                    const TextStyle(fontSize: 11, color: AppColors.textMuted))
-          ]),
-          const SizedBox(height: 4),
-          Row(children: [
-            const Icon(Icons.star_rounded, color: Colors.orange, size: 14),
-            const SizedBox(width: 4),
-            Text(rating,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                  fontSize: 15,
+                ),
+              ),
+              Text(
+                time,
+                style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Row(
+                children: List.generate(
+                  5,
+                  (index) => Icon(
+                    Icons.star_rounded,
+                    color: index < double.parse(rating).floor()
+                        ? Colors.orange
+                        : Colors.grey[200],
+                    size: 14,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                rating,
                 style: const TextStyle(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 13,
-                    color: AppColors.textPrimary))
-          ]),
-          const SizedBox(height: 8),
-          Text(comment,
-              style: const TextStyle(
-                  fontSize: 13, color: AppColors.textSecondary, height: 1.4)),
+                  fontWeight: FontWeight.w800,
+                  fontSize: 12,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            comment,
+            style: const TextStyle(
+              fontSize: 13,
+              color: AppColors.textSecondary,
+              height: 1.4,
+            ),
+          ),
         ],
       ),
     );

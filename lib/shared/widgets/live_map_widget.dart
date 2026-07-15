@@ -153,6 +153,10 @@ class _LiveMapWidgetState extends ConsumerState<LiveMapWidget>
   void _fitBounds(LatLng p1, LatLng p2) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      if (p1.latitude == p2.latitude && p1.longitude == p2.longitude) {
+        _mapController.move(p1, 15);
+        return;
+      }
       final bounds = LatLngBounds(p1, p2);
       _mapController.fitCamera(
         CameraFit.bounds(
