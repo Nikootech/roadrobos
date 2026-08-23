@@ -14,6 +14,7 @@ import '../core/repositories/driver_repository.dart';
 import '../core/services/user_tracking_service.dart';
 import '../core/services/osm_maps_service.dart';
 import '../core/services/payment_service.dart';
+import '../core/services/location_permission_helper.dart';
 
 // Sentinel object used by TaxiState.copyWith() to distinguish "clear this
 // nullable field" from "leave it unchanged". Pass _kClear for any nullable
@@ -245,16 +246,9 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
         return;
       }
 
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) {
-          _setFallbackLocation();
-          return;
-        }
-      }
-
-      if (permission == LocationPermission.deniedForever) {
+      final hasPermission =
+          await LocationPermissionHelper.requestLocationWithDisclosure();
+      if (!hasPermission) {
         _setFallbackLocation();
         return;
       }
@@ -918,6 +912,10 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
   }
 
   Future<bool> startSearching() async {
+    // Proactively clean up any stale searching rides
+    unawaited(ref
+        .read(rideBookingRepositoryProvider)
+        .autoCancelExpiredSearchingRides());
     // Do NOT set booked here — bookRide() handles status internally
     return await bookRide();
   }

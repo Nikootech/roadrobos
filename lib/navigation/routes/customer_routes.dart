@@ -45,6 +45,7 @@ import '../../features/rentals/rental_providers.dart';
 import '../../features/profile/referral_screen.dart';
 import '../../features/profile/user_loyalty_screen.dart';
 import '../../features/profile/account_settings_screen.dart';
+import '../../features/settings/unified_settings_screen.dart';
 import '../../features/profile/service_history_screen.dart';
 import '../../features/profile/my_vehicles_screen.dart';
 import '../../features/profile/saved_locations_screen.dart';
@@ -589,6 +590,13 @@ final List<RouteBase> customerRoutes = [
     path: '/saved-locations',
     pageBuilder: (context, state) => AppTransitions.slideRight(
       child: const SavedLocationsScreen(),
+      state: state,
+    ),
+  ),
+  GoRoute(
+    path: '/settings',
+    pageBuilder: (context, state) => AppTransitions.slideRight(
+      child: const UnifiedSettingsScreen(),
       state: state,
     ),
   ),

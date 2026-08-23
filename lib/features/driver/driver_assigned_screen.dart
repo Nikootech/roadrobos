@@ -15,6 +15,7 @@ import '../../core/models/ride_booking.dart';
 import '../../core/repositories/driver_repository.dart';
 import '../../core/models/user_role.dart';
 import 'providers/driver_state_provider.dart';
+import 'driver_navigation_screen.dart';
 
 /// Driver Assigned Screen matching Rapido Captain Logic — Premium Overhaul
 class DriverAssignedScreen extends ConsumerStatefulWidget {
@@ -127,28 +128,38 @@ class _DriverAssignedScreenState extends ConsumerState<DriverAssignedScreen> {
                       children: [
                         _buildFloatingButton(Icons.arrow_back_ios_new_rounded,
                             onTap: () => context.pop()),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: AppColors.deepNavy,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: const [
-                              BoxShadow(color: Colors.black26, blurRadius: 10)
-                            ],
+                        GestureDetector(
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => DriverNavigationScreen(
+                                destination: booking.pickupAddress,
+                              ),
+                            ),
                           ),
-                          child: const Row(
-                            children: [
-                              Icon(Icons.directions_rounded,
-                                  color: Colors.white, size: 18),
-                              SizedBox(width: 8),
-                              Text('NAVIGATE',
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w800,
-                                      fontSize: 12,
-                                      letterSpacing: 0.5)),
-                            ],
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: AppColors.deepNavy,
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: const [
+                                BoxShadow(color: Colors.black26, blurRadius: 10)
+                              ],
+                            ),
+                            child: const Row(
+                              children: [
+                                Icon(Icons.directions_rounded,
+                                    color: Colors.white, size: 18),
+                                SizedBox(width: 8),
+                                Text('NAVIGATE',
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w800,
+                                        fontSize: 12,
+                                        letterSpacing: 0.5)),
+                              ],
+                            ),
                           ),
                         ).animate().fadeIn().scale(),
                       ],

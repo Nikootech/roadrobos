@@ -1,4 +1,6 @@
-import 'package:shared_preferences/shared_preferences.dart';
+// All permissions are compile-time constants.
+// The shared_preferences import was removed (S4 security fix):
+// permission checks must never rely on client-modifiable storage.
 
 enum UserRole {
   customer,
@@ -71,6 +73,8 @@ class AppUser {
   final List<String> emergencyContacts;
   final String referralCode;
   final List<SavedLocation> savedLocations;
+  final String? cityId;
+  final String? zoneId;
   final Map<String, dynamic> notificationPreferences;
 
   const AppUser({
@@ -81,6 +85,8 @@ class AppUser {
     required this.role,
     this.profilePic,
     this.createdAt,
+    this.cityId,
+    this.zoneId,
     this.points = 0,
     this.totalRides = 0,
     this.emergencyContacts = const [],
@@ -113,6 +119,8 @@ class AppUser {
       profilePic: map['profile_pic'] ?? map['avatar_url'],
       createdAt:
           map['created_at'] != null ? DateTime.parse(map['created_at']) : null,
+      cityId: map['city_id'],
+      zoneId: map['zone_id'],
       points: map['points'] ?? 0,
       totalRides: map['total_rides'] ?? 0,
       emergencyContacts: List<String>.from(map['emergency_contacts'] ?? []),
@@ -157,6 +165,8 @@ class AppUser {
       'email': email,
       'role': _roleToDb(role),
       'profile_pic': profilePic,
+      'city_id': cityId,
+      'zone_id': zoneId,
       'current_device_id': currentDeviceId,
       'is_approved': isApproved,
       'saved_locations': savedLocations.map((x) => x.toMap()).toList(),
@@ -200,6 +210,8 @@ class AppUser {
     UserRole? role,
     String? profilePic,
     DateTime? createdAt,
+    String? cityId,
+    String? zoneId,
     int? points,
     int? totalRides,
     List<String>? emergencyContacts,
@@ -218,6 +230,8 @@ class AppUser {
       role: role ?? this.role,
       profilePic: profilePic ?? this.profilePic,
       createdAt: createdAt ?? this.createdAt,
+      cityId: cityId ?? this.cityId,
+      zoneId: zoneId ?? this.zoneId,
       points: points ?? this.points,
       totalRides: totalRides ?? this.totalRides,
       emergencyContacts: emergencyContacts ?? this.emergencyContacts,
@@ -233,6 +247,8 @@ class AppUser {
 }
 
 extension UserRoleExtension on UserRole {
+  // -- Role groupings -------------------------------------------------------
+
   bool get isAdmin => [
         UserRole.admin,
         UserRole.superAdmin,
@@ -254,9 +270,122 @@ extension UserRoleExtension on UserRole {
 
   bool get isEmployee => this != UserRole.customer && this != UserRole.driver;
 
-  Future<bool> hasPermission(String permission) async {
-    final prefs = await SharedPreferences.getInstance();
-    final cached = prefs.getStringList('user_permissions') ?? [];
-    return cached.contains(permission);
+  // -- Read-only roles ------------------------------------------------------
+
+  /// Auditor and analyst roles are strictly read-only.
+  /// All write action buttons must be hidden when this is true. (Fix S1/S6)
+  bool get isReadOnly => this == UserRole.auditor || this == UserRole.analyst;
+
+  // -- Permission gates (compile-time, no async I/O) ------------------------
+  // SECURITY: Replaces the removed SharedPreferences-based hasPermission()
+  // (Fix S4). Client-side permission storage is tamper-prone; compile-time
+  // role checks are the only safe gate for UI-level access control.
+
+  /// Can see revenue, payouts, and financial KPIs.
+  bool get canAccessFinancials => [
+        UserRole.superAdmin,
+        UserRole.founderAdmin,
+        UserRole.admin,
+        UserRole.financeManager,
+        UserRole.auditor,
+        UserRole.analyst,
+      ].contains(this);
+
+  /// Can see and act on emergency SOS alerts.
+  bool get canSeeEmergencies => [
+        UserRole.superAdmin,
+        UserRole.founderAdmin,
+        UserRole.admin,
+        UserRole.opsHead,
+        UserRole.cityManager,
+        UserRole.areaManager,
+        UserRole.supportManager,
+      ].contains(this);
+
+  /// Can dispatch technicians and manage service jobs.
+  bool get canDispatch => [
+        UserRole.superAdmin,
+        UserRole.founderAdmin,
+        UserRole.admin,
+        UserRole.opsHead,
+        UserRole.cityManager,
+        UserRole.areaManager,
+      ].contains(this);
+
+  /// Can approve drivers, staff, and KYC requests.
+  bool get canApprove => [
+        UserRole.superAdmin,
+        UserRole.founderAdmin,
+        UserRole.admin,
+        UserRole.opsHead,
+        UserRole.cityManager,
+        UserRole.areaManager,
+      ].contains(this);
+
+  /// Can see and manage offers, campaigns, and referrals.
+  bool get canAccessMarketing => [
+        UserRole.superAdmin,
+        UserRole.founderAdmin,
+        UserRole.admin,
+        UserRole.marketingAdmin,
+      ].contains(this);
+
+  /// Can see audit log feeds and compliance data.
+  bool get canAccessAudit => [
+        UserRole.superAdmin,
+        UserRole.founderAdmin,
+        UserRole.admin,
+        UserRole.auditor,
+        UserRole.analyst,
+      ].contains(this);
+
+  /// Can see analytics dashboards, reports, and data exports.
+  bool get canAccessAnalytics => [
+        UserRole.superAdmin,
+        UserRole.founderAdmin,
+        UserRole.admin,
+        UserRole.analyst,
+        UserRole.opsHead,
+        UserRole.financeManager,
+        UserRole.cityManager,
+        UserRole.areaManager,
+      ].contains(this);
+
+  /// Can manage system settings, RBAC, and staff permissions.
+  bool get canManageSystem => [
+        UserRole.superAdmin,
+        UserRole.founderAdmin,
+        UserRole.admin,
+      ].contains(this);
+
+  /// Can handle support tickets, disputes, and feedback.
+  bool get canHandleSupport => [
+        UserRole.superAdmin,
+        UserRole.founderAdmin,
+        UserRole.admin,
+        UserRole.supportManager,
+        UserRole.opsHead,
+      ].contains(this);
+
+  // -- UI helpers ------------------------------------------------------------
+
+  /// Human-readable badge label shown in the dashboard AppBar. (Fix S3)
+  String get roleLabel {
+    return switch (this) {
+      UserRole.superAdmin     => 'SUPER ADMIN',
+      UserRole.founderAdmin   => 'FOUNDER',
+      UserRole.opsHead        => 'OPS COMMAND',
+      UserRole.cityManager    => 'CITY MANAGER',
+      UserRole.areaManager    => 'AREA MANAGER',
+      UserRole.financeManager => 'FINANCE CONSOLE',
+      UserRole.supportManager => 'SUPPORT HUB',
+      UserRole.marketingAdmin => 'MARKETING HUB',
+      UserRole.auditor        => 'AUDIT VIEW',
+      UserRole.analyst        => 'ANALYTICS',
+      UserRole.admin          => 'ADMIN CONSOLE',
+      UserRole.driver         => 'DRIVER',
+      UserRole.technician     => 'TECHNICIAN',
+      UserRole.customer       => 'CUSTOMER',
+    };
   }
 }

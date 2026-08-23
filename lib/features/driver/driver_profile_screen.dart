@@ -50,7 +50,7 @@ class DriverProfileScreen extends ConsumerWidget {
                   color: AppColors.textPrimary),
               onPressed: () {
                 HapticFeedback.lightImpact();
-                context.push('/account-settings');
+                context.push('/settings');
               },
             ),
           ),

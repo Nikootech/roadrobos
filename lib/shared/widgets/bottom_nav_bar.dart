@@ -11,104 +11,116 @@ class NavItemData {
       {required this.icon, required this.activeIcon, required this.label});
 }
 
-/// Premium Unified Bottom Navigation Bar — Active Pill Indicator Edition
+/// Unified Bottom Navigation Bar — Classic Animated Design for All User Roles
 class CustomBottomNavBar extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
   final List<NavItemData> items;
+  final Color? activeColor;
+  final Color? inactiveColor;
 
   const CustomBottomNavBar({
     super.key,
     required this.currentIndex,
     required this.onTap,
     required this.items,
+    this.activeColor,
+    this.inactiveColor,
   });
 
   @override
   Widget build(BuildContext context) {
+    final effectiveActiveColor = activeColor ?? AppColors.brandGreen;
+    final effectiveInactiveColor = inactiveColor ?? const Color(0xFF94A3B8);
+    final bottomPadding = MediaQuery.paddingOf(context).bottom;
+
     return Container(
-      height: 76,
       decoration: BoxDecoration(
         color: Colors.white,
-        border: const Border(top: BorderSide(color: Color(0xFFEEF0F3))),
+        border: const Border(top: BorderSide(color: Color(0xFFE2E8F0))),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 16,
-            offset: const Offset(0, -4),
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 12,
+            offset: const Offset(0, -3),
           )
         ],
       ),
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-          child: Row(
-            children: List.generate(items.length, (index) {
-              final item = items[index];
-              final isActive = currentIndex == index;
+      padding: EdgeInsets.only(
+        top: 8,
+        bottom: bottomPadding > 0 ? bottomPadding : 10,
+        left: 4,
+        right: 4,
+      ),
+      child: Row(
+        children: List.generate(items.length, (index) {
+          final item = items[index];
+          final isActive = currentIndex == index;
 
-              return Expanded(
-                child: GestureDetector(
-                  onTap: () {
-                    if (!isActive) {
-                      HapticFeedback.selectionClick();
-                      onTap(index);
-                    }
-                  },
-                  behavior: HitTestBehavior.opaque,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Icon with animated pill background
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 220),
-                        curve: Curves.easeOutCubic,
-                        padding: EdgeInsets.symmetric(
-                          horizontal: isActive ? 16 : 10,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isActive
-                              ? AppColors.primaryBlue.withValues(alpha: 0.12)
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        child: AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 200),
-                          child: Icon(
-                            isActive ? item.activeIcon : item.icon,
-                            key: ValueKey('${item.label}_$isActive'),
-                            color: isActive
-                                ? AppColors.primaryBlue
-                                : const Color(0xFFB0B5BE),
-                            size: 22,
+          return Expanded(
+            child: GestureDetector(
+              onTap: () {
+                if (!isActive) {
+                  HapticFeedback.selectionClick();
+                  onTap(index);
+                }
+              },
+              behavior: HitTestBehavior.opaque,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  AnimatedScale(
+                    scale: isActive ? 1.10 : 1.0,
+                    duration: const Duration(milliseconds: 220),
+                    curve: Curves.easeOutBack,
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 200),
+                      transitionBuilder: (child, animation) {
+                        return FadeTransition(
+                          opacity: animation,
+                          child: ScaleTransition(
+                            scale: Tween<double>(begin: 0.85, end: 1.0)
+                                .animate(animation),
+                            child: child,
                           ),
-                        ),
+                        );
+                      },
+                      child: Icon(
+                        isActive ? item.activeIcon : item.icon,
+                        key: ValueKey('${item.label}_$isActive'),
+                        color: isActive
+                            ? effectiveActiveColor
+                            : effectiveInactiveColor,
+                        size: 24,
                       ),
-                      const SizedBox(height: 3),
-                      // Label
-                      AnimatedDefaultTextStyle(
-                        duration: const Duration(milliseconds: 200),
-                        style: TextStyle(
-                          fontSize: 10.5,
-                          fontWeight:
-                              isActive ? FontWeight.w700 : FontWeight.w500,
-                          color: isActive
-                              ? AppColors.primaryBlue
-                              : const Color(0xFFB0B5BE),
-                          letterSpacing: 0.1,
-                        ),
-                        child: Text(item.label),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-              );
-            }),
-          ),
-        ),
+                  const SizedBox(height: 4),
+                  AnimatedDefaultTextStyle(
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeInOut,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight:
+                          isActive ? FontWeight.w700 : FontWeight.w500,
+                      color: isActive
+                          ? effectiveActiveColor
+                          : effectiveInactiveColor,
+                      letterSpacing: 0.1,
+                      height: 1.15,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    child: Text(item.label),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }),
       ),
     );
   }
 }
+

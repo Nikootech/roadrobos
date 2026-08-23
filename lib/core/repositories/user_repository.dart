@@ -19,25 +19,6 @@ class UserRepository {
 
   /// Fetch user profile from Supabase profiles table
   Future<AppUser?> getUser(String uid) async {
-    // On web, always fetch fresh from Supabase.
-    // The local cache doesn't persist currentDeviceId and can return stale
-    // data that causes false device-mismatch logouts during the auth flow.
-    if (!kIsWeb) {
-      // 1. Check local cache first (mobile/desktop only)
-      final local = await (_db.select(_db.cachedProfiles)
-            ..where((t) => t.id.equals(uid)))
-          .getSingleOrNull();
-      if (local != null) {
-        debugPrint('UserRepository: Returning Cached Profile for $uid');
-        // Background refresh
-        unawaited(
-          _fetchAndCache(uid)
-              .catchError((e) => debugPrint('Background Fetch Error: $e')),
-        );
-        return _fromCached(local);
-      }
-    }
-
     try {
       final response =
           await _supabase.from('profiles').select().eq('id', uid).maybeSingle();
@@ -49,15 +30,16 @@ class UserRepository {
       }
       return null;
     } catch (e) {
+      debugPrint('UserRepository: Fresh fetch failed ($e), falling back to offline cache');
+      if (!kIsWeb) {
+        final local = await (_db.select(_db.cachedProfiles)
+              ..where((t) => t.id.equals(uid)))
+            .getSingleOrNull();
+        if (local != null) {
+          return _fromCached(local);
+        }
+      }
       throw Exception('Failed to fetch user profile: $e');
-    }
-  }
-
-  Future<void> _fetchAndCache(String uid) async {
-    final response =
-        await _supabase.from('profiles').select().eq('id', uid).maybeSingle();
-    if (response != null) {
-      await _cacheUser(AppUser.fromMap(response, uid));
     }
   }
 
@@ -110,7 +92,12 @@ class UserRepository {
       try {
         final exists = await userExists(user.id);
         if (exists) {
-          await _supabase.from('profiles').update(userMap).eq('id', user.id);
+          // SECURITY: Never overwrite server-authoritative role or approval status
+          // during general profile updates (e.g. name, avatar, phone sync)
+          final updateMap = Map<String, dynamic>.from(userMap)
+            ..remove('role')
+            ..remove('is_approved');
+          await _supabase.from('profiles').update(updateMap).eq('id', user.id);
         } else {
           await _supabase.from('profiles').insert(
                 userMap..addEntries([MapEntry('id', user.id)]),

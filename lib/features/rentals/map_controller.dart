@@ -7,6 +7,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/services/location_permission_helper.dart';
 
 final mapControllerProvider =
     StateNotifierProvider<AppMapController, AppMapState>((ref) {
@@ -69,14 +70,14 @@ class AppMapController extends StateNotifier<AppMapState> {
         return;
       }
 
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) {
-          state = state.copyWith(
-              isLoading: false, errorMessage: 'Permission denied');
-          return;
-        }
+      final hasPermission =
+          await LocationPermissionHelper.requestLocationWithDisclosure(
+        isBackgroundRequired: false,
+      );
+      if (!hasPermission) {
+        state = state.copyWith(
+            isLoading: false, errorMessage: 'Permission denied');
+        return;
       }
 
       final position = await Geolocator.getCurrentPosition();

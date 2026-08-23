@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../shared/widgets/live_map_widget.dart';
 import '../../navigation/nav_helpers.dart';
 import '../../providers/taxi_provider.dart';
+import 'schedule_ride_screen.dart';
 
 class BookRideScreen extends ConsumerStatefulWidget {
   const BookRideScreen({super.key});
@@ -248,6 +249,43 @@ class _BookRideScreenState extends ConsumerState<BookRideScreen> {
                             style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w800,
+                                letterSpacing: 0.5),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      // Secondary CTA — Schedule for Later
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ScheduleRideScreen(
+                                  pickupAddress: taxiState.pickupAddress,
+                                  dropoffAddress: taxiState.dropoffAddress,
+                                ),
+                              ),
+                            );
+                          },
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: const Color(0xFF22C55E),
+                            side: const BorderSide(
+                                color: Color(0xFF22C55E), width: 1.5),
+                            padding:
+                                const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30)),
+                          ),
+                          icon: const Icon(
+                              Icons.schedule_rounded,
+                              size: 18),
+                          label: const Text(
+                            'SCHEDULE FOR LATER',
+                            style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
                                 letterSpacing: 0.5),
                           ),
                         ),

@@ -13,13 +13,15 @@ import '../../features/driver/driver_profile_screen.dart';
 import '../../features/auth/kyc/kyc_upload_screen.dart';
 import '../../features/auth/kyc/kyc_status_screen.dart';
 import '../app_transitions.dart';
+import '../../features/settings/unified_settings_screen.dart';
+import '../../features/profile/notification_settings_screen.dart';
 
 /// Driver portal routes.
 /// Exported as [driverRoutes] and composed into the root GoRouter.
 final List<RouteBase> driverRoutes = [
   GoRoute(
     path: '/driver-home',
-    pageBuilder: (context, state) => AppTransitions.scaleIn(
+    pageBuilder: (context, state) => AppTransitions.fade(
       child: const DriverHomeScreen(),
       state: state,
     ),
@@ -75,7 +77,7 @@ final List<RouteBase> driverRoutes = [
   ),
   GoRoute(
     path: '/driver-earnings',
-    pageBuilder: (context, state) => AppTransitions.slideRight(
+    pageBuilder: (context, state) => AppTransitions.fade(
       child: const EarningsScreen(),
       state: state,
     ),
@@ -89,7 +91,7 @@ final List<RouteBase> driverRoutes = [
   ),
   GoRoute(
     path: '/driver-profile',
-    pageBuilder: (context, state) => AppTransitions.slideRight(
+    pageBuilder: (context, state) => AppTransitions.fade(
       child: const DriverProfileScreen(),
       state: state,
     ),
@@ -108,6 +110,20 @@ final List<RouteBase> driverRoutes = [
     path: '/driver/kyc-status',
     pageBuilder: (context, state) => AppTransitions.fade(
       child: const KycStatusScreen(),
+      state: state,
+    ),
+  ),
+  GoRoute(
+    path: '/settings',
+    pageBuilder: (context, state) => AppTransitions.slideRight(
+      child: const UnifiedSettingsScreen(),
+      state: state,
+    ),
+  ),
+  GoRoute(
+    path: '/notification-settings',
+    pageBuilder: (context, state) => AppTransitions.slideRight(
+      child: const NotificationSettingsScreen(),
       state: state,
     ),
   ),

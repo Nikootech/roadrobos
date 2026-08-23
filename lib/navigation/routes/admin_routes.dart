@@ -22,14 +22,19 @@ import '../../features/admin/approvals/approvals_list_screen.dart';
 import '../../features/admin/approvals/approval_detail_screen.dart';
 import '../../core/models/approval.dart';
 import '../../features/admin/assets_screen.dart';
+import '../../features/admin/service_dispatch_screen.dart';
+import '../../features/admin/admin_dispute_center_screen.dart';
 import '../app_transitions.dart';
+import '../../features/settings/unified_settings_screen.dart';
+import '../../features/profile/notification_center_screen.dart';
+import '../../features/profile/notification_settings_screen.dart';
 
 /// Admin console routes.
 /// Exported as [adminRoutes] and composed into the root GoRouter.
 final List<RouteBase> adminRoutes = [
   GoRoute(
     path: '/admin-home',
-    pageBuilder: (context, state) => AppTransitions.scaleIn(
+    pageBuilder: (context, state) => AppTransitions.fade(
       child: const AdminDashboardScreen(),
       state: state,
     ),
@@ -59,7 +64,7 @@ final List<RouteBase> adminRoutes = [
   ),
   GoRoute(
     path: '/admin-approvals',
-    pageBuilder: (context, state) => AppTransitions.slideRight(
+    pageBuilder: (context, state) => AppTransitions.fade(
       child: const ApprovalsListScreen(),
       state: state,
     ),
@@ -76,7 +81,7 @@ final List<RouteBase> adminRoutes = [
   ),
   GoRoute(
     path: '/admin-revenue-referral',
-    pageBuilder: (context, state) => AppTransitions.slideRight(
+    pageBuilder: (context, state) => AppTransitions.fade(
       child: const RevenueReferralScreen(),
       state: state,
     ),
@@ -121,7 +126,7 @@ final List<RouteBase> adminRoutes = [
   ),
   GoRoute(
     path: '/admin-customer-database',
-    pageBuilder: (context, state) => AppTransitions.slideRight(
+    pageBuilder: (context, state) => AppTransitions.fade(
       child: const CustomerDatabaseScreen(),
       state: state,
     ),
@@ -162,6 +167,13 @@ final List<RouteBase> adminRoutes = [
     ),
   ),
   GoRoute(
+    path: '/admin-logistics-hub',
+    pageBuilder: (context, state) => AppTransitions.slideRight(
+      child: const ManpowerSupplyScreen(),
+      state: state,
+    ),
+  ),
+  GoRoute(
     path: '/admin/audit-logs',
     pageBuilder: (context, state) => AppTransitions.slideRight(
       child: const AuditLogScreen(),
@@ -172,6 +184,48 @@ final List<RouteBase> adminRoutes = [
     path: '/admin-assets',
     pageBuilder: (context, state) => AppTransitions.slideRight(
       child: const AssetsScreen(),
+      state: state,
+    ),
+  ),
+  GoRoute(
+    path: '/admin-service-dispatch',
+    pageBuilder: (context, state) => AppTransitions.fade(
+      child: const ServiceDispatchScreen(),
+      state: state,
+    ),
+  ),
+  GoRoute(
+    path: '/admin-disputes',
+    pageBuilder: (context, state) => AppTransitions.slideRight(
+      child: const AdminDisputeCenterScreen(),
+      state: state,
+    ),
+  ),
+  GoRoute(
+    path: '/settings',
+    pageBuilder: (context, state) => AppTransitions.slideRight(
+      child: const UnifiedSettingsScreen(),
+      state: state,
+    ),
+  ),
+  GoRoute(
+    path: '/admin/audit-logs',
+    pageBuilder: (context, state) => AppTransitions.slideRight(
+      child: const AuditLogScreen(),
+      state: state,
+    ),
+  ),
+  GoRoute(
+    path: '/notifications',
+    pageBuilder: (context, state) => AppTransitions.slideRight(
+      child: const NotificationCenterScreen(),
+      state: state,
+    ),
+  ),
+  GoRoute(
+    path: '/notification-settings',
+    pageBuilder: (context, state) => AppTransitions.slideRight(
+      child: const NotificationSettingsScreen(),
       state: state,
     ),
   ),

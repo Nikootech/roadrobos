@@ -78,6 +78,7 @@ Future<void> initializeBackgroundService() async {
   await service.configure(
     androidConfiguration: AndroidConfiguration(
       onStart: onStart,
+      autoStartOnBoot: false,
       isForegroundMode: true,
       notificationChannelId: 'background_service',
       initialNotificationTitle: 'RoadRobos Background Service',

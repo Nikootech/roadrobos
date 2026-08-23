@@ -15,6 +15,7 @@ import '../../features/profile/user_provider.dart';
 import '../../core/services/language_service.dart';
 import '../../core/repositories/ride_booking_repository.dart';
 import '../../core/models/ride_booking.dart';
+import 'widgets/instant_cashout_sheet.dart';
 
 class DriverHomeScreen extends ConsumerStatefulWidget {
   const DriverHomeScreen({super.key});
@@ -525,7 +526,94 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                             .fadeIn(delay: 100.ms)
                             .slideX(begin: 0.1, end: 0),
 
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 20),
+
+                        // Daily Milestone & Incentive Ring
+                        Container(
+                          padding: const EdgeInsets.all(18),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.03),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  SizedBox(
+                                    width: 52,
+                                    height: 52,
+                                    child: CircularProgressIndicator(
+                                      value: 0.7,
+                                      strokeWidth: 5,
+                                      backgroundColor: const Color(0xFFF97316).withValues(alpha: 0.15),
+                                      valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFF97316)),
+                                    ),
+                                  ),
+                                  const Text(
+                                    '7/10',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w900,
+                                      color: Color(0xFFF97316),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        const Text(
+                                          'Daily Goal • ₹500 Bonus',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w800,
+                                            color: AppColors.deepNavy,
+                                          ),
+                                        ),
+                                        const Spacer(),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFF97316).withValues(alpha: 0.1),
+                                            borderRadius: BorderRadius.circular(6),
+                                          ),
+                                          child: const Text(
+                                            '3 Left',
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.bold,
+                                              color: Color(0xFFF97316),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 4),
+                                    const Text(
+                                      'Complete 3 more rides before midnight to unlock payout bonus.',
+                                      style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ).animate().fadeIn(delay: 150.ms).slideY(begin: 0.08, end: 0),
+
+                        const SizedBox(height: 28),
 
                         // Quick Actions
                         Text('Quick Actions',
@@ -558,6 +646,14 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                                         child: const Text('Got it'))
                                   ],
                                 ),
+                              );
+                            }),
+                            _buildQuickAction('Fast Cashout', Iconsax.empty_wallet_tick,
+                                const Color(0xFF10B981), () {
+                              InstantCashoutSheet.show(
+                                context,
+                                availableBalance: 2450.0,
+                                defaultUpiId: 'driver.partner@oksbi',
                               );
                             }),
                             _buildQuickAction('Wallet', Iconsax.wallet,

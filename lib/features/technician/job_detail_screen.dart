@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/models/service_booking.dart';
 import '../../core/repositories/service_booking_repository.dart';
+import 'tech_job_completion_screen.dart';
 
 class JobDetailScreen extends ConsumerStatefulWidget {
   final String bookingId;
@@ -330,7 +331,22 @@ class _JobDetailScreenState extends ConsumerState<JobDetailScreen> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: () => _updateStatus('completed'),
+              onPressed: () {
+                final booking = _booking;
+                if (booking == null) return;
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => TechJobCompletionScreen(
+                      bookingId: booking.id,
+                      serviceName: booking.packageName,
+                      customerName: booking.vehicleName.isNotEmpty
+                          ? booking.vehicleName
+                          : 'Customer',
+                    ),
+                  ),
+                );
+              },
               style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green, foregroundColor: Colors.white),
               child: const Text('Complete Job'),

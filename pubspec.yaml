@@ -1,7 +1,7 @@
 name: roadrobos
 description: "RoadRobos - Vehicle Service & Ride Booking App"
 publish_to: 'none'
-version: 1.0.4+9
+version: 1.0.7+12
 
 environment:
   sdk: '>=3.3.4 <4.0.0'
@@ -93,7 +93,6 @@ dependencies:
   # ── Security & Encryption ────────────────────────────────────────────────────
   pointycastle: ^3.9.1            # AES-256-GCM for SQLite column encryption (E1)
   cryptography: ^2.7.0            # X25519 + AES-256-GCM for chat E2E (E5)
-  flutter_jailbreak_detection: ^1.9.0  # Uncomment to enable root detection (S3)
 
   # ── Misc ─────────────────────────────────────────────────────────────────────
   flutter_image_compress: ^2.4.0

@@ -9,6 +9,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/services/location_permission_helper.dart';
 import '../profile/user_provider.dart';
 import '../profile/sos_provider.dart';
 
@@ -41,6 +42,22 @@ class _EmergencyHelpScreenState extends ConsumerState<EmergencyHelpScreen> {
       });
     }
     try {
+      final hasPermission =
+          await LocationPermissionHelper.requestLocationWithDisclosure(
+        context: mounted ? context : null,
+        isBackgroundRequired: false,
+      );
+      if (!hasPermission) {
+        if (mounted) {
+          setState(() {
+            _locationLine1 = 'Location Permission Required';
+            _locationLine2 = 'Enable GPS for accurate emergency dispatch';
+            _isLoadingLocation = false;
+          });
+        }
+        return;
+      }
+
       final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
         timeLimit: const Duration(seconds: 5),

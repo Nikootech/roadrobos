@@ -61,7 +61,7 @@ class ProfileScreen extends ConsumerWidget {
                           color: AppColors.textPrimary),
                     ),
                     GestureDetector(
-                      onTap: () => context.push('/account-settings'),
+                      onTap: () => context.push('/settings'),
                       child: Container(
                         width: 40,
                         height: 40,
@@ -314,6 +314,11 @@ class ProfileScreen extends ConsumerWidget {
                       'My Vehicles',
                       'Manage your vehicles',
                       () => context.push('/vehicles')),
+                  _buildMenuItem(
+                      Icons.shield_outlined,
+                      'Vehicle Insurance & Policies',
+                      'Active policies, renewals & claims',
+                      () => context.push('/insurance')),
                   _buildMenuItem(
                       Icons.location_on_outlined,
                       'Saved Locations',

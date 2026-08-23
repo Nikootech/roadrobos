@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
@@ -84,18 +85,58 @@ class DriverRepository {
   }
 
   /// Stream of pending ride requests (status = 'searching')
-  /// This MUST match the status written by TaxiProvider.startSearching()
-  Stream<List<RideBooking>> watchPendingRides() {
+  /// Automatically filters out requests older than [maxAgeSeconds] (default 90s)
+  /// and triggers backend cancellation of expired searching rides.
+  Stream<List<RideBooking>> watchPendingRides({int maxAgeSeconds = 90}) {
+    unawaited(autoCancelExpiredSearchingRides());
+
     return _supabase
         .from('ride_bookings')
         .stream(primaryKey: ['id'])
         .eq('status', 'searching')
         .order('created_at')
         .map((list) {
+          final now = DateTime.now().toUtc();
           return list
               .map((map) => RideBooking.fromMap(map, map['id'].toString()))
+              .where((booking) {
+                final ageSec =
+                    now.difference(booking.createdAt.toUtc()).inSeconds;
+                return ageSec <= maxAgeSeconds;
+              })
               .toList();
         });
+  }
+
+  /// Auto-cancels any searching ride that was requested more than [timeoutSeconds] ago
+  Future<int> autoCancelExpiredSearchingRides({int timeoutSeconds = 90}) async {
+    try {
+      final cutoff = DateTime.now()
+          .toUtc()
+          .subtract(Duration(seconds: timeoutSeconds))
+          .toIso8601String();
+      final staleRides = await _supabase
+          .from('ride_bookings')
+          .select('id')
+          .eq('status', 'searching')
+          .lt('created_at', cutoff);
+
+      if (staleRides.isEmpty) return 0;
+
+      final ids = staleRides.map((r) => r['id'].toString()).toList();
+      await _supabase
+          .from('ride_bookings')
+          .update({
+            'status': 'cancelled',
+            'cancelled_at': DateTime.now().toUtc().toIso8601String(),
+          })
+          .inFilter('id', ids)
+          .eq('status', 'searching');
+
+      return ids.length;
+    } catch (_) {
+      return 0;
+    }
   }
 
   /// Accept a ride request — atomically assigns driver and updates status

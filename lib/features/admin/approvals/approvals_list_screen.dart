@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/models/approval.dart';
+import '../widgets/admin_bottom_nav_bar.dart';
 import 'approval_provider.dart';
 
 class ApprovalsListScreen extends ConsumerStatefulWidget {
@@ -63,6 +64,7 @@ class _ApprovalsListScreenState extends ConsumerState<ApprovalsListScreen>
 
     return Scaffold(
       backgroundColor: AppColors.bgLightGrey,
+      bottomNavigationBar: const AdminBottomNavBar(currentIndex: 2),
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,

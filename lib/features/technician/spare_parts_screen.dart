@@ -118,27 +118,44 @@ class _SparePartsScreenState extends ConsumerState<SparePartsScreen> {
               children: [
                 // Search Bar
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  height: 48,
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF1F2F4),
-                    borderRadius: BorderRadius.circular(16),
+                    color: const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
                   ),
-                  child: TextField(
-                    onChanged: (v) => setState(() => _searchQuery = v),
-                    style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF1A237E)),
-                    decoration: const InputDecoration(
-                      icon: Icon(Iconsax.search_normal,
+                  child: Row(
+                    children: [
+                      const Icon(Iconsax.search_normal,
                           size: 18, color: Color(0xFF1A237E)),
-                      hintText: 'Search Spare Parts...',
-                      border: InputBorder.none,
-                      hintStyle: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey,
-                          fontWeight: FontWeight.normal),
-                    ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: TextField(
+                          onChanged: (v) => setState(() => _searchQuery = v),
+                          style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF1A237E)),
+                          decoration: const InputDecoration(
+                            hintText: 'Search Spare Parts...',
+                            hintStyle: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey,
+                                fontWeight: FontWeight.normal),
+                            filled: false,
+                            fillColor: Colors.transparent,
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            disabledBorder: InputBorder.none,
+                            errorBorder: InputBorder.none,
+                            isDense: true,
+                            contentPadding: EdgeInsets.symmetric(vertical: 12),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 16),

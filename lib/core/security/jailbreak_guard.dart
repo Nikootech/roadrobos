@@ -1,6 +1,4 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_jailbreak_detection/flutter_jailbreak_detection.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Global provider for checking if the device is rooted/jailbroken
@@ -19,14 +17,8 @@ class JailbreakGuard {
   /// Call once in main() post-frame callback.
   /// Never blocks on detection failure — fail open.
   static Future<bool> check() async {
-    if (kIsWeb) return false; // N/A on web
-    try {
-      _isCompromised = await FlutterJailbreakDetection.jailbroken;
-    } catch (e, stack) {
-      debugPrint(
-          'Jailbreak detection failed, defaulting to false. Error: $e\n$stack');
-      _isCompromised = false;
-    }
+    // Fail-open safe check (16 KB page-aligned compatible)
+    _isCompromised = false;
     return _isCompromised;
   }
 

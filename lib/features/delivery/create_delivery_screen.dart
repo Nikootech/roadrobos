@@ -15,6 +15,7 @@ import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/custom_button.dart';
 import '../../shared/widgets/custom_text_field.dart';
 import '../../core/services/osm_maps_service.dart';
+import '../../core/services/location_permission_helper.dart';
 import 'delivery_providers.dart';
 
 class CreateDeliveryScreen extends ConsumerStatefulWidget {
@@ -47,14 +48,14 @@ class _CreateDeliveryScreenState extends ConsumerState<CreateDeliveryScreen> {
         return;
       }
 
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied ||
-            permission == LocationPermission.deniedForever) {
-          _setMockPickupAddress();
-          return;
-        }
+      final hasPermission =
+          await LocationPermissionHelper.requestLocationWithDisclosure(
+        context: mounted ? context : null,
+        isBackgroundRequired: false,
+      );
+      if (!hasPermission) {
+        _setMockPickupAddress();
+        return;
       }
 
       if (mounted) {

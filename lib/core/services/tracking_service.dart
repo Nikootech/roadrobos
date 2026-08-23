@@ -4,6 +4,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../extensions/datetime_extensions.dart';
+import 'location_permission_helper.dart';
 
 final trackingServiceProvider = Provider<TrackingService>((ref) {
   return TrackingService();
@@ -24,10 +25,12 @@ class TrackingService {
     final bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) return;
 
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) return;
+    final LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
+      final granted =
+          await LocationPermissionHelper.requestLocationWithDisclosure();
+      if (!granted) return;
     }
 
     LocationSettings locationSettings;

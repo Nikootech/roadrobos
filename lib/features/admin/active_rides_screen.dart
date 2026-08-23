@@ -1,26 +1,45 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/repositories/admin_ops_repository.dart';
+import '../../core/repositories/ride_booking_repository.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/live_map_widget.dart';
 
 final activeRidesStreamProvider =
     StreamProvider.autoDispose<List<Map<String, dynamic>>>((ref) {
+  final repo = ref.watch(rideBookingRepositoryProvider);
+  unawaited(repo.autoCancelExpiredSearchingRides());
+
   final supabase = Supabase.instance.client;
   return supabase
       .from('ride_bookings')
       .stream(primaryKey: ['id'])
       .order('created_at')
-      .map((list) => list
-          .where((item) =>
-              ['searching', 'accepted', 'on_trip'].contains(item['status']))
-          .toList());
+      .map((list) {
+        final now = DateTime.now().toUtc();
+        return list.where((item) {
+          final status = item['status'];
+          if (status == 'accepted' || status == 'on_trip') return true;
+          if (status == 'searching') {
+            final createdAtStr = item['created_at'];
+            if (createdAtStr != null) {
+              final createdAt = DateTime.tryParse(createdAtStr);
+              if (createdAt != null) {
+                final ageSec = now.difference(createdAt.toUtc()).inSeconds;
+                return ageSec <= 90;
+              }
+            }
+            return false;
+          }
+          return false;
+        }).toList();
+      });
 });
 
 class ActiveRidesScreen extends ConsumerStatefulWidget {
@@ -35,6 +54,7 @@ class _ActiveRidesScreenState extends ConsumerState<ActiveRidesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final activeRidesAsync = ref.watch(activeRidesStreamProvider);
     return Scaffold(
       backgroundColor: AppColors.bgLightGrey,
       appBar: AppBar(
@@ -64,7 +84,13 @@ class _ActiveRidesScreenState extends ConsumerState<ActiveRidesScreen> {
           ),
         ],
       ),
-      body: _isMapMode ? _buildMapView() : _buildListView(),
+      body: activeRidesAsync.when(
+        data: (rides) => _isMapMode ? _buildMapView(rides) : _buildListView(rides),
+        loading: () => const Center(
+            child: CircularProgressIndicator(color: AppColors.primaryBlue)),
+        error: (err, stack) =>
+            Center(child: Text('Error loading active rides: $err')),
+      ),
     );
   }
 
@@ -163,66 +189,56 @@ class _ActiveRidesScreenState extends ConsumerState<ActiveRidesScreen> {
     );
   }
 
-  Widget _buildListView() {
-    final activeRidesAsync = ref.watch(activeRidesStreamProvider);
+  Widget _buildListView(List<Map<String, dynamic>> rides) {
+    final total = rides.length;
+    final transit = rides.where((r) => r['status'] == 'on_trip').length;
+    final pending = rides
+        .where(
+            (r) => r['status'] == 'searching' || r['status'] == 'accepted')
+        .length;
 
-    return activeRidesAsync.when(
-      data: (rides) {
-        final total = rides.length;
-        final transit = rides.where((r) => r['status'] == 'on_trip').length;
-        final pending = rides
-            .where(
-                (r) => r['status'] == 'searching' || r['status'] == 'accepted')
-            .length;
+    return Column(
+      children: [
+        // Summary bar
+        Container(
+          color: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildSummaryItem('Total Active', total.toString()),
+              _buildSummaryItem('In Transit', transit.toString()),
+              _buildSummaryItem('Pending', pending.toString()),
+            ],
+          ),
+        ),
 
-        return Column(
-          children: [
-            // Summary bar
-            Container(
-              color: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _buildSummaryItem('Total Active', total.toString()),
-                  _buildSummaryItem('In Transit', transit.toString()),
-                  _buildSummaryItem('Pending', pending.toString()),
-                ],
-              ),
-            ),
-
-            Expanded(
-              child: rides.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Iconsax.radar,
-                              size: 80,
-                              color:
-                                  AppColors.textMuted.withValues(alpha: 0.2)),
-                          const SizedBox(height: 16),
-                          const Text('No active rides at the moment',
-                              style: TextStyle(color: AppColors.textSecondary)),
-                        ],
-                      ),
-                    )
-                  : ListView.separated(
-                      padding: const EdgeInsets.all(20),
-                      itemCount: rides.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 16),
-                      itemBuilder: (context, index) {
-                        return _buildRideCard(rides[index], context);
-                      },
-                    ),
-            ),
-          ],
-        );
-      },
-      loading: () => const Center(
-          child: CircularProgressIndicator(color: AppColors.primaryBlue)),
-      error: (err, stack) =>
-          Center(child: Text('Error loading active rides: $err')),
+        Expanded(
+          child: rides.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Iconsax.radar,
+                          size: 80,
+                          color:
+                              AppColors.textMuted.withValues(alpha: 0.2)),
+                      const SizedBox(height: 16),
+                      const Text('No active rides at the moment',
+                          style: TextStyle(color: AppColors.textSecondary)),
+                    ],
+                  ),
+                )
+              : ListView.separated(
+                  padding: const EdgeInsets.all(20),
+                  itemCount: rides.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 16),
+                  itemBuilder: (context, index) {
+                    return _buildRideCard(rides[index], context);
+                  },
+                ),
+        ),
+      ],
     );
   }
 
@@ -350,42 +366,311 @@ class _ActiveRidesScreenState extends ConsumerState<ActiveRidesScreen> {
     }
   }
 
-  Widget _buildMapView() {
+  int _selectedVehicleIndex = 0;
+  String _mapFilter = 'ALL';
+
+  Widget _buildMapView(List<Map<String, dynamic>> rides) {
+    final filteredRides = rides.where((r) {
+      if (_mapFilter == 'ALL') return true;
+      if (_mapFilter == 'IN_TRANSIT') return r['status'] == 'on_trip';
+      if (_mapFilter == 'SEARCHING') return r['status'] == 'searching' || r['status'] == 'accepted';
+      return true;
+    }).toList();
+
     return Stack(
       children: [
         const LiveMapWidget(
           height: double.infinity,
         ),
+
+        // Top Header Filter Overlay
         Positioned(
-          top: 20,
-          left: 20,
-          right: 20,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.9),
-              borderRadius: const BorderRadius.all(Radius.circular(16)),
-              boxShadow: [
-                BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1), blurRadius: 10),
-              ],
-            ),
-            child: Row(
-              children: [
-                const Icon(Iconsax.radar,
-                    color: AppColors.primaryBlue, size: 20),
-                const SizedBox(width: 12),
-                Text(
-                  'Tracking Live Rides',
-                  style: GoogleFonts.outfit(
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary),
+          top: 16,
+          left: 16,
+          right: 16,
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.12),
+                        blurRadius: 12),
+                  ],
                 ),
-              ],
-            ),
-          ).animate().slideY(begin: -0.5, end: 0).fadeIn(),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 10,
+                      height: 10,
+                      decoration: const BoxDecoration(
+                        color: AppColors.brandGreen,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      'Live Fleet Operations (${rides.length} vehicles)',
+                      style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                          color: AppColors.textPrimary),
+                    ),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryBlue.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        'LIVE GPS',
+                        style: GoogleFonts.outfit(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.primaryBlue,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              // Filter Chips
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    _buildMapFilterChip('ALL', 'All (${rides.length})'),
+                    const SizedBox(width: 8),
+                    _buildMapFilterChip('IN_TRANSIT', 'In Transit (${rides.where((r) => r['status'] == 'on_trip').length})'),
+                    const SizedBox(width: 8),
+                    _buildMapFilterChip('SEARCHING', 'Searching (${rides.where((r) => r['status'] == 'searching' || r['status'] == 'accepted').length})'),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
+
+        // Bottom Vehicle Quick-Inspect Carousel
+        if (filteredRides.isNotEmpty)
+          Positioned(
+            bottom: 20,
+            left: 0,
+            right: 0,
+            child: SizedBox(
+              height: 190,
+              child: PageView.builder(
+                controller: PageController(viewportFraction: 0.9),
+                itemCount: filteredRides.length,
+                onPageChanged: (index) {
+                  setState(() => _selectedVehicleIndex = index);
+                  HapticFeedback.selectionClick();
+                },
+                itemBuilder: (context, index) {
+                  final ride = filteredRides[index];
+                  final status = ride['status']?.toString().toUpperCase() ?? 'SEARCHING';
+                  final isSearching = status == 'SEARCHING';
+                  final fare = ride['fare'] ?? '0';
+                  final vehicleType = ride['vehicle_type'] ?? 'Taxi';
+                  final pickup = ride['pickup_address'] ?? 'Pickup';
+                  final dest = ride['destination_address'] ?? 'Destination';
+                  final rideId = ride['id']?.toString() ?? '';
+
+                  return Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 6),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.15),
+                          blurRadius: 16,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                      border: Border.all(
+                        color: index == _selectedVehicleIndex
+                            ? AppColors.primaryBlue
+                            : Colors.transparent,
+                        width: 2,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: AppColors.primaryBlue.withValues(alpha: 0.1),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                vehicleType.toString().toLowerCase().contains('bike')
+                                    ? Icons.two_wheeler_rounded
+                                    : vehicleType.toString().toLowerCase().contains('auto')
+                                        ? Icons.electric_rickshaw_rounded
+                                        : Icons.directions_car_rounded,
+                                color: AppColors.primaryBlue,
+                                size: 18,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '${vehicleType.toString().toUpperCase()} · RID-${rideId.length > 6 ? rideId.substring(0, 6).toUpperCase() : rideId}',
+                                    style: GoogleFonts.outfit(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.textPrimary),
+                                  ),
+                                  Text('Fare: ₹$fare · Status: $status',
+                                      style: GoogleFonts.inter(
+                                          fontSize: 11,
+                                          color: AppColors.textSecondary)),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: isSearching
+                                    ? AppColors.warningAmber.withValues(alpha: 0.1)
+                                    : AppColors.successGreen.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                status,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: isSearching
+                                      ? AppColors.warningAmber
+                                      : AppColors.successGreen,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const Divider(height: 16),
+                        Row(
+                          children: [
+                            const Icon(Icons.radio_button_checked,
+                                size: 14, color: AppColors.primaryBlue),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(pickup,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(fontSize: 12)),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            const Icon(Icons.location_on_rounded,
+                                size: 14, color: AppColors.dangerRed),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(dest,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(fontSize: 12)),
+                            ),
+                          ],
+                        ),
+                        const Spacer(),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            if (isSearching)
+                              ElevatedButton(
+                                onPressed: () => _showAssignDriverDialog(context, ride),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primaryBlue,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 14, vertical: 8),
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8)),
+                                ),
+                                child: const Text('Assign Driver',
+                                    style: TextStyle(
+                                        fontSize: 12, fontWeight: FontWeight.bold)),
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          )
+        else
+          Positioned(
+            bottom: 30,
+            left: 20,
+            right: 20,
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10)],
+              ),
+              child: Center(
+                child: Text(
+                  'No vehicles match "$_mapFilter" filter',
+                  style: const TextStyle(color: AppColors.textSecondary),
+                ),
+              ),
+            ),
+          ),
       ],
+    );
+  }
+
+  Widget _buildMapFilterChip(String filterKey, String label) {
+    final isSelected = _mapFilter == filterKey;
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        setState(() => _mapFilter = filterKey);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.deepNavy : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 6,
+            ),
+          ],
+        ),
+        child: Text(
+          label,
+          style: GoogleFonts.outfit(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: isSelected ? Colors.white : AppColors.textPrimary,
+          ),
+        ),
+      ),
     );
   }
 

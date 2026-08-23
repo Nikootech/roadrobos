@@ -3,6 +3,8 @@ import '../../core/repositories/admin_ops_repository.dart';
 import 'package:roadrobos/core/repositories/technician_job_repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/extensions/datetime_extensions.dart';
+import '../../core/models/user_role.dart';
+import '../../features/profile/user_provider.dart';
 
 // --- Models (kept for UI compatibility) ---
 class CustomerOp {
@@ -43,8 +45,10 @@ class TechOp {
   final int inService;
   final int progress;
   final int completed;
+  final int pending;
   final List<ServiceJob> recentServices;
-  TechOp(this.inService, this.progress, this.completed, this.recentServices);
+  TechOp(this.inService, this.progress, this.completed, this.pending,
+      this.recentServices);
 }
 
 class ServiceJob {
@@ -52,7 +56,9 @@ class ServiceJob {
   final String tech;
   final String status;
   final double invoiceAmount;
-  ServiceJob(this.regNo, this.tech, this.status, this.invoiceAmount);
+  final String timeLabel;
+  ServiceJob(this.regNo, this.tech, this.status, this.invoiceAmount,
+      {this.timeLabel = ''});
 }
 
 class EmergencyAlert {
@@ -66,7 +72,7 @@ class EmergencyAlert {
       {this.isAcknowledged = false});
 }
 
-// --- Providers backed by Firestore ---
+// --- Providers backed by Supabase ---
 
 final customersOpProvider = StreamProvider<CustomerOp>((ref) {
   final repo = ref.watch(adminOpsRepositoryProvider);
@@ -111,15 +117,64 @@ final driversOpProvider = StreamProvider<DriverOp>((ref) {
   });
 });
 
+/// Real-time technician ops provider backed by the technician_jobs Supabase table.
+/// Emits live job counts AND the 5 most recent/active jobs for the admin card.
 final techOpProvider = StreamProvider<TechOp>((ref) {
   final repo = ref.watch(technicianJobRepositoryProvider);
-  return repo.watchJobMetrics().map((metrics) {
-    return TechOp(
-      metrics['scheduled'] ?? 0,
-      metrics['inProgress'] ?? 0,
-      metrics['completed'] ?? 0,
-      [], // Recent services list is shown via the main dashboard feed instead
-    );
+  return repo.watchAllJobs().map((jobs) {
+    final scheduled = jobs.where((j) => j.status == 'SCHEDULED').length;
+    final inProgress = jobs
+        .where((j) => j.status == 'IN PROGRESS' || j.status == 'ACCEPTED')
+        .length;
+    final completed = jobs.where((j) => j.status == 'COMPLETED').length;
+    final pending = scheduled + inProgress;
+
+    // Sort: active first, then scheduled, then completed; newest first within groups
+    final sorted = [...jobs]
+      ..sort((a, b) {
+        int priority(String s) {
+          if (s == 'IN PROGRESS' || s == 'ACCEPTED') return 0;
+          if (s == 'SCHEDULED') return 1;
+          return 2;
+        }
+
+        final p = priority(a.status).compareTo(priority(b.status));
+        if (p != 0) return p;
+        return b.createdAt.compareTo(a.createdAt);
+      });
+
+    final recentServices = sorted.take(5).map((j) {
+      // Labels computed first (needed in all code paths)
+      final regLabel =
+          j.vehiclePlate.isNotEmpty ? j.vehiclePlate : j.vehicleModel;
+      final techLabel = j.assignedTechId?.isNotEmpty == true
+          ? j.assignedTechId!.substring(0, 8).toUpperCase()
+          : 'Unassigned';
+
+      // Parse price to double (strip ₹ and other symbols)
+      double amt = 0;
+      try {
+        amt = double.parse(j.price.replaceAll(RegExp(r'[^\d.]'), ''));
+      } catch (_) {}
+
+      // Human-readable time since job was created
+      String timeLabel = 'Just now';
+      try {
+        final diff = DateTime.now().difference(j.createdAt);
+        if (diff.inMinutes < 60) {
+          timeLabel = '${diff.inMinutes}m ago';
+        } else if (diff.inHours < 24) {
+          timeLabel = '${diff.inHours}h ago';
+        } else {
+          timeLabel = '${diff.inDays}d ago';
+        }
+      } catch (_) {}
+
+      return ServiceJob(regLabel, techLabel, j.status, amt,
+          timeLabel: timeLabel);
+    }).toList();
+
+    return TechOp(scheduled, inProgress, completed, pending, recentServices);
   });
 });
 
@@ -141,4 +196,18 @@ final emergencyAlertsProvider = StreamProvider<List<EmergencyAlert>>((ref) {
               isAcknowledged: data['is_acknowledged'] ?? false,
             );
           }).toList());
+});
+
+/// Allows SuperAdmin / Founder to preview the dashboard as any of the 14 roles.
+final impersonatedRoleProvider = StateProvider<UserRole?>((ref) => null);
+
+/// Geographic zone scoping (e.g. "All Zones", "Mumbai - South", "Delhi - NCR", etc.)
+final selectedZoneProvider = StateProvider<String>((ref) => 'All Zones');
+
+/// The effective role used to drive dashboard layout (either real or impersonated).
+final effectiveAdminRoleProvider = Provider<UserRole>((ref) {
+  final impersonated = ref.watch(impersonatedRoleProvider);
+  if (impersonated != null) return impersonated;
+  final user = ref.watch(userProvider).user;
+  return user?.role ?? UserRole.admin;
 });

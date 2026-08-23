@@ -43,6 +43,11 @@ class ServiceOp {
 
 // --- Firestore-Backed Providers ---
 
+final adminLiveMetricsStreamProvider = StreamProvider<AdminLiveMetrics>((ref) {
+  final repo = ref.watch(adminOpsRepositoryProvider);
+  return repo.watchMetrics();
+});
+
 final adminMetricsStreamProvider = StreamProvider<AdminOpsMetrics>((ref) {
   // Permission Guard
   final hasAdminAccess = ref.watch(hasPermissionProvider('admin_access'));

@@ -10,6 +10,7 @@ import 'user_provider.dart';
 import '../../core/models/user_role.dart';
 import '../../core/repositories/user_repository.dart';
 import '../../navigation/nav_helpers.dart';
+import '../../core/services/location_permission_helper.dart';
 
 class SavedLocationsScreen extends ConsumerWidget {
   const SavedLocationsScreen({super.key});
@@ -198,20 +199,13 @@ class SavedLocationsScreen extends ConsumerWidget {
     try {
       loading.value = true;
 
-      // 1. Check & Request Permissions
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) return;
-      }
-
-      if (permission == LocationPermission.deniedForever) {
-        if (context.mounted) {
-          NavHelpers.showError(
-              context, 'Location permissions are permanently denied.');
-        }
-        return;
-      }
+      // 1. Check & Request Permissions with Prominent Disclosure
+      final hasPermission =
+          await LocationPermissionHelper.requestLocationWithDisclosure(
+        context: context,
+        isBackgroundRequired: false,
+      );
+      if (!hasPermission) return;
 
       // 2. Get Current Position
       final position = await Geolocator.getCurrentPosition();

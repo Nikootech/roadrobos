@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
@@ -22,6 +23,7 @@ class _AdminManagementScreenState extends ConsumerState<AdminManagementScreen> {
   List<Map<String, dynamic>> _employees = [];
   bool _isLoading = true;
   String _searchQuery = '';
+  String _selectedCategory = 'all'; // 'all', 'staff', 'customer', 'driver', 'technician'
 
   @override
   void initState() {
@@ -32,7 +34,7 @@ class _AdminManagementScreenState extends ConsumerState<AdminManagementScreen> {
   Future<void> _loadEmployees() async {
     setState(() => _isLoading = true);
     try {
-      final list = await ref.read(adminOpsRepositoryProvider).getAllEmployees();
+      final list = await ref.read(adminOpsRepositoryProvider).getAllUsers();
       setState(() {
         _employees = list;
         _isLoading = false;
@@ -40,7 +42,7 @@ class _AdminManagementScreenState extends ConsumerState<AdminManagementScreen> {
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        NavHelpers.showError(context, 'Failed to load employees: $e');
+        NavHelpers.showError(context, 'Failed to load users: $e');
       }
     }
   }
@@ -54,8 +56,8 @@ class _AdminManagementScreenState extends ConsumerState<AdminManagementScreen> {
       NavHelpers.showSuccess(
         context,
         currentApproval
-            ? 'Employee access suspended!'
-            : 'Employee approved and activated!',
+            ? 'Access suspended!'
+            : 'Access approved and activated!',
       );
       await _loadEmployees();
     } catch (e) {
@@ -66,25 +68,20 @@ class _AdminManagementScreenState extends ConsumerState<AdminManagementScreen> {
   }
 
   Future<void> _changeRole(String uid, String currentRole) async {
-    // Show dialog to select role
+    // Show dialog to select role from all 14 roles
     final String? selectedRole = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Change Employee Role'),
+        title: const Text('Assign User Role & Access'),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         content: SizedBox(
           width: double.maxFinite,
           child: ListView(
             shrinkWrap: true,
-            children: UserRole.values
-                .where((role) =>
-                    role != UserRole.customer &&
-                    role != UserRole.driver &&
-                    role != UserRole.admin)
-                .map((role) {
+            children: UserRole.values.map((role) {
               final roleNameDb = _getRoleDbString(role);
               final displayName = role.name.toUpperCase().replaceAll('_', ' ');
-              final isCurrent = roleNameDb == currentRole;
+              final isCurrent = roleNameDb.toLowerCase() == currentRole.toLowerCase();
 
               return ListTile(
                 title: Text(
@@ -95,6 +92,16 @@ class _AdminManagementScreenState extends ConsumerState<AdminManagementScreen> {
                         ? AppColors.primaryBlue
                         : AppColors.textPrimary,
                   ),
+                ),
+                subtitle: Text(
+                  role.isAdmin
+                      ? 'Admin Console Access'
+                      : (role == UserRole.driver
+                          ? 'Driver App Access'
+                          : (role == UserRole.technician
+                              ? 'Technician Console Access'
+                              : 'Standard Customer App')),
+                  style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
                 ),
                 trailing: isCurrent
                     ? const Icon(Icons.check_circle_rounded,
@@ -114,7 +121,10 @@ class _AdminManagementScreenState extends ConsumerState<AdminManagementScreen> {
             .read(adminOpsRepositoryProvider)
             .updateEmployeeApproval(uid, true, role: selectedRole);
         if (mounted) {
-          NavHelpers.showSuccess(context, 'Role changed successfully!');
+          NavHelpers.showSuccess(
+            context,
+            'Role updated to ${selectedRole.toUpperCase()}! User will be automatically routed to their new portal.',
+          );
           await _loadEmployees();
         }
       } catch (e) {
@@ -153,8 +163,22 @@ class _AdminManagementScreenState extends ConsumerState<AdminManagementScreen> {
     final filtered = _employees.where((emp) {
       final name = emp['name']?.toString().toLowerCase() ?? '';
       final email = emp['email']?.toString().toLowerCase() ?? '';
+      final role = emp['role']?.toString().toLowerCase() ?? 'customer';
       final query = _searchQuery.toLowerCase();
-      return name.contains(query) || email.contains(query);
+      final matchesQuery = name.contains(query) || email.contains(query);
+
+      if (!matchesQuery) return false;
+
+      if (_selectedCategory == 'staff') {
+        return role != 'customer' && role != 'driver' && role != 'technician';
+      } else if (_selectedCategory == 'customer') {
+        return role == 'customer';
+      } else if (_selectedCategory == 'driver') {
+        return role == 'driver';
+      } else if (_selectedCategory == 'technician') {
+        return role == 'technician';
+      }
+      return true;
     }).toList();
 
     return Scaffold(
@@ -168,7 +192,7 @@ class _AdminManagementScreenState extends ConsumerState<AdminManagementScreen> {
           onPressed: () => context.pop(),
         ),
         title: Text(
-          'Admin & Staff Console',
+          'User & Role Management',
           style: GoogleFonts.outfit(
               fontSize: 20,
               fontWeight: FontWeight.w700,
@@ -188,30 +212,73 @@ class _AdminManagementScreenState extends ConsumerState<AdminManagementScreen> {
           children: [
             // Search box
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              height: 48,
+              padding: const EdgeInsets.symmetric(horizontal: 14),
               decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.border)),
-              child: TextField(
-                onChanged: (val) => setState(() => _searchQuery = val),
-                decoration: const InputDecoration(
-                  icon: Icon(Iconsax.search_normal,
-                      size: 20, color: AppColors.textSecondary),
-                  hintText: 'Search employees by name or email...',
-                  border: InputBorder.none,
-                ),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: const Color(0xFFE2E8F0))),
+              child: Row(
+                children: [
+                  const Icon(Iconsax.search_normal,
+                      size: 18, color: AppColors.textSecondary),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: TextField(
+                      onChanged: (val) => setState(() => _searchQuery = val),
+                      style: GoogleFonts.outfit(
+                        fontSize: 14,
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      decoration: const InputDecoration(
+                        hintText: 'Search users by name, email or role...',
+                        hintStyle: TextStyle(
+                            fontSize: 13, color: AppColors.textMuted),
+                        filled: false,
+                        fillColor: Colors.transparent,
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        disabledBorder: InputBorder.none,
+                        errorBorder: InputBorder.none,
+                        isDense: true,
+                        contentPadding: EdgeInsets.symmetric(vertical: 12),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
 
-            const SizedBox(height: 28),
+            const SizedBox(height: 16),
+
+            // Role Category Selector Chips
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _buildFilterChip('All Users', 'all'),
+                  const SizedBox(width: 8),
+                  _buildFilterChip('Staff & Admins', 'staff'),
+                  const SizedBox(width: 8),
+                  _buildFilterChip('Customers', 'customer'),
+                  const SizedBox(width: 8),
+                  _buildFilterChip('Drivers', 'driver'),
+                  const SizedBox(width: 8),
+                  _buildFilterChip('Technicians', 'technician'),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 20),
 
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Managing Employees',
+                Text('Platform Users (${_selectedCategory.toUpperCase()})',
                     style: GoogleFonts.outfit(
-                        fontSize: 18, fontWeight: FontWeight.w700)),
+                        fontSize: 17, fontWeight: FontWeight.w700)),
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -220,7 +287,7 @@ class _AdminManagementScreenState extends ConsumerState<AdminManagementScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    '${filtered.length} Total',
+                    '${filtered.length} Users',
                     style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
@@ -307,14 +374,32 @@ class _AdminManagementScreenState extends ConsumerState<AdminManagementScreen> {
     );
   }
 
+  /// Formats an email username into a readable display name.
+  /// e.g. 'john.doe.123' → 'John Doe'
+  String _formatEmailAsName(String email) {
+    final username = email.split('@').first;
+    final parts = username.split(RegExp(r'[._-]'))
+        .where((p) => p.isNotEmpty && !RegExp(r'^\d+$').hasMatch(p))
+        .toList();
+    if (parts.isEmpty) return username;
+    return parts
+        .map((p) => '${p[0].toUpperCase()}${p.substring(1).toLowerCase()}')
+        .join(' ');
+  }
+
   Widget _buildEmployeeCard(Map<String, dynamic> emp) {
     final String uid = emp['id'] ?? '';
-    final String name = emp['name'] ?? 'Unknown Employee';
     final String email = emp['email'] ?? '';
-    final String role = emp['role'] ?? 'technician';
+    final String role = emp['role'] ?? 'customer';
     final bool isApproved = emp['is_approved'] ?? false;
+    final String roleDisplay = role.toUpperCase().replaceAll('_', ' ');
 
-    final displayName = role.toUpperCase().replaceAll('_', ' ');
+    // Resolve the best available display name
+    final rawName = (emp['full_name']?.toString() ?? emp['name']?.toString() ?? '').trim();
+    final String name = (rawName.isEmpty || rawName.contains('@'))
+        ? _formatEmailAsName(email)
+        : rawName;
+    final String avatarLetter = name.isNotEmpty ? name[0].toUpperCase() : '?';
 
     return GestureDetector(
         onTap: () async {
@@ -335,35 +420,53 @@ class _AdminManagementScreenState extends ConsumerState<AdminManagementScreen> {
               Row(
                 children: [
                   CircleAvatar(
-                      backgroundColor:
-                          AppColors.primaryBlue.withValues(alpha: 0.1),
-                      child: Text(name[0],
-                          style: const TextStyle(
-                              color: AppColors.primaryBlue,
-                              fontWeight: FontWeight.bold))),
-                  const SizedBox(width: 16),
+                    radius: 22,
+                    backgroundColor: AppColors.primaryBlue.withValues(alpha: 0.12),
+                    child: Text(
+                      avatarLetter,
+                      style: const TextStyle(
+                        color: AppColors.primaryBlue,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(name,
-                            style: GoogleFonts.outfit(
-                                fontSize: 16, fontWeight: FontWeight.w700)),
+                        Text(
+                          name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.outfit(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
                         const SizedBox(height: 2),
-                        Text(email,
-                            style: GoogleFonts.inter(
-                                fontSize: 12, color: AppColors.textSecondary)),
+                        Text(
+                          email,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.inter(
+                            fontSize: 11.5,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
                       ],
                     ),
                   ),
+                  const SizedBox(width: 8),
                   // Status Badge
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: isApproved
-                          ? AppColors.successGreen.withValues(alpha: 0.1)
-                          : AppColors.warningAmber.withValues(alpha: 0.1),
+                          ? AppColors.successGreen.withValues(alpha: 0.12)
+                          : AppColors.warningAmber.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -385,7 +488,7 @@ class _AdminManagementScreenState extends ConsumerState<AdminManagementScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Display requested role in a chip
+                  // Role chip — tap to change role
                   GestureDetector(
                     onTap: () => _changeRole(uid, role),
                     child: MouseRegion(
@@ -402,15 +505,15 @@ class _AdminManagementScreenState extends ConsumerState<AdminManagementScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              displayName,
+                              roleDisplay,
                               style: const TextStyle(
-                                  fontSize: 12,
+                                  fontSize: 11,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.blueGrey),
                             ),
-                            const SizedBox(width: 6),
+                            const SizedBox(width: 5),
                             const Icon(Iconsax.edit_2,
-                                size: 12, color: Colors.blueGrey),
+                                size: 11, color: Colors.blueGrey),
                           ],
                         ),
                       ),
@@ -456,6 +559,42 @@ class _AdminManagementScreenState extends ConsumerState<AdminManagementScreen> {
             ],
           ),
         ));
+  }
+
+  Widget _buildFilterChip(String label, String categoryKey) {
+    final isSelected = _selectedCategory == categoryKey;
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        setState(() => _selectedCategory = categoryKey);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primaryBlue : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? AppColors.primaryBlue : AppColors.border,
+          ),
+          boxShadow: [
+            if (isSelected)
+              BoxShadow(
+                color: AppColors.primaryBlue.withValues(alpha: 0.2),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+          ],
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+            color: isSelected ? Colors.white : AppColors.textPrimary,
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildAuditLogTile(int index) {

@@ -10,6 +10,7 @@ import '../../features/wallet/widgets/insufficient_balance_sheet.dart';
 import '../../features/profile/user_provider.dart';
 import '../../providers/connectivity_provider.dart';
 import '../../core/services/unified_sync_service.dart';
+import 'service_booking_confirmation_screen.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 
@@ -154,12 +155,7 @@ class _BookServiceScreenState extends ConsumerState<BookServiceScreen> {
             );
         if (mounted) {
           Navigator.pop(context); // close loader
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content:
-                    Text("Saved — will be submitted when you're back online.")),
-          );
-          setState(() => _currentStep = 4); // show success
+          _navigateToConfirmation(booking);
         }
       } else {
         await ref
@@ -167,7 +163,7 @@ class _BookServiceScreenState extends ConsumerState<BookServiceScreen> {
             .createServiceBooking(booking);
         if (mounted) {
           Navigator.pop(context); // close loader
-          setState(() => _currentStep = 4); // show success
+          _navigateToConfirmation(booking);
         }
       }
     } catch (e) {
@@ -179,13 +175,29 @@ class _BookServiceScreenState extends ConsumerState<BookServiceScreen> {
     }
   }
 
+  void _navigateToConfirmation(ServiceBooking booking) {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ServiceBookingConfirmationScreen(
+          bookingId: booking.id,
+          serviceName: booking.packageName,
+          vehicleName: booking.vehicleName,
+          vehiclePlate: booking.vehiclePlate,
+          date: booking.date,
+          time: booking.time,
+          address: booking.address ?? '',
+          totalCost: booking.totalCost,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Book ${widget.title}')),
-      body: _currentStep == 4
-          ? _buildSuccess()
-          : Stepper(
+      body: Stepper(
               currentStep: _currentStep,
               onStepContinue: () {
                 if (_currentStep == 0 && _selectedVehicle == null) return;
@@ -318,28 +330,6 @@ class _BookServiceScreenState extends ConsumerState<BookServiceScreen> {
                 ),
               ],
             ),
-    );
-  }
-
-  Widget _buildSuccess() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.check_circle, color: Colors.green, size: 80),
-          const SizedBox(height: 16),
-          const Text('Booking Confirmed!',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          Text('Your ${widget.title} has been scheduled.',
-              style: TextStyle(color: Colors.grey[700])),
-          const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: () => context.go('/customer-home'),
-            child: const Text('Return to Home'),
-          ),
-        ],
-      ),
     );
   }
 }

@@ -11,6 +11,8 @@ import '../../features/technician/spare_parts_screen.dart';
 import '../../features/technician/tech_qr_scanner_screen.dart';
 import '../../features/technician/job_detail_screen.dart';
 import '../app_transitions.dart';
+import '../../features/settings/unified_settings_screen.dart';
+import '../../features/profile/notification_settings_screen.dart';
 
 /// Technician portal routes.
 /// Exported as [techRoutes] and composed into the root GoRouter.
@@ -24,14 +26,14 @@ final List<RouteBase> techRoutes = [
   ),
   GoRoute(
     path: '/tech-earnings',
-    pageBuilder: (context, state) => AppTransitions.slideRight(
+    pageBuilder: (context, state) => AppTransitions.fade(
       child: const TechEarningsScreen(),
       state: state,
     ),
   ),
   GoRoute(
     path: '/tech-tasks',
-    pageBuilder: (context, state) => AppTransitions.scaleIn(
+    pageBuilder: (context, state) => AppTransitions.fade(
       child: const TaskListScreen(),
       state: state,
     ),
@@ -59,7 +61,7 @@ final List<RouteBase> techRoutes = [
   ),
   GoRoute(
     path: '/tech-spare-parts',
-    pageBuilder: (context, state) => AppTransitions.slideRight(
+    pageBuilder: (context, state) => AppTransitions.fade(
       child: const SparePartsScreen(),
       state: state,
     ),
@@ -85,6 +87,20 @@ final List<RouteBase> techRoutes = [
     path: '/tech-qr-scanner',
     pageBuilder: (context, state) => AppTransitions.slideUp(
       child: const TechQRScannerScreen(),
+      state: state,
+    ),
+  ),
+  GoRoute(
+    path: '/settings',
+    pageBuilder: (context, state) => AppTransitions.slideRight(
+      child: const UnifiedSettingsScreen(),
+      state: state,
+    ),
+  ),
+  GoRoute(
+    path: '/notification-settings',
+    pageBuilder: (context, state) => AppTransitions.slideRight(
+      child: const NotificationSettingsScreen(),
       state: state,
     ),
   ),

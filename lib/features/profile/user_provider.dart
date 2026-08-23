@@ -169,6 +169,19 @@ class UserNotifier extends StateNotifier<UserState> {
         final isValid = await _checkDeviceSession(updatedUser);
         if (!isValid) return;
 
+        final roleChanged =
+            state.user != null && updatedUser.role != state.user!.role;
+
+        if (roleChanged) {
+          if (kDebugMode) {
+            debugPrint(
+                'UserNotifier: Realtime Role Change Detected: ${state.user?.role} -> ${updatedUser.role}');
+          }
+          await _ref.read(localStorageServiceProvider).clearSelectedRole();
+          final newRoute = _homeRouteForUser(updatedUser);
+          await _ref.read(localStorageServiceProvider).saveLastHomeRoute(newRoute);
+        }
+
         // Only update if data actually changed to avoid UI flickers
         if (updatedUser.profilePic != state.user?.profilePic ||
             updatedUser.points != state.user?.points ||
@@ -179,9 +192,9 @@ class UserNotifier extends StateNotifier<UserState> {
                 updatedUser.savedLocations, state.user?.savedLocations) ||
             updatedUser.currentDeviceId != state.user?.currentDeviceId ||
             updatedUser.isApproved != state.user?.isApproved ||
-            updatedUser.role != state.user?.role) {
+            roleChanged) {
           state = state.copyWith(user: updatedUser);
-          debugPrint('Real-time Profile Update Received: ${updatedUser.name}');
+          debugPrint('Real-time Profile Update Received: ${updatedUser.name} (Role: ${updatedUser.role.name})');
         }
       }
     });
@@ -304,49 +317,10 @@ class UserNotifier extends StateNotifier<UserState> {
         bool needsUpdate = false;
         String updatedName = user.name;
         String? updatedPic = user.profilePic;
-        UserRole updatedRole = user.role;
-        bool updatedApproval = user.isApproved;
+        final updatedRole = user.role;
+        final updatedApproval = user.isApproved;
 
-        // Check if the user selected a new role from RoleSelectionScreen
-        final savedRoleName =
-            await _ref.read(localStorageServiceProvider).getSelectedRole();
-
-        bool isNewSignup = false;
-        if (currentSupabaseUser?.createdAt != null) {
-          try {
-            final authCreatedAt = DateTime.parse(currentSupabaseUser!.createdAt);
-            if (DateTime.now().toUtc().difference(authCreatedAt.toUtc()).inSeconds.abs() < 43200) {
-              isNewSignup = true;
-            }
-          } catch (_) {}
-        }
-        if (user.createdAt != null) {
-          try {
-            if (DateTime.now().toUtc().difference(user.createdAt!.toUtc()).inSeconds.abs() < 43200) {
-              isNewSignup = true;
-            }
-          } catch (_) {}
-        }
-
-        if (savedRoleName != null && savedRoleName.isNotEmpty) {
-          final selectedRole = UserRole.values.firstWhere(
-            (e) => e.name == savedRoleName,
-            orElse: () => user!.role,
-          );
-
-          // Allow setting the role ONLY if this is a brand new signup.
-          // For returning users, the role is permanent and cannot be modified.
-          // We also guard by ensuring the DB role is currently the default 'customer'.
-          if (isNewSignup && user.role == UserRole.customer && user.role != selectedRole && !user.role.isAdmin) {
-            updatedRole = selectedRole;
-            updatedApproval = (selectedRole != UserRole.technician &&
-                selectedRole != UserRole.admin);
-            needsUpdate = true;
-          }
-        }
-
-        // Clear the local cache now so stale values never bleed into future
-        // profile fetches (e.g. after logout and re-login on the same device).
+        // Clear any stale role cache
         unawaited(_ref.read(localStorageServiceProvider).clearSelectedRole());
 
         final oauthName = currentSupabaseUser?.userMetadata?['full_name'] ??

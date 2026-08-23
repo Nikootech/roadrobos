@@ -49,7 +49,7 @@ class TechProfileScreen extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.settings_outlined,
                 color: AppColors.textPrimary),
-            onPressed: () => context.push('/account-settings'),
+            onPressed: () => context.push('/settings'),
           ),
         ],
       ),

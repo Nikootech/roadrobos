@@ -5,6 +5,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
+import '../../core/repositories/ride_booking_repository.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/custom_button.dart';
 import 'providers/driver_state_provider.dart';
@@ -33,10 +34,10 @@ class _DriverRideRequestScreenState
     _progressController = AnimationController(
         vsync: this, duration: const Duration(seconds: _timeoutSeconds))
       ..forward().then((_) {
-        // Guard: widget may have been disposed before the 60-second timer fired
-        // (e.g. driver accepted/declined manually). Calling pop() on a dead
-        // context causes a "deactivated widget" exception.
         if (!mounted) return;
+        unawaited(ref
+            .read(rideBookingRepositoryProvider)
+            .autoCancelExpiredSearchingRides(timeoutSeconds: 60));
         context.pop();
       });
     Future.delayed(
@@ -72,6 +73,9 @@ class _DriverRideRequestScreenState
   void _onDecline() {
     HapticFeedback.lightImpact();
     _progressController.stop();
+    unawaited(ref
+        .read(rideBookingRepositoryProvider)
+        .autoCancelExpiredSearchingRides(timeoutSeconds: 60));
     context.pop();
   }
 

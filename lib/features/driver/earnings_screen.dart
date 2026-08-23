@@ -12,6 +12,7 @@ import '../../core/models/ride_booking.dart';
 import '../../features/profile/user_provider.dart';
 import '../../shared/widgets/bottom_nav_bar.dart';
 import 'providers/driver_state_provider.dart';
+import 'driver_earnings_report_screen.dart';
 
 /// Driver Earnings Screen — connected to real Supabase driver stream data.
 class EarningsScreen extends ConsumerStatefulWidget {
@@ -68,6 +69,22 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen> {
               letterSpacing: -0.5),
         ),
         actions: [
+          TextButton.icon(
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (_) => const DriverEarningsReportScreen()),
+            ),
+            icon: const Icon(Icons.bar_chart_rounded,
+                color: AppColors.brandGreenLight, size: 18),
+            label: const Text(
+              'Report',
+              style: TextStyle(
+                  color: AppColors.brandGreenLight,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13),
+            ),
+          ),
           IconButton(
             icon: const Icon(Iconsax.refresh, color: Colors.white),
             onPressed: () {

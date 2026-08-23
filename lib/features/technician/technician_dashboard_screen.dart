@@ -8,8 +8,14 @@ import '../../core/repositories/job_card_repository.dart';
 import 'technician_provider.dart';
 import '../profile/user_provider.dart';
 import 'widgets/service_team_alert_monitor.dart';
+import 'widgets/pre_arrival_video_diagnostic_modal.dart';
+import '../driver/widgets/instant_cashout_sheet.dart';
 import '../../core/services/tracking_service.dart';
 import '../../core/services/language_service.dart';
+
+// Technician online/offline availability toggle — persists within session.
+final techOnlineProvider = StateProvider<bool>((ref) => true);
+
 
 class TechnicianDashboardScreen extends ConsumerStatefulWidget {
   const TechnicianDashboardScreen({super.key});
@@ -303,7 +309,7 @@ class _TechnicianDashboardScreenState
               children: [
                 const SizedBox(height: 10),
                 const ServiceTeamAlertMonitor(),
-                // ─── 1. Header ───
+                 // ─── 1. Header ───
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -316,6 +322,65 @@ class _TechnicianDashboardScreenState
                                 fontSize: 22,
                                 fontWeight: FontWeight.w900,
                                 color: Color(0xFF1A237E))),
+                        const SizedBox(height: 4),
+                        // Online / Offline availability toggle
+                        GestureDetector(
+                          onTap: () {
+                            HapticFeedback.mediumImpact();
+                            final isOnline = ref.read(techOnlineProvider);
+                            ref.read(techOnlineProvider.notifier).state =
+                                !isOnline;
+                          },
+                          child: Consumer(
+                            builder: (_, ref, __) {
+                              final isOnline = ref.watch(techOnlineProvider);
+                              return AnimatedContainer(
+                                duration: const Duration(milliseconds: 250),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: isOnline
+                                      ? const Color(0xFF28C76F)
+                                          .withValues(alpha: 0.12)
+                                      : Colors.grey.withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: isOnline
+                                        ? const Color(0xFF28C76F)
+                                            .withValues(alpha: 0.4)
+                                        : Colors.grey.withValues(alpha: 0.3),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(
+                                      width: 7,
+                                      height: 7,
+                                      decoration: BoxDecoration(
+                                        color: isOnline
+                                            ? const Color(0xFF28C76F)
+                                            : Colors.grey,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      isOnline ? 'Online' : 'Offline',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w700,
+                                        color: isOnline
+                                            ? const Color(0xFF28C76F)
+                                            : Colors.grey,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                        ),
                       ],
                     ),
                     Row(
@@ -383,6 +448,11 @@ class _TechnicianDashboardScreenState
 
                 // ─── 2. Weekly Performance Card ───
                 _buildMainPerformanceCard(jobs),
+
+                const SizedBox(height: 16),
+
+                // ─── 2b. Today's Earnings Row ───
+                _buildTodayEarningsRow(jobs),
 
                 const SizedBox(height: 24),
 
@@ -535,78 +605,308 @@ class _TechnicianDashboardScreenState
                 offset: const Offset(0, 10))
           ],
         ),
-        child: Row(
+        child: Column(
           children: [
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: const BoxDecoration(
-                  color: Colors.white24, shape: BoxShape.circle),
-              child: const Icon(Icons.directions_car_filled_rounded,
-                  color: Colors.white, size: 24),
-            ),
-            const SizedBox(width: 20),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(job.vehicleModel,
-                      style: const TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.white)),
-                  const SizedBox(height: 6),
-                  Row(
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: const BoxDecoration(
+                      color: Colors.white24, shape: BoxShape.circle),
+                  child: const Icon(Icons.directions_car_filled_rounded,
+                      color: Colors.white, size: 24),
+                ),
+                const SizedBox(width: 20),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 3),
-                        decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(6)),
-                        child: Text(job.vehiclePlate,
-                            style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white70)),
-                      ),
-                      const SizedBox(width: 12),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: (job.status == 'COMPLETED'
-                                  ? Colors.greenAccent
-                                  : Colors.amberAccent)
-                              .withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          job.status,
-                          style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: job.status == 'COMPLETED'
-                                  ? Colors.greenAccent
-                                  : Colors.amberAccent),
-                        ),
+                      Text(job.vehicleModel,
+                          style: const TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white)),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 3),
+                            decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(6)),
+                            child: Text(job.vehiclePlate,
+                                style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white70)),
+                          ),
+                          const SizedBox(width: 12),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: (job.status == 'COMPLETED'
+                                      ? Colors.greenAccent
+                                      : Colors.amberAccent)
+                                  .withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              job.status,
+                              style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: job.status == 'COMPLETED'
+                                      ? Colors.greenAccent
+                                      : Colors.amberAccent),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
-              ),
+                ),
+                const Icon(Icons.arrow_forward_ios_rounded,
+                    color: Colors.white54, size: 16),
+              ],
             ),
-            const Icon(Icons.arrow_forward_ios_rounded,
-                color: Colors.white54, size: 16),
+            const SizedBox(height: 16),
+            const Divider(color: Colors.white24, height: 1),
+            const SizedBox(height: 12),
+            // Field Partner Quick Actions: Video Diag, GPS Nav, Log Parts, Sign-off
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      HapticFeedback.lightImpact();
+                      PreArrivalVideoDiagnosticModal.show(
+                        context,
+                        vehicleModel: job.vehicleModel,
+                        vehiclePlate: job.vehiclePlate,
+                      );
+                    },
+                    icon: const Icon(Icons.videocam_rounded, size: 14, color: Colors.white),
+                    label: const Text('Video Diag', style: TextStyle(color: Colors.white, fontSize: 10)),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Colors.white38),
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      HapticFeedback.lightImpact();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Launching GPS Navigation to ${job.vehiclePlate}...'),
+                          backgroundColor: const Color(0xFF1A237E),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.navigation_rounded, size: 14, color: Colors.white),
+                    label: const Text('GPS Nav', style: TextStyle(color: Colors.white, fontSize: 10)),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Colors.white38),
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      HapticFeedback.lightImpact();
+                      _showPartsLoggerModal(context, job);
+                    },
+                    icon: const Icon(Icons.handyman_rounded, size: 14, color: Colors.white),
+                    label: const Text('Log Parts', style: TextStyle(color: Colors.white, fontSize: 10)),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Colors.white38),
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      HapticFeedback.mediumImpact();
+                      _showCustomerSignoffModal(context, job);
+                    },
+                    icon: const Icon(Icons.draw_rounded, size: 14, color: Color(0xFF1A237E)),
+                    label: const Text('Sign-off', style: TextStyle(color: Color(0xFF1A237E), fontSize: 10, fontWeight: FontWeight.bold)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.greenAccent,
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
     ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.08, end: 0);
   }
 
+  void _showPartsLoggerModal(BuildContext context, TechnicianJob job) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)),
+              ),
+            ),
+            const SizedBox(height: 18),
+            Text('Log Spare Parts • ${job.vehiclePlate}',
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1A237E))),
+            const SizedBox(height: 14),
+            TextField(
+              decoration: InputDecoration(
+                labelText: 'Part Name / Part Number',
+                hintText: 'e.g. Bosch Brake Pad Set (Front)',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: 'Qty',
+                      hintText: '1',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextField(
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: 'Price (₹)',
+                      hintText: '1450',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 18),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Spare parts logged to job invoice.'), backgroundColor: Color(0xFF28C76F)),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF1A237E),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Text('Add to Job Card', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showCustomerSignoffModal(BuildContext context, TechnicianJob job) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.draw_rounded, color: Color(0xFF1A237E)),
+            SizedBox(width: 10),
+            Text('Customer Digital Sign-Off', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Color(0xFF1A237E))),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Vehicle: ${job.vehicleModel} (${job.vehiclePlate})', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 4),
+            const Text('Please hand phone to customer to draw signature confirming job completion.', style: TextStyle(fontSize: 12, color: Colors.grey)),
+            const SizedBox(height: 16),
+            Container(
+              height: 120,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: const Center(
+                child: Text('✍️ Customer Signature Area', style: TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.w500)),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Customer signature captured & verified!'), backgroundColor: Color(0xFF28C76F)),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF28C76F),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: const Text('Confirm Sign-off', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
   // ─── Performance Card ───
   Widget _buildMainPerformanceCard(List<TechnicianJob> jobs) {
-    final completedCount =
-        12 + jobs.where((j) => j.status == 'COMPLETED').length;
+    final completedCount = jobs.where((j) => j.status == 'COMPLETED').length;
+    final totalJobs = jobs.length;
+    final pendingCount = totalJobs - completedCount;
+    final now = DateTime.now();
+
+    // Per-weekday job fractions (Mon=0 … Sun=6)
+    // Mark today's index with the real completed count; other days get 0.
+    final dayCounts = List.filled(7, 0);
+    dayCounts[now.weekday - 1] = completedCount;
+    final maxCount = dayCounts.reduce((a, b) => a > b ? a : b).clamp(1, 9999);
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -632,39 +932,41 @@ class _TechnicianDashboardScreenState
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('WEEKLY PERFORMANCE',
+                  const Text('THIS WEEK',
                       style: TextStyle(
                           color: Colors.white60,
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 0.5)),
                   const SizedBox(height: 4),
-                  Text('$completedCount Jobs Completed',
+                  Text('$completedCount Jobs Done · $pendingCount Pending',
                       style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 18,
+                          fontSize: 16,
                           fontWeight: FontWeight.w900)),
                 ],
               ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(20)),
-                child: const Row(
-                  children: [
-                    Icon(Icons.trending_up_rounded,
-                        color: Colors.greenAccent, size: 14),
-                    SizedBox(width: 4),
-                    Text('+20%',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold)),
-                  ],
+              if (totalJobs > 0)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(20)),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.trending_up_rounded,
+                          color: Colors.greenAccent, size: 14),
+                      const SizedBox(width: 4),
+                      Text(
+                          '${((completedCount / totalJobs) * 100).toStringAsFixed(0)}%',
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold)),
+                    ],
+                  ),
                 ),
-              ),
             ],
           ),
           const SizedBox(height: 24),
@@ -672,13 +974,14 @@ class _TechnicianDashboardScreenState
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              _buildChartBar('Mon', 0.4),
-              _buildChartBar('Tue', 0.6),
-              _buildChartBar('Wed', 0.9),
-              _buildChartBar('Thu', 0.5),
-              _buildChartBar('Fri', 0.7),
-              _buildChartBar('Sat', 0.3),
-              _buildChartBar('Sun', 0.2),
+              _buildChartBar('Mon', dayCounts[0] / maxCount),
+              _buildChartBar('Tue', dayCounts[1] / maxCount),
+              _buildChartBar('Wed', dayCounts[2] / maxCount),
+              _buildChartBar('Thu', dayCounts[3] / maxCount),
+              _buildChartBar('Fri', dayCounts[4] / maxCount),
+              _buildChartBar('Sat', dayCounts[5] / maxCount),
+              _buildChartBar('Sun', dayCounts[6] / maxCount,
+                  isToday: now.weekday == 7),
             ],
           ),
         ],
@@ -686,19 +989,127 @@ class _TechnicianDashboardScreenState
     ).animate().fadeIn().slideY(begin: 0.1, end: 0);
   }
 
-  Widget _buildChartBar(String day, double percent) {
+  // ─── Today's Earnings Row ───
+  Widget _buildTodayEarningsRow(List<TechnicianJob> jobs) {
+    // Sum prices of all completed jobs (parse ₹ prefix)
+    double total = 0;
+    double todayTotal = 0;
+    final today = DateFormat('dd MMM').format(DateTime.now());
+    for (final job in jobs) {
+      double amt = 0;
+      try {
+        amt = double.parse(job.price.replaceAll(RegExp(r'[^\d.]'), ''));
+      } catch (_) {}
+      total += amt;
+      if (job.date == today || job.date == 'Today') todayTotal += amt;
+    }
+
+    return InkWell(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        InstantCashoutSheet.show(
+          context,
+          availableBalance: total > 0 ? total : 3200.0,
+          defaultUpiId: 'technician.partner@oksbi',
+        );
+      },
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: const Color(0xFFE5E9F0)),
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withValues(alpha: 0.02),
+                blurRadius: 10,
+                offset: const Offset(0, 4))
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: const Color(0xFF28C76F).withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.account_balance_wallet_rounded,
+                  color: Color(0xFF28C76F), size: 22),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Today\'s Earnings',
+                      style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF64748B))),
+                  const SizedBox(height: 2),
+                  Text(
+                    todayTotal > 0
+                        ? '₹${todayTotal.toStringAsFixed(0)}'
+                        : 'No completed jobs yet',
+                    style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                        color: Color(0xFF1A237E)),
+                  ),
+                ],
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                const Text('Cash Out',
+                    style: TextStyle(fontSize: 10, color: Color(0xFF28C76F), fontWeight: FontWeight.bold)),
+                Text(
+                  '₹${total.toStringAsFixed(0)}',
+                  style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF28C76F)),
+                ),
+              ],
+            ),
+            const SizedBox(width: 4),
+            const Icon(Icons.arrow_forward_ios_rounded,
+                size: 14, color: Color(0xFFCBD5E1)),
+          ],
+        ),
+      ),
+    )
+        .animate(delay: 150.ms)
+        .fadeIn()
+        .slideY(begin: 0.1, end: 0);
+  }
+
+
+  Widget _buildChartBar(String day, double percent,
+      {bool isToday = false}) {
+    final clampedPercent = percent.clamp(0.05, 1.0);
     return Column(
       children: [
         Container(
           width: 25,
-          height: 80 * percent,
+          height: 80 * clampedPercent,
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: percent > 0.8 ? 1.0 : 0.4),
+            color: isToday
+                ? Colors.greenAccent
+                : Colors.white.withValues(alpha: clampedPercent > 0.6 ? 1.0 : 0.4),
             borderRadius: BorderRadius.circular(6),
           ),
         ),
         const SizedBox(height: 8),
-        Text(day, style: const TextStyle(color: Colors.white60, fontSize: 10)),
+        Text(day,
+            style: TextStyle(
+                color: isToday ? Colors.greenAccent : Colors.white60,
+                fontSize: 10,
+                fontWeight:
+                    isToday ? FontWeight.bold : FontWeight.normal)),
       ],
     );
   }

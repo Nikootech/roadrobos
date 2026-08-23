@@ -108,6 +108,38 @@ class RideBookingRepository {
     }).eq('id', bookingId);
   }
 
+  /// Auto-cancels any searching ride that was requested more than [timeoutSeconds] ago
+  /// and was never accepted by a driver.
+  Future<int> autoCancelExpiredSearchingRides({int timeoutSeconds = 90}) async {
+    try {
+      final cutoff = DateTime.now()
+          .toUtc()
+          .subtract(Duration(seconds: timeoutSeconds))
+          .toIso8601String();
+      final staleRides = await _supabase
+          .from('ride_bookings')
+          .select('id')
+          .eq('status', 'searching')
+          .lt('created_at', cutoff);
+
+      if (staleRides.isEmpty) return 0;
+
+      final ids = staleRides.map((r) => r['id'].toString()).toList();
+      await _supabase
+          .from('ride_bookings')
+          .update({
+            'status': 'cancelled',
+            'cancelled_at': DateTime.now().toUtc().toIso8601String(),
+          })
+          .inFilter('id', ids)
+          .eq('status', 'searching');
+
+      return ids.length;
+    } catch (_) {
+      return 0;
+    }
+  }
+
   /// Watch a specific booking for updates
   Stream<RideBooking?> watchBooking(String bookingId) {
     return _supabase
