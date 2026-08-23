@@ -217,7 +217,8 @@ class _WalletTopupScreenState extends ConsumerState<WalletTopupScreen> {
       if (!mounted) return;
       setState(() => _isProcessing = false);
 
-      final txnId = 'TXN-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}';
+      final txnId =
+          'TXN-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}';
       _showSuccessSheet(amount, txnId);
     } catch (e) {
       if (!mounted) return;

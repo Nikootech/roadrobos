@@ -100,21 +100,17 @@ class DriverRepository {
           return list
               .map((map) => RideBooking.fromMap(map, map['id'].toString()))
               .where((booking) {
-                final ageSec =
-                    now.difference(booking.createdAt.toUtc()).inSeconds;
-                return ageSec <= maxAgeSeconds;
-              })
-              .toList();
+            final ageSec = now.difference(booking.createdAt.toUtc()).inSeconds;
+            return ageSec <= maxAgeSeconds;
+          }).toList();
         });
   }
 
   /// Auto-cancels any searching ride that was requested more than [timeoutSeconds] ago
   Future<int> autoCancelExpiredSearchingRides({int timeoutSeconds = 90}) async {
     try {
-      final cutoff = DateTime.now()
-          .toUtc()
-          .subtract(Duration(seconds: timeoutSeconds))
-          .toIso8601String();
+      final DateTime now = DateTime.now().toUtc();
+      final cutoff = now.subtract(Duration(seconds: timeoutSeconds)).utcIso;
       final staleRides = await _supabase
           .from('ride_bookings')
           .select('id')

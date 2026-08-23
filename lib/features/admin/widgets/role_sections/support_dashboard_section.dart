@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -57,7 +57,8 @@ class SupportDashboardSection extends StatelessWidget {
           decoration: BoxDecoration(
             color: const Color(0xFFDC2626).withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFDC2626).withValues(alpha: 0.25)),
+            border: Border.all(
+                color: const Color(0xFFDC2626).withValues(alpha: 0.25)),
           ),
           child: Row(
             children: [
@@ -67,7 +68,8 @@ class SupportDashboardSection extends StatelessWidget {
                   color: Color(0xFFDC2626),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.timer_outlined, color: Colors.white, size: 16),
+                child: const Icon(Icons.timer_outlined,
+                    color: Colors.white, size: 16),
               ),
               const SizedBox(width: 12),
               const Expanded(
@@ -85,7 +87,8 @@ class SupportDashboardSection extends StatelessWidget {
                     SizedBox(height: 2),
                     Text(
                       'Payment disputed for Ride #RD-9182 (Customer waiting)',
-                      style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                      style: TextStyle(
+                          fontSize: 11, color: AppColors.textSecondary),
                     ),
                   ],
                 ),
@@ -97,12 +100,17 @@ class SupportDashboardSection extends StatelessWidget {
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFDC2626),
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
                 ),
                 child: const Text(
                   'Resolve',
-                  style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold),
                 ),
               ),
             ],

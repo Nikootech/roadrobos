@@ -150,14 +150,14 @@ final driverActiveTripProvider = StreamProvider<RideBooking?>((ref) {
         final activeRides = list
             .map((map) => RideBooking.fromMap(map, map['id'].toString()))
             .where((booking) =>
-                booking.status != 'completed' &&
-                booking.status != 'cancelled');
+                booking.status != 'completed' && booking.status != 'cancelled');
         return activeRides.isNotEmpty ? activeRides.first : null;
       });
 });
 
 // Stream of passenger/customer profile
-final passengerProfileProvider = StreamProvider.family<AppUser?, String>((ref, customerId) {
+final passengerProfileProvider =
+    StreamProvider.family<AppUser?, String>((ref, customerId) {
   return ref.watch(userRepositoryProvider).getUserStream(customerId);
 });
 

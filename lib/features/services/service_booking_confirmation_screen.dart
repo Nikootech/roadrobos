@@ -121,11 +121,10 @@ class _ServiceBookingConfirmationScreenState
                 ),
               ],
             ),
-            child: const Icon(Icons.check_rounded, color: Colors.white, size: 52),
+            child:
+                const Icon(Icons.check_rounded, color: Colors.white, size: 52),
           ),
-        )
-            .animate()
-            .scale(
+        ).animate().scale(
               begin: const Offset(0, 0),
               end: const Offset(1, 1),
               duration: 600.ms,
@@ -223,7 +222,10 @@ class _ServiceBookingConfirmationScreenState
           ),
         ],
       ),
-    ).animate().fadeIn(delay: 500.ms, duration: 500.ms).slideY(begin: 0.2, end: 0);
+    )
+        .animate()
+        .fadeIn(delay: 500.ms, duration: 500.ms)
+        .slideY(begin: 0.2, end: 0);
   }
 
   Widget _buildDetailsSection() {
@@ -272,7 +274,10 @@ class _ServiceBookingConfirmationScreenState
           ),
         ],
       ),
-    ).animate().fadeIn(delay: 600.ms, duration: 500.ms).slideY(begin: 0.2, end: 0);
+    )
+        .animate()
+        .fadeIn(delay: 600.ms, duration: 500.ms)
+        .slideY(begin: 0.2, end: 0);
   }
 
   Widget _buildDetailRow({
@@ -329,8 +334,8 @@ class _ServiceBookingConfirmationScreenState
           colors: [Color(0xFF1E3A5F), Color(0xFF0F2040)],
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-            color: const Color(0xFF3B82F6).withValues(alpha: 0.3)),
+        border:
+            Border.all(color: const Color(0xFF3B82F6).withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
@@ -350,8 +355,7 @@ class _ServiceBookingConfirmationScreenState
                 const SizedBox(height: 4),
                 Text('via RoadRobos Wallet',
                     style: GoogleFonts.outfit(
-                        fontSize: 12,
-                        color: AppColors.brandGreenLight)),
+                        fontSize: 12, color: AppColors.brandGreenLight)),
               ],
             ),
           ),
@@ -380,7 +384,10 @@ class _ServiceBookingConfirmationScreenState
           ),
         ],
       ),
-    ).animate().fadeIn(delay: 700.ms, duration: 500.ms).slideY(begin: 0.2, end: 0);
+    )
+        .animate()
+        .fadeIn(delay: 700.ms, duration: 500.ms)
+        .slideY(begin: 0.2, end: 0);
   }
 
   Widget _buildStatusTimeline() {
@@ -457,9 +464,10 @@ class _ServiceBookingConfirmationScreenState
                     step['label'] as String,
                     style: GoogleFonts.outfit(
                       fontSize: 14,
-                      color: isDone ? Colors.white.withValues(alpha: 0.87) : Colors.white30,
-                      fontWeight:
-                          isDone ? FontWeight.w600 : FontWeight.w400,
+                      color: isDone
+                          ? Colors.white.withValues(alpha: 0.87)
+                          : Colors.white30,
+                      fontWeight: isDone ? FontWeight.w600 : FontWeight.w400,
                     ),
                   ),
                 ),
@@ -468,7 +476,10 @@ class _ServiceBookingConfirmationScreenState
           }),
         ],
       ),
-    ).animate().fadeIn(delay: 800.ms, duration: 500.ms).slideY(begin: 0.2, end: 0);
+    )
+        .animate()
+        .fadeIn(delay: 800.ms, duration: 500.ms)
+        .slideY(begin: 0.2, end: 0);
   }
 
   Widget _buildBottomActions() {
@@ -519,8 +530,7 @@ class _ServiceBookingConfirmationScreenState
               onPressed: () => context.go('/main/home'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: Colors.white70,
-                side: BorderSide(
-                    color: Colors.white.withValues(alpha: 0.15)),
+                side: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16)),
               ),

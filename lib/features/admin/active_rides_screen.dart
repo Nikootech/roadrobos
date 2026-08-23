@@ -85,7 +85,8 @@ class _ActiveRidesScreenState extends ConsumerState<ActiveRidesScreen> {
         ],
       ),
       body: activeRidesAsync.when(
-        data: (rides) => _isMapMode ? _buildMapView(rides) : _buildListView(rides),
+        data: (rides) =>
+            _isMapMode ? _buildMapView(rides) : _buildListView(rides),
         loading: () => const Center(
             child: CircularProgressIndicator(color: AppColors.primaryBlue)),
         error: (err, stack) =>
@@ -193,8 +194,7 @@ class _ActiveRidesScreenState extends ConsumerState<ActiveRidesScreen> {
     final total = rides.length;
     final transit = rides.where((r) => r['status'] == 'on_trip').length;
     final pending = rides
-        .where(
-            (r) => r['status'] == 'searching' || r['status'] == 'accepted')
+        .where((r) => r['status'] == 'searching' || r['status'] == 'accepted')
         .length;
 
     return Column(
@@ -221,8 +221,7 @@ class _ActiveRidesScreenState extends ConsumerState<ActiveRidesScreen> {
                     children: [
                       Icon(Iconsax.radar,
                           size: 80,
-                          color:
-                              AppColors.textMuted.withValues(alpha: 0.2)),
+                          color: AppColors.textMuted.withValues(alpha: 0.2)),
                       const SizedBox(height: 16),
                       const Text('No active rides at the moment',
                           style: TextStyle(color: AppColors.textSecondary)),
@@ -371,9 +370,15 @@ class _ActiveRidesScreenState extends ConsumerState<ActiveRidesScreen> {
 
   Widget _buildMapView(List<Map<String, dynamic>> rides) {
     final filteredRides = rides.where((r) {
-      if (_mapFilter == 'ALL') return true;
-      if (_mapFilter == 'IN_TRANSIT') return r['status'] == 'on_trip';
-      if (_mapFilter == 'SEARCHING') return r['status'] == 'searching' || r['status'] == 'accepted';
+      if (_mapFilter == 'ALL') {
+        return true;
+      }
+      if (_mapFilter == 'IN_TRANSIT') {
+        return r['status'] == 'on_trip';
+      }
+      if (_mapFilter == 'SEARCHING') {
+        return r['status'] == 'searching' || r['status'] == 'accepted';
+      }
       return true;
     }).toList();
 
@@ -391,7 +396,8 @@ class _ActiveRidesScreenState extends ConsumerState<ActiveRidesScreen> {
           child: Column(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
@@ -421,7 +427,8 @@ class _ActiveRidesScreenState extends ConsumerState<ActiveRidesScreen> {
                     ),
                     const Spacer(),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: AppColors.primaryBlue.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
@@ -446,9 +453,11 @@ class _ActiveRidesScreenState extends ConsumerState<ActiveRidesScreen> {
                   children: [
                     _buildMapFilterChip('ALL', 'All (${rides.length})'),
                     const SizedBox(width: 8),
-                    _buildMapFilterChip('IN_TRANSIT', 'In Transit (${rides.where((r) => r['status'] == 'on_trip').length})'),
+                    _buildMapFilterChip('IN_TRANSIT',
+                        'In Transit (${rides.where((r) => r['status'] == 'on_trip').length})'),
                     const SizedBox(width: 8),
-                    _buildMapFilterChip('SEARCHING', 'Searching (${rides.where((r) => r['status'] == 'searching' || r['status'] == 'accepted').length})'),
+                    _buildMapFilterChip('SEARCHING',
+                        'Searching (${rides.where((r) => r['status'] == 'searching' || r['status'] == 'accepted').length})'),
                   ],
                 ),
               ),
@@ -473,7 +482,8 @@ class _ActiveRidesScreenState extends ConsumerState<ActiveRidesScreen> {
                 },
                 itemBuilder: (context, index) {
                   final ride = filteredRides[index];
-                  final status = ride['status']?.toString().toUpperCase() ?? 'SEARCHING';
+                  final status =
+                      ride['status']?.toString().toUpperCase() ?? 'SEARCHING';
                   final isSearching = status == 'SEARCHING';
                   final fare = ride['fare'] ?? '0';
                   final vehicleType = ride['vehicle_type'] ?? 'Taxi';
@@ -509,13 +519,20 @@ class _ActiveRidesScreenState extends ConsumerState<ActiveRidesScreen> {
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: AppColors.primaryBlue.withValues(alpha: 0.1),
+                                color: AppColors.primaryBlue
+                                    .withValues(alpha: 0.1),
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(
-                                vehicleType.toString().toLowerCase().contains('bike')
+                                vehicleType
+                                        .toString()
+                                        .toLowerCase()
+                                        .contains('bike')
                                     ? Icons.two_wheeler_rounded
-                                    : vehicleType.toString().toLowerCase().contains('auto')
+                                    : vehicleType
+                                            .toString()
+                                            .toLowerCase()
+                                            .contains('auto')
                                         ? Icons.electric_rickshaw_rounded
                                         : Icons.directions_car_rounded,
                                 color: AppColors.primaryBlue,
@@ -546,8 +563,10 @@ class _ActiveRidesScreenState extends ConsumerState<ActiveRidesScreen> {
                                   horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
                                 color: isSearching
-                                    ? AppColors.warningAmber.withValues(alpha: 0.1)
-                                    : AppColors.successGreen.withValues(alpha: 0.1),
+                                    ? AppColors.warningAmber
+                                        .withValues(alpha: 0.1)
+                                    : AppColors.successGreen
+                                        .withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
@@ -597,7 +616,8 @@ class _ActiveRidesScreenState extends ConsumerState<ActiveRidesScreen> {
                           children: [
                             if (isSearching)
                               ElevatedButton(
-                                onPressed: () => _showAssignDriverDialog(context, ride),
+                                onPressed: () =>
+                                    _showAssignDriverDialog(context, ride),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: AppColors.primaryBlue,
                                   foregroundColor: Colors.white,
@@ -608,7 +628,8 @@ class _ActiveRidesScreenState extends ConsumerState<ActiveRidesScreen> {
                                 ),
                                 child: const Text('Assign Driver',
                                     style: TextStyle(
-                                        fontSize: 12, fontWeight: FontWeight.bold)),
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold)),
                               ),
                           ],
                         ),
@@ -629,7 +650,9 @@ class _ActiveRidesScreenState extends ConsumerState<ActiveRidesScreen> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 10)],
+                boxShadow: const [
+                  BoxShadow(color: Colors.black12, blurRadius: 10)
+                ],
               ),
               child: Center(
                 child: Text(

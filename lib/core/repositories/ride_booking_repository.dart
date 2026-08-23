@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import '../models/ride_booking.dart';
+import '../extensions/datetime_extensions.dart';
 
 final rideBookingRepositoryProvider =
     Provider((ref) => RideBookingRepository());
@@ -88,14 +89,13 @@ class RideBookingRepository {
     }
   }
 
-  Future<void> updateScheduledTime(String bookingId, DateTime scheduledTime) async {
+  Future<void> updateScheduledTime(
+      String bookingId, DateTime scheduledTime) async {
     try {
-      await _supabase
-          .from('ride_bookings')
-          .update({
-            'scheduled_for': scheduledTime.toUtc().toIso8601String(),
-            'status': 'scheduled',
-          }).eq('id', bookingId);
+      await _supabase.from('ride_bookings').update({
+        'scheduled_for': scheduledTime.toUtc().toIso8601String(),
+        'status': 'scheduled',
+      }).eq('id', bookingId);
     } catch (e) {
       throw Exception('Failed to update scheduled time: $e');
     }
@@ -112,10 +112,8 @@ class RideBookingRepository {
   /// and was never accepted by a driver.
   Future<int> autoCancelExpiredSearchingRides({int timeoutSeconds = 90}) async {
     try {
-      final cutoff = DateTime.now()
-          .toUtc()
-          .subtract(Duration(seconds: timeoutSeconds))
-          .toIso8601String();
+      final DateTime now = DateTime.now().toUtc();
+      final cutoff = now.subtract(Duration(seconds: timeoutSeconds)).utcIso;
       final staleRides = await _supabase
           .from('ride_bookings')
           .select('id')

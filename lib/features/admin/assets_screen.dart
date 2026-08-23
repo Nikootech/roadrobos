@@ -36,7 +36,12 @@ class AssetsScreen extends StatefulWidget {
 
 class _AssetsScreenState extends State<AssetsScreen> {
   String _selectedFilter = 'All';
-  final List<String> _filters = ['All', 'Active', 'Maintenance', 'Inspection Due'];
+  final List<String> _filters = [
+    'All',
+    'Active',
+    'Maintenance',
+    'Inspection Due'
+  ];
 
   final List<FleetAssetItem> _assets = [
     FleetAssetItem(
@@ -105,7 +110,8 @@ class _AssetsScreenState extends State<AssetsScreen> {
   Widget build(BuildContext context) {
     final activeCount = _assets.where((a) => a.status == 'Active').length;
     final maintCount = _assets.where((a) => a.status == 'Maintenance').length;
-    final inspectionCount = _assets.where((a) => a.status == 'Inspection Due').length;
+    final inspectionCount =
+        _assets.where((a) => a.status == 'Inspection Due').length;
     final readinessPct = ((activeCount / _assets.length) * 100).toInt();
 
     final filteredAssets = _assets.where((a) {
@@ -225,11 +231,14 @@ class _AssetsScreenState extends State<AssetsScreen> {
             // Stat Summary Chips
             Row(
               children: [
-                _buildStatBadge('Active', activeCount.toString(), AppColors.successGreen),
+                _buildStatBadge(
+                    'Active', activeCount.toString(), AppColors.successGreen),
                 const SizedBox(width: 8),
-                _buildStatBadge('Maintenance', maintCount.toString(), AppColors.dangerRed),
+                _buildStatBadge(
+                    'Maintenance', maintCount.toString(), AppColors.dangerRed),
                 const SizedBox(width: 8),
-                _buildStatBadge('Inspect Due', inspectionCount.toString(), AppColors.warningAmber),
+                _buildStatBadge('Inspect Due', inspectionCount.toString(),
+                    AppColors.warningAmber),
               ],
             ),
 
@@ -250,8 +259,10 @@ class _AssetsScreenState extends State<AssetsScreen> {
                       backgroundColor: Colors.white,
                       labelStyle: GoogleFonts.outfit(
                         fontSize: 13,
-                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                        color: isSelected ? Colors.white : AppColors.textPrimary,
+                        fontWeight:
+                            isSelected ? FontWeight.w700 : FontWeight.w500,
+                        color:
+                            isSelected ? Colors.white : AppColors.textPrimary,
                       ),
                       onSelected: (_) {
                         HapticFeedback.selectionClick();
@@ -293,7 +304,8 @@ class _AssetsScreenState extends State<AssetsScreen> {
                         Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: AppColors.primaryBlue.withValues(alpha: 0.08),
+                            color:
+                                AppColors.primaryBlue.withValues(alpha: 0.08),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Icon(
@@ -358,7 +370,9 @@ class _AssetsScreenState extends State<AssetsScreen> {
                               ? Icons.battery_alert_rounded
                               : Icons.battery_charging_full_rounded,
                           size: 16,
-                          color: isLowBattery ? AppColors.dangerRed : AppColors.successGreen,
+                          color: isLowBattery
+                              ? AppColors.dangerRed
+                              : AppColors.successGreen,
                         ),
                         const SizedBox(width: 6),
                         Text(
@@ -366,7 +380,9 @@ class _AssetsScreenState extends State<AssetsScreen> {
                           style: GoogleFonts.inter(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: isLowBattery ? AppColors.dangerRed : AppColors.textPrimary,
+                            color: isLowBattery
+                                ? AppColors.dangerRed
+                                : AppColors.textPrimary,
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -377,7 +393,9 @@ class _AssetsScreenState extends State<AssetsScreen> {
                               value: asset.batteryLevel / 100,
                               backgroundColor: Colors.grey.shade200,
                               valueColor: AlwaysStoppedAnimation<Color>(
-                                isLowBattery ? AppColors.dangerRed : AppColors.successGreen,
+                                isLowBattery
+                                    ? AppColors.dangerRed
+                                    : AppColors.successGreen,
                               ),
                               minHeight: 6,
                             ),
@@ -400,9 +418,10 @@ class _AssetsScreenState extends State<AssetsScreen> {
                           style: GoogleFonts.inter(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: asset.odometerKm >= asset.nextServiceDueKm - 500
-                                ? AppColors.warningAmber
-                                : AppColors.textSecondary,
+                            color:
+                                asset.odometerKm >= asset.nextServiceDueKm - 500
+                                    ? AppColors.warningAmber
+                                    : AppColors.textSecondary,
                           ),
                         ),
                       ],
@@ -421,10 +440,12 @@ class _AssetsScreenState extends State<AssetsScreen> {
                               setState(() => asset.status = 'Maintenance');
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                    content: Text('${asset.name} flagged as In-Maintenance.')),
+                                    content: Text(
+                                        '${asset.name} flagged as In-Maintenance.')),
                               );
                             },
-                            icon: const Icon(Icons.build_circle_outlined, size: 16),
+                            icon: const Icon(Icons.build_circle_outlined,
+                                size: 16),
                             label: const Text('Mark In-Service'),
                             style: TextButton.styleFrom(
                                 foregroundColor: AppColors.warningAmber),
@@ -436,18 +457,21 @@ class _AssetsScreenState extends State<AssetsScreen> {
                               setState(() => asset.status = 'Active');
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text('${asset.name} restored to Active Fleet!'),
+                                  content: Text(
+                                      '${asset.name} restored to Active Fleet!'),
                                   backgroundColor: AppColors.successGreen,
                                 ),
                               );
                             },
-                            icon: const Icon(Icons.check_circle_rounded, size: 16),
+                            icon: const Icon(Icons.check_circle_rounded,
+                                size: 16),
                             label: const Text('Release to Active'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.successGreen,
                               foregroundColor: Colors.white,
                               elevation: 0,
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 6),
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8)),
                             ),
@@ -483,7 +507,8 @@ class _AssetsScreenState extends State<AssetsScreen> {
             const SizedBox(width: 8),
             Text(
               '$label: ',
-              style: GoogleFonts.inter(fontSize: 11, color: AppColors.textSecondary),
+              style: GoogleFonts.inter(
+                  fontSize: 11, color: AppColors.textSecondary),
             ),
             Text(
               count,

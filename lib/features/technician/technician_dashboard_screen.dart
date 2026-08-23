@@ -16,7 +16,6 @@ import '../../core/services/language_service.dart';
 // Technician online/offline availability toggle — persists within session.
 final techOnlineProvider = StateProvider<bool>((ref) => true);
 
-
 class TechnicianDashboardScreen extends ConsumerStatefulWidget {
   const TechnicianDashboardScreen({super.key});
 
@@ -309,7 +308,7 @@ class _TechnicianDashboardScreenState
               children: [
                 const SizedBox(height: 10),
                 const ServiceTeamAlertMonitor(),
-                 // ─── 1. Header ───
+                // ─── 1. Header ───
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -687,12 +686,15 @@ class _TechnicianDashboardScreenState
                         vehiclePlate: job.vehiclePlate,
                       );
                     },
-                    icon: const Icon(Icons.videocam_rounded, size: 14, color: Colors.white),
-                    label: const Text('Video Diag', style: TextStyle(color: Colors.white, fontSize: 10)),
+                    icon: const Icon(Icons.videocam_rounded,
+                        size: 14, color: Colors.white),
+                    label: const Text('Video Diag',
+                        style: TextStyle(color: Colors.white, fontSize: 10)),
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: Colors.white38),
                       padding: const EdgeInsets.symmetric(vertical: 8),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
                     ),
                   ),
                 ),
@@ -703,17 +705,21 @@ class _TechnicianDashboardScreenState
                       HapticFeedback.lightImpact();
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Launching GPS Navigation to ${job.vehiclePlate}...'),
+                          content: Text(
+                              'Launching GPS Navigation to ${job.vehiclePlate}...'),
                           backgroundColor: const Color(0xFF1A237E),
                         ),
                       );
                     },
-                    icon: const Icon(Icons.navigation_rounded, size: 14, color: Colors.white),
-                    label: const Text('GPS Nav', style: TextStyle(color: Colors.white, fontSize: 10)),
+                    icon: const Icon(Icons.navigation_rounded,
+                        size: 14, color: Colors.white),
+                    label: const Text('GPS Nav',
+                        style: TextStyle(color: Colors.white, fontSize: 10)),
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: Colors.white38),
                       padding: const EdgeInsets.symmetric(vertical: 8),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
                     ),
                   ),
                 ),
@@ -724,12 +730,15 @@ class _TechnicianDashboardScreenState
                       HapticFeedback.lightImpact();
                       _showPartsLoggerModal(context, job);
                     },
-                    icon: const Icon(Icons.handyman_rounded, size: 14, color: Colors.white),
-                    label: const Text('Log Parts', style: TextStyle(color: Colors.white, fontSize: 10)),
+                    icon: const Icon(Icons.handyman_rounded,
+                        size: 14, color: Colors.white),
+                    label: const Text('Log Parts',
+                        style: TextStyle(color: Colors.white, fontSize: 10)),
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: Colors.white38),
                       padding: const EdgeInsets.symmetric(vertical: 8),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
                     ),
                   ),
                 ),
@@ -740,12 +749,18 @@ class _TechnicianDashboardScreenState
                       HapticFeedback.mediumImpact();
                       _showCustomerSignoffModal(context, job);
                     },
-                    icon: const Icon(Icons.draw_rounded, size: 14, color: Color(0xFF1A237E)),
-                    label: const Text('Sign-off', style: TextStyle(color: Color(0xFF1A237E), fontSize: 10, fontWeight: FontWeight.bold)),
+                    icon: const Icon(Icons.draw_rounded,
+                        size: 14, color: Color(0xFF1A237E)),
+                    label: const Text('Sign-off',
+                        style: TextStyle(
+                            color: Color(0xFF1A237E),
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.greenAccent,
                       padding: const EdgeInsets.symmetric(vertical: 8),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
                     ),
                   ),
                 ),
@@ -776,18 +791,24 @@ class _TechnicianDashboardScreenState
               child: Container(
                 width: 40,
                 height: 4,
-                decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)),
+                decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2)),
               ),
             ),
             const SizedBox(height: 18),
             Text('Log Spare Parts • ${job.vehiclePlate}',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1A237E))),
+                style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1A237E))),
             const SizedBox(height: 14),
             TextField(
               decoration: InputDecoration(
                 labelText: 'Part Name / Part Number',
                 hintText: 'e.g. Bosch Brake Pad Set (Front)',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
             ),
             const SizedBox(height: 12),
@@ -799,7 +820,8 @@ class _TechnicianDashboardScreenState
                     decoration: InputDecoration(
                       labelText: 'Qty',
                       hintText: '1',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12)),
                     ),
                   ),
                 ),
@@ -810,7 +832,8 @@ class _TechnicianDashboardScreenState
                     decoration: InputDecoration(
                       labelText: 'Price (₹)',
                       hintText: '1450',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12)),
                     ),
                   ),
                 ),
@@ -823,15 +846,20 @@ class _TechnicianDashboardScreenState
                 onPressed: () {
                   Navigator.pop(ctx);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Spare parts logged to job invoice.'), backgroundColor: Color(0xFF28C76F)),
+                    const SnackBar(
+                        content: Text('Spare parts logged to job invoice.'),
+                        backgroundColor: Color(0xFF28C76F)),
                   );
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF1A237E),
                   padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
                 ),
-                child: const Text('Add to Job Card', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                child: const Text('Add to Job Card',
+                    style: TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.bold)),
               ),
             ),
           ],
@@ -849,16 +877,24 @@ class _TechnicianDashboardScreenState
           children: [
             Icon(Icons.draw_rounded, color: Color(0xFF1A237E)),
             SizedBox(width: 10),
-            Text('Customer Digital Sign-Off', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Color(0xFF1A237E))),
+            Text('Customer Digital Sign-Off',
+                style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1A237E))),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Vehicle: ${job.vehicleModel} (${job.vehiclePlate})', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+            Text('Vehicle: ${job.vehicleModel} (${job.vehiclePlate})',
+                style:
+                    const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
             const SizedBox(height: 4),
-            const Text('Please hand phone to customer to draw signature confirming job completion.', style: TextStyle(fontSize: 12, color: Colors.grey)),
+            const Text(
+                'Please hand phone to customer to draw signature confirming job completion.',
+                style: TextStyle(fontSize: 12, color: Colors.grey)),
             const SizedBox(height: 16),
             Container(
               height: 120,
@@ -869,25 +905,35 @@ class _TechnicianDashboardScreenState
                 border: Border.all(color: Colors.grey.shade300),
               ),
               child: const Center(
-                child: Text('✍️ Customer Signature Area', style: TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.w500)),
+                child: Text('✍️ Customer Signature Area',
+                    style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500)),
               ),
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(ctx);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Customer signature captured & verified!'), backgroundColor: Color(0xFF28C76F)),
+                const SnackBar(
+                    content: Text('Customer signature captured & verified!'),
+                    backgroundColor: Color(0xFF28C76F)),
               );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF28C76F),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
             ),
-            child: const Text('Confirm Sign-off', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: const Text('Confirm Sign-off',
+                style: TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -1065,7 +1111,10 @@ class _TechnicianDashboardScreenState
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 const Text('Cash Out',
-                    style: TextStyle(fontSize: 10, color: Color(0xFF28C76F), fontWeight: FontWeight.bold)),
+                    style: TextStyle(
+                        fontSize: 10,
+                        color: Color(0xFF28C76F),
+                        fontWeight: FontWeight.bold)),
                 Text(
                   '₹${total.toStringAsFixed(0)}',
                   style: const TextStyle(
@@ -1081,15 +1130,10 @@ class _TechnicianDashboardScreenState
           ],
         ),
       ),
-    )
-        .animate(delay: 150.ms)
-        .fadeIn()
-        .slideY(begin: 0.1, end: 0);
+    ).animate(delay: 150.ms).fadeIn().slideY(begin: 0.1, end: 0);
   }
 
-
-  Widget _buildChartBar(String day, double percent,
-      {bool isToday = false}) {
+  Widget _buildChartBar(String day, double percent, {bool isToday = false}) {
     final clampedPercent = percent.clamp(0.05, 1.0);
     return Column(
       children: [
@@ -1099,7 +1143,8 @@ class _TechnicianDashboardScreenState
           decoration: BoxDecoration(
             color: isToday
                 ? Colors.greenAccent
-                : Colors.white.withValues(alpha: clampedPercent > 0.6 ? 1.0 : 0.4),
+                : Colors.white
+                    .withValues(alpha: clampedPercent > 0.6 ? 1.0 : 0.4),
             borderRadius: BorderRadius.circular(6),
           ),
         ),
@@ -1108,8 +1153,7 @@ class _TechnicianDashboardScreenState
             style: TextStyle(
                 color: isToday ? Colors.greenAccent : Colors.white60,
                 fontSize: 10,
-                fontWeight:
-                    isToday ? FontWeight.bold : FontWeight.normal)),
+                fontWeight: isToday ? FontWeight.bold : FontWeight.normal)),
       ],
     );
   }

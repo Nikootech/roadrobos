@@ -92,16 +92,14 @@ class ServiceBookingRepository {
 
   Future<void> collectCashPayment(String bookingId) async {
     try {
-      await _supabase
-          .from('service_bookings')
-          .update({
-            'status': 'paid',
-            'details': {
-              'method': 'Cash',
-              'payment_status': 'collected',
-              'collected_at': DateTime.now().toUtc().toIso8601String(),
-            }
-          }).eq('id', bookingId);
+      await _supabase.from('service_bookings').update({
+        'status': 'paid',
+        'details': {
+          'method': 'Cash',
+          'payment_status': 'collected',
+          'collected_at': DateTime.now().toUtc().toIso8601String(),
+        }
+      }).eq('id', bookingId);
     } catch (e) {
       throw Exception('Failed to collect cash payment: $e');
     }
@@ -118,9 +116,13 @@ class ServiceBookingRepository {
       if (bookingResponse == null) throw Exception('Booking not found');
 
       final customerId = bookingResponse['customer_id'];
-      final double totalCost = double.tryParse(bookingResponse['total_cost']?.toString() ?? '0.0') ?? 0.0;
+      final double totalCost =
+          double.tryParse(bookingResponse['total_cost']?.toString() ?? '0.0') ??
+              0.0;
       final status = bookingResponse['status']?.toString();
-      final Map<dynamic, dynamic> details = bookingResponse['details'] is Map ? bookingResponse['details'] as Map : {};
+      final Map<dynamic, dynamic> details = bookingResponse['details'] is Map
+          ? bookingResponse['details'] as Map
+          : {};
       final method = details['method']?.toString() ?? 'Online';
 
       await _supabase.from('service_bookings').update({
@@ -141,7 +143,8 @@ class ServiceBookingRepository {
             .maybeSingle();
 
         if (profileResponse != null) {
-          final int currentPoints = int.tryParse(profileResponse['points']?.toString() ?? '0') ?? 0;
+          final int currentPoints =
+              int.tryParse(profileResponse['points']?.toString() ?? '0') ?? 0;
           final refundPoints = totalCost.toInt();
           await _supabase.from('profiles').update({
             'points': currentPoints + refundPoints,
@@ -150,7 +153,8 @@ class ServiceBookingRepository {
           await _supabase.from('user_notifications').insert({
             'user_id': customerId,
             'title': '💰 Booking Refund Credited',
-            'description': 'Your refund of ₹$totalCost has been credited as $refundPoints Loyalty Points to your account due to No-Show / Service cancellation.',
+            'description':
+                'Your refund of ₹$totalCost has been credited as $refundPoints Loyalty Points to your account due to No-Show / Service cancellation.',
             'type': 'REFUND',
             'is_read': false,
             'created_at': DateTime.now().toUtc().toIso8601String(),

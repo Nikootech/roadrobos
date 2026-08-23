@@ -1,4 +1,4 @@
-﻿import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/user_role.dart';
@@ -31,7 +31,8 @@ class AuditLoggerService {
     };
 
     if (kDebugMode) {
-      debugPrint('AUDIT LOG: [$category] $action by $actorId ($actorRole) -> $details');
+      debugPrint(
+          'AUDIT LOG: [$category] $action by $actorId ($actorRole) -> $details');
     }
 
     try {
@@ -52,7 +53,8 @@ class AuditLoggerService {
         details: {'job_id': jobId, 'tech_id': techId},
       );
 
-  Future<void> logKycApproval({required String driverId, required bool approved}) =>
+  Future<void> logKycApproval(
+          {required String driverId, required bool approved}) =>
       logEvent(
         action: approved ? 'KYC_APPROVED' : 'KYC_REJECTED',
         category: 'COMPLIANCE',
@@ -69,8 +71,7 @@ class AuditLoggerService {
         details: {'dispute_id': disputeId, 'refund_amount': refundAmount},
       );
 
-  Future<void> logRoleImpersonation({required UserRole targetRole}) =>
-      logEvent(
+  Future<void> logRoleImpersonation({required UserRole targetRole}) => logEvent(
         action: 'ROLE_IMPERSONATION',
         category: 'SECURITY',
         details: {'target_role': targetRole.name},

@@ -60,7 +60,7 @@ class _BookRideScreenState extends ConsumerState<BookRideScreen> {
               final screenHeight = MediaQuery.of(context).size.height;
               final double initialSize = screenHeight < 850 ? 0.58 : 0.45;
               final double minSize = screenHeight < 850 ? 0.48 : 0.45;
-              
+
               return DraggableScrollableSheet(
                 controller: _sheetController,
                 initialChildSize: initialSize,
@@ -69,237 +69,240 @@ class _BookRideScreenState extends ConsumerState<BookRideScreen> {
                 snapSizes: [minSize, 0.75, 0.9],
                 snap: true,
                 builder: (context, scrollController) {
-              return Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(32)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 20,
-                      offset: const Offset(0, -5),
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius:
+                          const BorderRadius.vertical(top: Radius.circular(32)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 20,
+                          offset: const Offset(0, -5),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                child: SingleChildScrollView(
-                  controller: scrollController,
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Drag handle
-                      Center(
-                        child: Container(
-                          width: 40,
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: Colors.grey[300],
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      const Text(
-                        'Plan Your Ride',
-                        style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.black),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Pickup Location
-                      const Text(
-                        'Pickup Location',
-                        style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black54),
-                      ),
-                      const SizedBox(height: 8),
-                      Semantics(
-                        label: 'Set pickup location',
-                        button: true,
-                        child: GestureDetector(
-                          onTap: () => context.push('/taxi/search-location',
-                              extra: {'focusPickup': true}),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 14),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF3F4F6),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: Colors.grey.shade200),
-                            ),
-                            child: Row(
-                              children: [
-                                // Show spinner while GPS is detecting
-                                if (taxiState.isLoadingLocation)
-                                  const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.green,
-                                    ),
-                                  )
-                                else
-                                  const Icon(Icons.circle_outlined,
-                                      size: 16, color: Colors.green),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                    child: Text(
-                                  taxiState.isLoadingLocation
-                                      ? 'Detecting your location...'
-                                      : (taxiState.pickupAddress ??
-                                          'Set pickup location'),
-                                  style: const TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.black87),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                )),
-                              ],
+                    child: SingleChildScrollView(
+                      controller: scrollController,
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // Drag handle
+                          Center(
+                            child: Container(
+                              width: 40,
+                              height: 4,
+                              decoration: BoxDecoration(
+                                color: Colors.grey[300],
+                                borderRadius: BorderRadius.circular(2),
+                              ),
                             ),
                           ),
-                        ),
-                      ),
+                          const SizedBox(height: 20),
+                          const Text(
+                            'Plan Your Ride',
+                            style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.black),
+                          ),
+                          const SizedBox(height: 20),
 
-                      const SizedBox(height: 16),
-
-                      // Destination
-                      const Text(
-                        'Destination',
-                        style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black54),
-                      ),
-                      const SizedBox(height: 8),
-                      Semantics(
-                        label: 'Set destination',
-                        button: true,
-                        child: GestureDetector(
-                          onTap: () => context.push('/taxi/search-location',
-                              extra: {'focusPickup': false}),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 14),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF3F4F6),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: Colors.grey.shade200),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.location_on_outlined,
-                                    size: 16, color: Colors.red),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    taxiState.dropoffAddress ?? 'Where to?',
-                                    style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                        color: taxiState.dropoffAddress == null
-                                            ? Colors.black45
-                                            : Colors.black87),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
+                          // Pickup Location
+                          const Text(
+                            'Pickup Location',
+                            style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black54),
+                          ),
+                          const SizedBox(height: 8),
+                          Semantics(
+                            label: 'Set pickup location',
+                            button: true,
+                            child: GestureDetector(
+                              onTap: () => context.push('/taxi/search-location',
+                                  extra: {'focusPickup': true}),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 14),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF3F4F6),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border:
+                                      Border.all(color: Colors.grey.shade200),
                                 ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      // CTA Button — label reflects what happens next
-                      Semantics(
-                        label: taxiState.dropoffLocation != null
-                            ? 'View ride options'
-                            : 'Select destination',
-                        button: true,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            if (taxiState.dropoffLocation == null) {
-                              context.push('/taxi/search-location',
-                                  extra: {'focusPickup': false});
-                            } else {
-                              context.push('/taxi/ride-options');
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF22C55E),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30)),
-                            elevation: 0,
-                          ),
-                          child: Text(
-                            // Contextual label: changes once destination is set
-                            taxiState.dropoffLocation != null
-                                ? 'VIEW RIDE OPTIONS'
-                                : 'SELECT DESTINATION',
-                            style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 0.5),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      // Secondary CTA — Schedule for Later
-                      SizedBox(
-                        width: double.infinity,
-                        child: OutlinedButton.icon(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => ScheduleRideScreen(
-                                  pickupAddress: taxiState.pickupAddress,
-                                  dropoffAddress: taxiState.dropoffAddress,
+                                child: Row(
+                                  children: [
+                                    // Show spinner while GPS is detecting
+                                    if (taxiState.isLoadingLocation)
+                                      const SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.green,
+                                        ),
+                                      )
+                                    else
+                                      const Icon(Icons.circle_outlined,
+                                          size: 16, color: Colors.green),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                        child: Text(
+                                      taxiState.isLoadingLocation
+                                          ? 'Detecting your location...'
+                                          : (taxiState.pickupAddress ??
+                                              'Set pickup location'),
+                                      style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.black87),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    )),
+                                  ],
                                 ),
                               ),
-                            );
-                          },
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: const Color(0xFF22C55E),
-                            side: const BorderSide(
-                                color: Color(0xFF22C55E), width: 1.5),
-                            padding:
-                                const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30)),
+                            ),
                           ),
-                          icon: const Icon(
-                              Icons.schedule_rounded,
-                              size: 18),
-                          label: const Text(
-                            'SCHEDULE FOR LATER',
+
+                          const SizedBox(height: 16),
+
+                          // Destination
+                          const Text(
+                            'Destination',
                             style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 0.5),
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black54),
                           ),
-                        ),
+                          const SizedBox(height: 8),
+                          Semantics(
+                            label: 'Set destination',
+                            button: true,
+                            child: GestureDetector(
+                              onTap: () => context.push('/taxi/search-location',
+                                  extra: {'focusPickup': false}),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 14),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF3F4F6),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border:
+                                      Border.all(color: Colors.grey.shade200),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.location_on_outlined,
+                                        size: 16, color: Colors.red),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        taxiState.dropoffAddress ?? 'Where to?',
+                                        style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                            color:
+                                                taxiState.dropoffAddress == null
+                                                    ? Colors.black45
+                                                    : Colors.black87),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 24),
+
+                          // CTA Button — label reflects what happens next
+                          Semantics(
+                            label: taxiState.dropoffLocation != null
+                                ? 'View ride options'
+                                : 'Select destination',
+                            button: true,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                if (taxiState.dropoffLocation == null) {
+                                  context.push('/taxi/search-location',
+                                      extra: {'focusPickup': false});
+                                } else {
+                                  context.push('/taxi/ride-options');
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF22C55E),
+                                foregroundColor: Colors.white,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(30)),
+                                elevation: 0,
+                              ),
+                              child: Text(
+                                // Contextual label: changes once destination is set
+                                taxiState.dropoffLocation != null
+                                    ? 'VIEW RIDE OPTIONS'
+                                    : 'SELECT DESTINATION',
+                                style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 0.5),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          // Secondary CTA — Schedule for Later
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => ScheduleRideScreen(
+                                      pickupAddress: taxiState.pickupAddress,
+                                      dropoffAddress: taxiState.dropoffAddress,
+                                    ),
+                                  ),
+                                );
+                              },
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: const Color(0xFF22C55E),
+                                side: const BorderSide(
+                                    color: Color(0xFF22C55E), width: 1.5),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(30)),
+                              ),
+                              icon:
+                                  const Icon(Icons.schedule_rounded, size: 18),
+                              label: const Text(
+                                'SCHEDULE FOR LATER',
+                                style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 0.5),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                        ],
                       ),
-                      const SizedBox(height: 12),
-                    ],
-                  ),
-                ),
+                    ),
+                  );
+                },
               );
             },
-          );
-        },
-      ),
-    ],
+          ),
+        ],
       ),
     );
   }

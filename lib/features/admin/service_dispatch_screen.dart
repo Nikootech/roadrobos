@@ -28,8 +28,7 @@ class ServiceDispatchScreen extends ConsumerStatefulWidget {
       _ServiceDispatchScreenState();
 }
 
-class _ServiceDispatchScreenState
-    extends ConsumerState<ServiceDispatchScreen>
+class _ServiceDispatchScreenState extends ConsumerState<ServiceDispatchScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   String _selectedCategory = 'ALL';
@@ -104,7 +103,8 @@ class _ServiceDispatchScreenState
 
           final inField = bookings.where((b) {
             final s = b['status']?.toString().toLowerCase() ?? '';
-            return ['assigned', 'on_my_way', 'arrived', 'in_progress'].contains(s) &&
+            return ['assigned', 'on_my_way', 'arrived', 'in_progress']
+                    .contains(s) &&
                 b['assigned_technician_id'] != null;
           }).toList();
 
@@ -156,18 +156,25 @@ class _ServiceDispatchScreenState
                             padding: const EdgeInsets.only(right: 8),
                             child: FilterChip(
                               label: Text(
-                                cat == 'ALL' ? 'All Services' : '$cat Maintenance',
+                                cat == 'ALL'
+                                    ? 'All Services'
+                                    : '$cat Maintenance',
                                 style: GoogleFonts.outfit(
                                   fontSize: 12,
-                                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                                  color: isSelected ? Colors.white : AppColors.textSecondary,
+                                  fontWeight: isSelected
+                                      ? FontWeight.w700
+                                      : FontWeight.w500,
+                                  color: isSelected
+                                      ? Colors.white
+                                      : AppColors.textSecondary,
                                 ),
                               ),
                               selected: isSelected,
                               backgroundColor: const Color(0xFFF1F3F7),
                               selectedColor: AppColors.deepNavy,
                               showCheckmark: false,
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 4),
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(20)),
                               onSelected: (_) {
@@ -192,8 +199,8 @@ class _ServiceDispatchScreenState
                   indicatorWeight: 3,
                   labelColor: AppColors.primaryBlue,
                   unselectedLabelColor: AppColors.textSecondary,
-                  labelStyle:
-                      GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w700),
+                  labelStyle: GoogleFonts.outfit(
+                      fontSize: 13, fontWeight: FontWeight.w700),
                   tabs: [
                     Tab(text: 'Unassigned (${unassigned.length})'),
                     Tab(text: 'In Field (${inField.length})'),
@@ -226,7 +233,8 @@ class _ServiceDispatchScreenState
     );
   }
 
-  Widget _buildStatChip(String title, String value, Color color, IconData icon) {
+  Widget _buildStatChip(
+      String title, String value, Color color, IconData icon) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(12),
@@ -269,12 +277,14 @@ class _ServiceDispatchScreenState
     );
   }
 
-  Widget _buildBookingList(List<Map<String, dynamic>> items, {bool isUnassigned = false}) {
+  Widget _buildBookingList(List<Map<String, dynamic>> items,
+      {bool isUnassigned = false}) {
     final filtered = items.where((b) {
       if (_selectedCategory == 'ALL') return true;
       final package = b['package_name']?.toString().toUpperCase() ?? '';
       final vehicle = b['vehicle_name']?.toString().toUpperCase() ?? '';
-      return package.contains(_selectedCategory) || vehicle.contains(_selectedCategory);
+      return package.contains(_selectedCategory) ||
+          vehicle.contains(_selectedCategory);
     }).toList();
 
     if (filtered.isEmpty) {
@@ -282,11 +292,13 @@ class _ServiceDispatchScreenState
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Iconsax.task, size: 64, color: AppColors.textMuted.withValues(alpha: 0.3)),
+            Icon(Iconsax.task,
+                size: 64, color: AppColors.textMuted.withValues(alpha: 0.3)),
             const SizedBox(height: 12),
             Text(
               'No service bookings in this queue',
-              style: GoogleFonts.outfit(color: AppColors.textSecondary, fontSize: 14),
+              style: GoogleFonts.outfit(
+                  color: AppColors.textSecondary, fontSize: 14),
             ),
           ],
         ),
@@ -362,7 +374,8 @@ class _ServiceDispatchScreenState
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: status == 'COMPLETED'
                           ? AppColors.successGreen.withValues(alpha: 0.1)
@@ -390,14 +403,16 @@ class _ServiceDispatchScreenState
               // Location & Slot
               Row(
                 children: [
-                  const Icon(Icons.location_on_outlined, size: 14, color: AppColors.textMuted),
+                  const Icon(Icons.location_on_outlined,
+                      size: 14, color: AppColors.textMuted),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
                       address,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.inter(fontSize: 12, color: AppColors.textPrimary),
+                      style: GoogleFonts.inter(
+                          fontSize: 12, color: AppColors.textPrimary),
                     ),
                   ),
                 ],
@@ -405,10 +420,12 @@ class _ServiceDispatchScreenState
               const SizedBox(height: 6),
               Row(
                 children: [
-                  const Icon(Icons.calendar_today_outlined, size: 14, color: AppColors.textMuted),
+                  const Icon(Icons.calendar_today_outlined,
+                      size: 14, color: AppColors.textMuted),
                   const SizedBox(width: 6),
                   Text('$date at $time',
-                      style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary)),
+                      style: GoogleFonts.inter(
+                          fontSize: 12, color: AppColors.textSecondary)),
                   const Spacer(),
                   Text('₹$totalCost',
                       style: GoogleFonts.outfit(
@@ -512,7 +529,9 @@ class _ServiceDispatchScreenState
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to auto-dispatch: $e'), backgroundColor: AppColors.dangerRed),
+          SnackBar(
+              content: Text('Failed to auto-dispatch: $e'),
+              backgroundColor: AppColors.dangerRed),
         );
       }
     }
@@ -556,7 +575,8 @@ class _ServiceDispatchScreenState
             ),
             Text(
               'Assigning for ${booking['package_name'] ?? 'Service'}',
-              style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary),
+              style: GoogleFonts.inter(
+                  fontSize: 12, color: AppColors.textSecondary),
             ),
             const SizedBox(height: 16),
             Expanded(
@@ -568,11 +588,13 @@ class _ServiceDispatchScreenState
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(
-                        child: CircularProgressIndicator(color: AppColors.primaryBlue));
+                        child: CircularProgressIndicator(
+                            color: AppColors.primaryBlue));
                   }
                   final list = snapshot.data ?? [];
                   if (list.isEmpty) {
-                    return const Center(child: Text('No registered technicians found.'));
+                    return const Center(
+                        child: Text('No registered technicians found.'));
                   }
 
                   return ListView.separated(
@@ -580,7 +602,8 @@ class _ServiceDispatchScreenState
                     separatorBuilder: (_, __) => const SizedBox(height: 10),
                     itemBuilder: (context, index) {
                       final tech = list[index];
-                      final name = tech['full_name'] ?? 'Technician #${index + 1}';
+                      final name =
+                          tech['full_name'] ?? 'Technician #${index + 1}';
                       final rating = tech['rating']?.toString() ?? '4.8';
 
                       return ListTile(
@@ -589,11 +612,14 @@ class _ServiceDispatchScreenState
                           side: const BorderSide(color: AppColors.border),
                         ),
                         leading: CircleAvatar(
-                          backgroundColor: AppColors.primaryBlue.withValues(alpha: 0.1),
-                          child: const Icon(Icons.person, color: AppColors.primaryBlue),
+                          backgroundColor:
+                              AppColors.primaryBlue.withValues(alpha: 0.1),
+                          child: const Icon(Icons.person,
+                              color: AppColors.primaryBlue),
                         ),
                         title: Text(name,
-                            style: GoogleFonts.outfit(fontWeight: FontWeight.w600)),
+                            style: GoogleFonts.outfit(
+                                fontWeight: FontWeight.w600)),
                         subtitle: Row(
                           children: [
                             const Icon(Icons.star_rounded,
@@ -603,7 +629,9 @@ class _ServiceDispatchScreenState
                             const SizedBox(width: 8),
                             const Text('· Available Now',
                                 style: TextStyle(
-                                    color: AppColors.successGreen, fontSize: 11, fontWeight: FontWeight.w600)),
+                                    color: AppColors.successGreen,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600)),
                           ],
                         ),
                         trailing: ElevatedButton(
@@ -620,13 +648,16 @@ class _ServiceDispatchScreenState
 
                               messenger.showSnackBar(
                                 SnackBar(
-                                  content: Text('✅ Assigned to $name successfully!'),
+                                  content:
+                                      Text('✅ Assigned to $name successfully!'),
                                   backgroundColor: AppColors.successGreen,
                                 ),
                               );
                             } catch (e) {
                               messenger.showSnackBar(
-                                SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.dangerRed),
+                                SnackBar(
+                                    content: Text('Error: $e'),
+                                    backgroundColor: AppColors.dangerRed),
                               );
                             }
                           },
@@ -639,7 +670,8 @@ class _ServiceDispatchScreenState
                                 horizontal: 12, vertical: 6),
                           ),
                           child: const Text('Assign',
-                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 12)),
                         ),
                       );
                     },

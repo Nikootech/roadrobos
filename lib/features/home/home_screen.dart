@@ -341,7 +341,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget _buildGreetingSection(WidgetRef ref) {
     final selectedVehicle = ref.watch(vehicleProvider);
     final allVehicles = ref.watch(allVehiclesProvider);
-    final hasVehicle = allVehicles.isNotEmpty && selectedVehicle.id != 'placeholder';
+    final hasVehicle =
+        allVehicles.isNotEmpty && selectedVehicle.id != 'placeholder';
 
     // If no vehicles registered, show an "Add Vehicle" prompt card
     if (!hasVehicle) {
@@ -384,7 +385,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
                       colors: [Color(0xFF6366F1), Color(0xFF4F46E5)],
@@ -420,7 +422,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           .copyWith(bottom: 0),
       child: GestureDetector(
         onTap: () {
-
           showModalBottomSheet(
             context: context,
             backgroundColor: Colors.transparent,
@@ -1165,7 +1166,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       return (const Color(0xFFF97316), const Color(0xFFFFF7ED));
     } else if (l.contains('ac') || l.contains('climate') || l.contains('air')) {
       return (const Color(0xFF10B981), const Color(0xFFECFDF5));
-    } else if (l.contains('tyre') || l.contains('wheel') || l.contains('tire')) {
+    } else if (l.contains('tyre') ||
+        l.contains('wheel') ||
+        l.contains('tire')) {
       return (const Color(0xFF64748B), const Color(0xFFF8FAFC));
     } else if (l.contains('electrical') || l.contains('electric')) {
       return (const Color(0xFFF59E0B), const Color(0xFFFFFBEB));
@@ -1203,7 +1206,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 },
                 behavior: HitTestBehavior.opaque,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
                   child: Text(
                     AppStrings.viewAll,
                     style: GoogleFonts.outfit(
@@ -1500,16 +1504,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     const items = <_MoreTileData>[
       _MoreTileData('Add Vehicle', Icons.add_circle_outline_rounded,
           Color(0xFF3B82F6), '/add-vehicle'),
-      _MoreTileData('Loyalty', Icons.card_membership_rounded,
-          Color(0xFFF97316), '/loyalty'),
+      _MoreTileData('Loyalty', Icons.card_membership_rounded, Color(0xFFF97316),
+          '/loyalty'),
       _MoreTileData(
           'Send Package', Iconsax.box, Color(0xFF8B5CF6), '/delivery/create'),
-      _MoreTileData('Help', Iconsax.message_question, Color(0xFF1B8A5A),
-          '/help-center'),
-      _MoreTileData('History', Icons.history_rounded, Color(0xFFF97316),
-          '/ride-history'),
-      _MoreTileData('Referral', Icons.card_giftcard_rounded,
-          Color(0xFFEC4899), '/referral'),
+      _MoreTileData(
+          'Help', Iconsax.message_question, Color(0xFF1B8A5A), '/help-center'),
+      _MoreTileData(
+          'History', Icons.history_rounded, Color(0xFFF97316), '/ride-history'),
+      _MoreTileData('Referral', Icons.card_giftcard_rounded, Color(0xFFEC4899),
+          '/referral'),
       _MoreTileData(
           'Emergency', Iconsax.shield_slash, AppColors.dangerRed, '/sos-setup'),
     ];
@@ -1586,9 +1590,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     )
         .animate(delay: (100 + index * 50).ms)
         .fadeIn(duration: 350.ms)
-        .scale(
-            begin: const Offset(0.9, 0.9),
-            end: const Offset(1.0, 1.0));
+        .scale(begin: const Offset(0.9, 0.9), end: const Offset(1.0, 1.0));
   }
 
   Widget _buildRoleCard(BuildContext context, String label, IconData icon,

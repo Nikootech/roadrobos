@@ -102,8 +102,7 @@ class CustomBottomNavBar extends StatelessWidget {
                     curve: Curves.easeInOut,
                     style: TextStyle(
                       fontSize: 11,
-                      fontWeight:
-                          isActive ? FontWeight.w700 : FontWeight.w500,
+                      fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
                       color: isActive
                           ? effectiveActiveColor
                           : effectiveInactiveColor,
@@ -123,4 +122,3 @@ class CustomBottomNavBar extends StatelessWidget {
     );
   }
 }
-

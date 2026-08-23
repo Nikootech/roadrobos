@@ -126,7 +126,8 @@ void main() {
               // just skip init. Screens that need Supabase will handle
               // the uninitialized state via error boundaries.
               if (kDebugMode) {
-                debugPrint('Supabase init failed: $e. Running in offline mode.');
+                debugPrint(
+                    'Supabase init failed: $e. Running in offline mode.');
               }
             }
           })(),

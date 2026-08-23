@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -39,7 +39,8 @@ class PredictiveHeatmapCard extends StatelessWidget {
                       color: const Color(0xFFF97316).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(Iconsax.radar_2, color: Color(0xFFF97316), size: 18),
+                    child: const Icon(Iconsax.radar_2,
+                        color: Color(0xFFF97316), size: 18),
                   ),
                   const SizedBox(width: 10),
                   Column(
@@ -55,7 +56,8 @@ class PredictiveHeatmapCard extends StatelessWidget {
                       ),
                       const Text(
                         'Next 2–4 hrs predictive surge prediction',
-                        style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                        style: TextStyle(
+                            fontSize: 11, color: AppColors.textSecondary),
                       ),
                     ],
                   ),
@@ -69,7 +71,10 @@ class PredictiveHeatmapCard extends StatelessWidget {
                 ),
                 child: const Text(
                   'HIGH SURGE',
-                  style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Color(0xFFF97316)),
+                  style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFFF97316)),
                 ),
               ),
             ],
@@ -110,12 +115,16 @@ class PredictiveHeatmapCard extends StatelessWidget {
             ),
             child: Row(
               children: [
-                const Icon(Icons.auto_awesome, size: 16, color: Color(0xFF4F46E5)),
+                const Icon(Icons.auto_awesome,
+                    size: 16, color: Color(0xFF4F46E5)),
                 const SizedBox(width: 8),
                 const Expanded(
                   child: Text(
                     'Smart Fleet Rebalance: 6 available partners notified to move toward Bandra hub.',
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF334155)),
+                    style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF334155)),
                   ),
                 ),
                 TextButton(
@@ -123,17 +132,23 @@ class PredictiveHeatmapCard extends StatelessWidget {
                     HapticFeedback.lightImpact();
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('Fleet rebalance broadcast dispatched to active drivers.'),
+                        content: Text(
+                            'Fleet rebalance broadcast dispatched to active drivers.'),
                         backgroundColor: AppColors.brandGreen,
                       ),
                     );
                   },
                   style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     minimumSize: Size.zero,
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
-                  child: const Text('Rebalance', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF4F46E5))),
+                  child: const Text('Rebalance',
+                      style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF4F46E5))),
                 ),
               ],
             ),
@@ -183,15 +198,22 @@ class _HotspotZoneTile extends StatelessWidget {
                 child: Text(
                   zoneName,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                  style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 6),
-          Text(riskLevel, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: color)),
+          Text(riskLevel,
+              style: TextStyle(
+                  fontSize: 12, fontWeight: FontWeight.w800, color: color)),
           const SizedBox(height: 2),
-          Text(triggerReason, style: const TextStyle(fontSize: 10, color: AppColors.textSecondary)),
+          Text(triggerReason,
+              style: const TextStyle(
+                  fontSize: 10, color: AppColors.textSecondary)),
           const SizedBox(height: 6),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
@@ -202,7 +224,8 @@ class _HotspotZoneTile extends StatelessWidget {
             ),
             child: Text(
               recommendedAction,
-              style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: color),
+              style: TextStyle(
+                  fontSize: 9, fontWeight: FontWeight.bold, color: color),
             ),
           ),
         ],

@@ -12,8 +12,7 @@ class DriverEarningsReportScreen extends StatefulWidget {
       _DriverEarningsReportScreenState();
 }
 
-class _DriverEarningsReportScreenState
-    extends State<DriverEarningsReportScreen>
+class _DriverEarningsReportScreenState extends State<DriverEarningsReportScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
@@ -131,8 +130,7 @@ class _DriverEarningsReportScreenState
           ),
           const Spacer(),
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
               color: AppColors.brandGreen.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(20),
@@ -213,10 +211,13 @@ class _DriverEarningsReportScreenState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  ['This Week', 'This Month', '3-Month Total'][
-                      _tabController.index],
-                  style: GoogleFonts.outfit(
-                      fontSize: 13, color: Colors.white70),
+                  [
+                    'This Week',
+                    'This Month',
+                    '3-Month Total'
+                  ][_tabController.index],
+                  style:
+                      GoogleFonts.outfit(fontSize: 13, color: Colors.white70),
                 ),
                 const SizedBox(height: 6),
                 Text(
@@ -306,17 +307,21 @@ class _DriverEarningsReportScreenState
                           ),
                         const SizedBox(height: 4),
                         AnimatedContainer(
-                          duration:
-                              Duration(milliseconds: 400 + i * 60),
+                          duration: Duration(milliseconds: 400 + i * 60),
                           curve: Curves.easeOutCubic,
                           height: barHeight,
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: isMax
-                                  ? [AppColors.brandGreenLight, AppColors.brandGreen]
+                                  ? [
+                                      AppColors.brandGreenLight,
+                                      AppColors.brandGreen
+                                    ]
                                   : [
-                                      AppColors.brandGreen.withValues(alpha: 0.7),
-                                      AppColors.brandGreenMid.withValues(alpha: 0.5),
+                                      AppColors.brandGreen
+                                          .withValues(alpha: 0.7),
+                                      AppColors.brandGreenMid
+                                          .withValues(alpha: 0.5),
                                     ],
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
@@ -349,7 +354,11 @@ class _DriverEarningsReportScreenState
     final stats = [
       {'icon': Icons.local_taxi_rounded, 'label': 'Total Trips', 'value': '47'},
       {'icon': Icons.speed_rounded, 'label': 'Total KM', 'value': '312 km'},
-      {'icon': Icons.currency_rupee_rounded, 'label': 'Avg/Trip', 'value': '₹178'},
+      {
+        'icon': Icons.currency_rupee_rounded,
+        'label': 'Avg/Trip',
+        'value': '₹178'
+      },
       {'icon': Icons.star_rounded, 'label': 'Rating', 'value': '4.87'},
     ];
 
@@ -369,8 +378,7 @@ class _DriverEarningsReportScreenState
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.04),
             borderRadius: BorderRadius.circular(16),
-            border:
-                Border.all(color: Colors.white.withValues(alpha: 0.07)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
           ),
           child: Row(
             children: [
@@ -404,8 +412,7 @@ class _DriverEarningsReportScreenState
             ],
           ),
         ).animate().fadeIn(
-            delay: Duration(milliseconds: 200 + i * 80),
-            duration: 400.ms);
+            delay: Duration(milliseconds: 200 + i * 80), duration: 400.ms);
       }).toList(),
     );
   }
@@ -427,8 +434,8 @@ class _DriverEarningsReportScreenState
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-            color: const Color(0xFFF59E0B).withValues(alpha: 0.3)),
+        border:
+            Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -466,8 +473,8 @@ class _DriverEarningsReportScreenState
                     value: ridesCompleted / (ridesCompleted + ridesNeeded),
                     minHeight: 10,
                     backgroundColor: Colors.white.withValues(alpha: 0.1),
-                    valueColor: const AlwaysStoppedAnimation<Color>(
-                        Color(0xFFF59E0B)),
+                    valueColor:
+                        const AlwaysStoppedAnimation<Color>(Color(0xFFF59E0B)),
                   ),
                 ),
               ),
@@ -484,11 +491,13 @@ class _DriverEarningsReportScreenState
           const SizedBox(height: 8),
           Text(
             '$ridesNeeded rides remaining · Bonus credited by end of week',
-            style: GoogleFonts.outfit(
-                fontSize: 11, color: Colors.white38),
+            style: GoogleFonts.outfit(fontSize: 11, color: Colors.white38),
           ),
         ],
       ),
-    ).animate().fadeIn(delay: 400.ms, duration: 400.ms).slideY(begin: 0.2, end: 0);
+    )
+        .animate()
+        .fadeIn(delay: 400.ms, duration: 400.ms)
+        .slideY(begin: 0.2, end: 0);
   }
 }

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -53,7 +53,9 @@ class ZoneFilterDropdown extends ConsumerWidget {
                 Icon(
                   zone == 'All Zones' ? Iconsax.global : Iconsax.location,
                   size: 16,
-                  color: isSelected ? AppColors.brandGreen : AppColors.textSecondary,
+                  color: isSelected
+                      ? AppColors.brandGreen
+                      : AppColors.textSecondary,
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -61,13 +63,17 @@ class ZoneFilterDropdown extends ConsumerWidget {
                     zone,
                     style: TextStyle(
                       fontSize: 13,
-                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                      color: isSelected ? AppColors.brandGreen : AppColors.textPrimary,
+                      fontWeight:
+                          isSelected ? FontWeight.w700 : FontWeight.w500,
+                      color: isSelected
+                          ? AppColors.brandGreen
+                          : AppColors.textPrimary,
                     ),
                   ),
                 ),
                 if (isSelected)
-                  const Icon(Icons.check_rounded, color: AppColors.brandGreen, size: 16),
+                  const Icon(Icons.check_rounded,
+                      color: AppColors.brandGreen, size: 16),
               ],
             ),
           );

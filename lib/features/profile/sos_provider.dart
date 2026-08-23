@@ -32,12 +32,17 @@ class SosNotifier extends StateNotifier<List<SosContact>> {
       final supabase = Supabase.instance.client;
 
       // Fetch user profile details
-      final userResponse = await supabase.from('profiles').select().eq('id', userId).maybeSingle();
+      final userResponse = await supabase
+          .from('profiles')
+          .select()
+          .eq('id', userId)
+          .maybeSingle();
       final customerName = userResponse?['name'] ?? 'Unknown User';
       final customerPhone = userResponse?['phone'] ?? 'N/A';
       final customerEmail = userResponse?['email'] ?? 'N/A';
 
-      final message = 'SOS EMERGENCY: Roadside Help needed for $customerName. Contact: $customerPhone. Email: $customerEmail. Coordinates: [${position.latitude}, ${position.longitude}]';
+      final message =
+          'SOS EMERGENCY: Roadside Help needed for $customerName. Contact: $customerPhone. Email: $customerEmail. Coordinates: [${position.latitude}, ${position.longitude}]';
 
       // Log to Supabase for Admin Dashboard
       final alertData = {
@@ -76,7 +81,8 @@ class SosNotifier extends StateNotifier<List<SosContact>> {
         await supabase.from('user_notifications').insert({
           'user_id': managerId,
           'title': '🚨 ROADSIDE EMERGENCY SOS',
-          'description': 'Customer $customerName ($customerPhone) triggered SOS. Location: Lat ${position.latitude}, Lng ${position.longitude}',
+          'description':
+              'Customer $customerName ($customerPhone) triggered SOS. Location: Lat ${position.latitude}, Lng ${position.longitude}',
           'type': 'EMERGENCY_ALERT',
           'is_read': false,
           'created_at': DateTime.now().utcIso,

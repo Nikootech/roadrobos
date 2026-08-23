@@ -179,7 +179,9 @@ class UserNotifier extends StateNotifier<UserState> {
           }
           await _ref.read(localStorageServiceProvider).clearSelectedRole();
           final newRoute = _homeRouteForUser(updatedUser);
-          await _ref.read(localStorageServiceProvider).saveLastHomeRoute(newRoute);
+          await _ref
+              .read(localStorageServiceProvider)
+              .saveLastHomeRoute(newRoute);
         }
 
         // Only update if data actually changed to avoid UI flickers
@@ -194,7 +196,8 @@ class UserNotifier extends StateNotifier<UserState> {
             updatedUser.isApproved != state.user?.isApproved ||
             roleChanged) {
           state = state.copyWith(user: updatedUser);
-          debugPrint('Real-time Profile Update Received: ${updatedUser.name} (Role: ${updatedUser.role.name})');
+          debugPrint(
+              'Real-time Profile Update Received: ${updatedUser.name} (Role: ${updatedUser.role.name})');
         }
       }
     });

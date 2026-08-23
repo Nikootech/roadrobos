@@ -55,16 +55,29 @@ class AdminDriversNotifier extends Notifier<AsyncValue<List<AdminDriver>>> {
 
       state = AsyncValue.data(drivers.map((map) {
         final rawId = map['id']?.toString() ?? '';
-        final id = rawId.length > 8 ? rawId.substring(0, 8).toUpperCase() : (rawId.isNotEmpty ? rawId.toUpperCase() : 'DRV-NEW');
-        final name = map['name'] ?? map['full_name'] ?? 'RoadRobos Partner Driver';
+        final id = rawId.length > 8
+            ? rawId.substring(0, 8).toUpperCase()
+            : (rawId.isNotEmpty ? rawId.toUpperCase() : 'DRV-NEW');
+        final name =
+            map['name'] ?? map['full_name'] ?? 'RoadRobos Partner Driver';
         final phone = map['phone'] ?? '+91 98700 11223';
         final createdAt = map['created_at'] != null
             ? DateTime.tryParse(map['created_at'].toString()) ?? DateTime.now()
             : DateTime.now();
 
         final months = [
-          'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+          'Jan',
+          'Feb',
+          'Mar',
+          'Apr',
+          'May',
+          'Jun',
+          'Jul',
+          'Aug',
+          'Sep',
+          'Oct',
+          'Nov',
+          'Dec'
         ];
         final dateStr = '${months[createdAt.month - 1]} ${createdAt.year}';
 
@@ -84,7 +97,8 @@ class AdminDriversNotifier extends Notifier<AsyncValue<List<AdminDriver>>> {
           joinDate: dateStr,
           rating: (map['rating'] as num?)?.toDouble() ?? 4.8,
           rides: (map['total_rides'] as int?) ?? 45,
-          docsPending: docs.where((d) => d.status.toLowerCase() == 'pending').length,
+          docsPending:
+              docs.where((d) => d.status.toLowerCase() == 'pending').length,
           walletRequest: (map['wallet_request'] as num?)?.toDouble() ?? 0.0,
           documents: docs,
         );
@@ -218,8 +232,9 @@ class DriverDatabaseScreen extends ConsumerWidget {
                       const SizedBox(width: 10),
                       Expanded(
                         child: TextField(
-                          onChanged: (val) =>
-                              ref.read(driverSearchProvider.notifier).state = val,
+                          onChanged: (val) => ref
+                              .read(driverSearchProvider.notifier)
+                              .state = val,
                           style: GoogleFonts.outfit(
                             fontSize: 14,
                             color: AppColors.textPrimary,
@@ -239,14 +254,16 @@ class DriverDatabaseScreen extends ConsumerWidget {
                             disabledBorder: InputBorder.none,
                             errorBorder: InputBorder.none,
                             isDense: true,
-                            contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                            contentPadding:
+                                const EdgeInsets.symmetric(vertical: 12),
                           ),
                         ),
                       ),
                       if (search.isNotEmpty)
                         GestureDetector(
-                          onTap: () =>
-                              ref.read(driverSearchProvider.notifier).state = '',
+                          onTap: () => ref
+                              .read(driverSearchProvider.notifier)
+                              .state = '',
                           child: const Padding(
                             padding: EdgeInsets.symmetric(horizontal: 12),
                             child: Icon(Icons.close_rounded,
@@ -288,29 +305,42 @@ class DriverDatabaseScreen extends ConsumerWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Iconsax.warning_2, size: 40, color: AppColors.dangerRed),
+                    const Icon(Iconsax.warning_2,
+                        size: 40, color: AppColors.dangerRed),
                     const SizedBox(height: 12),
                     Text('Failed to load driver database',
-                        style: GoogleFonts.outfit(fontWeight: FontWeight.w700, fontSize: 16)),
+                        style: GoogleFonts.outfit(
+                            fontWeight: FontWeight.w700, fontSize: 16)),
                     const SizedBox(height: 8),
                     ElevatedButton(
-                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.brandGreen),
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.brandGreen),
                       onPressed: () => ref.invalidate(adminDriversProvider),
-                      child: const Text('Try Again', style: TextStyle(color: Colors.white)),
+                      child: const Text('Try Again',
+                          style: TextStyle(color: Colors.white)),
                     )
                   ],
                 ),
               ),
               data: (drivers) {
                 final filtered = drivers.where((d) {
-                  final matchesSearch = d.name.toLowerCase().contains(search.toLowerCase()) ||
-                      d.id.toLowerCase().contains(search.toLowerCase()) ||
-                      d.phone.toLowerCase().contains(search.toLowerCase());
-                  if (!matchesSearch) return false;
+                  final matchesSearch =
+                      d.name.toLowerCase().contains(search.toLowerCase()) ||
+                          d.id.toLowerCase().contains(search.toLowerCase()) ||
+                          d.phone.toLowerCase().contains(search.toLowerCase());
+                  if (!matchesSearch) {
+                    return false;
+                  }
 
-                  if (activeFilter == 'Pending KYC') return d.docsPending > 0;
-                  if (activeFilter == 'Wallet Requests') return d.walletRequest > 0;
-                  if (activeFilter == 'Top Rated (⭐4.8+)') return d.rating >= 4.8;
+                  if (activeFilter == 'Pending KYC') {
+                    return d.docsPending > 0;
+                  }
+                  if (activeFilter == 'Wallet Requests') {
+                    return d.walletRequest > 0;
+                  }
+                  if (activeFilter == 'Top Rated (⭐4.8+)') {
+                    return d.rating >= 4.8;
+                  }
                   return true;
                 }).toList();
 
@@ -327,31 +357,42 @@ class DriverDatabaseScreen extends ConsumerWidget {
                               color: Color(0xFFFEF3C7),
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Iconsax.car, size: 48, color: Color(0xFFD97706)),
+                            child: const Icon(Iconsax.car,
+                                size: 48, color: Color(0xFFD97706)),
                           ),
                           const SizedBox(height: 18),
                           Text(
-                            search.isNotEmpty ? 'No drivers matching "$search"' : 'No drivers in this filter',
+                            search.isNotEmpty
+                                ? 'No drivers matching "$search"'
+                                : 'No drivers in this filter',
                             textAlign: TextAlign.center,
-                            style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700),
+                            style: GoogleFonts.outfit(
+                                fontSize: 16, fontWeight: FontWeight.w700),
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            search.isNotEmpty ? 'Try searching with another name or ID.' : 'Try changing your filter.',
-                            style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                            search.isNotEmpty
+                                ? 'Try searching with another name or ID.'
+                                : 'Try changing your filter.',
+                            style: const TextStyle(
+                                fontSize: 12, color: AppColors.textSecondary),
                           ),
                           const SizedBox(height: 20),
                           OutlinedButton.icon(
                             onPressed: () {
-                              ref.read(driverSearchProvider.notifier).state = '';
-                              ref.read(driverFilterProvider.notifier).state = 'All';
+                              ref.read(driverSearchProvider.notifier).state =
+                                  '';
+                              ref.read(driverFilterProvider.notifier).state =
+                                  'All';
                             },
-                            icon: const Icon(Icons.restart_alt_rounded, size: 16),
+                            icon:
+                                const Icon(Icons.restart_alt_rounded, size: 16),
                             label: const Text('Reset Search & Filters'),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: AppColors.brandGreen,
                               side: const BorderSide(color: Color(0xFFE2E8F0)),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12)),
                             ),
                           ),
                         ],
@@ -365,13 +406,16 @@ class DriverDatabaseScreen extends ConsumerWidget {
                   itemCount: filtered.length + 1,
                   itemBuilder: (context, index) {
                     if (index == 0) {
-                      final totalPending = drivers.fold<int>(0, (sum, d) => sum + d.docsPending);
-                      final totalWithdrawals = drivers.fold<double>(0.0, (sum, d) => sum + d.walletRequest);
+                      final totalPending =
+                          drivers.fold<int>(0, (sum, d) => sum + d.docsPending);
+                      final totalWithdrawals = drivers.fold<double>(
+                          0.0, (sum, d) => sum + d.walletRequest);
 
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 14),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
                               colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
@@ -383,11 +427,18 @@ class DriverDatabaseScreen extends ConsumerWidget {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: [
-                              _buildSummaryItem('Total Partners', '${drivers.length}', Colors.white),
-                              Container(width: 1, height: 28, color: Colors.white24),
-                              _buildSummaryItem('Pending KYC', '$totalPending', const Color(0xFFFBBF24)),
-                              Container(width: 1, height: 28, color: Colors.white24),
-                              _buildSummaryItem('Withdrawal Req', '₹${totalWithdrawals.toInt()}', const Color(0xFF34D399)),
+                              _buildSummaryItem('Total Partners',
+                                  '${drivers.length}', Colors.white),
+                              Container(
+                                  width: 1, height: 28, color: Colors.white24),
+                              _buildSummaryItem('Pending KYC', '$totalPending',
+                                  const Color(0xFFFBBF24)),
+                              Container(
+                                  width: 1, height: 28, color: Colors.white24),
+                              _buildSummaryItem(
+                                  'Withdrawal Req',
+                                  '₹${totalWithdrawals.toInt()}',
+                                  const Color(0xFF34D399)),
                             ],
                           ),
                         ),
@@ -415,8 +466,14 @@ class DriverDatabaseScreen extends ConsumerWidget {
   Widget _buildSummaryItem(String label, String value, Color color) {
     return Column(
       children: [
-        Text(value, style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w800, color: color)),
-        Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: Colors.white.withValues(alpha: 0.7))),
+        Text(value,
+            style: GoogleFonts.outfit(
+                fontSize: 16, fontWeight: FontWeight.w800, color: color)),
+        Text(label,
+            style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+                color: Colors.white.withValues(alpha: 0.7))),
       ],
     );
   }
@@ -433,7 +490,9 @@ class DriverDatabaseScreen extends ConsumerWidget {
         decoration: BoxDecoration(
           color: isSelected ? AppColors.brandGreen : const Color(0xFFF1F5F9),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: isSelected ? AppColors.brandGreen : const Color(0xFFE2E8F0)),
+          border: Border.all(
+              color:
+                  isSelected ? AppColors.brandGreen : const Color(0xFFE2E8F0)),
         ),
         child: Text(
           label,
@@ -477,7 +536,8 @@ class DriverDatabaseScreen extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: const Center(
-                  child: Icon(Iconsax.car, color: AppColors.brandGreen, size: 22),
+                  child:
+                      Icon(Iconsax.car, color: AppColors.brandGreen, size: 22),
                 ),
               ),
               const SizedBox(width: 14),
@@ -501,14 +561,18 @@ class DriverDatabaseScreen extends ConsumerWidget {
                         ),
                         const SizedBox(width: 6),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
                             color: const Color(0xFFF1F5F9),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
                             '#${d.id}',
-                            style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.textSecondary),
+                            style: GoogleFonts.outfit(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textSecondary),
                           ),
                         ),
                       ],
@@ -516,18 +580,23 @@ class DriverDatabaseScreen extends ConsumerWidget {
                     const SizedBox(height: 2),
                     Text(
                       '${d.phone} • Joined: ${d.joinDate}',
-                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
+                      style: const TextStyle(
+                          color: AppColors.textSecondary, fontSize: 11),
                     ),
                   ],
                 ),
               ),
               Row(
                 children: [
-                  const Icon(Icons.star_rounded, size: 16, color: Color(0xFFF59E0B)),
+                  const Icon(Icons.star_rounded,
+                      size: 16, color: Color(0xFFF59E0B)),
                   const SizedBox(width: 3),
                   Text(
                     d.rating.toStringAsFixed(1),
-                    style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
+                    style: GoogleFonts.outfit(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary),
                   ),
                 ],
               ),
@@ -539,15 +608,19 @@ class DriverDatabaseScreen extends ConsumerWidget {
               spacing: 6,
               runSpacing: 6,
               children: [
-                _buildBadge('🚕', '${d.rides} Completed Rides', const Color(0xFF0284C7)),
+                _buildBadge('🚕', '${d.rides} Completed Rides',
+                    const Color(0xFF0284C7)),
                 if (d.docsPending > 0)
-                  _buildBadge('🪪', '${d.docsPending} Docs Pending', const Color(0xFFDC2626)),
+                  _buildBadge('🪪', '${d.docsPending} Docs Pending',
+                      const Color(0xFFDC2626)),
                 if (d.walletRequest > 0)
-                  _buildBadge('💳', '₹${d.walletRequest.toInt()} Req', const Color(0xFFD97706)),
+                  _buildBadge('💳', '₹${d.walletRequest.toInt()} Req',
+                      const Color(0xFFD97706)),
               ],
             ),
           ),
-          childrenPadding: const EdgeInsets.only(left: 16, right: 16, bottom: 18),
+          childrenPadding:
+              const EdgeInsets.only(left: 16, right: 16, bottom: 18),
           expandedCrossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Divider(color: Color(0xFFF1F5F9)),
@@ -555,7 +628,9 @@ class DriverDatabaseScreen extends ConsumerWidget {
 
             // Wallet Requests Section
             if (d.walletRequest > 0) ...[
-              Text('Pending Wallet Withdrawal', style: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 13)),
+              Text('Pending Wallet Withdrawal',
+                  style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.w800, fontSize: 13)),
               const SizedBox(height: 10),
               Container(
                 padding: const EdgeInsets.all(12),
@@ -571,24 +646,39 @@ class DriverDatabaseScreen extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text('₹${d.walletRequest.toInt()}',
-                            style: GoogleFonts.outfit(fontWeight: FontWeight.w900, fontSize: 18, color: const Color(0xFFD97706))),
-                        const Text('Immediate Bank Payout Requested', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                            style: GoogleFonts.outfit(
+                                fontWeight: FontWeight.w900,
+                                fontSize: 18,
+                                color: const Color(0xFFD97706))),
+                        const Text('Immediate Bank Payout Requested',
+                            style: TextStyle(
+                                fontSize: 11, color: AppColors.textSecondary)),
                       ],
                     ),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFD97706),
                         elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8)),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 8),
                       ),
                       onPressed: () {
-                        ref.read(adminDriversProvider.notifier).approveWallet(d.id);
+                        ref
+                            .read(adminDriversProvider.notifier)
+                            .approveWallet(d.id);
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Payout approved & initiated!'), behavior: SnackBarBehavior.floating),
+                          const SnackBar(
+                              content: Text('Payout approved & initiated!'),
+                              behavior: SnackBarBehavior.floating),
                         );
                       },
-                      child: const Text('Approve Payout', style: TextStyle(fontSize: 11, color: Colors.white, fontWeight: FontWeight.bold)),
+                      child: const Text('Approve Payout',
+                          style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold)),
                     )
                   ],
                 ),
@@ -600,13 +690,18 @@ class DriverDatabaseScreen extends ConsumerWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('KYC Verification Documents', style: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 13)),
-                Text('${d.documents.length} Docs', style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
+                Text('KYC Verification Documents',
+                    style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.w800, fontSize: 13)),
+                Text('${d.documents.length} Docs',
+                    style: const TextStyle(
+                        fontSize: 11, color: AppColors.textMuted)),
               ],
             ),
             const SizedBox(height: 10),
             if (d.documents.isEmpty)
-              const Text('No KYC documents submitted yet.', style: TextStyle(color: AppColors.textMuted, fontSize: 12))
+              const Text('No KYC documents submitted yet.',
+                  style: TextStyle(color: AppColors.textMuted, fontSize: 12))
             else
               ...d.documents.map((doc) => Padding(
                     padding: const EdgeInsets.only(bottom: 8),
@@ -621,16 +716,25 @@ class DriverDatabaseScreen extends ConsumerWidget {
                         children: [
                           Container(
                             padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(color: const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(8)),
-                            child: const Icon(Iconsax.document, size: 16, color: AppColors.textSecondary),
+                            decoration: BoxDecoration(
+                                color: const Color(0xFFF1F5F9),
+                                borderRadius: BorderRadius.circular(8)),
+                            child: const Icon(Iconsax.document,
+                                size: 16, color: AppColors.textSecondary),
                           ),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(doc.title, style: GoogleFonts.outfit(fontWeight: FontWeight.w700, fontSize: 12)),
-                                Text('Uploaded: ${doc.date}', style: const TextStyle(fontSize: 10, color: AppColors.textSecondary)),
+                                Text(doc.title,
+                                    style: GoogleFonts.outfit(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 12)),
+                                Text('Uploaded: ${doc.date}',
+                                    style: const TextStyle(
+                                        fontSize: 10,
+                                        color: AppColors.textSecondary)),
                               ],
                             ),
                           ),
@@ -640,22 +744,40 @@ class DriverDatabaseScreen extends ConsumerWidget {
                                 backgroundColor: AppColors.brandGreen,
                                 elevation: 0,
                                 minimumSize: const Size(60, 28),
-                                padding: const EdgeInsets.symmetric(horizontal: 10),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 10),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(6)),
                               ),
                               onPressed: () {
-                                ref.read(adminDriversProvider.notifier).approveDoc(d.id, doc.title);
+                                ref
+                                    .read(adminDriversProvider.notifier)
+                                    .approveDoc(d.id, doc.title);
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('${doc.title} verified for ${d.name}'), behavior: SnackBarBehavior.floating),
+                                  SnackBar(
+                                      content: Text(
+                                          '${doc.title} verified for ${d.name}'),
+                                      behavior: SnackBarBehavior.floating),
                                 );
                               },
-                              child: const Text('Verify', style: TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold)),
+                              child: const Text('Verify',
+                                  style: TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold)),
                             )
                           else
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(color: const Color(0xFFECFDF5), borderRadius: BorderRadius.circular(6)),
-                              child: const Text('VERIFIED', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: AppColors.brandGreen)),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                  color: const Color(0xFFECFDF5),
+                                  borderRadius: BorderRadius.circular(6)),
+                              child: const Text('VERIFIED',
+                                  style: TextStyle(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w800,
+                                      color: AppColors.brandGreen)),
                             )
                         ],
                       ),
@@ -670,13 +792,17 @@ class DriverDatabaseScreen extends ConsumerWidget {
   Widget _buildBadge(String emoji, String text, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(color: color.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(8)),
+      decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(8)),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(emoji, style: const TextStyle(fontSize: 10)),
           const SizedBox(width: 4),
-          Text(text, style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.w700, color: color)),
+          Text(text,
+              style: GoogleFonts.outfit(
+                  fontSize: 11, fontWeight: FontWeight.w700, color: color)),
         ],
       ),
     );

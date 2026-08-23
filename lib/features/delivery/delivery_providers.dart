@@ -216,7 +216,8 @@ class ActiveDeliveryNotifier extends StateNotifier<DeliveryOrder?> {
   /// Accept a pending delivery request
   Future<void> acceptDelivery(DeliveryOrder order) async {
     if (driverId == null || !_isValidUuid(driverId)) {
-      throw Exception('Cannot accept delivery: Driver ID is invalid or missing.');
+      throw Exception(
+          'Cannot accept delivery: Driver ID is invalid or missing.');
     }
     await ref.read(deliveryRepositoryProvider).acceptOrder(order.id, driverId!);
   }

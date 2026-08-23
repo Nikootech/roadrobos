@@ -71,7 +71,8 @@ class _CustomTextFieldState extends State<CustomTextField> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = !widget.forceLightMode && (Theme.of(context).brightness == Brightness.dark);
+    final isDark = !widget.forceLightMode &&
+        (Theme.of(context).brightness == Brightness.dark);
     final textStyleColor =
         isDark ? AppColors.textOnDark : AppColors.textPrimary;
     final defaultFillColor =

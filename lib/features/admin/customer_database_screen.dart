@@ -57,7 +57,9 @@ final adminCustomersProvider =
 
   yield customers.map((map) {
     final rawId = map['id']?.toString() ?? '';
-    final id = rawId.length > 8 ? rawId.substring(0, 8).toUpperCase() : (rawId.isNotEmpty ? rawId.toUpperCase() : 'CUST-NEW');
+    final id = rawId.length > 8
+        ? rawId.substring(0, 8).toUpperCase()
+        : (rawId.isNotEmpty ? rawId.toUpperCase() : 'CUST-NEW');
     final name = map['name'] ?? map['full_name'] ?? 'RoadRobos Customer';
     final phone = map['phone'] ?? '+91 98765 43210';
     final email = map['email'] ?? 'customer@roadrobos.com';
@@ -66,8 +68,18 @@ final adminCustomersProvider =
         : DateTime.now();
 
     final months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
     ];
     final dateStr = '${months[createdAt.month - 1]} ${createdAt.year}';
 
@@ -75,7 +87,10 @@ final adminCustomersProvider =
     final activities = recentBookings.map((b) {
       return CustomerActivity(
         type: b['type'] ?? 'Service',
-        title: b['title'] ?? b['package_name'] ?? b['vehicle_name'] ?? 'Periodic Service',
+        title: b['title'] ??
+            b['package_name'] ??
+            b['vehicle_name'] ??
+            'Periodic Service',
         status: b['status'] ?? 'Completed',
         date: b['date'] ?? b['booking_date'] ?? 'Recently',
       );
@@ -90,7 +105,8 @@ final adminCustomersProvider =
       ltv: (map['ltv'] as num?)?.toDouble() ?? 4200.0,
       rides: (map['total_rides'] as int?) ?? 0,
       rentals: (map['total_rentals'] as int?) ?? 0,
-      services: (map['total_services'] as int?) ?? (activities.isNotEmpty ? activities.length : 1),
+      services: (map['total_services'] as int?) ??
+          (activities.isNotEmpty ? activities.length : 1),
       activities: activities,
     );
   }).toList();
@@ -194,15 +210,17 @@ class CustomerDatabaseScreen extends ConsumerWidget {
                       const SizedBox(width: 10),
                       Expanded(
                         child: TextField(
-                          onChanged: (val) =>
-                              ref.read(customerSearchProvider.notifier).state = val,
+                          onChanged: (val) => ref
+                              .read(customerSearchProvider.notifier)
+                              .state = val,
                           style: GoogleFonts.outfit(
                             fontSize: 14,
                             color: AppColors.textPrimary,
                             fontWeight: FontWeight.w500,
                           ),
                           decoration: InputDecoration(
-                            hintText: 'Search by customer name, phone, or ID...',
+                            hintText:
+                                'Search by customer name, phone, or ID...',
                             hintStyle: TextStyle(
                               fontSize: 13,
                               color: AppColors.textMuted.withValues(alpha: 0.9),
@@ -215,14 +233,16 @@ class CustomerDatabaseScreen extends ConsumerWidget {
                             disabledBorder: InputBorder.none,
                             errorBorder: InputBorder.none,
                             isDense: true,
-                            contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                            contentPadding:
+                                const EdgeInsets.symmetric(vertical: 12),
                           ),
                         ),
                       ),
                       if (search.isNotEmpty)
                         GestureDetector(
-                          onTap: () =>
-                              ref.read(customerSearchProvider.notifier).state = '',
+                          onTap: () => ref
+                              .read(customerSearchProvider.notifier)
+                              .state = '',
                           child: const Padding(
                             padding: EdgeInsets.symmetric(horizontal: 12),
                             child: Icon(Icons.close_rounded,
@@ -291,7 +311,9 @@ class CustomerDatabaseScreen extends ConsumerWidget {
               data: (customers) {
                 // Apply Search & Filter
                 final filtered = customers.where((c) {
-                  final matchesSearch = c.name.toLowerCase().contains(search.toLowerCase()) ||
+                  final matchesSearch = c.name
+                          .toLowerCase()
+                          .contains(search.toLowerCase()) ||
                       c.id.toLowerCase().contains(search.toLowerCase()) ||
                       c.phone.toLowerCase().contains(search.toLowerCase()) ||
                       c.email.toLowerCase().contains(search.toLowerCase());
@@ -348,10 +370,13 @@ class CustomerDatabaseScreen extends ConsumerWidget {
                           const SizedBox(height: 20),
                           OutlinedButton.icon(
                             onPressed: () {
-                              ref.read(customerSearchProvider.notifier).state = '';
-                              ref.read(customerFilterProvider.notifier).state = 'All';
+                              ref.read(customerSearchProvider.notifier).state =
+                                  '';
+                              ref.read(customerFilterProvider.notifier).state =
+                                  'All';
                             },
-                            icon: const Icon(Icons.restart_alt_rounded, size: 16),
+                            icon:
+                                const Icon(Icons.restart_alt_rounded, size: 16),
                             label: const Text('Reset Search & Filters'),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: AppColors.brandGreen,
@@ -372,8 +397,8 @@ class CustomerDatabaseScreen extends ConsumerWidget {
                   itemBuilder: (context, index) {
                     if (index == 0) {
                       // Summary Header Widget
-                      final totalLtv = customers.fold<double>(
-                          0.0, (sum, c) => sum + c.ltv);
+                      final totalLtv =
+                          customers.fold<double>(0.0, (sum, c) => sum + c.ltv);
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 14),
                         child: Container(
@@ -397,11 +422,20 @@ class CustomerDatabaseScreen extends ConsumerWidget {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: [
-                              _buildSummaryItem('Total Customers', '${customers.length}', Colors.white),
-                              Container(width: 1, height: 28, color: Colors.white24),
-                              _buildSummaryItem('Cumulative LTV', '₹${(totalLtv / 1000).toStringAsFixed(1)}k', const Color(0xFF34D399)),
-                              Container(width: 1, height: 28, color: Colors.white24),
-                              _buildSummaryItem('Active Today', '${filtered.length}', const Color(0xFF38BDF8)),
+                              _buildSummaryItem('Total Customers',
+                                  '${customers.length}', Colors.white),
+                              Container(
+                                  width: 1, height: 28, color: Colors.white24),
+                              _buildSummaryItem(
+                                  'Cumulative LTV',
+                                  '₹${(totalLtv / 1000).toStringAsFixed(1)}k',
+                                  const Color(0xFF34D399)),
+                              Container(
+                                  width: 1, height: 28, color: Colors.white24),
+                              _buildSummaryItem(
+                                  'Active Today',
+                                  '${filtered.length}',
+                                  const Color(0xFF38BDF8)),
                             ],
                           ),
                         ),
@@ -479,7 +513,13 @@ class CustomerDatabaseScreen extends ConsumerWidget {
 
   Widget _buildCustomerCard(BuildContext context, AdminCustomer c) {
     final initials = c.name.trim().isNotEmpty
-        ? c.name.trim().split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join().toUpperCase()
+        ? c.name
+            .trim()
+            .split(' ')
+            .map((e) => e.isNotEmpty ? e[0] : '')
+            .take(2)
+            .join()
+            .toUpperCase()
         : 'C';
 
     return Container(
@@ -611,7 +651,8 @@ class CustomerDatabaseScreen extends ConsumerWidget {
                 const SizedBox(width: 6),
                 _buildBadge('🚗', '${c.rentals} Rentals', AppColors.brandGreen),
                 const SizedBox(width: 6),
-                _buildBadge('🔧', '${c.services} Services', const Color(0xFFD97706)),
+                _buildBadge(
+                    '🔧', '${c.services} Services', const Color(0xFFD97706)),
               ],
             ),
           ),
@@ -634,7 +675,8 @@ class CustomerDatabaseScreen extends ConsumerWidget {
                 ),
                 Text(
                   '${c.activities.length} Records',
-                  style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+                  style:
+                      const TextStyle(fontSize: 11, color: AppColors.textMuted),
                 ),
               ],
             ),
@@ -644,7 +686,9 @@ class CustomerDatabaseScreen extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Text(
                   'No recent booking records for this customer.',
-                  style: TextStyle(color: AppColors.textMuted.withValues(alpha: 0.8), fontSize: 12),
+                  style: TextStyle(
+                      color: AppColors.textMuted.withValues(alpha: 0.8),
+                      fontSize: 12),
                 ),
               )
             else
@@ -713,13 +757,16 @@ class CustomerDatabaseScreen extends ConsumerWidget {
                       HapticFeedback.lightImpact();
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Contacting ${c.name} via ${c.phone}...'),
+                          content:
+                              Text('Contacting ${c.name} via ${c.phone}...'),
                           behavior: SnackBarBehavior.floating,
                         ),
                       );
                     },
                     icon: const Icon(Iconsax.call, size: 14),
-                    label: const Text('Call / SMS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+                    label: const Text('Call / SMS',
+                        style: TextStyle(
+                            fontSize: 11, fontWeight: FontWeight.w700)),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.brandGreen,
                       side: const BorderSide(color: Color(0xFFE2E8F0)),
@@ -736,8 +783,13 @@ class CustomerDatabaseScreen extends ConsumerWidget {
                       HapticFeedback.lightImpact();
                       context.push('/admin-active-rides');
                     },
-                    icon: const Icon(Iconsax.routing, size: 14, color: Colors.white),
-                    label: const Text('Live Track', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white)),
+                    icon: const Icon(Iconsax.routing,
+                        size: 14, color: Colors.white),
+                    label: const Text('Live Track',
+                        style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.brandGreen,
                       elevation: 0,
@@ -809,7 +861,9 @@ class CustomerDatabaseScreen extends ConsumerWidget {
 
   Color _getStatusBg(String status) {
     final s = status.toLowerCase();
-    if (s.contains('ongoing') || s.contains('progress') || s.contains('active')) {
+    if (s.contains('ongoing') ||
+        s.contains('progress') ||
+        s.contains('active')) {
       return const Color(0xFFECFDF5);
     }
     if (s.contains('completed') || s.contains('done')) {
@@ -820,7 +874,9 @@ class CustomerDatabaseScreen extends ConsumerWidget {
 
   Color _getStatusText(String status) {
     final s = status.toLowerCase();
-    if (s.contains('ongoing') || s.contains('progress') || s.contains('active')) {
+    if (s.contains('ongoing') ||
+        s.contains('progress') ||
+        s.contains('active')) {
       return AppColors.brandGreen;
     }
     if (s.contains('completed') || s.contains('done')) {

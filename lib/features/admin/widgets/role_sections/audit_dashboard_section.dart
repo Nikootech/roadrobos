@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
@@ -27,8 +27,7 @@ class AuditDashboardSection extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
                 color: const Color(0xFF475569).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(6),
@@ -166,7 +165,8 @@ class _AuditRow extends StatelessWidget {
             ),
             if (onTap != null) ...[
               const SizedBox(width: 4),
-              const Icon(Icons.chevron_right, size: 14, color: AppColors.textMuted),
+              const Icon(Icons.chevron_right,
+                  size: 14, color: AppColors.textMuted),
             ],
           ],
         ),

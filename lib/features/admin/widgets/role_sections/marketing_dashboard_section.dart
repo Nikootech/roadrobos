@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -24,12 +24,14 @@ class MarketingDashboardSection extends StatelessWidget {
                 color: const Color(0xFFF59E0B).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Iconsax.notification_bing, color: Color(0xFFF59E0B), size: 20),
+              child: const Icon(Iconsax.notification_bing,
+                  color: Color(0xFFF59E0B), size: 20),
             ),
             const SizedBox(width: 10),
             Text(
               'Campaign Broadcast',
-              style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold),
+              style:
+                  GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -46,7 +48,8 @@ class MarketingDashboardSection extends StatelessWidget {
               decoration: InputDecoration(
                 labelText: 'Promo Headline',
                 hintText: 'e.g. 20% OFF on Weekend Service',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
             ),
             const SizedBox(height: 12),
@@ -55,7 +58,8 @@ class MarketingDashboardSection extends StatelessWidget {
               decoration: InputDecoration(
                 labelText: 'Push Message Body',
                 hintText: 'Use code MONSOON20 to claim repair discounts.',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
               ),
             ),
           ],
@@ -63,7 +67,8 @@ class MarketingDashboardSection extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
+            child: const Text('Cancel',
+                style: TextStyle(color: AppColors.textSecondary)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -77,9 +82,12 @@ class MarketingDashboardSection extends StatelessWidget {
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFF59E0B),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
             ),
-            child: const Text('Send Broadcast', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: const Text('Send Broadcast',
+                style: TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -105,7 +113,8 @@ class MarketingDashboardSection extends StatelessWidget {
             ),
             TextButton.icon(
               onPressed: () => _showBroadcastDialog(context),
-              icon: const Icon(Iconsax.send_1, size: 14, color: Color(0xFFF59E0B)),
+              icon: const Icon(Iconsax.send_1,
+                  size: 14, color: Color(0xFFF59E0B)),
               label: const Text(
                 'Broadcast Push',
                 style: TextStyle(
@@ -177,7 +186,8 @@ class MarketingDashboardSection extends StatelessWidget {
               padding: EdgeInsets.all(16),
               child: Row(
                 children: [
-                  Icon(Iconsax.discount_shape, size: 20, color: Color(0xFFF59E0B)),
+                  Icon(Iconsax.discount_shape,
+                      size: 20, color: Color(0xFFF59E0B)),
                   SizedBox(width: 12),
                   Text(
                     'Configure Deals, Coupons & Discounts',
@@ -188,7 +198,8 @@ class MarketingDashboardSection extends StatelessWidget {
                     ),
                   ),
                   Spacer(),
-                  Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Color(0xFFF59E0B)),
+                  Icon(Icons.arrow_forward_ios_rounded,
+                      size: 14, color: Color(0xFFF59E0B)),
                 ],
               ),
             ),

@@ -464,7 +464,8 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                                                             color: Colors.white,
                                                             fontSize: 24,
                                                             fontWeight:
-                                                                FontWeight.w900))),
+                                                                FontWeight
+                                                                    .w900))),
                                                 const SizedBox(width: 4),
                                                 Text(
                                                     '${earnings.todayEarnings.toInt()}',
@@ -473,17 +474,20 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                                                         fontSize: ResponsiveLayout
                                                             .responsiveFontSize(
                                                                 context, 48),
-                                                        fontWeight: FontWeight.w900,
+                                                        fontWeight:
+                                                            FontWeight.w900,
                                                         letterSpacing: -1.5)),
                                                 const Padding(
                                                     padding: EdgeInsets.only(
                                                         bottom: 8.0),
                                                     child: Text('.50',
                                                         style: TextStyle(
-                                                            color: Colors.white70,
+                                                            color:
+                                                                Colors.white70,
                                                             fontSize: 22,
                                                             fontWeight:
-                                                                FontWeight.w800))),
+                                                                FontWeight
+                                                                    .w800))),
                                               ],
                                             ),
                                           ),
@@ -492,7 +496,8 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                                             children: [
                                               _buildMiniStat(
                                                   Iconsax.car,
-                                                  earnings.totalRides.toString(),
+                                                  earnings.totalRides
+                                                      .toString(),
                                                   'RIDES'),
                                               Container(
                                                   width: 1,
@@ -500,7 +505,7 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                                                   color: Colors.white24,
                                                   margin: const EdgeInsets
                                                       .symmetric(
-                                                          horizontal: 20)),
+                                                      horizontal: 20)),
                                               _buildMiniStat(
                                                   Iconsax.timer_1,
                                                   earnings.onlineTime,
@@ -554,8 +559,11 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                                     child: CircularProgressIndicator(
                                       value: 0.7,
                                       strokeWidth: 5,
-                                      backgroundColor: const Color(0xFFF97316).withValues(alpha: 0.15),
-                                      valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFF97316)),
+                                      backgroundColor: const Color(0xFFF97316)
+                                          .withValues(alpha: 0.15),
+                                      valueColor:
+                                          const AlwaysStoppedAnimation<Color>(
+                                              Color(0xFFF97316)),
                                     ),
                                   ),
                                   const Text(
@@ -585,10 +593,13 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                                         ),
                                         const Spacer(),
                                         Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 6, vertical: 2),
                                           decoration: BoxDecoration(
-                                            color: const Color(0xFFF97316).withValues(alpha: 0.1),
-                                            borderRadius: BorderRadius.circular(6),
+                                            color: const Color(0xFFF97316)
+                                                .withValues(alpha: 0.1),
+                                            borderRadius:
+                                                BorderRadius.circular(6),
                                           ),
                                           child: const Text(
                                             '3 Left',
@@ -604,14 +615,19 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                                     const SizedBox(height: 4),
                                     const Text(
                                       'Complete 3 more rides before midnight to unlock payout bonus.',
-                                      style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                                      style: TextStyle(
+                                          fontSize: 11,
+                                          color: AppColors.textSecondary),
                                     ),
                                   ],
                                 ),
                               ),
                             ],
                           ),
-                        ).animate().fadeIn(delay: 150.ms).slideY(begin: 0.08, end: 0),
+                        )
+                            .animate()
+                            .fadeIn(delay: 150.ms)
+                            .slideY(begin: 0.08, end: 0),
 
                         const SizedBox(height: 28),
 
@@ -648,7 +664,9 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                                 ),
                               );
                             }),
-                            _buildQuickAction('Fast Cashout', Iconsax.empty_wallet_tick,
+                            _buildQuickAction(
+                                'Fast Cashout',
+                                Iconsax.empty_wallet_tick,
                                 const Color(0xFF10B981), () {
                               InstantCashoutSheet.show(
                                 context,

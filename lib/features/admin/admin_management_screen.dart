@@ -23,7 +23,8 @@ class _AdminManagementScreenState extends ConsumerState<AdminManagementScreen> {
   List<Map<String, dynamic>> _employees = [];
   bool _isLoading = true;
   String _searchQuery = '';
-  String _selectedCategory = 'all'; // 'all', 'staff', 'customer', 'driver', 'technician'
+  String _selectedCategory =
+      'all'; // 'all', 'staff', 'customer', 'driver', 'technician'
 
   @override
   void initState() {
@@ -81,7 +82,8 @@ class _AdminManagementScreenState extends ConsumerState<AdminManagementScreen> {
             children: UserRole.values.map((role) {
               final roleNameDb = _getRoleDbString(role);
               final displayName = role.name.toUpperCase().replaceAll('_', ' ');
-              final isCurrent = roleNameDb.toLowerCase() == currentRole.toLowerCase();
+              final isCurrent =
+                  roleNameDb.toLowerCase() == currentRole.toLowerCase();
 
               return ListTile(
                 title: Text(
@@ -101,7 +103,8 @@ class _AdminManagementScreenState extends ConsumerState<AdminManagementScreen> {
                           : (role == UserRole.technician
                               ? 'Technician Console Access'
                               : 'Standard Customer App')),
-                  style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                  style: const TextStyle(
+                      fontSize: 11, color: AppColors.textSecondary),
                 ),
                 trailing: isCurrent
                     ? const Icon(Icons.check_circle_rounded,
@@ -233,8 +236,8 @@ class _AdminManagementScreenState extends ConsumerState<AdminManagementScreen> {
                       ),
                       decoration: const InputDecoration(
                         hintText: 'Search users by name, email or role...',
-                        hintStyle: TextStyle(
-                            fontSize: 13, color: AppColors.textMuted),
+                        hintStyle:
+                            TextStyle(fontSize: 13, color: AppColors.textMuted),
                         filled: false,
                         fillColor: Colors.transparent,
                         border: InputBorder.none,
@@ -378,7 +381,8 @@ class _AdminManagementScreenState extends ConsumerState<AdminManagementScreen> {
   /// e.g. 'john.doe.123' → 'John Doe'
   String _formatEmailAsName(String email) {
     final username = email.split('@').first;
-    final parts = username.split(RegExp(r'[._-]'))
+    final parts = username
+        .split(RegExp(r'[._-]'))
         .where((p) => p.isNotEmpty && !RegExp(r'^\d+$').hasMatch(p))
         .toList();
     if (parts.isEmpty) return username;
@@ -395,7 +399,8 @@ class _AdminManagementScreenState extends ConsumerState<AdminManagementScreen> {
     final String roleDisplay = role.toUpperCase().replaceAll('_', ' ');
 
     // Resolve the best available display name
-    final rawName = (emp['full_name']?.toString() ?? emp['name']?.toString() ?? '').trim();
+    final rawName =
+        (emp['full_name']?.toString() ?? emp['name']?.toString() ?? '').trim();
     final String name = (rawName.isEmpty || rawName.contains('@'))
         ? _formatEmailAsName(email)
         : rawName;
@@ -421,7 +426,8 @@ class _AdminManagementScreenState extends ConsumerState<AdminManagementScreen> {
                 children: [
                   CircleAvatar(
                     radius: 22,
-                    backgroundColor: AppColors.primaryBlue.withValues(alpha: 0.12),
+                    backgroundColor:
+                        AppColors.primaryBlue.withValues(alpha: 0.12),
                     child: Text(
                       avatarLetter,
                       style: const TextStyle(
@@ -462,7 +468,8 @@ class _AdminManagementScreenState extends ConsumerState<AdminManagementScreen> {
                   const SizedBox(width: 8),
                   // Status Badge
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: isApproved
                           ? AppColors.successGreen.withValues(alpha: 0.12)

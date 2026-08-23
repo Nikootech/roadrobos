@@ -65,5 +65,3 @@ class AdminBottomNavBar extends StatelessWidget {
     );
   }
 }
-
-

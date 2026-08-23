@@ -49,7 +49,8 @@ class _TechJobCompletionScreenState
     if (!_signatureAdded) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Please add customer signature before completing'),
+          content:
+              const Text('Please add customer signature before completing'),
           backgroundColor: AppColors.dangerRed,
           behavior: SnackBarBehavior.floating,
           shape:
@@ -346,8 +347,9 @@ class _TechJobCompletionScreenState
                 _signatureAdded
                     ? Icons.check_circle_rounded
                     : Icons.draw_rounded,
-                color:
-                    _signatureAdded ? AppColors.brandGreenLight : Colors.white38,
+                color: _signatureAdded
+                    ? AppColors.brandGreenLight
+                    : Colors.white38,
                 size: 28,
               ),
               const SizedBox(height: 6),
@@ -360,9 +362,8 @@ class _TechJobCompletionScreenState
                   color: _signatureAdded
                       ? AppColors.brandGreenLight
                       : Colors.white38,
-                  fontWeight: _signatureAdded
-                      ? FontWeight.w600
-                      : FontWeight.w400,
+                  fontWeight:
+                      _signatureAdded ? FontWeight.w600 : FontWeight.w400,
                 ),
               ),
             ],
@@ -405,6 +406,8 @@ class _TechJobCompletionScreenState
                 ],
               ),
       ),
-    ).animate().slideY(begin: 0.3, end: 0, duration: 400.ms, curve: Curves.easeOut);
+    )
+        .animate()
+        .slideY(begin: 0.3, end: 0, duration: 400.ms, curve: Curves.easeOut);
   }
 }

@@ -412,9 +412,7 @@ class _RentalVehicleDetailScreenState
                     backgroundColor: cardColor,
                     child: Icon(isFav ? Iconsax.heart5 : Iconsax.heart,
                         size: 20,
-                        color: isFav
-                            ? AppColors.dangerRed
-                            : textColor),
+                        color: isFav ? AppColors.dangerRed : textColor),
                   ),
                   onPressed: () {
                     ref
@@ -464,7 +462,8 @@ class _RentalVehicleDetailScreenState
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Iconsax.verify5, color: Colors.blue, size: 20),
+                          const Icon(Iconsax.verify5,
+                              color: Colors.blue, size: 20),
                           const SizedBox(width: 8),
                           Text(
                             'PREMIUM FLEET',
@@ -645,9 +644,7 @@ class _RentalVehicleDetailScreenState
                   Text(
                     description,
                     style: TextStyle(
-                        color: textSecondaryColor,
-                        fontSize: 14,
-                        height: 1.5),
+                        color: textSecondaryColor, fontSize: 14, height: 1.5),
                   ).animate().fadeIn(delay: 600.ms),
                   const SizedBox(height: 32),
                   Text('Pickup Location',
@@ -757,8 +754,8 @@ class _RentalVehicleDetailScreenState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('Total Price',
-                      style: TextStyle(
-                          color: textSecondaryColor, fontSize: 12)),
+                      style:
+                          TextStyle(color: textSecondaryColor, fontSize: 12)),
                   Text(displayVehicle['price'] ?? '₹159/hr',
                       style: TextStyle(
                           fontSize: 20,
@@ -918,9 +915,7 @@ class _RentalVehicleDetailScreenState
                         fontSize: 14,
                         fontWeight:
                             hasValue ? FontWeight.w700 : FontWeight.w500,
-                        color: hasValue
-                            ? textColor
-                            : AppColors.textMuted,
+                        color: hasValue ? textColor : AppColors.textMuted,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -929,8 +924,8 @@ class _RentalVehicleDetailScreenState
                       const SizedBox(height: 1),
                       Text(
                         address,
-                        style: TextStyle(
-                            fontSize: 11, color: textSecondaryColor),
+                        style:
+                            TextStyle(fontSize: 11, color: textSecondaryColor),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -968,9 +963,7 @@ class _RentalVehicleDetailScreenState
           const SizedBox(height: 8),
           Text(val,
               style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: textColor)),
+                  fontSize: 12, fontWeight: FontWeight.w600, color: textColor)),
         ],
       ),
     ).animate().fadeIn().scale();

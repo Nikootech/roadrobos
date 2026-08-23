@@ -147,11 +147,17 @@ class _AdminDisputeCenterScreenState
                 _buildSummaryBox('Pending Claims', pending.length.toString(),
                     AppColors.dangerRed, Iconsax.danger),
                 const SizedBox(width: 10),
-                _buildSummaryBox('Total Refunded', '₹${refunded.fold<double>(0, (s, c) => s + c.amount).toInt()}',
-                    AppColors.successGreen, Iconsax.empty_wallet_tick),
+                _buildSummaryBox(
+                    'Total Refunded',
+                    '₹${refunded.fold<double>(0, (s, c) => s + c.amount).toInt()}',
+                    AppColors.successGreen,
+                    Iconsax.empty_wallet_tick),
                 const SizedBox(width: 10),
-                _buildSummaryBox('Resolved', '${refunded.length + rejected.length}',
-                    AppColors.primaryBlue, Iconsax.verify),
+                _buildSummaryBox(
+                    'Resolved',
+                    '${refunded.length + rejected.length}',
+                    AppColors.primaryBlue,
+                    Iconsax.verify),
               ],
             ),
           ),
@@ -216,7 +222,8 @@ class _AdminDisputeCenterScreenState
             ),
             Text(
               label,
-              style: GoogleFonts.inter(fontSize: 10, color: AppColors.textSecondary),
+              style: GoogleFonts.inter(
+                  fontSize: 10, color: AppColors.textSecondary),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -237,7 +244,8 @@ class _AdminDisputeCenterScreenState
             const SizedBox(height: 12),
             Text(
               'No claims in this category',
-              style: GoogleFonts.outfit(color: AppColors.textSecondary, fontSize: 14),
+              style: GoogleFonts.outfit(
+                  color: AppColors.textSecondary, fontSize: 14),
             ),
           ],
         ),

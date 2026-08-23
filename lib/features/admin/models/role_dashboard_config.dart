@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../../../core/models/user_role.dart';
 
 // ---------------------------------------------------------------------------
@@ -87,12 +87,11 @@ class RoleDashboardConfig {
       UserRole.financeManager => _finance,
       UserRole.supportManager => _support,
       UserRole.marketingAdmin => _marketing,
-      UserRole.auditor        => _auditor,
-      UserRole.analyst        => _analyst,
-      UserRole.cityManager ||
-      UserRole.areaManager    => _opsLocal,
-      UserRole.opsHead        => _opsHead,
-      _                       => _fullAccess, // superAdmin, founderAdmin, admin
+      UserRole.auditor => _auditor,
+      UserRole.analyst => _analyst,
+      UserRole.cityManager || UserRole.areaManager => _opsLocal,
+      UserRole.opsHead => _opsHead,
+      _ => _fullAccess, // superAdmin, founderAdmin, admin
     };
   }
 
@@ -122,7 +121,7 @@ class RoleDashboardConfig {
     sections: [
       DashboardSection.emergencyFeed,
       DashboardSection.telemetry,
-      DashboardSection.statCards,     // Active Rides + Services + KYC only
+      DashboardSection.statCards, // Active Rides + Services + KYC only
       DashboardSection.opsOverview,
       DashboardSection.fleetControl,
     ],
@@ -137,7 +136,7 @@ class RoleDashboardConfig {
     sections: [
       DashboardSection.emergencyFeed,
       DashboardSection.telemetry,
-      DashboardSection.statCards,     // Active Rides + KYC only
+      DashboardSection.statCards, // Active Rides + KYC only
       DashboardSection.opsOverview,
       DashboardSection.fleetControl,
     ],
@@ -149,9 +148,9 @@ class RoleDashboardConfig {
     subscribeFinancials: true,
     sections: [
       DashboardSection.telemetry,
-      DashboardSection.statCards,     // Revenue card only
+      DashboardSection.statCards, // Revenue card only
       DashboardSection.financeSection,
-      DashboardSection.quickActions,  // Revenue Hub tile only
+      DashboardSection.quickActions, // Revenue Hub tile only
     ],
   );
 
@@ -164,7 +163,7 @@ class RoleDashboardConfig {
       DashboardSection.emergencyFeed,
       DashboardSection.telemetry,
       DashboardSection.supportSection,
-      DashboardSection.quickActions,  // Disputes + Feedback tiles only
+      DashboardSection.quickActions, // Disputes + Feedback tiles only
     ],
   );
 
@@ -175,7 +174,7 @@ class RoleDashboardConfig {
     sections: [
       DashboardSection.telemetry,
       DashboardSection.marketingSection,
-      DashboardSection.quickActions,  // Offers & Deals tile only
+      DashboardSection.quickActions, // Offers & Deals tile only
     ],
   );
 
@@ -187,7 +186,7 @@ class RoleDashboardConfig {
     subscribeFinancials: true,
     sections: [
       DashboardSection.telemetry,
-      DashboardSection.statCards,   // Revenue (read-only, no onTap)
+      DashboardSection.statCards, // Revenue (read-only, no onTap)
       DashboardSection.auditSection,
     ],
   );
@@ -201,7 +200,7 @@ class RoleDashboardConfig {
     subscribeOps: true,
     sections: [
       DashboardSection.telemetry,
-      DashboardSection.statCards,   // All KPI cards (read-only)
+      DashboardSection.statCards, // All KPI cards (read-only)
       DashboardSection.auditSection,
     ],
   );

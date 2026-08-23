@@ -155,12 +155,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         unawaited(showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             title: const Row(
               children: [
                 Icon(Icons.info_outline_rounded, color: AppColors.primaryBlue),
                 SizedBox(width: 8),
-                Text('Sign In Help', style: TextStyle(fontWeight: FontWeight.bold)),
+                Text('Sign In Help',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
               ],
             ),
             content: Text(
@@ -178,7 +180,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   Navigator.of(context).pop();
                   _handleForgotPassword();
                 },
-                child: const Text('Set Password', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primaryBlue)),
+                child: const Text('Set Password',
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primaryBlue)),
               ),
             ],
           ),

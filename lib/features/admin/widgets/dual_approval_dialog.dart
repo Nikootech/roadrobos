@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
@@ -54,12 +54,16 @@ class DualApprovalDialog extends StatelessWidget {
               color: const Color(0xFF4F46E5).withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Iconsax.shield_security, color: Color(0xFF4F46E5), size: 22),
+            child: const Icon(Iconsax.shield_security,
+                color: Color(0xFF4F46E5), size: 22),
           ),
           const SizedBox(width: 12),
           Text(
             '4-Eyes Dual Authorization',
-            style: GoogleFonts.outfit(fontSize: 17, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
+            style: GoogleFonts.outfit(
+                fontSize: 17,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textPrimary),
           ),
         ],
       ),
@@ -81,7 +85,10 @@ class DualApprovalDialog extends StatelessWidget {
                 Expanded(
                   child: Text(
                     'High-Value Transaction Governance (>₹5,000 threshold). Requires SuperAdmin co-signature.',
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFFB45309)),
+                    style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFFB45309)),
                   ),
                 ),
               ],
@@ -104,7 +111,8 @@ class DualApprovalDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Reject / Cancel', style: TextStyle(color: AppColors.textSecondary)),
+          child: const Text('Reject / Cancel',
+              style: TextStyle(color: AppColors.textSecondary)),
         ),
         ElevatedButton(
           onPressed: () {
@@ -113,16 +121,20 @@ class DualApprovalDialog extends StatelessWidget {
             onAuthorized();
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('Transaction co-signed and authorized successfully!'),
+                content:
+                    Text('Transaction co-signed and authorized successfully!'),
                 backgroundColor: AppColors.brandGreen,
               ),
             );
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF4F46E5),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),
-          child: const Text('Co-Sign & Authorize', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          child: const Text('Co-Sign & Authorize',
+              style:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         ),
       ],
     );
@@ -134,13 +146,16 @@ class DualApprovalDialog extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+          Text(label,
+              style: const TextStyle(
+                  fontSize: 12, color: AppColors.textSecondary)),
           Text(
             value,
             style: TextStyle(
               fontSize: isHighlight ? 14 : 12,
               fontWeight: isHighlight ? FontWeight.w900 : FontWeight.w700,
-              color: isHighlight ? const Color(0xFF059669) : AppColors.textPrimary,
+              color:
+                  isHighlight ? const Color(0xFF059669) : AppColors.textPrimary,
             ),
           ),
         ],

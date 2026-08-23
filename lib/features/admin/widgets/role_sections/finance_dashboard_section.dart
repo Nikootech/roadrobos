@@ -43,7 +43,8 @@ class FinanceDashboardSection extends StatelessWidget {
               ),
               child: const Row(
                 children: [
-                  Icon(Icons.check_circle_rounded, color: Color(0xFF059669), size: 12),
+                  Icon(Icons.check_circle_rounded,
+                      color: Color(0xFF059669), size: 12),
                   SizedBox(width: 4),
                   Text(
                     'Gateway Online',
@@ -98,7 +99,8 @@ class FinanceDashboardSection extends StatelessWidget {
           decoration: BoxDecoration(
             color: const Color(0xFF059669).withValues(alpha: 0.06),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFF059669).withValues(alpha: 0.2)),
+            border: Border.all(
+                color: const Color(0xFF059669).withValues(alpha: 0.2)),
           ),
           child: Row(
             children: [
@@ -118,7 +120,8 @@ class FinanceDashboardSection extends StatelessWidget {
                     ),
                     Text(
                       'Scheduled in 3 hrs 42 mins via RazorpayX Route',
-                      style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                      style: TextStyle(
+                          fontSize: 11, color: AppColors.textSecondary),
                     ),
                   ],
                 ),
@@ -128,15 +131,18 @@ class FinanceDashboardSection extends StatelessWidget {
                   HapticFeedback.lightImpact();
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Payout ledger exported to CSV successfully.'),
+                      content:
+                          Text('Payout ledger exported to CSV successfully.'),
                       backgroundColor: AppColors.brandGreen,
                     ),
                   );
                 },
                 style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   backgroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8)),
                 ),
                 child: const Text(
                   'Export CSV',
@@ -325,7 +331,8 @@ class _FinanceStatTile extends StatelessWidget {
           ),
           Text(
             label,
-            style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+            style:
+                const TextStyle(fontSize: 11, color: AppColors.textSecondary),
           ),
           if (sublabel != null) ...[
             const SizedBox(height: 2),

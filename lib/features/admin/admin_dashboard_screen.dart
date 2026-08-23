@@ -743,7 +743,8 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
             if (impersonatedRole != null)
               Container(
                 margin: const EdgeInsets.only(bottom: 16),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFFFBEB),
                   borderRadius: BorderRadius.circular(14),
@@ -767,7 +768,8 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                     GestureDetector(
                       onTap: () {
                         HapticFeedback.lightImpact();
-                        ref.read(impersonatedRoleProvider.notifier).state = null;
+                        ref.read(impersonatedRoleProvider.notifier).state =
+                            null;
                       },
                       child: Container(
                         padding: const EdgeInsets.symmetric(
@@ -794,11 +796,13 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
             if (config.isReadOnly && impersonatedRole == null)
               Container(
                 margin: const EdgeInsets.only(bottom: 16),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
                   color: const Color(0xFF475569).withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFF475569).withValues(alpha: 0.2)),
+                  border: Border.all(
+                      color: const Color(0xFF475569).withValues(alpha: 0.2)),
                 ),
                 child: const Row(
                   children: [
@@ -843,94 +847,96 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
 
             // Emergency Alerts Section — only for roles that need it
             if (config.subscribeEmergencies)
-            ref.watch(emergencyAlertsProvider).when(
-                  data: (alerts) {
-                    if (alerts.isEmpty) return const SizedBox.shrink();
-                    final latest = alerts.first;
-                    final shortUserId = latest.userId.length > 8
-                        ? latest.userId.substring(0, 8).toUpperCase()
-                        : latest.userId;
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 20),
-                      child: InkWell(
-                        onTap: () {
-                          HapticFeedback.mediumImpact();
-                          _showEmergencyAlertDetails(latest);
-                        },
-                        borderRadius: BorderRadius.circular(20),
-                        child: Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                AppColors.dangerRed.withValues(alpha: 0.12),
-                                Colors.white
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                                color: AppColors.dangerRed, width: 1.5),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.dangerRed.withValues(alpha: 0.15),
-                                blurRadius: 16,
-                                offset: const Offset(0, 4),
+              ref.watch(emergencyAlertsProvider).when(
+                    data: (alerts) {
+                      if (alerts.isEmpty) return const SizedBox.shrink();
+                      final latest = alerts.first;
+                      final shortUserId = latest.userId.length > 8
+                          ? latest.userId.substring(0, 8).toUpperCase()
+                          : latest.userId;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 20),
+                        child: InkWell(
+                          onTap: () {
+                            HapticFeedback.mediumImpact();
+                            _showEmergencyAlertDetails(latest);
+                          },
+                          borderRadius: BorderRadius.circular(20),
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  AppColors.dangerRed.withValues(alpha: 0.12),
+                                  Colors.white
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
                               ),
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              const _AnimatedEmergencyIcon(),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        const Text('🚨 SOS EMERGENCY',
-                                            style: TextStyle(
-                                                fontWeight: FontWeight.w900,
-                                                color: AppColors.dangerRed,
-                                                fontSize: 15)),
-                                        Text(
-                                            '${latest.timestamp.hour.toString().padLeft(2, '0')}:${latest.timestamp.minute.toString().padLeft(2, '0')}',
-                                            style: const TextStyle(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.bold,
-                                                color: AppColors.textMuted)),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text('User: $shortUserId',
-                                        style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 13)),
-                                    Text(latest.message,
-                                        style: const TextStyle(
-                                            fontSize: 12,
-                                            color: AppColors.textSecondary)),
-                                  ],
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                  color: AppColors.dangerRed, width: 1.5),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.dangerRed
+                                      .withValues(alpha: 0.15),
+                                  blurRadius: 16,
+                                  offset: const Offset(0, 4),
                                 ),
-                              ),
-                              const Icon(Icons.arrow_forward_ios_rounded,
-                                  size: 14, color: AppColors.dangerRed),
-                            ],
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                const _AnimatedEmergencyIcon(),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          const Text('🚨 SOS EMERGENCY',
+                                              style: TextStyle(
+                                                  fontWeight: FontWeight.w900,
+                                                  color: AppColors.dangerRed,
+                                                  fontSize: 15)),
+                                          Text(
+                                              '${latest.timestamp.hour.toString().padLeft(2, '0')}:${latest.timestamp.minute.toString().padLeft(2, '0')}',
+                                              style: const TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: AppColors.textMuted)),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text('User: $shortUserId',
+                                          style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 13)),
+                                      Text(latest.message,
+                                          style: const TextStyle(
+                                              fontSize: 12,
+                                              color: AppColors.textSecondary)),
+                                    ],
+                                  ),
+                                ),
+                                const Icon(Icons.arrow_forward_ios_rounded,
+                                    size: 14, color: AppColors.dangerRed),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                    )
-                        .animate()
-                        .shimmer(duration: 2.seconds, color: Colors.white24)
-                        .shake(offset: const Offset(2, 0));
-                  },
-                  loading: () => const SizedBox.shrink(),
-                  error: (e, s) => const SizedBox.shrink(),
-                ),
+                      )
+                          .animate()
+                          .shimmer(duration: 2.seconds, color: Colors.white24)
+                          .shake(offset: const Offset(2, 0));
+                    },
+                    loading: () => const SizedBox.shrink(),
+                    error: (e, s) => const SizedBox.shrink(),
+                  ),
 
             // High-Tech Telemetry & System Health Card
             Container(
@@ -1147,325 +1153,321 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
 
             // Stat Cards Grid — filtered by role permissions
             if (config.sections.contains(DashboardSection.statCards))
-            GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 2,
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              childAspectRatio: 1.32,
-              children: [
-                // Revenue — only for finance-capable roles
-                if (effectiveRole.canAccessFinancials)
-                  _buildExecutiveStatCard(
-                    title: 'Total Revenue',
-                    value: liveMetrics.formattedRevenue,
-                    icon: Iconsax.wallet_3,
-                    accentColor: const Color(0xFF059669),
-                    bgGradient: [
-                      const Color(0xFF059669).withValues(alpha: 0.06),
-                      Colors.white
-                    ],
-                    badgeText: '+8.4%',
-                    isStreamActive: true,
-                    // Read-only roles: no navigation onTap
-                    onTap: config.isReadOnly
-                        ? null
-                        : () => context.push('/admin-revenue-referral'),
-                  ),
-                // Active Rides — ops roles only
-                if (!effectiveRole.canAccessFinancials || effectiveRole.canDispatch)
-                  _buildExecutiveStatCard(
-                    title: 'Active Rides',
-                    value: '${liveMetrics.activeRides}',
-                    icon: Iconsax.routing_2,
-                    accentColor: const Color(0xFF0284C7),
-                    bgGradient: [
-                      const Color(0xFF0284C7).withValues(alpha: 0.06),
-                      Colors.white
-                    ],
-                    badgeText: 'Live Stream',
-                    isStreamActive: true,
-                    onTap: config.isReadOnly
-                        ? null
-                        : () => context.push('/admin-active-rides'),
-                  ),
-                // Pending Services — dispatch-capable roles
-                if (effectiveRole.canDispatch)
-                  _buildExecutiveStatCard(
-                    title: 'Pending Services',
-                    value: '${liveMetrics.pendingServices}',
-                    icon: Iconsax.setting_4,
-                    accentColor: const Color(0xFFD97706),
-                    bgGradient: [
-                      const Color(0xFFD97706).withValues(alpha: 0.06),
-                      Colors.white
-                    ],
-                    badgeText: liveMetrics.pendingServices > 0 ? 'Action Req' : 'Optimal',
-                    isStreamActive: true,
-                    onTap: config.isReadOnly
-                        ? null
-                        : () => context.push('/admin-service-dispatch'),
-                  ),
-                // KYC Approvals — approval-capable roles
-                if (effectiveRole.canApprove)
-                  _buildExecutiveStatCard(
-                    title: 'KYC Approvals',
-                    value: '${liveMetrics.pendingKycApprovals}',
-                    icon: Iconsax.shield_tick,
-                    accentColor: const Color(0xFF4F46E5),
-                    bgGradient: [
-                      const Color(0xFF4F46E5).withValues(alpha: 0.06),
-                      Colors.white
-                    ],
-                    badgeText: 'Review >',
-                    isStreamActive: true,
-                    onTap: config.isReadOnly
-                        ? null
-                        : () => context.push('/admin-approvals'),
-                  ),
-              ],
-            ).animate(delay: 100.ms).slideY(begin: 0.1, end: 0).fadeIn(),
+              GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 2,
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                childAspectRatio: 1.32,
+                children: [
+                  // Revenue — only for finance-capable roles
+                  if (effectiveRole.canAccessFinancials)
+                    _buildExecutiveStatCard(
+                      title: 'Total Revenue',
+                      value: liveMetrics.formattedRevenue,
+                      icon: Iconsax.wallet_3,
+                      accentColor: const Color(0xFF059669),
+                      bgGradient: [
+                        const Color(0xFF059669).withValues(alpha: 0.06),
+                        Colors.white
+                      ],
+                      badgeText: '+8.4%',
+                      isStreamActive: true,
+                      // Read-only roles: no navigation onTap
+                      onTap: config.isReadOnly
+                          ? null
+                          : () => context.push('/admin-revenue-referral'),
+                    ),
+                  // Active Rides — ops roles only
+                  if (!effectiveRole.canAccessFinancials ||
+                      effectiveRole.canDispatch)
+                    _buildExecutiveStatCard(
+                      title: 'Active Rides',
+                      value: '${liveMetrics.activeRides}',
+                      icon: Iconsax.routing_2,
+                      accentColor: const Color(0xFF0284C7),
+                      bgGradient: [
+                        const Color(0xFF0284C7).withValues(alpha: 0.06),
+                        Colors.white
+                      ],
+                      badgeText: 'Live Stream',
+                      isStreamActive: true,
+                      onTap: config.isReadOnly
+                          ? null
+                          : () => context.push('/admin-active-rides'),
+                    ),
+                  // Pending Services — dispatch-capable roles
+                  if (effectiveRole.canDispatch)
+                    _buildExecutiveStatCard(
+                      title: 'Pending Services',
+                      value: '${liveMetrics.pendingServices}',
+                      icon: Iconsax.setting_4,
+                      accentColor: const Color(0xFFD97706),
+                      bgGradient: [
+                        const Color(0xFFD97706).withValues(alpha: 0.06),
+                        Colors.white
+                      ],
+                      badgeText: liveMetrics.pendingServices > 0
+                          ? 'Action Req'
+                          : 'Optimal',
+                      isStreamActive: true,
+                      onTap: config.isReadOnly
+                          ? null
+                          : () => context.push('/admin-service-dispatch'),
+                    ),
+                  // KYC Approvals — approval-capable roles
+                  if (effectiveRole.canApprove)
+                    _buildExecutiveStatCard(
+                      title: 'KYC Approvals',
+                      value: '${liveMetrics.pendingKycApprovals}',
+                      icon: Iconsax.shield_tick,
+                      accentColor: const Color(0xFF4F46E5),
+                      bgGradient: [
+                        const Color(0xFF4F46E5).withValues(alpha: 0.06),
+                        Colors.white
+                      ],
+                      badgeText: 'Review >',
+                      isStreamActive: true,
+                      onTap: config.isReadOnly
+                          ? null
+                          : () => context.push('/admin-approvals'),
+                    ),
+                ],
+              ).animate(delay: 100.ms).slideY(begin: 0.1, end: 0).fadeIn(),
 
             // Interactive Analytics Chart Section for Analytics / Finance / SuperAdmin
-            if (effectiveRole.canAccessAnalytics) ...
-              [
-                const SizedBox(height: 22),
-                const AnalyticsChartSection(),
-              ],
+            if (effectiveRole.canAccessAnalytics) ...[
+              const SizedBox(height: 22),
+              const AnalyticsChartSection(),
+            ],
 
             // Finance-specific section
-            if (config.sections.contains(DashboardSection.financeSection)) ...
-              [
-                const SizedBox(height: 22),
-                FinanceDashboardSection(
-                  totalRevenue: liveMetrics.formattedRevenue,
-                  pendingServices: liveMetrics.pendingServices,
-                ),
-              ],
+            if (config.sections.contains(DashboardSection.financeSection)) ...[
+              const SizedBox(height: 22),
+              FinanceDashboardSection(
+                totalRevenue: liveMetrics.formattedRevenue,
+                pendingServices: liveMetrics.pendingServices,
+              ),
+            ],
 
             // Support-specific section
-            if (config.sections.contains(DashboardSection.supportSection)) ...
-              [
-                const SizedBox(height: 22),
-                const SupportDashboardSection(),
-              ],
+            if (config.sections.contains(DashboardSection.supportSection)) ...[
+              const SizedBox(height: 22),
+              const SupportDashboardSection(),
+            ],
 
             // Marketing-specific section
-            if (config.sections.contains(DashboardSection.marketingSection)) ...
-              [
-                const SizedBox(height: 22),
-                const MarketingDashboardSection(),
-              ],
+            if (config.sections
+                .contains(DashboardSection.marketingSection)) ...[
+              const SizedBox(height: 22),
+              const MarketingDashboardSection(),
+            ],
 
             // Audit/Analytics section
-            if (config.sections.contains(DashboardSection.auditSection)) ...
-              [
-                const SizedBox(height: 22),
-                const AuditDashboardSection(),
-              ],
+            if (config.sections.contains(DashboardSection.auditSection)) ...[
+              const SizedBox(height: 22),
+              const AuditDashboardSection(),
+            ],
 
             // Ops Overview — full admin + ops roles only
-            if (config.sections.contains(DashboardSection.opsOverview)) ...
-              [
-                const SizedBox(height: 22),
-                const _AdminOpsThreeCardSection(),
-              ],
+            if (config.sections.contains(DashboardSection.opsOverview)) ...[
+              const SizedBox(height: 22),
+              const _AdminOpsThreeCardSection(),
+            ],
 
             const SizedBox(height: 24),
 
             // Quick Actions — role-gated tiles
-            if (config.sections.contains(DashboardSection.quickActions)) ...
-              [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Quick Access',
-                      style: GoogleFonts.outfit(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
-                        letterSpacing: -0.2,
-                      ),
+            if (config.sections.contains(DashboardSection.quickActions)) ...[
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Quick Access',
+                    style: GoogleFonts.outfit(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                      letterSpacing: -0.2,
                     ),
-                    Text(
-                      'Core Modules',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textSecondary.withValues(alpha: 0.7),
-                      ),
+                  ),
+                  Text(
+                    'Core Modules',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textSecondary.withValues(alpha: 0.7),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 14),
-                GridView.count(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 12,
-                  crossAxisSpacing: 12,
-                  childAspectRatio: 1.25,
-                  children: [
-                    if (effectiveRole.canAccessFinancials)
-                      _QuickActionCard(
-                        title: 'Revenue Hub',
-                        subtitle: 'Analytics & Payouts',
-                        icon: Iconsax.chart_2,
-                        color: const Color(0xFF0D9488),
-                        onTap: config.isReadOnly
-                            ? null
-                            : () => context.push('/admin-revenue-referral'),
-                      ),
-                    if (effectiveRole.canDispatch)
-                      _QuickActionCard(
-                        title: 'Rides Map',
-                        subtitle: 'Real-time Telemetry',
-                        icon: Iconsax.map_1,
-                        color: const Color(0xFF0284C7),
-                        onTap: () => context.push('/admin-active-rides'),
-                      ),
-                    if (effectiveRole.canDispatch)
-                      _QuickActionCard(
-                        title: 'Logistics',
-                        subtitle: 'Hub Operations',
-                        icon: Iconsax.box_1,
-                        color: const Color(0xFFD97706),
-                        onTap: () => context.push('/admin-logistics-hub'),
-                      ),
-                    if (effectiveRole == UserRole.superAdmin ||
-                        effectiveRole == UserRole.founderAdmin ||
-                        effectiveRole == UserRole.opsHead ||
-                        effectiveRole == UserRole.cityManager)
-                      _QuickActionCard(
-                        title: 'B2B Fleet',
-                        subtitle: 'Corporate SLA Portals',
-                        icon: Iconsax.building,
-                        color: const Color(0xFF059669),
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const B2BFleetPortalScreen(),
-                          ),
-                        ),
-                      ),
-                    if (effectiveRole.canManageSystem)
-                      _QuickActionCard(
-                        title: 'Permissions',
-                        subtitle: 'Staff Roles & RBAC',
-                        icon: Iconsax.security_user,
-                        color: const Color(0xFF4F46E5),
-                        onTap: () => context.push('/admin-management'),
-                      ),
-                    if (effectiveRole.canApprove)
-                      _QuickActionCard(
-                        title: 'Approvals',
-                        subtitle: 'Maker Checker',
-                        icon: Iconsax.task_square,
-                        color: const Color(0xFF10B981),
-                        onTap: config.isReadOnly
-                            ? null
-                            : () => context.push('/admin-approvals'),
-                      ),
-                    if (effectiveRole.canHandleSupport)
-                      _QuickActionCard(
-                        title: 'Feedback',
-                        subtitle: 'User Sentiments',
-                        icon: Iconsax.messages_1,
-                        color: const Color(0xFFE11D48),
-                        onTap: () => context.push('/admin-feedback-analytics'),
-                      ),
-                    if (effectiveRole.canAccessMarketing)
-                      _QuickActionCard(
-                        title: 'Offers & Deals',
-                        subtitle: 'Coupons & Promos',
-                        icon: Iconsax.discount_shape,
-                        color: const Color(0xFFF59E0B),
-                        onTap: config.isReadOnly
-                            ? null
-                            : () => context.push('/admin-manage-offers'),
-                      ),
-                    if (effectiveRole.canAccessAudit)
-                      _QuickActionCard(
-                        title: 'Audit Logs',
-                        subtitle: 'Compliance Trail',
-                        icon: Iconsax.document_text,
-                        color: const Color(0xFF475569),
-                        onTap: () => context.push('/admin/audit-logs'),
-                      ),
-                  ],
-                ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1, end: 0),
-              ],
-
-            // Fleet & Operations Control — dispatch roles only
-            if (config.sections.contains(DashboardSection.fleetControl)) ...
-              [
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Fleet & Operations Control',
-                      style: GoogleFonts.outfit(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
-                        letterSpacing: -0.2,
-                      ),
-                    ),
-                    Text(
-                      'Control Unit',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textSecondary.withValues(alpha: 0.7),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 14),
-                GridView.count(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 12,
-                  crossAxisSpacing: 12,
-                  childAspectRatio: 1.25,
-                  children: [
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 2,
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                childAspectRatio: 1.25,
+                children: [
+                  if (effectiveRole.canAccessFinancials)
                     _QuickActionCard(
-                      title: 'Service Dispatch',
-                      subtitle: 'Tech Allocation',
-                      icon: Iconsax.truck_fast,
-                      color: const Color(0xFF059669),
-                      onTap: effectiveRole.canDispatch
-                          ? () => context.push('/admin-service-dispatch')
-                          : null,
-                    ),
-                    _QuickActionCard(
-                      title: 'Disputes & Claims',
-                      subtitle: 'Refund Center',
-                      icon: Iconsax.judge,
-                      color: const Color(0xFFDC2626),
-                      onTap: () => context.push('/admin-disputes'),
-                    ),
-                    _QuickActionCard(
-                      title: 'Fleet Health',
-                      subtitle: 'Battery & Assets',
-                      icon: Iconsax.car,
-                      color: const Color(0xFF0284C7),
-                      onTap: () => context.push('/admin-assets'),
-                    ),
-                    _QuickActionCard(
-                      title: 'Live Radar',
-                      subtitle: 'GPS Triangulation',
-                      icon: Iconsax.radar_2,
+                      title: 'Revenue Hub',
+                      subtitle: 'Analytics & Payouts',
+                      icon: Iconsax.chart_2,
                       color: const Color(0xFF0D9488),
+                      onTap: config.isReadOnly
+                          ? null
+                          : () => context.push('/admin-revenue-referral'),
+                    ),
+                  if (effectiveRole.canDispatch)
+                    _QuickActionCard(
+                      title: 'Rides Map',
+                      subtitle: 'Real-time Telemetry',
+                      icon: Iconsax.map_1,
+                      color: const Color(0xFF0284C7),
                       onTap: () => context.push('/admin-active-rides'),
                     ),
-                  ],
-                ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.1, end: 0),
-              ],
+                  if (effectiveRole.canDispatch)
+                    _QuickActionCard(
+                      title: 'Logistics',
+                      subtitle: 'Hub Operations',
+                      icon: Iconsax.box_1,
+                      color: const Color(0xFFD97706),
+                      onTap: () => context.push('/admin-logistics-hub'),
+                    ),
+                  if (effectiveRole == UserRole.superAdmin ||
+                      effectiveRole == UserRole.founderAdmin ||
+                      effectiveRole == UserRole.opsHead ||
+                      effectiveRole == UserRole.cityManager)
+                    _QuickActionCard(
+                      title: 'B2B Fleet',
+                      subtitle: 'Corporate SLA Portals',
+                      icon: Iconsax.building,
+                      color: const Color(0xFF059669),
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const B2BFleetPortalScreen(),
+                        ),
+                      ),
+                    ),
+                  if (effectiveRole.canManageSystem)
+                    _QuickActionCard(
+                      title: 'Permissions',
+                      subtitle: 'Staff Roles & RBAC',
+                      icon: Iconsax.security_user,
+                      color: const Color(0xFF4F46E5),
+                      onTap: () => context.push('/admin-management'),
+                    ),
+                  if (effectiveRole.canApprove)
+                    _QuickActionCard(
+                      title: 'Approvals',
+                      subtitle: 'Maker Checker',
+                      icon: Iconsax.task_square,
+                      color: const Color(0xFF10B981),
+                      onTap: config.isReadOnly
+                          ? null
+                          : () => context.push('/admin-approvals'),
+                    ),
+                  if (effectiveRole.canHandleSupport)
+                    _QuickActionCard(
+                      title: 'Feedback',
+                      subtitle: 'User Sentiments',
+                      icon: Iconsax.messages_1,
+                      color: const Color(0xFFE11D48),
+                      onTap: () => context.push('/admin-feedback-analytics'),
+                    ),
+                  if (effectiveRole.canAccessMarketing)
+                    _QuickActionCard(
+                      title: 'Offers & Deals',
+                      subtitle: 'Coupons & Promos',
+                      icon: Iconsax.discount_shape,
+                      color: const Color(0xFFF59E0B),
+                      onTap: config.isReadOnly
+                          ? null
+                          : () => context.push('/admin-manage-offers'),
+                    ),
+                  if (effectiveRole.canAccessAudit)
+                    _QuickActionCard(
+                      title: 'Audit Logs',
+                      subtitle: 'Compliance Trail',
+                      icon: Iconsax.document_text,
+                      color: const Color(0xFF475569),
+                      onTap: () => context.push('/admin/audit-logs'),
+                    ),
+                ],
+              ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1, end: 0),
+            ],
+
+            // Fleet & Operations Control — dispatch roles only
+            if (config.sections.contains(DashboardSection.fleetControl)) ...[
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Fleet & Operations Control',
+                    style: GoogleFonts.outfit(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                  Text(
+                    'Control Unit',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textSecondary.withValues(alpha: 0.7),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 2,
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                childAspectRatio: 1.25,
+                children: [
+                  _QuickActionCard(
+                    title: 'Service Dispatch',
+                    subtitle: 'Tech Allocation',
+                    icon: Iconsax.truck_fast,
+                    color: const Color(0xFF059669),
+                    onTap: effectiveRole.canDispatch
+                        ? () => context.push('/admin-service-dispatch')
+                        : null,
+                  ),
+                  _QuickActionCard(
+                    title: 'Disputes & Claims',
+                    subtitle: 'Refund Center',
+                    icon: Iconsax.judge,
+                    color: const Color(0xFFDC2626),
+                    onTap: () => context.push('/admin-disputes'),
+                  ),
+                  _QuickActionCard(
+                    title: 'Fleet Health',
+                    subtitle: 'Battery & Assets',
+                    icon: Iconsax.car,
+                    color: const Color(0xFF0284C7),
+                    onTap: () => context.push('/admin-assets'),
+                  ),
+                  _QuickActionCard(
+                    title: 'Live Radar',
+                    subtitle: 'GPS Triangulation',
+                    icon: Iconsax.radar_2,
+                    color: const Color(0xFF0D9488),
+                    onTap: () => context.push('/admin-active-rides'),
+                  ),
+                ],
+              ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.1, end: 0),
+            ],
 
             // S5 Fix: Removed hardcoded fake 'Bandra zone' system alert.
             // Real operational alerts should come from a Supabase stream.
@@ -1590,7 +1592,10 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                           color: accentColor,
                           shape: BoxShape.circle,
                         ),
-                      ).animate(onPlay: (c) => c.repeat()).fadeIn(duration: 800.ms).fadeOut(duration: 800.ms),
+                      )
+                          .animate(onPlay: (c) => c.repeat())
+                          .fadeIn(duration: 800.ms)
+                          .fadeOut(duration: 800.ms),
                   ],
                 ),
               ],
@@ -1789,7 +1794,8 @@ class _CustomerOperationsCard extends ConsumerWidget {
               children: [
                 // Metric Pills Row
                 Container(
-                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
                   decoration: BoxDecoration(
                     color: const Color(0xFFF8FAFC),
                     borderRadius: BorderRadius.circular(14),
@@ -1800,11 +1806,15 @@ class _CustomerOperationsCard extends ConsumerWidget {
                     children: [
                       _buildPillMetric('Active', data.activeBookings.toString(),
                           const Color(0xFF0284C7)),
-                      Container(width: 1, height: 28, color: const Color(0xFFE2E8F0)),
+                      Container(
+                          width: 1, height: 28, color: const Color(0xFFE2E8F0)),
                       _buildPillMetric('Rentals', data.activeRentals.toString(),
                           AppColors.brandGreen),
-                      Container(width: 1, height: 28, color: const Color(0xFFE2E8F0)),
-                      _buildPillMetric('Services', data.activeServices.toString(),
+                      Container(
+                          width: 1, height: 28, color: const Color(0xFFE2E8F0)),
+                      _buildPillMetric(
+                          'Services',
+                          data.activeServices.toString(),
                           const Color(0xFFD97706)),
                     ],
                   ),
@@ -1814,7 +1824,8 @@ class _CustomerOperationsCard extends ConsumerWidget {
                   const Padding(
                     padding: EdgeInsets.symmetric(vertical: 16),
                     child: Text('No recent customer activity',
-                        style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                        style: TextStyle(
+                            color: AppColors.textMuted, fontSize: 12)),
                   )
                 else
                   ListView.separated(
@@ -2034,7 +2045,8 @@ class _DriverManagementCard extends ConsumerWidget {
               children: [
                 // Metric Pills Row
                 Container(
-                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
                   decoration: BoxDecoration(
                     color: const Color(0xFFF8FAFC),
                     borderRadius: BorderRadius.circular(14),
@@ -2045,10 +2057,12 @@ class _DriverManagementCard extends ConsumerWidget {
                     children: [
                       _buildPillMetric('Online', data.online.toString(),
                           AppColors.brandGreen),
-                      Container(width: 1, height: 28, color: const Color(0xFFE2E8F0)),
+                      Container(
+                          width: 1, height: 28, color: const Color(0xFFE2E8F0)),
                       _buildPillMetric('Pending', data.pending.toString(),
                           const Color(0xFFD97706)),
-                      Container(width: 1, height: 28, color: const Color(0xFFE2E8F0)),
+                      Container(
+                          width: 1, height: 28, color: const Color(0xFFE2E8F0)),
                       _buildPillMetric('Total', data.total.toString(),
                           AppColors.textPrimary),
                     ],
@@ -2059,7 +2073,8 @@ class _DriverManagementCard extends ConsumerWidget {
                   const Padding(
                     padding: EdgeInsets.symmetric(vertical: 16),
                     child: Text('No pending driver approvals',
-                        style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                        style: TextStyle(
+                            color: AppColors.textMuted, fontSize: 12)),
                   )
                 else
                   ListView.separated(
@@ -2139,7 +2154,10 @@ class _DriverManagementCard extends ConsumerWidget {
               onPressed: () => context.push('/admin-driver-database'),
               icon: const Icon(Iconsax.verify, size: 14, color: Colors.white),
               label: const Text('Verify All Documents',
-                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: Colors.white)),
+                  style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12,
+                      color: Colors.white)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.brandGreen,
                 elevation: 0,
@@ -2231,7 +2249,8 @@ class _TechnicianServicesCard extends ConsumerWidget {
               ),
               asyncData.when(
                 loading: () => Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
                     color: const Color(0xFFF1F5F9),
                     borderRadius: BorderRadius.circular(6),
@@ -2244,7 +2263,8 @@ class _TechnicianServicesCard extends ConsumerWidget {
                 ),
                 error: (_, __) => const SizedBox.shrink(),
                 data: (data) => Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
                     color: data.pending > 0
                         ? const Color(0xFFD97706).withValues(alpha: 0.1)
@@ -2274,7 +2294,8 @@ class _TechnicianServicesCard extends ConsumerWidget {
               children: [
                 // Metric Pills Row
                 Container(
-                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
                   decoration: BoxDecoration(
                     color: const Color(0xFFF8FAFC),
                     borderRadius: BorderRadius.circular(14),
@@ -2285,10 +2306,12 @@ class _TechnicianServicesCard extends ConsumerWidget {
                     children: [
                       _buildPillMetric('In Service', data.inService.toString(),
                           const Color(0xFFD97706)),
-                      Container(width: 1, height: 28, color: const Color(0xFFE2E8F0)),
+                      Container(
+                          width: 1, height: 28, color: const Color(0xFFE2E8F0)),
                       _buildPillMetric('Progress', data.progress.toString(),
                           const Color(0xFF0284C7)),
-                      Container(width: 1, height: 28, color: const Color(0xFFE2E8F0)),
+                      Container(
+                          width: 1, height: 28, color: const Color(0xFFE2E8F0)),
                       _buildPillMetric('Done', data.completed.toString(),
                           AppColors.brandGreen),
                     ],
@@ -2299,7 +2322,8 @@ class _TechnicianServicesCard extends ConsumerWidget {
                   const Padding(
                     padding: EdgeInsets.symmetric(vertical: 16),
                     child: Text('No active technician jobs',
-                        style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                        style: TextStyle(
+                            color: AppColors.textMuted, fontSize: 12)),
                   )
                 else
                   ListView.separated(
@@ -2310,7 +2334,8 @@ class _TechnicianServicesCard extends ConsumerWidget {
                         const Divider(height: 16, color: Color(0xFFF1F5F9)),
                     itemBuilder: (context, i) {
                       final job = data.recentServices[i];
-                      final isActive = job.status == 'IN PROGRESS' || job.status == 'ACCEPTED';
+                      final isActive = job.status == 'IN PROGRESS' ||
+                          job.status == 'ACCEPTED';
                       final isScheduled = job.status == 'SCHEDULED';
                       final isDone = job.status == 'COMPLETED';
                       final statusColor = isActive
@@ -2403,8 +2428,8 @@ class _TechnicianServicesCard extends ConsumerWidget {
                   height: 40,
                   child: ElevatedButton.icon(
                     onPressed: () => context.push('/admin-service-dispatch'),
-                    icon: const Icon(Iconsax.truck_fast, size: 14,
-                        color: Colors.white),
+                    icon: const Icon(Iconsax.truck_fast,
+                        size: 14, color: Colors.white),
                     label: const Text('Dispatch',
                         style: TextStyle(
                             fontWeight: FontWeight.w700,
@@ -2424,8 +2449,7 @@ class _TechnicianServicesCard extends ConsumerWidget {
                 child: SizedBox(
                   height: 40,
                   child: OutlinedButton.icon(
-                    onPressed: () =>
-                        context.push('/admin-technician-database'),
+                    onPressed: () => context.push('/admin-technician-database'),
                     icon: const Icon(Iconsax.receipt_2, size: 14),
                     label: const Text('Invoices',
                         style: TextStyle(

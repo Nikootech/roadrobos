@@ -73,7 +73,8 @@ class _DriverAssignedScreenState extends ConsumerState<DriverAssignedScreen> {
       ),
       error: (error, stack) => Scaffold(
         body: Center(
-          child: Text('Error: $error', style: const TextStyle(color: Colors.red)),
+          child:
+              Text('Error: $error', style: const TextStyle(color: Colors.red)),
         ),
       ),
       data: (booking) {
@@ -122,7 +123,8 @@ class _DriverAssignedScreenState extends ConsumerState<DriverAssignedScreen> {
                 right: 0,
                 child: SafeArea(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -426,7 +428,8 @@ class _DriverAssignedScreenState extends ConsumerState<DriverAssignedScreen> {
                 alignment: Alignment.centerLeft,
                 child: Row(
                   children: [
-                    const Icon(Icons.star_rounded, color: Colors.orange, size: 14),
+                    const Icon(Icons.star_rounded,
+                        color: Colors.orange, size: 14),
                     const SizedBox(width: 4),
                     const Text('4.8 • ',
                         style: TextStyle(
@@ -458,7 +461,8 @@ class _DriverAssignedScreenState extends ConsumerState<DriverAssignedScreen> {
           } else {
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Cannot open dialer on this device')),
+                const SnackBar(
+                    content: Text('Cannot open dialer on this device')),
               );
             }
           }

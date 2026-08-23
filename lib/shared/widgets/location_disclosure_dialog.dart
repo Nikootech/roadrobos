@@ -100,19 +100,22 @@ class LocationDisclosureDialog extends StatelessWidget {
                 _buildFeatureRow(
                   icon: Icons.local_taxi_rounded,
                   title: 'Ride Booking & Navigation',
-                  subtitle: 'Calculates pickup points, accurate fares, and real-time turn-by-turn navigation.',
+                  subtitle:
+                      'Calculates pickup points, accurate fares, and real-time turn-by-turn navigation.',
                 ),
                 const SizedBox(height: 10),
                 _buildFeatureRow(
                   icon: Icons.local_shipping_rounded,
                   title: 'Package Delivery Tracking',
-                  subtitle: 'Tracks real-time dispatch routes and ETA for senders and recipients.',
+                  subtitle:
+                      'Tracks real-time dispatch routes and ETA for senders and recipients.',
                 ),
                 const SizedBox(height: 10),
                 _buildFeatureRow(
                   icon: Icons.emergency_rounded,
                   title: 'Emergency Assistance (SOS)',
-                  subtitle: 'Pinpoints your exact location for rapid response teams during roadside emergencies.',
+                  subtitle:
+                      'Pinpoints your exact location for rapid response teams during roadside emergencies.',
                 ),
                 const SizedBox(height: 10),
 
@@ -137,7 +140,8 @@ class LocationDisclosureDialog extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.shield_outlined, size: 20, color: Colors.grey.shade700),
+                      Icon(Icons.shield_outlined,
+                          size: 20, color: Colors.grey.shade700),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -208,7 +212,8 @@ class LocationDisclosureDialog extends StatelessWidget {
     required String subtitle,
     bool isHighlight = false,
   }) {
-    final color = isHighlight ? const Color(0xFF1B5E20) : const Color(0xFF2E7D32);
+    final color =
+        isHighlight ? const Color(0xFF1B5E20) : const Color(0xFF2E7D32);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -216,7 +221,9 @@ class LocationDisclosureDialog extends StatelessWidget {
           margin: const EdgeInsets.only(top: 2),
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            color: isHighlight ? color.withValues(alpha: 0.15) : Colors.grey.shade100,
+            color: isHighlight
+                ? color.withValues(alpha: 0.15)
+                : Colors.grey.shade100,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, size: 18, color: color),

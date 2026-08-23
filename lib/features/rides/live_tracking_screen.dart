@@ -936,8 +936,7 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen>
                         child: const Text(
                           'Waiting for driver...',
                           style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.green),
+                              fontWeight: FontWeight.bold, color: Colors.green),
                         ),
                       ),
                   ],

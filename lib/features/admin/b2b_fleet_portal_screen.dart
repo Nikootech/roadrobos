@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -66,9 +66,13 @@ class _B2BFleetPortalScreenState extends State<B2BFleetPortalScreen> {
           children: [
             Text(
               'B2B Corporate Fleet Portal',
-              style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
+              style: GoogleFonts.outfit(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary),
             ),
-            const Text('Enterprise SLA Subscriptions & Fleets', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+            const Text('Enterprise SLA Subscriptions & Fleets',
+                style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
           ],
         ),
       ),
@@ -80,9 +84,11 @@ class _B2BFleetPortalScreenState extends State<B2BFleetPortalScreen> {
             // Top Executive B2B Stats Row
             Row(
               children: [
-                _buildMetricCard('Total Fleet Vehicles', '1,155', Iconsax.car, const Color(0xFF0284C7)),
+                _buildMetricCard('Total Fleet Vehicles', '1,155', Iconsax.car,
+                    const Color(0xFF0284C7)),
                 const SizedBox(width: 12),
-                _buildMetricCard('B2B Monthly MRR', '₹4.01L', Iconsax.wallet_3, const Color(0xFF059669)),
+                _buildMetricCard('B2B Monthly MRR', '₹4.01L', Iconsax.wallet_3,
+                    const Color(0xFF059669)),
               ],
             ),
             const SizedBox(height: 18),
@@ -90,20 +96,29 @@ class _B2BFleetPortalScreenState extends State<B2BFleetPortalScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [Color(0xFF1E293B), Color(0xFF0F172A)]),
+                gradient: const LinearGradient(
+                    colors: [Color(0xFF1E293B), Color(0xFF0F172A)]),
                 borderRadius: BorderRadius.circular(18),
               ),
               child: const Row(
                 children: [
-                  Icon(Icons.shield_rounded, color: Colors.greenAccent, size: 28),
+                  Icon(Icons.shield_rounded,
+                      color: Colors.greenAccent, size: 28),
                   SizedBox(width: 14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Enterprise SLA Compliance: 99.4%', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 13)),
+                        Text('Enterprise SLA Compliance: 99.4%',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 13)),
                         SizedBox(height: 2),
-                        Text('Average Breakdown Response: 8.2 mins across 4 corporate contracts.', style: TextStyle(color: Colors.white70, fontSize: 11)),
+                        Text(
+                            'Average Breakdown Response: 8.2 mins across 4 corporate contracts.',
+                            style:
+                                TextStyle(color: Colors.white70, fontSize: 11)),
                       ],
                     ),
                   ),
@@ -116,17 +131,27 @@ class _B2BFleetPortalScreenState extends State<B2BFleetPortalScreen> {
               children: [
                 Text(
                   'Active Corporate Accounts',
-                  style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
+                  style: GoogleFonts.outfit(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary),
                 ),
                 TextButton.icon(
                   onPressed: () {
                     HapticFeedback.lightImpact();
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Corporate contract onboarding modal.')),
+                      const SnackBar(
+                          content:
+                              Text('Corporate contract onboarding modal.')),
                     );
                   },
-                  icon: const Icon(Icons.add_rounded, size: 16, color: AppColors.brandGreen),
-                  label: const Text('+ Add Contract', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: AppColors.brandGreen)),
+                  icon: const Icon(Icons.add_rounded,
+                      size: 16, color: AppColors.brandGreen),
+                  label: const Text('+ Add Contract',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                          color: AppColors.brandGreen)),
                 ),
               ],
             ),
@@ -147,7 +172,8 @@ class _B2BFleetPortalScreenState extends State<B2BFleetPortalScreen> {
     );
   }
 
-  Widget _buildMetricCard(String title, String value, IconData icon, Color color) {
+  Widget _buildMetricCard(
+      String title, String value, IconData icon, Color color) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(16),
@@ -156,7 +182,10 @@ class _B2BFleetPortalScreenState extends State<B2BFleetPortalScreen> {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: const Color(0xFFE2E8F0)),
           boxShadow: [
-            BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 8, offset: const Offset(0, 2)),
+            BoxShadow(
+                color: Colors.black.withValues(alpha: 0.02),
+                blurRadius: 8,
+                offset: const Offset(0, 2)),
           ],
         ),
         child: Column(
@@ -164,8 +193,14 @@ class _B2BFleetPortalScreenState extends State<B2BFleetPortalScreen> {
           children: [
             Icon(icon, color: color, size: 20),
             const SizedBox(height: 10),
-            Text(value, style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.w900, color: AppColors.textPrimary)),
-            Text(title, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+            Text(value,
+                style: GoogleFonts.outfit(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.textPrimary)),
+            Text(title,
+                style: const TextStyle(
+                    fontSize: 11, color: AppColors.textSecondary)),
           ],
         ),
       ),
@@ -189,7 +224,10 @@ class _CorporateAccountCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 8, offset: const Offset(0, 2)),
+          BoxShadow(
+              color: Colors.black.withValues(alpha: 0.02),
+              blurRadius: 8,
+              offset: const Offset(0, 2)),
         ],
       ),
       child: Column(
@@ -199,7 +237,9 @@ class _CorporateAccountCard extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+                decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10)),
                 child: Icon(Iconsax.building, color: color, size: 18),
               ),
               const SizedBox(width: 12),
@@ -207,15 +247,27 @@ class _CorporateAccountCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(account['company'], style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
-                    Text('${account['vehicles']} Vehicles Registered', style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                    Text(account['company'],
+                        style: GoogleFonts.outfit(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.textPrimary)),
+                    Text('${account['vehicles']} Vehicles Registered',
+                        style: const TextStyle(
+                            fontSize: 11, color: AppColors.textSecondary)),
                   ],
                 ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(color: const Color(0xFF059669).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
-                child: Text(account['tier'], style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF059669))),
+                decoration: BoxDecoration(
+                    color: const Color(0xFF059669).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8)),
+                child: Text(account['tier'],
+                    style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF059669))),
               ),
             ],
           ),
@@ -228,22 +280,42 @@ class _CorporateAccountCard extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Contract Value', style: TextStyle(fontSize: 10, color: AppColors.textSecondary)),
-                  Text(account['monthlyBilling'], style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                  const Text('Contract Value',
+                      style: TextStyle(
+                          fontSize: 10, color: AppColors.textSecondary)),
+                  Text(account['monthlyBilling'],
+                      style: GoogleFonts.outfit(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary)),
                 ],
               ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('SLA Breach Rate', style: TextStyle(fontSize: 10, color: AppColors.textSecondary)),
-                  Text(account['slaBreachRate'], style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF059669))),
+                  const Text('SLA Breach Rate',
+                      style: TextStyle(
+                          fontSize: 10, color: AppColors.textSecondary)),
+                  Text(account['slaBreachRate'],
+                      style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF059669))),
                 ],
               ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  const Text('Active Roadside Calls', style: TextStyle(fontSize: 10, color: AppColors.textSecondary)),
-                  Text('${account['activeRequests']} active', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: account['activeRequests'] > 0 ? const Color(0xFFDC2626) : AppColors.textSecondary)),
+                  const Text('Active Roadside Calls',
+                      style: TextStyle(
+                          fontSize: 10, color: AppColors.textSecondary)),
+                  Text('${account['activeRequests']} active',
+                      style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: account['activeRequests'] > 0
+                              ? const Color(0xFFDC2626)
+                              : AppColors.textSecondary)),
                 ],
               ),
             ],

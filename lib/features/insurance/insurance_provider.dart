@@ -108,7 +108,8 @@ class InsuranceNotifier extends StateNotifier<InsuranceState> {
   }) async {
     state = state.copyWith(isLoading: true);
     final now = DateTime.now();
-    final randomSuffix = (1000 + (DateTime.now().millisecondsSinceEpoch % 9000));
+    final randomSuffix =
+        (1000 + (DateTime.now().millisecondsSinceEpoch % 9000));
     final policyNo = 'RR-${plan.id.toUpperCase()}-2026-$randomSuffix';
 
     final newPolicy = InsurancePolicy(
@@ -164,7 +165,8 @@ class InsuranceNotifier extends StateNotifier<InsuranceState> {
       ownerPhone: '',
       nomineeName: 'N/A',
       nomineeRelation: 'N/A',
-      status: expiryDate.isAfter(now) ? PolicyStatus.active : PolicyStatus.expired,
+      status:
+          expiryDate.isAfter(now) ? PolicyStatus.active : PolicyStatus.expired,
     );
 
     final updated = [linked, ...state.policies];

@@ -17,7 +17,8 @@ class EmergencyHelpScreen extends ConsumerStatefulWidget {
   const EmergencyHelpScreen({super.key});
 
   @override
-  ConsumerState<EmergencyHelpScreen> createState() => _EmergencyHelpScreenState();
+  ConsumerState<EmergencyHelpScreen> createState() =>
+      _EmergencyHelpScreenState();
 }
 
 class _EmergencyHelpScreenState extends ConsumerState<EmergencyHelpScreen> {
@@ -64,7 +65,8 @@ class _EmergencyHelpScreenState extends ConsumerState<EmergencyHelpScreen> {
       );
       if (mounted) {
         setState(() {
-          _locationLine1 = 'GPS: ${position.latitude.toStringAsFixed(5)}, ${position.longitude.toStringAsFixed(5)}';
+          _locationLine1 =
+              'GPS: ${position.latitude.toStringAsFixed(5)}, ${position.longitude.toStringAsFixed(5)}';
           _locationLine2 = 'Indiranagar, Bengaluru (GPS Active)';
           _isLoadingLocation = false;
         });
@@ -85,7 +87,8 @@ class _EmergencyHelpScreenState extends ConsumerState<EmergencyHelpScreen> {
     await HapticFeedback.heavyImpact();
 
     final now = DateTime.now();
-    if (_lastSosTap == null || now.difference(_lastSosTap!) > const Duration(seconds: 3)) {
+    if (_lastSosTap == null ||
+        now.difference(_lastSosTap!) > const Duration(seconds: 3)) {
       _sosTapCount = 1;
     } else {
       _sosTapCount++;
@@ -96,24 +99,30 @@ class _EmergencyHelpScreenState extends ConsumerState<EmergencyHelpScreen> {
       _sosTapCount = 0; // reset
       if (!mounted) return;
       final navigator = Navigator.of(context);
-      
+
       unawaited(showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (_) => const Center(child: CircularProgressIndicator(color: AppColors.dangerRed)),
+        builder: (_) => const Center(
+            child: CircularProgressIndicator(color: AppColors.dangerRed)),
       ));
 
       try {
         final user = ref.read(userProvider).user;
         final userId = user?.id ?? 'demo';
-        
-        final position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+
+        final position = await Geolocator.getCurrentPosition(
+            desiredAccuracy: LocationAccuracy.high);
         final supabase = Supabase.instance.client;
-        final userResponse = await supabase.from('profiles').select().eq('id', userId).maybeSingle();
+        final userResponse = await supabase
+            .from('profiles')
+            .select()
+            .eq('id', userId)
+            .maybeSingle();
         final customerName = userResponse?['name'] ?? 'Unknown User';
         final customerPhone = userResponse?['phone'] ?? 'N/A';
         final customerEmail = userResponse?['email'] ?? 'N/A';
-        
+
         final msg = '🚨 *EMERGENCY SOS ALERT (ROAD ROBOS)* 🚨\n\n'
             '*Customer Details:*\n'
             '• Name: $customerName\n'
@@ -124,7 +133,7 @@ class _EmergencyHelpScreenState extends ConsumerState<EmergencyHelpScreen> {
             '• Longitude: ${position.longitude}\n\n'
             '*Location Link:*\n'
             'https://maps.google.com/?q=${position.latitude},${position.longitude}';
-            
+
         final encodedMsg = Uri.encodeComponent(msg);
         final waUrl = 'https://wa.me/919844991225?text=$encodedMsg';
         final Uri waUri = Uri.parse(waUrl);
@@ -137,7 +146,9 @@ class _EmergencyHelpScreenState extends ConsumerState<EmergencyHelpScreen> {
           await launchUrl(waUri, mode: LaunchMode.externalApplication);
         } else {
           messenger.showSnackBar(
-            const SnackBar(content: Text('Could not launch WhatsApp. please check if WhatsApp is installed.')),
+            const SnackBar(
+                content: Text(
+                    'Could not launch WhatsApp. please check if WhatsApp is installed.')),
           );
         }
       } catch (e) {
@@ -157,7 +168,8 @@ class _EmergencyHelpScreenState extends ConsumerState<EmergencyHelpScreen> {
     if (_isSosTriggered) {
       messenger.showSnackBar(
         SnackBar(
-          content: Text('SOS Signal Sent! Tap ${5 - _sosTapCount} more times rapidly to launch WhatsApp emergency dispatch.'),
+          content: Text(
+              'SOS Signal Sent! Tap ${5 - _sosTapCount} more times rapidly to launch WhatsApp emergency dispatch.'),
           backgroundColor: AppColors.dangerRed,
           behavior: SnackBarBehavior.floating,
         ),

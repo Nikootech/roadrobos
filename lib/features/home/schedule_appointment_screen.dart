@@ -146,7 +146,8 @@ class _ScheduleAppointmentScreenState
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             decoration: BoxDecoration(
                               color: _serviceLocation == 'Doorstep'
-                                  ? AppColors.primaryBlue.withValues(alpha: 0.08)
+                                  ? AppColors.primaryBlue
+                                      .withValues(alpha: 0.08)
                                   : Colors.grey.shade50,
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
@@ -193,14 +194,17 @@ class _ScheduleAppointmentScreenState
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             decoration: BoxDecoration(
                               color: _serviceLocation == 'Service Center'
-                                  ? AppColors.primaryBlue.withValues(alpha: 0.08)
+                                  ? AppColors.primaryBlue
+                                      .withValues(alpha: 0.08)
                                   : Colors.grey.shade50,
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
                                 color: _serviceLocation == 'Service Center'
                                     ? AppColors.primaryBlue
                                     : Colors.grey.shade200,
-                                width: _serviceLocation == 'Service Center' ? 2 : 1,
+                                width: _serviceLocation == 'Service Center'
+                                    ? 2
+                                    : 1,
                               ),
                             ),
                             child: Column(
@@ -295,7 +299,8 @@ class _ScheduleAppointmentScreenState
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             decoration: BoxDecoration(
                               color: _paymentMethod == 'Online'
-                                  ? AppColors.primaryBlue.withValues(alpha: 0.08)
+                                  ? AppColors.primaryBlue
+                                      .withValues(alpha: 0.08)
                                   : Colors.grey.shade50,
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
@@ -348,7 +353,9 @@ class _ScheduleAppointmentScreenState
               ],
             ),
             child: CustomButton(
-              label: _paymentMethod == 'Online' ? 'Pay & Book Appointment' : 'Book Appointment',
+              label: _paymentMethod == 'Online'
+                  ? 'Pay & Book Appointment'
+                  : 'Book Appointment',
               onPressed: _selectedTime.isEmpty
                   ? null
                   : () async {
@@ -367,10 +374,12 @@ class _ScheduleAppointmentScreenState
                               .read(paymentServiceProvider.notifier)
                               .startPayment(PaymentDetails(
                                 contact: userData?.phone ?? '9876543210',
-                                email: userData?.email ?? 'customer@example.com',
+                                email:
+                                    userData?.email ?? 'customer@example.com',
                                 description:
                                     'Service Booking: ${booking.packageName}',
-                                bookingId: '00000000-0000-0000-0000-000000000000',
+                                bookingId:
+                                    '00000000-0000-0000-0000-000000000000',
                                 userId: userId,
                                 bookingType: BookingType.service,
                                 totalCost: breakdown.totalPayable,
@@ -423,7 +432,9 @@ class _ScheduleAppointmentScreenState
                                 'payment_id': paymentId,
                                 'service_location': _serviceLocation,
                               },
-                              status: _paymentMethod == 'Online' ? 'paid' : 'confirmed',
+                              status: _paymentMethod == 'Online'
+                                  ? 'paid'
+                                  : 'confirmed',
                               createdAt: DateTime.now(),
                             ));
 
@@ -436,7 +447,8 @@ class _ScheduleAppointmentScreenState
                                 .select('id')
                                 .or('role.eq.admin,role.eq.management');
 
-                            final customerName = userData?.name ?? 'Unknown User';
+                            final customerName =
+                                userData?.name ?? 'Unknown User';
                             final customerPhone = userData?.phone ?? 'N/A';
 
                             for (final m in managersResponse) {
@@ -444,14 +456,17 @@ class _ScheduleAppointmentScreenState
                               await supabase.from('user_notifications').insert({
                                 'user_id': managerId,
                                 'title': '🚗 New Doorstep Service Booking',
-                                'description': 'Customer $customerName ($customerPhone) booked doorstep wash for ${booking.packageName} on $dateStr at $_selectedTime.',
+                                'description':
+                                    'Customer $customerName ($customerPhone) booked doorstep wash for ${booking.packageName} on $dateStr at $_selectedTime.',
                                 'type': 'DOORSTEP_SERVICE',
                                 'is_read': false,
-                                'created_at': DateTime.now().toUtc().toIso8601String(),
+                                'created_at':
+                                    DateTime.now().toUtc().toIso8601String(),
                               });
                             }
                           } catch (e) {
-                            debugPrint('Error dispatching doorstep notifications: $e');
+                            debugPrint(
+                                'Error dispatching doorstep notifications: $e');
                           }
                         }
 
@@ -465,7 +480,8 @@ class _ScheduleAppointmentScreenState
                       } catch (e) {
                         if (!context.mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text(e.toString().replaceAll('Exception: ', '')),
+                          content:
+                              Text(e.toString().replaceAll('Exception: ', '')),
                           backgroundColor: AppColors.errorRed,
                         ));
                       }

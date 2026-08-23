@@ -286,7 +286,7 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
           final height = MediaQuery.of(context).size.height;
           targetSize = height < 850 ? 0.65 : 0.52;
         }
-        
+
         try {
           if (_sheetController.isAttached) {
             _sheetController.animateTo(
@@ -431,11 +431,11 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
     TextEditingController dropoffCtrl,
   ) {
     final screenHeight = MediaQuery.of(context).size.height;
-    
+
     // Compute responsive sheet sizes to prevent content truncation on smaller mobile screens
     final double initialSize;
     final double minSize;
-    
+
     if (state.status == RideStatus.selectingPickup ||
         state.status == RideStatus.selectingDrop) {
       initialSize = 0.85;
@@ -446,7 +446,8 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
     } else if (state.status == RideStatus.idle) {
       initialSize = screenHeight < 850 ? 0.6 : 0.48;
       minSize = screenHeight < 850 ? 0.5 : 0.4;
-    } else { // booked, tracking, completed, etc.
+    } else {
+      // booked, tracking, completed, etc.
       initialSize = screenHeight < 850 ? 0.65 : 0.52;
       minSize = screenHeight < 850 ? 0.55 : 0.45;
     }
@@ -902,8 +903,10 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
                     _showSuggestions = false;
                     _searchQuery = '';
                   });
-                  final isPickupSet = _isPickupSearch ? true : (state.pickupLocation != null);
-                  final isDropSet = !_isPickupSearch ? true : (state.dropoffLocation != null);
+                  final isPickupSet =
+                      _isPickupSearch ? true : (state.pickupLocation != null);
+                  final isDropSet =
+                      !_isPickupSearch ? true : (state.dropoffLocation != null);
                   final nextStatusIsVehicleSelection = isPickupSet && isDropSet;
 
                   _sheetController.animateTo(
@@ -923,7 +926,7 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
   Widget _buildPaymentSelector(TaxiState state, TaxiNotifier notifier) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isCash = state.paymentMethod == 'Cash';
-    
+
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
@@ -967,7 +970,9 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
                       Icons.money_rounded,
                       color: isCash
                           ? AppColors.primaryBlue
-                          : (isDark ? Colors.grey.shade600 : Colors.grey.shade500),
+                          : (isDark
+                              ? Colors.grey.shade600
+                              : Colors.grey.shade500),
                       size: 20,
                     ),
                     const SizedBox(width: 8),
@@ -978,7 +983,9 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
                         fontWeight: FontWeight.bold,
                         color: isCash
                             ? (isDark ? Colors.white : AppColors.textPrimary)
-                            : (isDark ? Colors.grey.shade500 : Colors.grey.shade600),
+                            : (isDark
+                                ? Colors.grey.shade500
+                                : Colors.grey.shade600),
                       ),
                     ),
                   ],
@@ -986,7 +993,7 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
               ),
             ),
           ),
-          
+
           // 2. Pay Online
           Expanded(
             child: GestureDetector(
@@ -1019,7 +1026,9 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
                       Icons.payment_rounded,
                       color: !isCash
                           ? AppColors.primaryBlue
-                          : (isDark ? Colors.grey.shade600 : Colors.grey.shade500),
+                          : (isDark
+                              ? Colors.grey.shade600
+                              : Colors.grey.shade500),
                       size: 20,
                     ),
                     const SizedBox(width: 8),
@@ -1030,7 +1039,9 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
                         fontWeight: FontWeight.bold,
                         color: !isCash
                             ? (isDark ? Colors.white : AppColors.textPrimary)
-                            : (isDark ? Colors.grey.shade500 : Colors.grey.shade600),
+                            : (isDark
+                                ? Colors.grey.shade500
+                                : Colors.grey.shade600),
                       ),
                     ),
                   ],
@@ -1046,11 +1057,17 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
   Color _getTagBgColor(String tag, bool isDark) {
     switch (tag.toLowerCase()) {
       case 'cheapest':
-        return isDark ? Colors.blue.shade900.withValues(alpha: 0.4) : Colors.blue.shade50;
+        return isDark
+            ? Colors.blue.shade900.withValues(alpha: 0.4)
+            : Colors.blue.shade50;
       case 'eco':
-        return isDark ? const Color(0xFF065F46).withValues(alpha: 0.4) : const Color(0xFFD1FAE5);
+        return isDark
+            ? const Color(0xFF065F46).withValues(alpha: 0.4)
+            : const Color(0xFFD1FAE5);
       case 'quickest':
-        return isDark ? Colors.amber.shade900.withValues(alpha: 0.4) : Colors.amber.shade50;
+        return isDark
+            ? Colors.amber.shade900.withValues(alpha: 0.4)
+            : Colors.amber.shade50;
       default:
         return AppColors.primaryBlue.withValues(alpha: 0.1);
     }
@@ -1075,8 +1092,7 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
       onTap: () {
         notifier.updateStatus(RideStatus.selectingDrop);
         _sheetController.animateTo(0.85,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOut);
+            duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
         _dropoffFocusNode.requestFocus();
       },
       child: Container(
@@ -1169,7 +1185,7 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
 
   Widget _buildVehicleIcon(RideOption option, bool isSelected) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     IconData iconData;
     if (option.id == 'bike') {
       iconData = Icons.two_wheeler_rounded;
@@ -1234,7 +1250,9 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
               decoration: BoxDecoration(
                 color: isSelected
                     ? AppColors.primaryBlue.withValues(alpha: 0.1)
-                    : (isDark ? const Color(0xFF0F172A).withValues(alpha: 0.3) : Colors.grey.shade50),
+                    : (isDark
+                        ? const Color(0xFF0F172A).withValues(alpha: 0.3)
+                        : Colors.grey.shade50),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: isSelected
@@ -1271,7 +1289,8 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
                                 ),
                                 child: Text(option.tag!,
                                     style: TextStyle(
-                                        color: _getTagTextColor(option.tag!, isDark),
+                                        color: _getTagTextColor(
+                                            option.tag!, isDark),
                                         fontSize: 9,
                                         fontWeight: FontWeight.bold)),
                               ),
@@ -1458,10 +1477,8 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
             final rideId = state.rideId;
             if (rideId != null && rideId.isNotEmpty && _completedRating > 0) {
               try {
-                await Supabase.instance.client
-                    .from('ride_bookings')
-                    .update({'customer_rating': _completedRating}).eq(
-                        'id', rideId);
+                await Supabase.instance.client.from('ride_bookings').update(
+                    {'customer_rating': _completedRating}).eq('id', rideId);
               } catch (e) {
                 debugPrint('Failed to submit rating: $e');
               }
@@ -1741,7 +1758,8 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
 
           try {
             if (state.rideId == null || state.rideId!.isEmpty) {
-              throw Exception('No active ride booking ID found to process payment.');
+              throw Exception(
+                  'No active ride booking ID found to process payment.');
             }
             await ref
                 .read(paymentServiceProvider.notifier)

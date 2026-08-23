@@ -54,7 +54,9 @@ final adminTechProvider = StreamProvider<List<AdminTechnician>>((ref) async* {
 
   yield techs.map((map) {
     final realId = map['id']?.toString() ?? '';
-    final id = realId.length > 8 ? realId.substring(0, 8).toUpperCase() : (realId.isNotEmpty ? realId.toUpperCase() : 'TECH-NEW');
+    final id = realId.length > 8
+        ? realId.substring(0, 8).toUpperCase()
+        : (realId.isNotEmpty ? realId.toUpperCase() : 'TECH-NEW');
     final name = map['name'] ?? map['full_name'] ?? 'Master Technician';
     final phone = map['phone'] ?? '+91 98200 44556';
     final specialization = map['specialization'] ?? 'EV & Auto Specialist';
@@ -63,14 +65,26 @@ final adminTechProvider = StreamProvider<List<AdminTechnician>>((ref) async* {
         : DateTime.now();
 
     final months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
     ];
     final dateStr = '${months[createdAt.month - 1]} ${createdAt.year}';
 
     final sampleJobs = [
-      TechJob('MH-02-CB-1904', 'Honda City • Periodic Service', 'In Progress', 4200.0, 'Today, 11:00 AM'),
-      TechJob('MH-04-AX-8812', 'Hyundai Creta • Brake Overhaul', 'Completed', 6800.0, 'Yesterday'),
+      TechJob('MH-02-CB-1904', 'Honda City • Periodic Service', 'In Progress',
+          4200.0, 'Today, 11:00 AM'),
+      TechJob('MH-04-AX-8812', 'Hyundai Creta • Brake Overhaul', 'Completed',
+          6800.0, 'Yesterday'),
     ];
 
     return AdminTechnician(
@@ -195,7 +209,8 @@ class TechnicianDatabaseScreen extends ConsumerWidget {
                             fontWeight: FontWeight.w500,
                           ),
                           decoration: InputDecoration(
-                            hintText: 'Search by technician name, skill, or ID...',
+                            hintText:
+                                'Search by technician name, skill, or ID...',
                             hintStyle: TextStyle(
                               fontSize: 13,
                               color: AppColors.textMuted.withValues(alpha: 0.9),
@@ -208,7 +223,8 @@ class TechnicianDatabaseScreen extends ConsumerWidget {
                             disabledBorder: InputBorder.none,
                             errorBorder: InputBorder.none,
                             isDense: true,
-                            contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                            contentPadding:
+                                const EdgeInsets.symmetric(vertical: 12),
                           ),
                         ),
                       ),
@@ -237,7 +253,8 @@ class TechnicianDatabaseScreen extends ConsumerWidget {
                       const SizedBox(width: 8),
                       _buildFilterChip(ref, 'Active On-Site', activeFilter),
                       const SizedBox(width: 8),
-                      _buildFilterChip(ref, 'Available for Dispatch', activeFilter),
+                      _buildFilterChip(
+                          ref, 'Available for Dispatch', activeFilter),
                       const SizedBox(width: 8),
                       _buildFilterChip(ref, 'Top Rated', activeFilter),
                     ],
@@ -257,29 +274,44 @@ class TechnicianDatabaseScreen extends ConsumerWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Iconsax.warning_2, size: 40, color: AppColors.dangerRed),
+                    const Icon(Iconsax.warning_2,
+                        size: 40, color: AppColors.dangerRed),
                     const SizedBox(height: 12),
                     Text('Failed to load technician database',
-                        style: GoogleFonts.outfit(fontWeight: FontWeight.w700, fontSize: 16)),
+                        style: GoogleFonts.outfit(
+                            fontWeight: FontWeight.w700, fontSize: 16)),
                     const SizedBox(height: 8),
                     ElevatedButton(
-                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.brandGreen),
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.brandGreen),
                       onPressed: () => ref.invalidate(adminTechProvider),
-                      child: const Text('Try Again', style: TextStyle(color: Colors.white)),
+                      child: const Text('Try Again',
+                          style: TextStyle(color: Colors.white)),
                     )
                   ],
                 ),
               ),
               data: (techs) {
                 final filtered = techs.where((t) {
-                  final matchesSearch = t.name.toLowerCase().contains(search.toLowerCase()) ||
-                      t.id.toLowerCase().contains(search.toLowerCase()) ||
-                      t.specialization.toLowerCase().contains(search.toLowerCase());
-                  if (!matchesSearch) return false;
+                  final matchesSearch =
+                      t.name.toLowerCase().contains(search.toLowerCase()) ||
+                          t.id.toLowerCase().contains(search.toLowerCase()) ||
+                          t.specialization
+                              .toLowerCase()
+                              .contains(search.toLowerCase());
+                  if (!matchesSearch) {
+                    return false;
+                  }
 
-                  if (activeFilter == 'Active On-Site') return t.undergoing > 0;
-                  if (activeFilter == 'Available for Dispatch') return t.booked == 0;
-                  if (activeFilter == 'Top Rated') return t.rating >= 4.8;
+                  if (activeFilter == 'Active On-Site') {
+                    return t.undergoing > 0;
+                  }
+                  if (activeFilter == 'Available for Dispatch') {
+                    return t.booked == 0;
+                  }
+                  if (activeFilter == 'Top Rated') {
+                    return t.rating >= 4.8;
+                  }
                   return true;
                 }).toList();
 
@@ -296,31 +328,41 @@ class TechnicianDatabaseScreen extends ConsumerWidget {
                               color: Color(0xFFFEF3C7),
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Iconsax.setting_4, size: 48, color: Color(0xFFD97706)),
+                            child: const Icon(Iconsax.setting_4,
+                                size: 48, color: Color(0xFFD97706)),
                           ),
                           const SizedBox(height: 18),
                           Text(
-                            search.isNotEmpty ? 'No technicians matching "$search"' : 'No technicians in this filter',
+                            search.isNotEmpty
+                                ? 'No technicians matching "$search"'
+                                : 'No technicians in this filter',
                             textAlign: TextAlign.center,
-                            style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w700),
+                            style: GoogleFonts.outfit(
+                                fontSize: 16, fontWeight: FontWeight.w700),
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            search.isNotEmpty ? 'Try searching with another name or skill.' : 'Try changing your filter.',
-                            style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                            search.isNotEmpty
+                                ? 'Try searching with another name or skill.'
+                                : 'Try changing your filter.',
+                            style: const TextStyle(
+                                fontSize: 12, color: AppColors.textSecondary),
                           ),
                           const SizedBox(height: 20),
                           OutlinedButton.icon(
                             onPressed: () {
                               ref.read(techSearchProvider.notifier).state = '';
-                              ref.read(techFilterProvider.notifier).state = 'All';
+                              ref.read(techFilterProvider.notifier).state =
+                                  'All';
                             },
-                            icon: const Icon(Icons.restart_alt_rounded, size: 16),
+                            icon:
+                                const Icon(Icons.restart_alt_rounded, size: 16),
                             label: const Text('Reset Search & Filters'),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: AppColors.brandGreen,
                               side: const BorderSide(color: Color(0xFFE2E8F0)),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12)),
                             ),
                           ),
                         ],
@@ -334,13 +376,16 @@ class TechnicianDatabaseScreen extends ConsumerWidget {
                   itemCount: filtered.length + 1,
                   itemBuilder: (context, index) {
                     if (index == 0) {
-                      final totalActive = techs.fold<int>(0, (sum, t) => sum + t.undergoing);
-                      final totalCompleted = techs.fold<int>(0, (sum, t) => sum + t.completed);
+                      final totalActive =
+                          techs.fold<int>(0, (sum, t) => sum + t.undergoing);
+                      final totalCompleted =
+                          techs.fold<int>(0, (sum, t) => sum + t.completed);
 
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 14),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
                               colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
@@ -352,11 +397,16 @@ class TechnicianDatabaseScreen extends ConsumerWidget {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: [
-                              _buildSummaryItem('Total Engineers', '${techs.length}', Colors.white),
-                              Container(width: 1, height: 28, color: Colors.white24),
-                              _buildSummaryItem('Live On-Site', '$totalActive', const Color(0xFF38BDF8)),
-                              Container(width: 1, height: 28, color: Colors.white24),
-                              _buildSummaryItem('Completed Services', '$totalCompleted', const Color(0xFF34D399)),
+                              _buildSummaryItem('Total Engineers',
+                                  '${techs.length}', Colors.white),
+                              Container(
+                                  width: 1, height: 28, color: Colors.white24),
+                              _buildSummaryItem('Live On-Site', '$totalActive',
+                                  const Color(0xFF38BDF8)),
+                              Container(
+                                  width: 1, height: 28, color: Colors.white24),
+                              _buildSummaryItem('Completed Services',
+                                  '$totalCompleted', const Color(0xFF34D399)),
                             ],
                           ),
                         ),
@@ -384,8 +434,14 @@ class TechnicianDatabaseScreen extends ConsumerWidget {
   Widget _buildSummaryItem(String label, String value, Color color) {
     return Column(
       children: [
-        Text(value, style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w800, color: color)),
-        Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: Colors.white.withValues(alpha: 0.7))),
+        Text(value,
+            style: GoogleFonts.outfit(
+                fontSize: 16, fontWeight: FontWeight.w800, color: color)),
+        Text(label,
+            style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+                color: Colors.white.withValues(alpha: 0.7))),
       ],
     );
   }
@@ -402,7 +458,9 @@ class TechnicianDatabaseScreen extends ConsumerWidget {
         decoration: BoxDecoration(
           color: isSelected ? AppColors.brandGreen : const Color(0xFFF1F5F9),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: isSelected ? AppColors.brandGreen : const Color(0xFFE2E8F0)),
+          border: Border.all(
+              color:
+                  isSelected ? AppColors.brandGreen : const Color(0xFFE2E8F0)),
         ),
         child: Text(
           label,
@@ -434,8 +492,9 @@ class TechnicianDatabaseScreen extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error loading bookings: $e'), behavior: SnackBarBehavior.floating));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Error loading bookings: $e'),
+            behavior: SnackBarBehavior.floating));
       }
       return;
     }
@@ -445,13 +504,19 @@ class TechnicianDatabaseScreen extends ConsumerWidget {
         unawaited(showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-            title: Text('No Pending Bookings', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-            content: const Text('All customer service bookings are currently assigned to active technicians.'),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+            title: Text('No Pending Bookings',
+                style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+            content: const Text(
+                'All customer service bookings are currently assigned to active technicians.'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Understood', style: TextStyle(color: AppColors.brandGreen, fontWeight: FontWeight.bold)),
+                child: const Text('Understood',
+                    style: TextStyle(
+                        color: AppColors.brandGreen,
+                        fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -464,42 +529,61 @@ class TechnicianDatabaseScreen extends ConsumerWidget {
       unawaited(showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Text('Dispatch Service to ${technician.name}', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 16)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text('Dispatch Service to ${technician.name}',
+              style: GoogleFonts.outfit(
+                  fontWeight: FontWeight.bold, fontSize: 16)),
           content: SizedBox(
             width: double.maxFinite,
             child: ListView.separated(
               shrinkWrap: true,
               itemCount: unassignedBookings.length,
-              separatorBuilder: (_, __) => const Divider(color: Color(0xFFF1F5F9)),
+              separatorBuilder: (_, __) =>
+                  const Divider(color: Color(0xFFF1F5F9)),
               itemBuilder: (context, index) {
                 final booking = unassignedBookings[index];
                 final bookingId = booking['id'].toString();
-                final packageName = booking['package_name'] ?? 'Periodic Service';
+                final packageName =
+                    booking['package_name'] ?? 'Periodic Service';
                 final vehicle = booking['vehicle_name'] ?? 'Vehicle';
                 final date = booking['booking_date'] ?? 'Today';
                 final cost = booking['total_cost'] ?? '0';
 
                 return ListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: Text(packageName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                  subtitle: Text('$vehicle • $date\nID: #${bookingId.length > 8 ? bookingId.substring(0, 8).toUpperCase() : bookingId}',
-                      style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-                  trailing: Text('₹$cost', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, color: AppColors.brandGreen, fontSize: 14)),
+                  title: Text(packageName,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 13)),
+                  subtitle: Text(
+                      '$vehicle • $date\nID: #${bookingId.length > 8 ? bookingId.substring(0, 8).toUpperCase() : bookingId}',
+                      style: const TextStyle(
+                          fontSize: 11, color: AppColors.textSecondary)),
+                  trailing: Text('₹$cost',
+                      style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.brandGreen,
+                          fontSize: 14)),
                   onTap: () async {
                     Navigator.pop(context);
                     unawaited(showDialog(
                       context: context,
                       barrierDismissible: false,
-                      builder: (context) => const Center(child: CircularProgressIndicator(color: AppColors.brandGreen)),
+                      builder: (context) => const Center(
+                          child: CircularProgressIndicator(
+                              color: AppColors.brandGreen)),
                     ));
 
                     try {
-                      await repo.assignTechnicianToBooking(bookingId, technician.uid);
+                      await repo.assignTechnicianToBooking(
+                          bookingId, technician.uid);
                       if (context.mounted) {
                         Navigator.pop(context);
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Technician assigned & dispatched successfully!'), behavior: SnackBarBehavior.floating),
+                          const SnackBar(
+                              content: Text(
+                                  'Technician assigned & dispatched successfully!'),
+                              behavior: SnackBarBehavior.floating),
                         );
                         ref.invalidate(adminTechProvider);
                       }
@@ -507,7 +591,9 @@ class TechnicianDatabaseScreen extends ConsumerWidget {
                       if (context.mounted) {
                         Navigator.pop(context);
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Assignment failed: $e'), behavior: SnackBarBehavior.floating),
+                          SnackBar(
+                              content: Text('Assignment failed: $e'),
+                              behavior: SnackBarBehavior.floating),
                         );
                       }
                     }
@@ -519,7 +605,8 @@ class TechnicianDatabaseScreen extends ConsumerWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
+              child: const Text('Cancel',
+                  style: TextStyle(color: AppColors.textSecondary)),
             ),
           ],
         ),
@@ -527,7 +614,8 @@ class TechnicianDatabaseScreen extends ConsumerWidget {
     }
   }
 
-  Widget _buildTechCard(BuildContext context, WidgetRef ref, AdminTechnician t) {
+  Widget _buildTechCard(
+      BuildContext context, WidgetRef ref, AdminTechnician t) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -557,7 +645,8 @@ class TechnicianDatabaseScreen extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: const Center(
-                  child: Icon(Iconsax.setting_4, color: Color(0xFFD97706), size: 22),
+                  child: Icon(Iconsax.setting_4,
+                      color: Color(0xFFD97706), size: 22),
                 ),
               ),
               const SizedBox(width: 14),
@@ -581,14 +670,18 @@ class TechnicianDatabaseScreen extends ConsumerWidget {
                         ),
                         const SizedBox(width: 6),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
                             color: const Color(0xFFF1F5F9),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
                             '#${t.id}',
-                            style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.textSecondary),
+                            style: GoogleFonts.outfit(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textSecondary),
                           ),
                         ),
                       ],
@@ -596,18 +689,23 @@ class TechnicianDatabaseScreen extends ConsumerWidget {
                     const SizedBox(height: 2),
                     Text(
                       '${t.specialization} • ${t.phone}',
-                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
+                      style: const TextStyle(
+                          color: AppColors.textSecondary, fontSize: 11),
                     ),
                   ],
                 ),
               ),
               Row(
                 children: [
-                  const Icon(Icons.star_rounded, size: 16, color: Color(0xFFF59E0B)),
+                  const Icon(Icons.star_rounded,
+                      size: 16, color: Color(0xFFF59E0B)),
                   const SizedBox(width: 3),
                   Text(
                     t.rating.toStringAsFixed(1),
-                    style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
+                    style: GoogleFonts.outfit(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary),
                   ),
                 ],
               ),
@@ -619,13 +717,17 @@ class TechnicianDatabaseScreen extends ConsumerWidget {
               spacing: 6,
               runSpacing: 6,
               children: [
-                _buildBadge('📅', '${t.booked} Scheduled', const Color(0xFFD97706)),
-                _buildBadge('⚙️', '${t.undergoing} In Progress', const Color(0xFF0284C7)),
-                _buildBadge('✅', '${t.completed} Completed', AppColors.brandGreen),
+                _buildBadge(
+                    '📅', '${t.booked} Scheduled', const Color(0xFFD97706)),
+                _buildBadge('⚙️', '${t.undergoing} In Progress',
+                    const Color(0xFF0284C7)),
+                _buildBadge(
+                    '✅', '${t.completed} Completed', AppColors.brandGreen),
               ],
             ),
           ),
-          childrenPadding: const EdgeInsets.only(left: 16, right: 16, bottom: 18),
+          childrenPadding:
+              const EdgeInsets.only(left: 16, right: 16, bottom: 18),
           expandedCrossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Divider(color: Color(0xFFF1F5F9)),
@@ -633,24 +735,34 @@ class TechnicianDatabaseScreen extends ConsumerWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Active Assigned Jobs', style: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 13)),
+                Text('Active Assigned Jobs',
+                    style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.w800, fontSize: 13)),
                 ElevatedButton.icon(
                   onPressed: () => _showAssignBookingDialog(context, ref, t),
-                  icon: const Icon(Icons.add_rounded, size: 14, color: Colors.white),
-                  label: const Text('Dispatch New Job', style: TextStyle(fontSize: 11, color: Colors.white, fontWeight: FontWeight.bold)),
+                  icon: const Icon(Icons.add_rounded,
+                      size: 14, color: Colors.white),
+                  label: const Text('Dispatch New Job',
+                      style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.brandGreen,
                     elevation: 0,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     minimumSize: const Size(60, 30),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8)),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 10),
             if (t.jobs.isEmpty)
-              const Text('No active jobs currently assigned.', style: TextStyle(color: AppColors.textMuted, fontSize: 12))
+              const Text('No active jobs currently assigned.',
+                  style: TextStyle(color: AppColors.textMuted, fontSize: 12))
             else
               ...t.jobs.map((job) => Padding(
                     padding: const EdgeInsets.only(bottom: 8),
@@ -665,25 +777,36 @@ class TechnicianDatabaseScreen extends ConsumerWidget {
                         children: [
                           Container(
                             padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(color: const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(8)),
-                            child: const Icon(Iconsax.car, size: 16, color: AppColors.textSecondary),
+                            decoration: BoxDecoration(
+                                color: const Color(0xFFF1F5F9),
+                                borderRadius: BorderRadius.circular(8)),
+                            child: const Icon(Iconsax.car,
+                                size: 16, color: AppColors.textSecondary),
                           ),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(job.vehicleType, style: GoogleFonts.outfit(fontWeight: FontWeight.w700, fontSize: 12)),
-                                Text('${job.regNo} • ${job.date}', style: const TextStyle(fontSize: 10, color: AppColors.textSecondary)),
+                                Text(job.vehicleType,
+                                    style: GoogleFonts.outfit(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 12)),
+                                Text('${job.regNo} • ${job.date}',
+                                    style: const TextStyle(
+                                        fontSize: 10,
+                                        color: AppColors.textSecondary)),
                               ],
                             ),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
-                              color: job.status.toLowerCase().contains('progress')
-                                  ? const Color(0xFFECFDF5)
-                                  : const Color(0xFFF0FDF4),
+                              color:
+                                  job.status.toLowerCase().contains('progress')
+                                      ? const Color(0xFFECFDF5)
+                                      : const Color(0xFFF0FDF4),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
@@ -691,7 +814,9 @@ class TechnicianDatabaseScreen extends ConsumerWidget {
                               style: TextStyle(
                                 fontSize: 9,
                                 fontWeight: FontWeight.w800,
-                                color: job.status.toLowerCase().contains('progress')
+                                color: job.status
+                                        .toLowerCase()
+                                        .contains('progress')
                                     ? AppColors.brandGreen
                                     : const Color(0xFF16A34A),
                               ),
@@ -710,13 +835,17 @@ class TechnicianDatabaseScreen extends ConsumerWidget {
   Widget _buildBadge(String emoji, String text, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(color: color.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(8)),
+      decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(8)),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(emoji, style: const TextStyle(fontSize: 10)),
           const SizedBox(width: 4),
-          Text(text, style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.w700, color: color)),
+          Text(text,
+              style: GoogleFonts.outfit(
+                  fontSize: 11, fontWeight: FontWeight.w700, color: color)),
         ],
       ),
     );

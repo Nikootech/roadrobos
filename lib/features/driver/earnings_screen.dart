@@ -139,13 +139,14 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen> {
                   const SizedBox(height: 32),
                   // Glassmorphism stats row — real values
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(vertical: 18, horizontal: 12),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 18, horizontal: 12),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(24),
                       border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.15), width: 1.5),
+                          color: Colors.white.withValues(alpha: 0.15),
+                          width: 1.5),
                     ),
                     child: Row(
                       children: [
@@ -155,8 +156,8 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen> {
                         _buildQuickStat(
                             Iconsax.clock, 'Online', earnings.onlineTime),
                         _buildDivider(),
-                        _buildQuickStat(Iconsax.chart_1, 'Accept',
-                            earnings.acceptanceRate),
+                        _buildQuickStat(
+                            Iconsax.chart_1, 'Accept', earnings.acceptanceRate),
                       ],
                     ),
                   ),
@@ -196,8 +197,8 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen> {
           Expanded(
             child: _isLoadingRides
                 ? const Center(
-                    child: CircularProgressIndicator(
-                        color: AppColors.primaryBlue))
+                    child:
+                        CircularProgressIndicator(color: AppColors.primaryBlue))
                 : ListView(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 24, vertical: 32),
@@ -228,8 +229,8 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen> {
                         )
                       else
                         ..._rides.map((ride) {
-                          final dateStr = DateFormat('MMM dd, yyyy').format(
-                              ride.createdAt.toLocal());
+                          final dateStr = DateFormat('MMM dd, yyyy')
+                              .format(ride.createdAt.toLocal());
                           return _buildPremiumPayoutRow(
                             dateStr,
                             NumberFormat.simpleCurrency(name: 'INR')
@@ -258,11 +259,12 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen> {
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(24),
                                 border: Border.all(
-                                    color:
-                                        AppColors.border.withValues(alpha: 0.5)),
+                                    color: AppColors.border
+                                        .withValues(alpha: 0.5)),
                                 boxShadow: [
                                   BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.03),
+                                      color:
+                                          Colors.black.withValues(alpha: 0.03),
                                       blurRadius: 20,
                                       offset: const Offset(0, 10))
                                 ],
@@ -399,8 +401,7 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen> {
           borderRadius: BorderRadius.circular(22),
           onTap: () => HapticFeedback.selectionClick(),
           child: Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [

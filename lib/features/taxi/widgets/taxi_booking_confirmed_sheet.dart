@@ -110,7 +110,8 @@ class _TaxiBookingConfirmedSheetState extends State<TaxiBookingConfirmedSheet> {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.successGreen.withValues(alpha: 0.5),
+                            color:
+                                AppColors.successGreen.withValues(alpha: 0.5),
                             blurRadius: 8,
                             spreadRadius: 2,
                           ),
@@ -133,7 +134,10 @@ class _TaxiBookingConfirmedSheetState extends State<TaxiBookingConfirmedSheet> {
                           horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: [AppColors.brandGreen, AppColors.brandGreenMid],
+                          colors: [
+                            AppColors.brandGreen,
+                            AppColors.brandGreenMid
+                          ],
                         ),
                         borderRadius: BorderRadius.circular(20),
                       ),
@@ -156,8 +160,8 @@ class _TaxiBookingConfirmedSheetState extends State<TaxiBookingConfirmedSheet> {
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(18),
-                    border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.08)),
+                    border:
+                        Border.all(color: Colors.white.withValues(alpha: 0.08)),
                   ),
                   child: Row(
                     children: [
@@ -216,8 +220,7 @@ class _TaxiBookingConfirmedSheetState extends State<TaxiBookingConfirmedSheet> {
                                   width: 4,
                                   height: 4,
                                   decoration: BoxDecoration(
-                                    color:
-                                        Colors.white.withValues(alpha: 0.3),
+                                    color: Colors.white.withValues(alpha: 0.3),
                                     shape: BoxShape.circle,
                                   ),
                                 ),
@@ -254,19 +257,21 @@ class _TaxiBookingConfirmedSheetState extends State<TaxiBookingConfirmedSheet> {
                       ),
                     ],
                   ),
-                ).animate().fadeIn(delay: 100.ms, duration: 400.ms).slideY(begin: 0.3, end: 0),
+                )
+                    .animate()
+                    .fadeIn(delay: 100.ms, duration: 400.ms)
+                    .slideY(begin: 0.3, end: 0),
                 const SizedBox(height: 12),
 
                 // ── Fare estimate ──────────────────────────────────────
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
                     color: const Color(0xFF1E3A5F).withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                        color: const Color(0xFF3B82F6)
-                            .withValues(alpha: 0.2)),
+                        color: const Color(0xFF3B82F6).withValues(alpha: 0.2)),
                   ),
                   child: Row(
                     children: [
@@ -309,8 +314,7 @@ class _TaxiBookingConfirmedSheetState extends State<TaxiBookingConfirmedSheet> {
                           icon: const Icon(Icons.call_rounded, size: 18),
                           label: Text('Contact',
                               style: GoogleFonts.outfit(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600)),
+                                  fontSize: 14, fontWeight: FontWeight.w600)),
                         ),
                       ),
                     ),
@@ -331,8 +335,7 @@ class _TaxiBookingConfirmedSheetState extends State<TaxiBookingConfirmedSheet> {
                           icon: const Icon(Icons.close_rounded, size: 18),
                           label: Text('Cancel',
                               style: GoogleFonts.outfit(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600)),
+                                  fontSize: 14, fontWeight: FontWeight.w600)),
                         ),
                       ),
                     ),

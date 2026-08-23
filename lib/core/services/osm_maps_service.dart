@@ -74,35 +74,40 @@ class OSMMapsService {
     },
     {
       'name': 'Tin Factory',
-      'address': 'Tin Factory, Swamy Vivekananda Rd, Jyothi Nagar, Bengaluru, Karnataka, 560016',
+      'address':
+          'Tin Factory, Swamy Vivekananda Rd, Jyothi Nagar, Bengaluru, Karnataka, 560016',
       'lat': 12.9964,
       'lng': 77.6704,
       'type': 'result',
     },
     {
       'name': 'KR Puram',
-      'address': 'Krishnarajapuram (KR Puram), Outer Ring Rd, Bengaluru, Karnataka, 560036',
+      'address':
+          'Krishnarajapuram (KR Puram), Outer Ring Rd, Bengaluru, Karnataka, 560036',
       'lat': 13.0040,
       'lng': 77.6780,
       'type': 'result',
     },
     {
       'name': 'KR Market',
-      'address': 'Krishna Rajendra (KR) Market, Kalasipalya, Bengaluru, Karnataka, 560002',
+      'address':
+          'Krishna Rajendra (KR) Market, Kalasipalya, Bengaluru, Karnataka, 560002',
       'lat': 12.9650,
       'lng': 77.5760,
       'type': 'result',
     },
     {
       'name': 'KR Road',
-      'address': 'Krishna Rajendra (KR) Road, Basavanagudi, Bengaluru, Karnataka, 560004',
+      'address':
+          'Krishna Rajendra (KR) Road, Basavanagudi, Bengaluru, Karnataka, 560004',
       'lat': 12.9416,
       'lng': 77.5739,
       'type': 'result',
     },
     {
       'name': 'KR Circle',
-      'address': 'Krishnarajendra (KR) Circle, Ambedkar Veedhi, Bengaluru, Karnataka, 560001',
+      'address':
+          'Krishnarajendra (KR) Circle, Ambedkar Veedhi, Bengaluru, Karnataka, 560001',
       'lat': 12.9734,
       'lng': 77.5912,
       'type': 'result',

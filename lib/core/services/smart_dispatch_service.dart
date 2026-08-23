@@ -1,4 +1,4 @@
-﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Vehicle breakdown specialization categories
 enum TechSpecialty {
@@ -112,9 +112,11 @@ class SmartDispatchService {
 
       String reason;
       if (hasSkill && hasPart) {
-        reason = 'Exact Skill & Spare Parts in Vehicle (${distanceKm.toStringAsFixed(1)} km away)';
+        reason =
+            'Exact Skill & Spare Parts in Vehicle (${distanceKm.toStringAsFixed(1)} km away)';
       } else if (hasSkill) {
-        reason = 'Verified Specialist (${distanceKm.toStringAsFixed(1)} km away)';
+        reason =
+            'Verified Specialist (${distanceKm.toStringAsFixed(1)} km away)';
       } else {
         reason = 'Nearest Available Partner';
       }
@@ -133,7 +135,8 @@ class SmartDispatchService {
     return results;
   }
 
-  double _calculateDistanceKm(double lat1, double lon1, double lat2, double lon2) {
+  double _calculateDistanceKm(
+      double lat1, double lon1, double lat2, double lon2) {
     // Pythagorean planar approximation for city-scale dispatch
     final dLat = (lat2 - lat1) * 111.0;
     final dLon = (lon2 - lon1) * 111.0;

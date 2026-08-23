@@ -39,7 +39,8 @@ class DriverDeliveryPanel extends ConsumerWidget {
       loading: () => const SizedBox.shrink(),
       error: (_, __) => const SizedBox.shrink(),
       data: (pending) {
-        final visible = pending.where((o) => !declinedIds.contains(o.id)).toList();
+        final visible =
+            pending.where((o) => !declinedIds.contains(o.id)).toList();
         if (visible.isEmpty) return const SizedBox.shrink();
         return _IncomingRequestCard(order: visible.first);
       },
@@ -53,7 +54,8 @@ class _IncomingRequestCard extends ConsumerStatefulWidget {
   const _IncomingRequestCard({required this.order});
 
   @override
-  ConsumerState<_IncomingRequestCard> createState() => _IncomingRequestCardState();
+  ConsumerState<_IncomingRequestCard> createState() =>
+      _IncomingRequestCardState();
 }
 
 class _IncomingRequestCardState extends ConsumerState<_IncomingRequestCard> {

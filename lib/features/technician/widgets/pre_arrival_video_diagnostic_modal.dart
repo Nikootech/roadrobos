@@ -77,7 +77,8 @@ class _PreArrivalVideoDiagnosticModalState
                       color: const Color(0xFFE11D48).withValues(alpha: 0.2),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.videocam_rounded, color: Color(0xFFE11D48), size: 18),
+                    child: const Icon(Icons.videocam_rounded,
+                        color: Color(0xFFE11D48), size: 18),
                   ),
                   const SizedBox(width: 10),
                   Column(
@@ -93,7 +94,8 @@ class _PreArrivalVideoDiagnosticModalState
                       ),
                       Text(
                         '${widget.vehicleModel} • ${widget.vehiclePlate}',
-                        style: const TextStyle(fontSize: 12, color: Colors.white60),
+                        style: const TextStyle(
+                            fontSize: 12, color: Colors.white60),
                       ),
                     ],
                   ),
@@ -107,9 +109,14 @@ class _PreArrivalVideoDiagnosticModalState
                 ),
                 child: const Row(
                   children: [
-                    Icon(Icons.fiber_manual_record, color: Color(0xFF10B981), size: 10),
+                    Icon(Icons.fiber_manual_record,
+                        color: Color(0xFF10B981), size: 10),
                     SizedBox(width: 4),
-                    Text('Recorded (0:28s)', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF10B981))),
+                    Text('Recorded (0:28s)',
+                        style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF10B981))),
                   ],
                 ),
               ),
@@ -131,21 +138,25 @@ class _PreArrivalVideoDiagnosticModalState
                 const Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.directions_car_filled_rounded, size: 48, color: Colors.white30),
+                    Icon(Icons.directions_car_filled_rounded,
+                        size: 48, color: Colors.white30),
                     SizedBox(height: 8),
-                    Text('Engine Compartment Inspection Stream', style: TextStyle(color: Colors.white60, fontSize: 12)),
+                    Text('Engine Compartment Inspection Stream',
+                        style: TextStyle(color: Colors.white60, fontSize: 12)),
                   ],
                 ),
                 Positioned(
                   bottom: 12,
                   left: 14,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: Colors.black.withValues(alpha: 0.6),
                       borderRadius: BorderRadius.circular(6),
                     ),
-                    child: const Text('1080p HD • WebRTC Encrypted', style: TextStyle(color: Colors.white70, fontSize: 10)),
+                    child: const Text('1080p HD • WebRTC Encrypted',
+                        style: TextStyle(color: Colors.white70, fontSize: 10)),
                   ),
                 ),
                 Positioned(
@@ -161,7 +172,9 @@ class _PreArrivalVideoDiagnosticModalState
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
-                        _isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                        _isPlaying
+                            ? Icons.pause_rounded
+                            : Icons.play_arrow_rounded,
                         color: Colors.white,
                         size: 32,
                       ),
@@ -185,17 +198,29 @@ class _PreArrivalVideoDiagnosticModalState
               children: [
                 Row(
                   children: [
-                    Icon(Icons.auto_awesome, size: 16, color: Color(0xFF60A5FA)),
+                    Icon(Icons.auto_awesome,
+                        size: 16, color: Color(0xFF60A5FA)),
                     SizedBox(width: 8),
-                    Text('AI Video Fault Classification', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF60A5FA))),
+                    Text('AI Video Fault Classification',
+                        style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF60A5FA))),
                     Spacer(),
-                    Text('92% Confidence', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF10B981))),
+                    Text('92% Confidence',
+                        style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF10B981))),
                   ],
                 ),
                 SizedBox(height: 8),
                 Text(
                   'Detected Issue: Starter Motor Solenoid Failure / 12V Battery Drop (<10.2V)',
-                  style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w700),
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700),
                 ),
                 SizedBox(height: 4),
                 Text(
@@ -215,9 +240,11 @@ class _PreArrivalVideoDiagnosticModalState
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: Colors.white24),
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
                   ),
-                  child: const Text('Close', style: TextStyle(color: Colors.white)),
+                  child: const Text('Close',
+                      style: TextStyle(color: Colors.white)),
                 ),
               ),
               const SizedBox(width: 12),
@@ -229,17 +256,22 @@ class _PreArrivalVideoDiagnosticModalState
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('Parts checklist confirmed. Ready for dispatch!'),
+                        content: Text(
+                            'Parts checklist confirmed. Ready for dispatch!'),
                         backgroundColor: Color(0xFF28C76F),
                       ),
                     );
                   },
-                  icon: const Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
-                  label: const Text('Confirm Parts & Dispatch', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  icon: const Icon(Icons.check_circle_rounded,
+                      color: Colors.white, size: 18),
+                  label: const Text('Confirm Parts & Dispatch',
+                      style: TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF28C76F),
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
                   ),
                 ),
               ),

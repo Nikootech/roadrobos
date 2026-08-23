@@ -1137,8 +1137,8 @@ class _InsuranceSelectionScreenState
               decoration: BoxDecoration(
                 color: AppColors.bgLightGrey,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                    color: AppColors.border.withValues(alpha: 0.6)),
+                border:
+                    Border.all(color: AppColors.border.withValues(alpha: 0.6)),
               ),
               child: Column(
                 children: [
@@ -1544,8 +1544,8 @@ class _InsuranceSelectionScreenState
             decoration: BoxDecoration(
               color: isDark ? AppColors.bgDarkCard : Colors.white,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                  color: isDark ? Colors.white12 : AppColors.border),
+              border:
+                  Border.all(color: isDark ? Colors.white12 : AppColors.border),
             ),
             child: Column(
               children: [

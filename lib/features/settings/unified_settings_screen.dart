@@ -21,8 +21,7 @@ class UnifiedSettingsScreen extends ConsumerStatefulWidget {
       _UnifiedSettingsScreenState();
 }
 
-class _UnifiedSettingsScreenState
-    extends ConsumerState<UnifiedSettingsScreen> {
+class _UnifiedSettingsScreenState extends ConsumerState<UnifiedSettingsScreen> {
   bool _isBiometricEnabled = false;
   bool _isLoggingOut = false;
 
@@ -64,12 +63,10 @@ class _UnifiedSettingsScreenState
     setState(() => _isBiometricEnabled = value);
     messenger.showSnackBar(
       SnackBar(
-        content: Text(value
-            ? 'Biometric login enabled.'
-            : 'Biometric login disabled.'),
+        content: Text(
+            value ? 'Biometric login enabled.' : 'Biometric login disabled.'),
         behavior: SnackBarBehavior.floating,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
@@ -347,7 +344,8 @@ class _UnifiedSettingsScreenState
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
-                              color: AppColors.brandGreen.withValues(alpha: 0.1),
+                              color:
+                                  AppColors.brandGreen.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(

@@ -63,8 +63,7 @@ class _RentalCheckoutScreenState extends ConsumerState<RentalCheckoutScreen> {
           onPressed: () => NavHelpers.pop(context),
         ),
         title: Text('Checkout',
-            style: TextStyle(
-                color: textColor, fontWeight: FontWeight.bold)),
+            style: TextStyle(color: textColor, fontWeight: FontWeight.bold)),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -76,8 +75,7 @@ class _RentalCheckoutScreenState extends ConsumerState<RentalCheckoutScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                    color: cardColor,
-                    borderRadius: BorderRadius.circular(20)),
+                    color: cardColor, borderRadius: BorderRadius.circular(20)),
                 child: Row(
                   children: [
                     Container(
@@ -85,7 +83,9 @@ class _RentalCheckoutScreenState extends ConsumerState<RentalCheckoutScreen> {
                       height: 70,
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: isDark ? AppColors.bgDarkDeep : AppColors.bgLightGrey,
+                        color: isDark
+                            ? AppColors.bgDarkDeep
+                            : AppColors.bgLightGrey,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: selectedVehicle['image_url']
@@ -103,11 +103,12 @@ class _RentalCheckoutScreenState extends ConsumerState<RentalCheckoutScreen> {
                         children: [
                           Text(selectedVehicle['name'],
                               style: TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 16, color: textColor)),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color: textColor)),
                           Text('Premium Rental • Sanitized',
                               style: TextStyle(
-                                  color: textSecondaryColor,
-                                  fontSize: 12)),
+                                  color: textSecondaryColor, fontSize: 12)),
                         ],
                       ),
                     ),
@@ -137,7 +138,11 @@ class _RentalCheckoutScreenState extends ConsumerState<RentalCheckoutScreen> {
                     child: Row(
                       children: [
                         Container(
-                            width: 1.5, height: 20, color: isDark ? AppColors.bgDarkDeep : AppColors.border),
+                            width: 1.5,
+                            height: 20,
+                            color: isDark
+                                ? AppColors.bgDarkDeep
+                                : AppColors.border),
                         const Spacer(),
                       ],
                     ),
@@ -172,10 +177,13 @@ class _RentalCheckoutScreenState extends ConsumerState<RentalCheckoutScreen> {
                               color: textSecondaryColor, fontSize: 11)),
                       Text('Oct 20, 10:00 AM',
                           style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 14, color: textColor)),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                              color: textColor)),
                     ],
                   ),
-                  Icon(Icons.arrow_forward_rounded, color: isDark ? AppColors.bgDarkDeep : AppColors.border),
+                  Icon(Icons.arrow_forward_rounded,
+                      color: isDark ? AppColors.bgDarkDeep : AppColors.border),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -184,7 +192,9 @@ class _RentalCheckoutScreenState extends ConsumerState<RentalCheckoutScreen> {
                               color: textSecondaryColor, fontSize: 11)),
                       Text('Oct 22, 10:00 AM',
                           style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 14, color: textColor)),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                              color: textColor)),
                     ],
                   ),
                 ],
@@ -198,7 +208,10 @@ class _RentalCheckoutScreenState extends ConsumerState<RentalCheckoutScreen> {
               value: _includeInsurance,
               onChanged: (v) => setState(() => _includeInsurance = v!),
               title: Text('Full Insurance Cover',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: textColor)),
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      color: textColor)),
               subtitle: Text('Covers accidental damage & theft',
                   style: TextStyle(fontSize: 12, color: textSecondaryColor)),
               secondary:
@@ -211,7 +224,7 @@ class _RentalCheckoutScreenState extends ConsumerState<RentalCheckoutScreen> {
                   const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             ),
 
-             const SizedBox(height: 32),
+            const SizedBox(height: 32),
             _buildSectionHeader('Payment Method'),
             const SizedBox(height: 12),
             Row(
@@ -228,12 +241,16 @@ class _RentalCheckoutScreenState extends ConsumerState<RentalCheckoutScreen> {
                       decoration: BoxDecoration(
                         color: _paymentMethod == 'Cash'
                             ? Colors.orange.shade50
-                            : (isDark ? AppColors.bgDarkSurface : Colors.grey.shade50),
+                            : (isDark
+                                ? AppColors.bgDarkSurface
+                                : Colors.grey.shade50),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
                           color: _paymentMethod == 'Cash'
                               ? Colors.orange.shade400
-                              : (isDark ? Colors.grey.shade800 : Colors.grey.shade200),
+                              : (isDark
+                                  ? Colors.grey.shade800
+                                  : Colors.grey.shade200),
                           width: _paymentMethod == 'Cash' ? 2 : 1,
                         ),
                       ),
@@ -275,12 +292,16 @@ class _RentalCheckoutScreenState extends ConsumerState<RentalCheckoutScreen> {
                       decoration: BoxDecoration(
                         color: _paymentMethod == 'Online'
                             ? AppColors.primaryBlue.withValues(alpha: 0.08)
-                            : (isDark ? AppColors.bgDarkSurface : Colors.grey.shade50),
+                            : (isDark
+                                ? AppColors.bgDarkSurface
+                                : Colors.grey.shade50),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
                           color: _paymentMethod == 'Online'
                               ? AppColors.primaryBlue
-                              : (isDark ? Colors.grey.shade800 : Colors.grey.shade200),
+                              : (isDark
+                                  ? Colors.grey.shade800
+                                  : Colors.grey.shade200),
                           width: _paymentMethod == 'Online' ? 2 : 1,
                         ),
                       ),
@@ -359,7 +380,8 @@ class _RentalCheckoutScreenState extends ConsumerState<RentalCheckoutScreen> {
       ),
       bottomNavigationBar: Container(
         padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(color: isDark ? AppColors.bgDarkDeep : Colors.white),
+        decoration:
+            BoxDecoration(color: isDark ? AppColors.bgDarkDeep : Colors.white),
         child: CustomButton(
           label: _paymentMethod == 'Online'
               ? 'PAY ₹${breakdown.totalPayable.round()}'
@@ -392,7 +414,9 @@ class _RentalCheckoutScreenState extends ConsumerState<RentalCheckoutScreen> {
                     .logTransaction(AppTransaction(
                       id: '',
                       userId: userId,
-                      razoprayPaymentId: _paymentMethod == 'Online' ? 'VERIFIED_ON_SERVER' : 'CASH_PAYMENT',
+                      razoprayPaymentId: _paymentMethod == 'Online'
+                          ? 'VERIFIED_ON_SERVER'
+                          : 'CASH_PAYMENT',
                       baseAmount: breakdown.baseAmount,
                       gstAmount: breakdown.gstAmount,
                       platformFee: breakdown.platformFee,
@@ -426,9 +450,7 @@ class _RentalCheckoutScreenState extends ConsumerState<RentalCheckoutScreen> {
     final textColor = isDark ? AppColors.textOnDark : AppColors.textPrimary;
     return Text(title,
         style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: textColor));
+            fontSize: 16, fontWeight: FontWeight.bold, color: textColor));
   }
 
   Widget _buildPriceRow(String label, String val, {bool isTotal = false}) {
@@ -448,8 +470,7 @@ class _RentalCheckoutScreenState extends ConsumerState<RentalCheckoutScreen> {
             style: TextStyle(
                 fontSize: isTotal ? 16 : 14,
                 fontWeight: isTotal ? FontWeight.w800 : FontWeight.bold,
-                color:
-                    isTotal ? AppColors.primaryBlue : textColor)),
+                color: isTotal ? AppColors.primaryBlue : textColor)),
       ],
     );
   }
@@ -473,11 +494,12 @@ class _RentalCheckoutScreenState extends ConsumerState<RentalCheckoutScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(label,
-                  style: TextStyle(
-                      color: textSecondaryColor, fontSize: 11)),
+                  style: TextStyle(color: textSecondaryColor, fontSize: 11)),
               Text(value,
                   style: TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 14, color: textColor),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      color: textColor),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis),
             ],

@@ -109,7 +109,8 @@ class _TaxiCancelSheetState extends State<TaxiCancelSheet> {
                           '₹0 cancellation fee if cancelled within 2 minutes of booking.',
                           style: GoogleFonts.outfit(
                             fontSize: 12,
-                            color: AppColors.successGreen.withValues(alpha: 0.9),
+                            color:
+                                AppColors.successGreen.withValues(alpha: 0.9),
                           ),
                         ),
                       ),
@@ -188,9 +189,7 @@ class _TaxiCancelSheetState extends State<TaxiCancelSheet> {
                               fontWeight: isSelected
                                   ? FontWeight.w600
                                   : FontWeight.w400,
-                              color: isSelected
-                                  ? Colors.white
-                                  : Colors.white70,
+                              color: isSelected ? Colors.white : Colors.white70,
                             ),
                           ),
                         ],

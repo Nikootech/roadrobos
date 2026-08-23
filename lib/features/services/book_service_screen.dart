@@ -198,138 +198,135 @@ class _BookServiceScreenState extends ConsumerState<BookServiceScreen> {
     return Scaffold(
       appBar: AppBar(title: Text('Book ${widget.title}')),
       body: Stepper(
-              currentStep: _currentStep,
-              onStepContinue: () {
-                if (_currentStep == 0 && _selectedVehicle == null) return;
-                if (_currentStep == 1 && _selectedTimeSlot == null) return;
-                if (_currentStep == 2 && _addressController.text.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Please enter an address')));
-                  return;
-                }
-                if (_currentStep == 3) {
-                  _confirmBooking();
-                  return;
-                }
-                setState(() => _currentStep += 1);
-              },
-              onStepCancel: () {
-                if (_currentStep > 0) {
-                  setState(() => _currentStep -= 1);
-                } else {
-                  context.pop();
-                }
-              },
-              steps: [
-                Step(
-                  title: const Text('Select Vehicle'),
-                  isActive: _currentStep >= 0,
-                  content: _isLoadingVehicles
-                      ? const CircularProgressIndicator()
-                      : _vehicles.isEmpty
-                          ? const Text(
-                              'No vehicles found. Please add a vehicle first.')
-                          : DropdownButton<UserVehicle>(
-                              value: _selectedVehicle,
-                              isExpanded: true,
-                              items: _vehicles
-                                  .map((v) => DropdownMenuItem(
-                                        value: v,
-                                        child: Text(
-                                            '${v.make} ${v.model} (${v.plateNumber})'),
-                                      ))
-                                  .toList(),
-                              onChanged: (v) =>
-                                  setState(() => _selectedVehicle = v),
-                            ),
-                ),
-                Step(
-                  title: const Text('Select Date & Time'),
-                  isActive: _currentStep >= 1,
-                  content: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                              'Date: ${DateFormat('yyyy-MM-dd').format(_selectedDate)}'),
-                          TextButton(
-                            onPressed: () async {
-                              final d = await showDatePicker(
-                                context: context,
-                                initialDate: _selectedDate,
-                                firstDate: DateTime.now(),
-                                lastDate: DateTime.now()
-                                    .add(const Duration(days: 30)),
-                              );
-                              if (d != null) {
-                                setState(() {
-                                  _selectedDate = d;
-                                  _selectedTimeSlot = null;
-                                });
-                                unawaited(_loadAvailableSlots());
-                              }
-                            },
-                            child: const Text('Change'),
-                          ),
-                        ],
+        currentStep: _currentStep,
+        onStepContinue: () {
+          if (_currentStep == 0 && _selectedVehicle == null) return;
+          if (_currentStep == 1 && _selectedTimeSlot == null) return;
+          if (_currentStep == 2 && _addressController.text.isEmpty) {
+            ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Please enter an address')));
+            return;
+          }
+          if (_currentStep == 3) {
+            _confirmBooking();
+            return;
+          }
+          setState(() => _currentStep += 1);
+        },
+        onStepCancel: () {
+          if (_currentStep > 0) {
+            setState(() => _currentStep -= 1);
+          } else {
+            context.pop();
+          }
+        },
+        steps: [
+          Step(
+            title: const Text('Select Vehicle'),
+            isActive: _currentStep >= 0,
+            content: _isLoadingVehicles
+                ? const CircularProgressIndicator()
+                : _vehicles.isEmpty
+                    ? const Text(
+                        'No vehicles found. Please add a vehicle first.')
+                    : DropdownButton<UserVehicle>(
+                        value: _selectedVehicle,
+                        isExpanded: true,
+                        items: _vehicles
+                            .map((v) => DropdownMenuItem(
+                                  value: v,
+                                  child: Text(
+                                      '${v.make} ${v.model} (${v.plateNumber})'),
+                                ))
+                            .toList(),
+                        onChanged: (v) => setState(() => _selectedVehicle = v),
                       ),
-                      if (_isLoadingSlots)
-                        const CircularProgressIndicator()
-                      else if (_availableSlots.isEmpty)
-                        const Text('No slots available for this date.')
-                      else
-                        Wrap(
-                          spacing: 8,
-                          children: _availableSlots
-                              .map((s) => ChoiceChip(
-                                    label: Text(s),
-                                    selected: _selectedTimeSlot == s,
-                                    onSelected: (sel) => setState(() =>
-                                        _selectedTimeSlot = sel ? s : null),
-                                  ))
-                              .toList(),
-                        ),
-                    ],
-                  ),
-                ),
-                Step(
-                  title: const Text('Service Address'),
-                  isActive: _currentStep >= 2,
-                  content: TextField(
-                    controller: _addressController,
-                    decoration: const InputDecoration(
-                      labelText: 'Full Address',
-                      border: OutlineInputBorder(),
+          ),
+          Step(
+            title: const Text('Select Date & Time'),
+            isActive: _currentStep >= 1,
+            content: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                        'Date: ${DateFormat('yyyy-MM-dd').format(_selectedDate)}'),
+                    TextButton(
+                      onPressed: () async {
+                        final d = await showDatePicker(
+                          context: context,
+                          initialDate: _selectedDate,
+                          firstDate: DateTime.now(),
+                          lastDate:
+                              DateTime.now().add(const Duration(days: 30)),
+                        );
+                        if (d != null) {
+                          setState(() {
+                            _selectedDate = d;
+                            _selectedTimeSlot = null;
+                          });
+                          unawaited(_loadAvailableSlots());
+                        }
+                      },
+                      child: const Text('Change'),
                     ),
-                    maxLines: 3,
-                  ),
+                  ],
                 ),
-                Step(
-                  title: const Text('Review & Confirm'),
-                  isActive: _currentStep >= 3,
-                  content: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Service: ${widget.title}',
-                          style: const TextStyle(fontWeight: FontWeight.bold)),
-                      if (_selectedVehicle != null)
-                        Text(
-                            'Vehicle: ${_selectedVehicle!.make} ${_selectedVehicle!.model}'),
-                      Text(
-                          'Date: ${DateFormat('yyyy-MM-dd').format(_selectedDate)}'),
-                      if (_selectedTimeSlot != null)
-                        Text('Time: $_selectedTimeSlot'),
-                      Text('Address: ${_addressController.text}'),
-                      const Divider(),
-                      Text('Total Cost: ₹${widget.basePrice.toInt()}',
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 18)),
-                    ],
+                if (_isLoadingSlots)
+                  const CircularProgressIndicator()
+                else if (_availableSlots.isEmpty)
+                  const Text('No slots available for this date.')
+                else
+                  Wrap(
+                    spacing: 8,
+                    children: _availableSlots
+                        .map((s) => ChoiceChip(
+                              label: Text(s),
+                              selected: _selectedTimeSlot == s,
+                              onSelected: (sel) => setState(
+                                  () => _selectedTimeSlot = sel ? s : null),
+                            ))
+                        .toList(),
                   ),
-                ),
               ],
             ),
+          ),
+          Step(
+            title: const Text('Service Address'),
+            isActive: _currentStep >= 2,
+            content: TextField(
+              controller: _addressController,
+              decoration: const InputDecoration(
+                labelText: 'Full Address',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
+            ),
+          ),
+          Step(
+            title: const Text('Review & Confirm'),
+            isActive: _currentStep >= 3,
+            content: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Service: ${widget.title}',
+                    style: const TextStyle(fontWeight: FontWeight.bold)),
+                if (_selectedVehicle != null)
+                  Text(
+                      'Vehicle: ${_selectedVehicle!.make} ${_selectedVehicle!.model}'),
+                Text('Date: ${DateFormat('yyyy-MM-dd').format(_selectedDate)}'),
+                if (_selectedTimeSlot != null) Text('Time: $_selectedTimeSlot'),
+                Text('Address: ${_addressController.text}'),
+                const Divider(),
+                Text('Total Cost: ₹${widget.basePrice.toInt()}',
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 18)),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

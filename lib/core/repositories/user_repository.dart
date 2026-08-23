@@ -30,7 +30,8 @@ class UserRepository {
       }
       return null;
     } catch (e) {
-      debugPrint('UserRepository: Fresh fetch failed ($e), falling back to offline cache');
+      debugPrint(
+          'UserRepository: Fresh fetch failed ($e), falling back to offline cache');
       if (!kIsWeb) {
         final local = await (_db.select(_db.cachedProfiles)
               ..where((t) => t.id.equals(uid)))

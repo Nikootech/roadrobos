@@ -65,7 +65,8 @@ class AppTransaction {
       handlingCharges:
           (map['handling_charges'] ?? map['handlingCharges'] ?? 0.0).toDouble(),
       totalAmount:
-          (map['total_amount'] ?? map['totalAmount'] ?? map['amount'] ?? 0.0).toDouble(),
+          (map['total_amount'] ?? map['totalAmount'] ?? map['amount'] ?? 0.0)
+              .toDouble(),
       description: map['description'] ?? '',
       timestamp: map['created_at'] != null
           ? DateTime.parse(map['created_at'])

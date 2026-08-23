@@ -67,8 +67,7 @@ class _DocumentsUploadScreenState extends ConsumerState<DocumentsUploadScreen> {
       final ext = image.path.split('.').last;
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       // Path: driver-documents/{userId}/{docKey}/{timestamp}.jpg
-      final storagePath =
-          '$userId/${key.replaceAll('/', '_')}/$timestamp.$ext';
+      final storagePath = '$userId/${key.replaceAll('/', '_')}/$timestamp.$ext';
 
       await Supabase.instance.client.storage
           .from('driver-documents')

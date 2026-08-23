@@ -73,8 +73,7 @@ class _MainShellState extends State<MainShell> {
         prefs.getBool('has_password_${currentUser.id}') ?? false;
     final localSkipped =
         prefs.getBool('skipped_password_${currentUser.id}') ?? false;
-    final metadataSet =
-        currentUser.userMetadata?['has_password'] == true;
+    final metadataSet = currentUser.userMetadata?['has_password'] == true;
 
     final alreadyHandled =
         serverSuppressed || localHasPassword || localSkipped || metadataSet;
@@ -146,8 +145,8 @@ class _MainShellState extends State<MainShell> {
                   ),
                   const SizedBox(width: 12),
                   const Text('Create Password',
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 18)),
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                 ],
               ),
               content: Form(
@@ -170,8 +169,8 @@ class _MainShellState extends State<MainShell> {
                       decoration: InputDecoration(
                         labelText: 'Password',
                         hintText: 'Enter a strong password',
-                        prefixIcon: const Icon(Icons.lock_outline_rounded,
-                            size: 20),
+                        prefixIcon:
+                            const Icon(Icons.lock_outline_rounded, size: 20),
                         border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12)),
                         contentPadding: const EdgeInsets.symmetric(
@@ -194,8 +193,8 @@ class _MainShellState extends State<MainShell> {
                       decoration: InputDecoration(
                         labelText: 'Confirm Password',
                         hintText: 'Re-enter your password',
-                        prefixIcon: const Icon(Icons.lock_outline_rounded,
-                            size: 20),
+                        prefixIcon:
+                            const Icon(Icons.lock_outline_rounded, size: 20),
                         border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12)),
                         contentPadding: const EdgeInsets.symmetric(
@@ -253,8 +252,7 @@ class _MainShellState extends State<MainShell> {
                               // 1. Set password + metadata in Supabase Auth
                               await supabase.auth.updateUser(
                                 UserAttributes(
-                                  password:
-                                      passwordController.text.trim(),
+                                  password: passwordController.text.trim(),
                                   data: const {'has_password': true},
                                 ),
                               );
@@ -286,8 +284,7 @@ class _MainShellState extends State<MainShell> {
                               if (context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content:
-                                        Text('Failed to set password: $e'),
+                                    content: Text('Failed to set password: $e'),
                                     backgroundColor: AppColors.dangerRed,
                                   ),
                                 );

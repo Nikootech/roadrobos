@@ -27,9 +27,7 @@ class _TechRatingScreenState extends State<TechRatingScreen> {
   final _commentController = TextEditingController();
   bool _submitted = false;
 
-  static const _labels = [
-    '', 'Poor', 'Fair', 'Good', 'Great', 'Excellent'
-  ];
+  static const _labels = ['', 'Poor', 'Fair', 'Good', 'Great', 'Excellent'];
 
   static const _colors = [
     Colors.transparent,
@@ -189,12 +187,10 @@ class _TechRatingScreenState extends State<TechRatingScreen> {
                       : Colors.white.withValues(alpha: 0.2),
                   size: 44,
                 ),
-              )
-                  .animate(target: isSelected ? 1 : 0)
-                  .scale(
-                      begin: const Offset(1, 1),
-                      end: const Offset(1.15, 1.15),
-                      duration: 150.ms),
+              ).animate(target: isSelected ? 1 : 0).scale(
+                  begin: const Offset(1, 1),
+                  end: const Offset(1.15, 1.15),
+                  duration: 150.ms),
             );
           }),
         ),

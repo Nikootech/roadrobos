@@ -60,14 +60,15 @@ class AllVehiclesNotifier extends StateNotifier<List<Vehicle>> {
       return;
     }
 
-      try {
+    try {
       final repo = ref.read(userVehicleRepositoryProvider);
       _subscription = repo.getUserVehiclesStream(userId).listen(
         (vehicles) {
           state = vehicles;
           // Auto-select first vehicle if none selected yet
           final currentId = ref.read(vehicleProvider).id;
-          if (vehicles.isNotEmpty && (currentId == 'placeholder' || currentId.isEmpty)) {
+          if (vehicles.isNotEmpty &&
+              (currentId == 'placeholder' || currentId.isEmpty)) {
             ref.read(vehicleProvider.notifier).setVehicle(vehicles.first);
           }
         },

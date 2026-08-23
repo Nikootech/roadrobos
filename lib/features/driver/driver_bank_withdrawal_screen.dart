@@ -68,9 +68,8 @@ class _DriverBankWithdrawalScreenState
           .stream(primaryKey: ['id'])
           .eq('user_id', _userId!)
           .order('created_at')
-          .map((list) => list
-              .map((map) => DriverBankAccount.fromMap(map))
-              .toList());
+          .map((list) =>
+              list.map((map) => DriverBankAccount.fromMap(map)).toList());
     }
   }
 
@@ -200,9 +199,11 @@ class _DriverBankWithdrawalScreenState
                   Expanded(
                     child: TextField(
                       controller: _amountController,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
                       inputFormatters: [
-                        FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+                        FilteringTextInputFormatter.allow(
+                            RegExp(r'^\d+\.?\d{0,2}')),
                       ],
                       style: const TextStyle(
                           fontSize: 36,
@@ -263,7 +264,8 @@ class _DriverBankWithdrawalScreenState
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(28),
                         border: Border.all(
-                            color: AppColors.primaryBlue.withValues(alpha: 0.3)),
+                            color:
+                                AppColors.primaryBlue.withValues(alpha: 0.3)),
                         color: AppColors.primaryBlue.withValues(alpha: 0.05),
                       ),
                       child: Row(
@@ -273,7 +275,8 @@ class _DriverBankWithdrawalScreenState
                             decoration: BoxDecoration(
                                 color: AppColors.primaryBlue,
                                 borderRadius: BorderRadius.circular(18)),
-                            child: const Icon(Iconsax.add, color: Colors.white, size: 26),
+                            child: const Icon(Iconsax.add,
+                                color: Colors.white, size: 26),
                           ),
                           const SizedBox(width: 20),
                           const Expanded(
@@ -496,7 +499,8 @@ class _DriverBankWithdrawalScreenState
             child: Container(
               decoration: const BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
+                  borderRadius:
+                      BorderRadius.vertical(top: Radius.circular(32))),
               padding: const EdgeInsets.all(24),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -547,8 +551,9 @@ class _DriverBankWithdrawalScreenState
                       }
                       return Column(
                         children: list.map((bank) {
-                          final isSelected = _selectedBankName == bank.bankName &&
-                              _selectedBankAcc == bank.accountNumber;
+                          final isSelected =
+                              _selectedBankName == bank.bankName &&
+                                  _selectedBankAcc == bank.accountNumber;
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 12.0),
                             child: _buildBankOption(
@@ -567,13 +572,16 @@ class _DriverBankWithdrawalScreenState
                                         'Are you sure you want to delete ${bank.bankName} (${bank.accountNumber})?'),
                                     actions: [
                                       TextButton(
-                                        onPressed: () => Navigator.pop(ctx, false),
+                                        onPressed: () =>
+                                            Navigator.pop(ctx, false),
                                         child: const Text('Cancel'),
                                       ),
                                       TextButton(
-                                        onPressed: () => Navigator.pop(ctx, true),
+                                        onPressed: () =>
+                                            Navigator.pop(ctx, true),
                                         child: const Text('Delete',
-                                            style: TextStyle(color: Colors.red)),
+                                            style:
+                                                TextStyle(color: Colors.red)),
                                       ),
                                     ],
                                   ),
@@ -611,7 +619,8 @@ class _DriverBankWithdrawalScreenState
                       ),
                       child: const Text('Confirm Selection',
                           style: TextStyle(
-                              color: Colors.white, fontWeight: FontWeight.bold)),
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold)),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -646,20 +655,23 @@ class _DriverBankWithdrawalScreenState
                       letterSpacing: -0.5)),
               const SizedBox(height: 8),
               const Text('Enter your bank details to receive payouts.',
-                  style: TextStyle(color: AppColors.textSecondary, fontSize: 14)),
+                  style:
+                      TextStyle(color: AppColors.textSecondary, fontSize: 14)),
               const SizedBox(height: 24),
               Container(
                 decoration: BoxDecoration(
                   color: AppColors.bgLightGrey.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+                  border: Border.all(
+                      color: AppColors.border.withValues(alpha: 0.5)),
                 ),
                 child: TextField(
                   controller: nameController,
                   style: const TextStyle(fontWeight: FontWeight.w600),
                   decoration: const InputDecoration(
                     border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                     labelText: 'Bank Name',
                     hintText: 'e.g. HDFC Bank',
                     labelStyle: TextStyle(color: AppColors.textSecondary),
@@ -671,7 +683,8 @@ class _DriverBankWithdrawalScreenState
                 decoration: BoxDecoration(
                   color: AppColors.bgLightGrey.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
+                  border: Border.all(
+                      color: AppColors.border.withValues(alpha: 0.5)),
                 ),
                 child: TextField(
                   controller: accController,
@@ -679,7 +692,8 @@ class _DriverBankWithdrawalScreenState
                   style: const TextStyle(fontWeight: FontWeight.w600),
                   decoration: const InputDecoration(
                     border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                     labelText: 'Account Number',
                     hintText: 'e.g. 1234567890',
                     labelStyle: TextStyle(color: AppColors.textSecondary),
@@ -712,7 +726,8 @@ class _DriverBankWithdrawalScreenState
                         final bankAcc = accController.text.trim();
                         if (bankName.isEmpty || bankAcc.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Please fill all fields')),
+                            const SnackBar(
+                                content: Text('Please fill all fields')),
                           );
                           return;
                         }
@@ -777,7 +792,8 @@ class _DriverBankWithdrawalScreenState
                                   fontWeight: FontWeight.bold, fontSize: 16)),
                           Text(bank.accountNumber,
                               style: const TextStyle(
-                                  color: AppColors.textSecondary, fontSize: 13)),
+                                  color: AppColors.textSecondary,
+                                  fontSize: 13)),
                         ],
                       ),
                     ),

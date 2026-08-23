@@ -79,8 +79,9 @@ class ActiveRentalNotifier extends StateNotifier<ActiveRental?> {
     String? bookingId;
     if (isRealUser) {
       try {
-        bookingId = await ref.read(rentalBookingRepositoryProvider).createRentalBooking(
-            RentalBooking(
+        bookingId = await ref
+            .read(rentalBookingRepositoryProvider)
+            .createRentalBooking(RentalBooking(
                 id: '',
                 customerId: custId,
                 vehicleName: state!.vehicle['name'] ?? 'Unknown',
@@ -131,9 +132,8 @@ class ActiveRentalNotifier extends StateNotifier<ActiveRental?> {
             .read(rentalBookingRepositoryProvider)
             .updateRentalStatus(bookingId, confirmedStatus);
         // Also update the payment_id in details
-        await ref
-            .read(rentalBookingRepositoryProvider)
-            .updateRentalDetails(bookingId, {'method': method, 'payment_id': paymentId});
+        await ref.read(rentalBookingRepositoryProvider).updateRentalDetails(
+            bookingId, {'method': method, 'payment_id': paymentId});
       } catch (e) {
         // Log but don't fail — payment already succeeded
         debugPrint('Warning: Could not update rental status after payment: $e');
@@ -142,7 +142,8 @@ class ActiveRentalNotifier extends StateNotifier<ActiveRental?> {
 
     _timer?.cancel();
     _timer = null;
-    state = state!.copyWith(status: method == 'Online' ? RentalStatus.paid : RentalStatus.active);
+    state = state!.copyWith(
+        status: method == 'Online' ? RentalStatus.paid : RentalStatus.active);
   }
 
   void clearRental() {

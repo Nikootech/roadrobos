@@ -30,12 +30,20 @@ class ProfileScreen extends ConsumerWidget {
           )
         : (isSilver
             ? const LinearGradient(
-                colors: [Color(0xFF94A3B8), Color(0xFF64748B), Color(0xFF334155)],
+                colors: [
+                  Color(0xFF94A3B8),
+                  Color(0xFF64748B),
+                  Color(0xFF334155)
+                ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               )
             : const LinearGradient(
-                colors: [Color(0xFFB45309), Color(0xFF78350F), Color(0xFF451A03)],
+                colors: [
+                  Color(0xFFB45309),
+                  Color(0xFF78350F),
+                  Color(0xFF451A03)
+                ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ));
@@ -92,7 +100,9 @@ class ProfileScreen extends ConsumerWidget {
                   BoxShadow(
                     color: (isGold
                             ? const Color(0xFFD97706)
-                            : (isSilver ? const Color(0xFF64748B) : const Color(0xFF78350F)))
+                            : (isSilver
+                                ? const Color(0xFF64748B)
+                                : const Color(0xFF78350F)))
                         .withValues(alpha: 0.35),
                     blurRadius: 24,
                     offset: const Offset(0, 12),
@@ -126,13 +136,13 @@ class ProfileScreen extends ConsumerWidget {
                           height: 68,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            border: Border.all(
-                                color: Colors.white, width: 2.5),
+                            border: Border.all(color: Colors.white, width: 2.5),
                           ),
                           child: AppAvatar(
                             imageUrl: user.profileImageUrl,
                             radius: 32,
-                            backgroundColor: Colors.white.withValues(alpha: 0.2),
+                            backgroundColor:
+                                Colors.white.withValues(alpha: 0.2),
                           ),
                         ),
                       ),
@@ -192,7 +202,8 @@ class ProfileScreen extends ConsumerWidget {
                       color: Colors.white.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.2), width: 1.5),
+                          color: Colors.white.withValues(alpha: 0.2),
+                          width: 1.5),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -244,9 +255,10 @@ class ProfileScreen extends ConsumerWidget {
                               CircularProgressIndicator(
                                 value: (user.points % 1000) / 1000,
                                 strokeWidth: 4.5,
-                                backgroundColor: Colors.white.withValues(alpha: 0.15),
-                                valueColor: const AlwaysStoppedAnimation(
-                                    Colors.white),
+                                backgroundColor:
+                                    Colors.white.withValues(alpha: 0.15),
+                                valueColor:
+                                    const AlwaysStoppedAnimation(Colors.white),
                               ),
                               Text(
                                   '${((user.points % 1000) / 10).toStringAsFixed(0)}%',
@@ -350,7 +362,7 @@ class ProfileScreen extends ConsumerWidget {
                       'Terms of Service',
                       'Read our terms and conditions',
                       () => context.push('/terms-of-service')),
-                  
+
                   const SizedBox(height: 8),
 
                   // Logout button
@@ -372,7 +384,8 @@ class ProfileScreen extends ConsumerWidget {
                         },
                         borderRadius: BorderRadius.circular(22),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 18),
                           child: Row(
                             children: [
                               const Icon(Icons.logout_rounded,
@@ -388,7 +401,8 @@ class ProfileScreen extends ConsumerWidget {
                               const Spacer(),
                               Icon(Icons.arrow_forward_ios_rounded,
                                   size: 14,
-                                  color: AppColors.dangerRed.withValues(alpha: 0.5)),
+                                  color: AppColors.dangerRed
+                                      .withValues(alpha: 0.5)),
                             ],
                           ),
                         ),
@@ -413,8 +427,7 @@ class ProfileScreen extends ConsumerWidget {
         decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-                color: AppColors.border.withValues(alpha: 0.5)),
+            border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
             boxShadow: [
               BoxShadow(
                 color: color.withValues(alpha: 0.05),
@@ -458,8 +471,7 @@ class ProfileScreen extends ConsumerWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-            color: AppColors.border.withValues(alpha: 0.6)),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.01),

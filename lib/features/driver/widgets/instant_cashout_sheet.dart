@@ -69,7 +69,8 @@ class _InstantCashoutSheetState extends State<InstantCashoutSheet> {
     }
     if (_enteredAmount > widget.availableBalance) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Entered amount exceeds available wallet balance.')),
+        const SnackBar(
+            content: Text('Entered amount exceeds available wallet balance.')),
       );
       return;
     }
@@ -87,7 +88,8 @@ class _InstantCashoutSheetState extends State<InstantCashoutSheet> {
       await showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -97,18 +99,23 @@ class _InstantCashoutSheetState extends State<InstantCashoutSheet> {
                   color: Color(0xFF28C76F),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.check_rounded, color: Colors.white, size: 36),
+                child: const Icon(Icons.check_rounded,
+                    color: Colors.white, size: 36),
               ),
               const SizedBox(height: 18),
               Text(
                 '₹${_netReceived.toStringAsFixed(0)} Transferred!',
-                style: GoogleFonts.outfit(fontSize: 22, fontWeight: FontWeight.w900, color: AppColors.textPrimary),
+                style: GoogleFonts.outfit(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.textPrimary),
               ),
               const SizedBox(height: 6),
               Text(
                 'Instant payout dispatched via UPI to ${widget.defaultUpiId}.\nReference: IMPS${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}',
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                style: const TextStyle(
+                    fontSize: 12, color: AppColors.textSecondary),
               ),
             ],
           ),
@@ -119,9 +126,12 @@ class _InstantCashoutSheetState extends State<InstantCashoutSheet> {
                 onPressed: () => Navigator.pop(ctx),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF28C76F),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
                 ),
-                child: const Text('Done', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                child: const Text('Done',
+                    style: TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.bold)),
               ),
             ),
           ],
@@ -151,7 +161,9 @@ class _InstantCashoutSheetState extends State<InstantCashoutSheet> {
             child: Container(
               width: 44,
               height: 5,
-              decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(3)),
+              decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(3)),
             ),
           ),
           const SizedBox(height: 18),
@@ -163,9 +175,14 @@ class _InstantCashoutSheetState extends State<InstantCashoutSheet> {
                 children: [
                   Text(
                     'Instant 24/7 Fast Cashout',
-                    style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
+                    style: GoogleFonts.outfit(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary),
                   ),
-                  const Text('Direct transfer to your verified UPI ID', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                  const Text('Direct transfer to your verified UPI ID',
+                      style: TextStyle(
+                          fontSize: 12, color: AppColors.textSecondary)),
                 ],
               ),
               Container(
@@ -176,9 +193,14 @@ class _InstantCashoutSheetState extends State<InstantCashoutSheet> {
                 ),
                 child: const Row(
                   children: [
-                    Icon(Icons.bolt_rounded, size: 14, color: Color(0xFF28C76F)),
+                    Icon(Icons.bolt_rounded,
+                        size: 14, color: Color(0xFF28C76F)),
                     SizedBox(width: 2),
-                    Text('Instant IMPS', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Color(0xFF28C76F))),
+                    Text('Instant IMPS',
+                        style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF28C76F))),
                   ],
                 ),
               ),
@@ -196,8 +218,16 @@ class _InstantCashoutSheetState extends State<InstantCashoutSheet> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Available Balance:', style: TextStyle(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
-                Text('₹${widget.availableBalance.toStringAsFixed(0)}', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+                const Text('Available Balance:',
+                    style: TextStyle(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w600)),
+                Text('₹${widget.availableBalance.toStringAsFixed(0)}',
+                    style: GoogleFonts.outfit(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary)),
               ],
             ),
           ),
@@ -207,20 +237,31 @@ class _InstantCashoutSheetState extends State<InstantCashoutSheet> {
             controller: _amountCtrl,
             keyboardType: TextInputType.number,
             onChanged: (_) => setState(() {}),
-            style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
+            style: GoogleFonts.outfit(
+                fontSize: 24,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textPrimary),
             decoration: InputDecoration(
               prefixText: '₹ ',
-              prefixStyle: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.w800, color: AppColors.brandGreen),
+              prefixStyle: GoogleFonts.outfit(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.brandGreen),
               labelText: 'Withdrawal Amount',
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+              border:
+                  OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
               suffixIcon: TextButton(
                 onPressed: () {
                   HapticFeedback.lightImpact();
                   setState(() {
-                    _amountCtrl.text = widget.availableBalance.toStringAsFixed(0);
+                    _amountCtrl.text =
+                        widget.availableBalance.toStringAsFixed(0);
                   });
                 },
-                child: const Text('MAX', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.brandGreen)),
+                child: const Text('MAX',
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.brandGreen)),
               ),
             ),
           ),
@@ -237,24 +278,44 @@ class _InstantCashoutSheetState extends State<InstantCashoutSheet> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Destination Account', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-                    Text(widget.defaultUpiId, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                    const Text('Destination Account',
+                        style: TextStyle(
+                            fontSize: 11, color: AppColors.textSecondary)),
+                    Text(widget.defaultUpiId,
+                        style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary)),
                   ],
                 ),
                 const SizedBox(height: 6),
                 const Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Instant Transfer Fee (Flat)', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-                    Text('₹5.00', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
+                    Text('Instant Transfer Fee (Flat)',
+                        style: TextStyle(
+                            fontSize: 11, color: AppColors.textSecondary)),
+                    Text('₹5.00',
+                        style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textSecondary)),
                   ],
                 ),
                 const Divider(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('You Will Receive', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
-                    Text('₹${_netReceived.toStringAsFixed(0)}', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w900, color: const Color(0xFF28C76F))),
+                    const Text('You Will Receive',
+                        style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.textPrimary)),
+                    Text('₹${_netReceived.toStringAsFixed(0)}',
+                        style: GoogleFonts.outfit(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w900,
+                            color: const Color(0xFF28C76F))),
                   ],
                 ),
               ],
@@ -268,11 +329,20 @@ class _InstantCashoutSheetState extends State<InstantCashoutSheet> {
               onPressed: _isProcessing ? null : _processInstantCashout,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF28C76F),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14)),
               ),
               child: _isProcessing
-                  ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
-                  : const Text('Cash Out Instantly Now', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 15)),
+                  ? const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                          color: Colors.white, strokeWidth: 2.5))
+                  : const Text('Cash Out Instantly Now',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 15)),
             ),
           ),
         ],

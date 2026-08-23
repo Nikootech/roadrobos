@@ -199,18 +199,21 @@ class _ScheduleRideScreenState extends State<ScheduleRideScreen> {
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 margin: const EdgeInsets.only(bottom: 10),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                 decoration: BoxDecoration(
                   gradient: isSelected
                       ? const LinearGradient(
-                          colors: [AppColors.brandGreen, AppColors.brandGreenMid],
+                          colors: [
+                            AppColors.brandGreen,
+                            AppColors.brandGreenMid
+                          ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         )
                       : null,
-                  color: isSelected
-                      ? null
-                      : Colors.white.withValues(alpha: 0.05),
+                  color:
+                      isSelected ? null : Colors.white.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
                     color: isSelected
@@ -260,16 +263,17 @@ class _ScheduleRideScreenState extends State<ScheduleRideScreen> {
                             style: GoogleFonts.outfit(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
-                              color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.87),
+                              color: isSelected
+                                  ? Colors.white
+                                  : Colors.white.withValues(alpha: 0.87),
                             ),
                           ),
                           Text(
                             dateStr,
                             style: GoogleFonts.outfit(
                               fontSize: 13,
-                              color: isSelected
-                                  ? Colors.white70
-                                  : Colors.white38,
+                              color:
+                                  isSelected ? Colors.white70 : Colors.white38,
                             ),
                           ),
                         ],
@@ -604,8 +608,7 @@ class _ScheduleRideScreenState extends State<ScheduleRideScreen> {
                 }
               : null,
           style: ElevatedButton.styleFrom(
-            backgroundColor:
-                canProceed ? AppColors.brandGreen : Colors.white12,
+            backgroundColor: canProceed ? AppColors.brandGreen : Colors.white12,
             foregroundColor: Colors.white,
             disabledBackgroundColor: Colors.white12,
             shape:

@@ -7,8 +7,8 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 import '../../core/config/app_config.dart';
 import '../security/jailbreak_guard.dart';
 import '../../navigation/app_router.dart';
-import 'payment_web_helper.dart' if (dart.library.js) 'payment_web_helper_web.dart' as web_helper;
-
+import 'payment_web_helper.dart'
+    if (dart.library.js) 'payment_web_helper_web.dart' as web_helper;
 
 part 'payment_service.g.dart';
 
@@ -235,8 +235,7 @@ class PaymentService extends _$PaymentService {
     }
 
     // Check if key is placeholder
-    final isPlaceholder =
-        apiKey.isEmpty || apiKey == 'rzp_test_placeholderKey';
+    final isPlaceholder = apiKey.isEmpty || apiKey == 'rzp_test_placeholderKey';
 
     if (isPlaceholder) {
       debugPrint(

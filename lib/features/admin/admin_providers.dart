@@ -130,8 +130,7 @@ final techOpProvider = StreamProvider<TechOp>((ref) {
     final pending = scheduled + inProgress;
 
     // Sort: active first, then scheduled, then completed; newest first within groups
-    final sorted = [...jobs]
-      ..sort((a, b) {
+    final sorted = [...jobs]..sort((a, b) {
         int priority(String s) {
           if (s == 'IN PROGRESS' || s == 'ACCEPTED') return 0;
           if (s == 'SCHEDULED') return 1;
@@ -185,9 +184,8 @@ final emergencyAlertsProvider = StreamProvider<List<EmergencyAlert>>((ref) {
       .stream(primaryKey: ['id'])
       .order('created_at')
       .limit(5)
-      .map((list) => list
-          .where((data) => !(data['is_acknowledged'] ?? false))
-          .map((data) {
+      .map((list) =>
+          list.where((data) => !(data['is_acknowledged'] ?? false)).map((data) {
             return EmergencyAlert(
               data['id'].toString(),
               data['user_id'] ?? 'Unknown',

@@ -372,20 +372,20 @@ extension UserRoleExtension on UserRole {
   /// Human-readable badge label shown in the dashboard AppBar. (Fix S3)
   String get roleLabel {
     return switch (this) {
-      UserRole.superAdmin     => 'SUPER ADMIN',
-      UserRole.founderAdmin   => 'FOUNDER',
-      UserRole.opsHead        => 'OPS COMMAND',
-      UserRole.cityManager    => 'CITY MANAGER',
-      UserRole.areaManager    => 'AREA MANAGER',
+      UserRole.superAdmin => 'SUPER ADMIN',
+      UserRole.founderAdmin => 'FOUNDER',
+      UserRole.opsHead => 'OPS COMMAND',
+      UserRole.cityManager => 'CITY MANAGER',
+      UserRole.areaManager => 'AREA MANAGER',
       UserRole.financeManager => 'FINANCE CONSOLE',
       UserRole.supportManager => 'SUPPORT HUB',
       UserRole.marketingAdmin => 'MARKETING HUB',
-      UserRole.auditor        => 'AUDIT VIEW',
-      UserRole.analyst        => 'ANALYTICS',
-      UserRole.admin          => 'ADMIN CONSOLE',
-      UserRole.driver         => 'DRIVER',
-      UserRole.technician     => 'TECHNICIAN',
-      UserRole.customer       => 'CUSTOMER',
+      UserRole.auditor => 'AUDIT VIEW',
+      UserRole.analyst => 'ANALYTICS',
+      UserRole.admin => 'ADMIN CONSOLE',
+      UserRole.driver => 'DRIVER',
+      UserRole.technician => 'TECHNICIAN',
+      UserRole.customer => 'CUSTOMER',
     };
   }
 }

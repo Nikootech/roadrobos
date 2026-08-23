@@ -75,8 +75,8 @@ class AppMapController extends StateNotifier<AppMapState> {
         isBackgroundRequired: false,
       );
       if (!hasPermission) {
-        state = state.copyWith(
-            isLoading: false, errorMessage: 'Permission denied');
+        state =
+            state.copyWith(isLoading: false, errorMessage: 'Permission denied');
         return;
       }
 

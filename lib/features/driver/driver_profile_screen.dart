@@ -104,17 +104,21 @@ class DriverProfileScreen extends ConsumerWidget {
                                   'https://i.pravatar.cc/150?u=roadrobo'),
                         ),
                       )
-                          .animate(onPlay: (controller) => controller.repeat(reverse: true))
+                          .animate(
+                              onPlay: (controller) =>
+                                  controller.repeat(reverse: true))
                           .boxShadow(
                             begin: BoxShadow(
                               color: isOnline
-                                  ? AppColors.successGreen.withValues(alpha: 0.15)
+                                  ? AppColors.successGreen
+                                      .withValues(alpha: 0.15)
                                   : Colors.transparent,
                               blurRadius: 4,
                             ),
                             end: BoxShadow(
                               color: isOnline
-                                  ? AppColors.successGreen.withValues(alpha: 0.45)
+                                  ? AppColors.successGreen
+                                      .withValues(alpha: 0.45)
                                   : Colors.transparent,
                               blurRadius: 18,
                               spreadRadius: 4,
@@ -126,12 +130,16 @@ class DriverProfileScreen extends ConsumerWidget {
                       Container(
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
-                          color: isOnline ? AppColors.successGreen : AppColors.textMuted,
+                          color: isOnline
+                              ? AppColors.successGreen
+                              : AppColors.textMuted,
                           shape: BoxShape.circle,
                           border: Border.all(color: Colors.white, width: 2),
                         ),
                         child: Icon(
-                          isOnline ? Icons.check : Icons.power_settings_new_rounded,
+                          isOnline
+                              ? Icons.check
+                              : Icons.power_settings_new_rounded,
                           color: Colors.white,
                           size: 14,
                         ),
@@ -159,14 +167,19 @@ class DriverProfileScreen extends ConsumerWidget {
                   const SizedBox(height: 18),
                   // Sleek Status Chip
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      color: (isOnline ? AppColors.successGreen : AppColors.textMuted)
+                      color: (isOnline
+                              ? AppColors.successGreen
+                              : AppColors.textMuted)
                           .withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: (isOnline ? AppColors.successGreen : AppColors.textMuted)
-                            .withValues(alpha: 0.2)),
+                          color: (isOnline
+                                  ? AppColors.successGreen
+                                  : AppColors.textMuted)
+                              .withValues(alpha: 0.2)),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -175,7 +188,9 @@ class DriverProfileScreen extends ConsumerWidget {
                           width: 8,
                           height: 8,
                           decoration: BoxDecoration(
-                            color: isOnline ? AppColors.successGreen : AppColors.textMuted,
+                            color: isOnline
+                                ? AppColors.successGreen
+                                : AppColors.textMuted,
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -183,7 +198,9 @@ class DriverProfileScreen extends ConsumerWidget {
                         Text(
                           isOnline ? 'ONLINE & ACTIVE' : 'OFFLINE',
                           style: TextStyle(
-                            color: isOnline ? AppColors.successGreen : AppColors.textSecondary,
+                            color: isOnline
+                                ? AppColors.successGreen
+                                : AppColors.textSecondary,
                             fontSize: 11,
                             fontWeight: FontWeight.w800,
                             letterSpacing: 0.5,
@@ -334,8 +351,7 @@ class DriverProfileScreen extends ConsumerWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-              color: AppColors.border.withValues(alpha: 0.5)),
+          border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.01),
@@ -385,8 +401,7 @@ class DriverProfileScreen extends ConsumerWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-            color: AppColors.border.withValues(alpha: 0.6)),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.01),
@@ -737,7 +752,8 @@ class DriverProfileScreen extends ConsumerWidget {
               ),
               Text(
                 time,
-                style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+                style:
+                    const TextStyle(fontSize: 11, color: AppColors.textMuted),
               ),
             ],
           ),

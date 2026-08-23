@@ -143,11 +143,14 @@ class _AnalyticsChartSectionState extends State<AnalyticsChartSection> {
           // Metric toggles
           Row(
             children: [
-              _buildMetricChip(0, 'Gross GMV', Iconsax.wallet_3, const Color(0xFF059669)),
+              _buildMetricChip(
+                  0, 'Gross GMV', Iconsax.wallet_3, const Color(0xFF059669)),
               const SizedBox(width: 8),
-              _buildMetricChip(1, 'Ride Volume', Iconsax.routing_2, const Color(0xFF0284C7)),
+              _buildMetricChip(
+                  1, 'Ride Volume', Iconsax.routing_2, const Color(0xFF0284C7)),
               const SizedBox(width: 8),
-              _buildMetricChip(2, 'Service Bookings', Iconsax.setting_4, const Color(0xFFD97706)),
+              _buildMetricChip(2, 'Service Bookings', Iconsax.setting_4,
+                  const Color(0xFFD97706)),
             ],
           ),
           const SizedBox(height: 18),
@@ -177,9 +180,12 @@ class _AnalyticsChartSectionState extends State<AnalyticsChartSection> {
             child: const Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _UnitMetricItem(title: 'Avg Fare', value: '₹342', trend: '+4.2%'),
-                _UnitMetricItem(title: 'Rev / Driver', value: '₹1,850', trend: '+8.1%'),
-                _UnitMetricItem(title: 'Completion', value: '94.6%', trend: '+1.4%'),
+                _UnitMetricItem(
+                    title: 'Avg Fare', value: '₹342', trend: '+4.2%'),
+                _UnitMetricItem(
+                    title: 'Rev / Driver', value: '₹1,850', trend: '+8.1%'),
+                _UnitMetricItem(
+                    title: 'Completion', value: '94.6%', trend: '+1.4%'),
               ],
             ),
           ),
@@ -199,7 +205,8 @@ class _AnalyticsChartSectionState extends State<AnalyticsChartSection> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
           decoration: BoxDecoration(
-            color: isSelected ? color.withValues(alpha: 0.1) : Colors.transparent,
+            color:
+                isSelected ? color.withValues(alpha: 0.1) : Colors.transparent,
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
               color: isSelected ? color : const Color(0xFFE2E8F0),
@@ -208,7 +215,9 @@ class _AnalyticsChartSectionState extends State<AnalyticsChartSection> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, size: 14, color: isSelected ? color : AppColors.textSecondary),
+              Icon(icon,
+                  size: 14,
+                  color: isSelected ? color : AppColors.textSecondary),
               const SizedBox(width: 6),
               Flexible(
                 child: Text(

@@ -19,22 +19,36 @@ class DriverNavigationScreen extends StatefulWidget {
   });
 
   @override
-  State<DriverNavigationScreen> createState() =>
-      _DriverNavigationScreenState();
+  State<DriverNavigationScreen> createState() => _DriverNavigationScreenState();
 }
 
-class _DriverNavigationScreenState
-    extends State<DriverNavigationScreen> {
+class _DriverNavigationScreenState extends State<DriverNavigationScreen> {
   // Simulated turn-by-turn instruction cycling
   int _turnIndex = 0;
   late Timer _turnTimer;
   bool _arrived = false;
 
   static const _turns = [
-    {'icon': Icons.straight_rounded, 'text': 'Continue on MG Road', 'dist': '1.2 km'},
-    {'icon': Icons.turn_right_rounded, 'text': 'Turn right onto Brigade Road', 'dist': '800 m'},
-    {'icon': Icons.turn_left_rounded, 'text': 'Turn left at the signal', 'dist': '300 m'},
-    {'icon': Icons.place_rounded, 'text': 'Destination on your right', 'dist': '50 m'},
+    {
+      'icon': Icons.straight_rounded,
+      'text': 'Continue on MG Road',
+      'dist': '1.2 km'
+    },
+    {
+      'icon': Icons.turn_right_rounded,
+      'text': 'Turn right onto Brigade Road',
+      'dist': '800 m'
+    },
+    {
+      'icon': Icons.turn_left_rounded,
+      'text': 'Turn left at the signal',
+      'dist': '300 m'
+    },
+    {
+      'icon': Icons.place_rounded,
+      'text': 'Destination on your right',
+      'dist': '50 m'
+    },
   ];
 
   @override
@@ -150,7 +164,7 @@ class _DriverNavigationScreenState
               duration: const Duration(milliseconds: 400),
               transitionBuilder: (child, anim) => SlideTransition(
                 position: Tween<Offset>(
-                    begin: const Offset(0, -0.3), end: Offset.zero)
+                        begin: const Offset(0, -0.3), end: Offset.zero)
                     .animate(CurvedAnimation(
                         parent: anim, curve: Curves.easeOutCubic)),
                 child: FadeTransition(opacity: anim, child: child),
@@ -175,7 +189,10 @@ class _DriverNavigationScreenState
                       height: 52,
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: [AppColors.brandGreen, AppColors.brandGreenMid],
+                          colors: [
+                            AppColors.brandGreen,
+                            AppColors.brandGreenMid
+                          ],
                         ),
                         borderRadius: BorderRadius.circular(14),
                       ),
@@ -257,10 +274,8 @@ class _DriverNavigationScreenState
                   // Stats row
                   Row(
                     children: [
-                      _statChip(
-                          Icons.access_time_rounded,
-                          '${(_turns.length - _turnIndex) * 2} min',
-                          'ETA'),
+                      _statChip(Icons.access_time_rounded,
+                          '${(_turns.length - _turnIndex) * 2} min', 'ETA'),
                       const SizedBox(width: 12),
                       _statChip(
                           Icons.speed_rounded,
@@ -269,9 +284,7 @@ class _DriverNavigationScreenState
                       const SizedBox(width: 12),
                       _statChip(
                           Icons.navigation_rounded,
-                          widget.phase == 'pickup'
-                              ? 'Pickup'
-                              : 'Dropoff',
+                          widget.phase == 'pickup' ? 'Pickup' : 'Dropoff',
                           'Phase'),
                     ],
                   ),
@@ -339,8 +352,8 @@ class _DriverNavigationScreenState
                 ],
               ),
             ),
-          ).animate().slideY(begin: 1, end: 0, duration: 500.ms,
-              curve: Curves.easeOutCubic),
+          ).animate().slideY(
+              begin: 1, end: 0, duration: 500.ms, curve: Curves.easeOutCubic),
         ],
       ),
     );
@@ -365,8 +378,7 @@ class _DriverNavigationScreenState
                     fontWeight: FontWeight.w700,
                     color: Colors.white)),
             Text(label,
-                style: GoogleFonts.outfit(
-                    fontSize: 10, color: Colors.white38)),
+                style: GoogleFonts.outfit(fontSize: 10, color: Colors.white38)),
           ],
         ),
       ),

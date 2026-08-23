@@ -68,7 +68,8 @@ class AdminRoleSwitcherSheet extends ConsumerWidget {
                   const SizedBox(height: 2),
                   const Text(
                     'Preview & test UI layouts across all 14 roles',
-                    style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                    style:
+                        TextStyle(fontSize: 12, color: AppColors.textSecondary),
                   ),
                 ],
               ),
@@ -79,7 +80,8 @@ class AdminRoleSwitcherSheet extends ConsumerWidget {
                     ref.read(impersonatedRoleProvider.notifier).state = null;
                     Navigator.pop(context);
                   },
-                  icon: const Icon(Icons.refresh_rounded, size: 16, color: AppColors.dangerRed),
+                  icon: const Icon(Icons.refresh_rounded,
+                      size: 16, color: AppColors.dangerRed),
                   label: const Text(
                     'Reset',
                     style: TextStyle(
@@ -113,14 +115,17 @@ class AdminRoleSwitcherSheet extends ConsumerWidget {
                     onTap: () {
                       HapticFeedback.selectionClick();
                       if (role == actualRole) {
-                        ref.read(impersonatedRoleProvider.notifier).state = null;
+                        ref.read(impersonatedRoleProvider.notifier).state =
+                            null;
                       } else {
-                        ref.read(impersonatedRoleProvider.notifier).state = role;
+                        ref.read(impersonatedRoleProvider.notifier).state =
+                            role;
                       }
                       Navigator.pop(context);
                     },
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 12),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
@@ -173,7 +178,8 @@ class AdminRoleSwitcherSheet extends ConsumerWidget {
                                         decoration: BoxDecoration(
                                           color: AppColors.brandGreen
                                               .withValues(alpha: 0.1),
-                                          borderRadius: BorderRadius.circular(4),
+                                          borderRadius:
+                                              BorderRadius.circular(4),
                                         ),
                                         child: const Text(
                                           'YOUR ROLE',
@@ -219,39 +225,44 @@ class AdminRoleSwitcherSheet extends ConsumerWidget {
 
   IconData _iconForRole(UserRole role) {
     return switch (role) {
-      UserRole.superAdmin     => Iconsax.crown,
-      UserRole.founderAdmin   => Iconsax.shield_security,
-      UserRole.opsHead        => Iconsax.radar,
-      UserRole.cityManager    => Iconsax.building_3,
-      UserRole.areaManager    => Iconsax.map_1,
+      UserRole.superAdmin => Iconsax.crown,
+      UserRole.founderAdmin => Iconsax.shield_security,
+      UserRole.opsHead => Iconsax.radar,
+      UserRole.cityManager => Iconsax.building_3,
+      UserRole.areaManager => Iconsax.map_1,
       UserRole.financeManager => Iconsax.wallet_3,
       UserRole.supportManager => Iconsax.headphone,
       UserRole.marketingAdmin => Iconsax.discount_shape,
-      UserRole.auditor        => Iconsax.document_text,
-      UserRole.analyst        => Iconsax.chart_21,
-      UserRole.admin          => Iconsax.security_user,
-      UserRole.driver         => Iconsax.car,
-      UserRole.technician     => Iconsax.setting_4,
-      UserRole.customer       => Iconsax.user,
+      UserRole.auditor => Iconsax.document_text,
+      UserRole.analyst => Iconsax.chart_21,
+      UserRole.admin => Iconsax.security_user,
+      UserRole.driver => Iconsax.car,
+      UserRole.technician => Iconsax.setting_4,
+      UserRole.customer => Iconsax.user,
     };
   }
 
   String _descriptionForRole(UserRole role) {
     return switch (role) {
-      UserRole.superAdmin     => 'Full system control and strategic metrics',
-      UserRole.founderAdmin   => 'Unrestricted platform and executive command',
-      UserRole.opsHead        => 'Real-time fleet operations and SOS escalations',
-      UserRole.cityManager    => 'Territorial city-level management and active drivers',
-      UserRole.areaManager    => 'Local zone coordination and service allocations',
-      UserRole.financeManager => 'Revenue KPIs, pending settlements and dispute ledger',
-      UserRole.supportManager => 'Customer tickets, rating metrics and dispute center',
-      UserRole.marketingAdmin => 'Campaign offers, promo codes and customer acquisition',
-      UserRole.auditor        => 'Read-only compliance audit trail and verification',
-      UserRole.analyst        => 'Data telemetry, retention charts and reporting exports',
-      UserRole.admin          => 'General administrative control (legacy view)',
-      UserRole.driver         => 'Driver mobile experience with earnings and rides',
-      UserRole.technician     => 'Service partner queue and repair tools',
-      UserRole.customer       => 'Standard consumer booking portal',
+      UserRole.superAdmin => 'Full system control and strategic metrics',
+      UserRole.founderAdmin => 'Unrestricted platform and executive command',
+      UserRole.opsHead => 'Real-time fleet operations and SOS escalations',
+      UserRole.cityManager =>
+        'Territorial city-level management and active drivers',
+      UserRole.areaManager => 'Local zone coordination and service allocations',
+      UserRole.financeManager =>
+        'Revenue KPIs, pending settlements and dispute ledger',
+      UserRole.supportManager =>
+        'Customer tickets, rating metrics and dispute center',
+      UserRole.marketingAdmin =>
+        'Campaign offers, promo codes and customer acquisition',
+      UserRole.auditor => 'Read-only compliance audit trail and verification',
+      UserRole.analyst =>
+        'Data telemetry, retention charts and reporting exports',
+      UserRole.admin => 'General administrative control (legacy view)',
+      UserRole.driver => 'Driver mobile experience with earnings and rides',
+      UserRole.technician => 'Service partner queue and repair tools',
+      UserRole.customer => 'Standard consumer booking portal',
     };
   }
 }

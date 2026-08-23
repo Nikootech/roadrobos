@@ -94,7 +94,8 @@ class _JobDetailScreenState extends ConsumerState<JobDetailScreen> {
 
     final b = _booking!;
     final method = b.details['method'] ?? 'Cash';
-    final isCashPending = method == 'Cash' && b.status != 'paid' && b.status != 'completed';
+    final isCashPending =
+        method == 'Cash' && b.status != 'paid' && b.status != 'completed';
 
     return Scaffold(
       appBar: AppBar(
@@ -128,7 +129,8 @@ class _JobDetailScreenState extends ConsumerState<JobDetailScreen> {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.warning_amber_rounded, color: Colors.orange.shade800),
+                    Icon(Icons.warning_amber_rounded,
+                        color: Colors.orange.shade800),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -204,12 +206,14 @@ class _JobDetailScreenState extends ConsumerState<JobDetailScreen> {
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   icon: const Icon(Icons.monetization_on_rounded),
-                  label: const Text('Collect Cash & Mark Paid', style: TextStyle(fontWeight: FontWeight.bold)),
+                  label: const Text('Collect Cash & Mark Paid',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.orange.shade700,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
                   ),
                   onPressed: () async {
                     final messenger = ScaffoldMessenger.of(context);
@@ -217,14 +221,18 @@ class _JobDetailScreenState extends ConsumerState<JobDetailScreen> {
                     unawaited(showDialog(
                       context: context,
                       barrierDismissible: false,
-                      builder: (_) => const Center(child: CircularProgressIndicator()),
+                      builder: (_) =>
+                          const Center(child: CircularProgressIndicator()),
                     ));
                     try {
-                      await ref.read(serviceBookingRepositoryProvider).collectCashPayment(b.id);
+                      await ref
+                          .read(serviceBookingRepositoryProvider)
+                          .collectCashPayment(b.id);
                       if (mounted) {
                         navigator.pop(); // close loader
                         messenger.showSnackBar(const SnackBar(
-                          content: Text('Payment successfully collected and marked paid!'),
+                          content: Text(
+                              'Payment successfully collected and marked paid!'),
                           backgroundColor: Colors.green,
                         ));
                       }
@@ -291,9 +299,7 @@ class _JobDetailScreenState extends ConsumerState<JobDetailScreen> {
       return const Center(
         child: Text('Job Cancelled & Refunded',
             style: TextStyle(
-                color: Colors.red,
-                fontSize: 18,
-                fontWeight: FontWeight.bold)),
+                color: Colors.red, fontSize: 18, fontWeight: FontWeight.bold)),
       );
     }
 
@@ -373,12 +379,14 @@ class _JobDetailScreenState extends ConsumerState<JobDetailScreen> {
       width: double.infinity,
       child: OutlinedButton.icon(
         icon: const Icon(Icons.cancel_presentation_rounded),
-        label: const Text('No Show / Cancel (Refund)', style: TextStyle(fontWeight: FontWeight.bold)),
+        label: const Text('No Show / Cancel (Refund)',
+            style: TextStyle(fontWeight: FontWeight.bold)),
         style: OutlinedButton.styleFrom(
           foregroundColor: Colors.red,
           side: const BorderSide(color: Colors.red),
           padding: const EdgeInsets.symmetric(vertical: 14),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
         onPressed: () => _confirmRefund(),
       ),
@@ -400,24 +408,29 @@ class _JobDetailScreenState extends ConsumerState<JobDetailScreen> {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red, foregroundColor: Colors.white),
             onPressed: () async {
               Navigator.pop(dialogContext); // close confirm dialog
-              
+
               final messenger = ScaffoldMessenger.of(context);
               final navigator = Navigator.of(context);
               unawaited(showDialog(
                 context: context,
                 barrierDismissible: false,
-                builder: (_) => const Center(child: CircularProgressIndicator()),
+                builder: (_) =>
+                    const Center(child: CircularProgressIndicator()),
               ));
 
               try {
-                await ref.read(serviceBookingRepositoryProvider).refundBooking(widget.bookingId);
+                await ref
+                    .read(serviceBookingRepositoryProvider)
+                    .refundBooking(widget.bookingId);
                 if (mounted) {
                   navigator.pop(); // close loader
                   messenger.showSnackBar(const SnackBar(
-                    content: Text('Booking cancelled and refund processed successfully!'),
+                    content: Text(
+                        'Booking cancelled and refund processed successfully!'),
                     backgroundColor: Colors.green,
                   ));
                 }

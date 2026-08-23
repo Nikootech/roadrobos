@@ -14,7 +14,8 @@ void payWithRazorpayWeb({
   required String description,
   required String contact,
   required String email,
-  required Function(String paymentId, String? orderId, String? signature) onSuccess,
+  required Function(String paymentId, String? orderId, String? signature)
+      onSuccess,
   required Function(String error) onFailure,
 }) {
   final optionsMap = {

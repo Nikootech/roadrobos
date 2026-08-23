@@ -48,24 +48,36 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
       RevenuePoint(x: 3, y: 22.4, label: 'Thu', date: '13 Aug', orders: 42),
       RevenuePoint(x: 4, y: 19.8, label: 'Fri', date: '14 Aug', orders: 39),
       RevenuePoint(x: 5, y: 28.6, label: 'Sat', date: '15 Aug', orders: 58),
-      RevenuePoint(x: 6, y: 32.1, label: 'Sun', date: '16 Aug (Live)', orders: 64),
+      RevenuePoint(
+          x: 6, y: 32.1, label: 'Sun', date: '16 Aug (Live)', orders: 64),
     ],
     '30D': const [
-      RevenuePoint(x: 0, y: 82.0, label: 'W1', date: 'Jul 20 - Jul 26', orders: 164),
-      RevenuePoint(x: 1, y: 94.5, label: 'W2', date: 'Jul 27 - Aug 02', orders: 188),
-      RevenuePoint(x: 2, y: 110.2, label: 'W3', date: 'Aug 03 - Aug 09', orders: 215),
-      RevenuePoint(x: 3, y: 138.6, label: 'W4', date: 'Aug 10 - Aug 16', orders: 276),
+      RevenuePoint(
+          x: 0, y: 82.0, label: 'W1', date: 'Jul 20 - Jul 26', orders: 164),
+      RevenuePoint(
+          x: 1, y: 94.5, label: 'W2', date: 'Jul 27 - Aug 02', orders: 188),
+      RevenuePoint(
+          x: 2, y: 110.2, label: 'W3', date: 'Aug 03 - Aug 09', orders: 215),
+      RevenuePoint(
+          x: 3, y: 138.6, label: 'W4', date: 'Aug 10 - Aug 16', orders: 276),
     ],
     '90D': const [
-      RevenuePoint(x: 0, y: 240.0, label: 'Jun', date: 'June 2026', orders: 520),
-      RevenuePoint(x: 1, y: 310.5, label: 'Jul', date: 'July 2026', orders: 684),
-      RevenuePoint(x: 2, y: 425.8, label: 'Aug', date: 'August 2026 (MTD)', orders: 940),
+      RevenuePoint(
+          x: 0, y: 240.0, label: 'Jun', date: 'June 2026', orders: 520),
+      RevenuePoint(
+          x: 1, y: 310.5, label: 'Jul', date: 'July 2026', orders: 684),
+      RevenuePoint(
+          x: 2, y: 425.8, label: 'Aug', date: 'August 2026 (MTD)', orders: 940),
     ],
     '1Y': const [
-      RevenuePoint(x: 0, y: 110.0, label: 'Q3 25', date: 'Q3 2025', orders: 320),
-      RevenuePoint(x: 1, y: 185.0, label: 'Q4 25', date: 'Q4 2025', orders: 490),
-      RevenuePoint(x: 2, y: 280.0, label: 'Q1 26', date: 'Q1 2026', orders: 680),
-      RevenuePoint(x: 3, y: 440.0, label: 'Q2 26', date: 'Q2 2026', orders: 1120),
+      RevenuePoint(
+          x: 0, y: 110.0, label: 'Q3 25', date: 'Q3 2025', orders: 320),
+      RevenuePoint(
+          x: 1, y: 185.0, label: 'Q4 25', date: 'Q4 2025', orders: 490),
+      RevenuePoint(
+          x: 2, y: 280.0, label: 'Q1 26', date: 'Q1 2026', orders: 680),
+      RevenuePoint(
+          x: 3, y: 440.0, label: 'Q2 26', date: 'Q2 2026', orders: 1120),
     ],
   };
 
@@ -87,11 +99,14 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
     super.dispose();
   }
 
-  List<RevenuePoint> get _currentPoints => _timeframeData[_selectedRange] ?? _timeframeData['7D']!;
+  List<RevenuePoint> get _currentPoints =>
+      _timeframeData[_selectedRange] ?? _timeframeData['7D']!;
 
   RevenuePoint get _activePoint {
     final points = _currentPoints;
-    if (_hoveredIndex != null && _hoveredIndex! >= 0 && _hoveredIndex! < points.length) {
+    if (_hoveredIndex != null &&
+        _hoveredIndex! >= 0 &&
+        _hoveredIndex! < points.length) {
       return points[_hoveredIndex!];
     }
     return points.last;
@@ -100,7 +115,8 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
   @override
   Widget build(BuildContext context) {
     final activePt = _activePoint;
-    final activeRevenueVal = (activePt.y + (_hoveredIndex == null ? _liveFluctuation : 0)) * 1000;
+    final activeRevenueVal =
+        (activePt.y + (_hoveredIndex == null ? _liveFluctuation : 0)) * 1000;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF6F8FA),
@@ -196,10 +212,14 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
               mainAxisSpacing: 12,
               childAspectRatio: 1.45,
               children: [
-                _buildKpiCard('Total Revenue', '₹12.4L', '+18.4%', Iconsax.wallet_3, const Color(0xFF059669), true),
-                _buildKpiCard('Active Referrals', '1,284', '+12.1%', Iconsax.profile_2user, const Color(0xFF0284C7), true),
-                _buildKpiCard('Referral Payouts', '₹45.2K', '-4.8%', Iconsax.money_send, const Color(0xFFD97706), false),
-                _buildKpiCard('Avg. Order Value', '₹850', '+6.2%', Iconsax.receipt_2, const Color(0xFF4F46E5), true),
+                _buildKpiCard('Total Revenue', '₹12.4L', '+18.4%',
+                    Iconsax.wallet_3, const Color(0xFF059669), true),
+                _buildKpiCard('Active Referrals', '1,284', '+12.1%',
+                    Iconsax.profile_2user, const Color(0xFF0284C7), true),
+                _buildKpiCard('Referral Payouts', '₹45.2K', '-4.8%',
+                    Iconsax.money_send, const Color(0xFFD97706), false),
+                _buildKpiCard('Avg. Order Value', '₹850', '+6.2%',
+                    Iconsax.receipt_2, const Color(0xFF4F46E5), true),
               ],
             ),
 
@@ -249,27 +269,37 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
                               },
                               borderRadius: BorderRadius.circular(8),
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 4),
                                 decoration: BoxDecoration(
                                   color: _showProfitCurve
-                                      ? const Color(0xFF0284C7).withValues(alpha: 0.1)
+                                      ? const Color(0xFF0284C7)
+                                          .withValues(alpha: 0.1)
                                       : const Color(0xFFF1F5F9),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Row(
                                   children: [
                                     Icon(
-                                      _showProfitCurve ? Iconsax.chart_21 : Iconsax.chart_2,
+                                      _showProfitCurve
+                                          ? Iconsax.chart_21
+                                          : Iconsax.chart_2,
                                       size: 14,
-                                      color: _showProfitCurve ? const Color(0xFF0284C7) : AppColors.textSecondary,
+                                      color: _showProfitCurve
+                                          ? const Color(0xFF0284C7)
+                                          : AppColors.textSecondary,
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
-                                      _showProfitCurve ? 'Net Margin' : 'Gross Rev',
+                                      _showProfitCurve
+                                          ? 'Net Margin'
+                                          : 'Gross Rev',
                                       style: TextStyle(
                                         fontSize: 11,
                                         fontWeight: FontWeight.w600,
-                                        color: _showProfitCurve ? const Color(0xFF0284C7) : AppColors.textSecondary,
+                                        color: _showProfitCurve
+                                            ? const Color(0xFF0284C7)
+                                            : AppColors.textSecondary,
                                       ),
                                     ),
                                   ],
@@ -289,15 +319,19 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
                               style: GoogleFonts.outfit(
                                 fontSize: 26,
                                 fontWeight: FontWeight.w900,
-                                color: _showProfitCurve ? const Color(0xFF0284C7) : AppColors.brandGreen,
+                                color: _showProfitCurve
+                                    ? const Color(0xFF0284C7)
+                                    : AppColors.brandGreen,
                                 letterSpacing: -0.5,
                               ),
                             ),
                             const SizedBox(width: 8),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF10B981).withValues(alpha: 0.12),
+                                color: const Color(0xFF10B981)
+                                    .withValues(alpha: 0.12),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
@@ -318,7 +352,8 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
                               : 'Touch or slide across the curve to inspect intervals',
                           style: TextStyle(
                             fontSize: 11,
-                            color: AppColors.textSecondary.withValues(alpha: 0.8),
+                            color:
+                                AppColors.textSecondary.withValues(alpha: 0.8),
                           ),
                         ),
                       ],
@@ -351,12 +386,15 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
                               duration: const Duration(milliseconds: 180),
                               padding: const EdgeInsets.symmetric(vertical: 6),
                               decoration: BoxDecoration(
-                                color: isSelected ? Colors.white : Colors.transparent,
+                                color: isSelected
+                                    ? Colors.white
+                                    : Colors.transparent,
                                 borderRadius: BorderRadius.circular(8),
                                 boxShadow: isSelected
                                     ? [
                                         BoxShadow(
-                                          color: Colors.black.withValues(alpha: 0.05),
+                                          color: Colors.black
+                                              .withValues(alpha: 0.05),
                                           blurRadius: 4,
                                           offset: const Offset(0, 1),
                                         )
@@ -368,8 +406,12 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
                                   range,
                                   style: GoogleFonts.outfit(
                                     fontSize: 12,
-                                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                                    color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
+                                    fontWeight: isSelected
+                                        ? FontWeight.w800
+                                        : FontWeight.w600,
+                                    color: isSelected
+                                        ? AppColors.textPrimary
+                                        : AppColors.textSecondary,
                                   ),
                                 ),
                               ),
@@ -385,7 +427,8 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
                   // Real-time Interactive Line Chart Canvas
                   Container(
                     height: 220,
-                    padding: const EdgeInsets.only(right: 20, left: 6, bottom: 8),
+                    padding:
+                        const EdgeInsets.only(right: 20, left: 6, bottom: 8),
                     child: _buildInteractiveChart(),
                   ),
                 ],
@@ -447,7 +490,9 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
         maxY: maxY,
         lineTouchData: LineTouchData(
           touchCallback: (FlTouchEvent event, LineTouchResponse? response) {
-            if (response != null && response.lineBarSpots != null && response.lineBarSpots!.isNotEmpty) {
+            if (response != null &&
+                response.lineBarSpots != null &&
+                response.lineBarSpots!.isNotEmpty) {
               final touchedIndex = response.lineBarSpots!.first.spotIndex;
               if (_hoveredIndex != touchedIndex) {
                 HapticFeedback.selectionClick();
@@ -457,7 +502,8 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
               }
             }
           },
-          getTouchedSpotIndicator: (LineChartBarData barData, List<int> spotIndexes) {
+          getTouchedSpotIndicator:
+              (LineChartBarData barData, List<int> spotIndexes) {
             return spotIndexes.map((spotIndex) {
               return TouchedSpotIndicatorData(
                 FlLine(
@@ -470,7 +516,9 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
                       radius: 6,
                       color: Colors.white,
                       strokeWidth: 3,
-                      strokeColor: _showProfitCurve ? const Color(0xFF0284C7) : AppColors.brandGreen,
+                      strokeColor: _showProfitCurve
+                          ? const Color(0xFF0284C7)
+                          : AppColors.brandGreen,
                     );
                   },
                 ),
@@ -480,11 +528,13 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
           touchTooltipData: LineTouchTooltipData(
             getTooltipColor: (touchedSpot) => const Color(0xFF0F172A),
             tooltipRoundedRadius: 10,
-            tooltipPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            tooltipPadding:
+                const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             getTooltipItems: (List<LineBarSpot> touchedSpots) {
               return touchedSpots.map((spot) {
                 final pt = points[spot.spotIndex];
-                final val = (pt.y * (_showProfitCurve ? 0.35 : 1.0) * 1000).toStringAsFixed(0);
+                final val = (pt.y * (_showProfitCurve ? 0.35 : 1.0) * 1000)
+                    .toStringAsFixed(0);
                 return LineTooltipItem(
                   '₹$val\n',
                   GoogleFonts.outfit(
@@ -526,7 +576,8 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
               interval: (maxY / 4).clamp(1.0, 500.0),
               getTitlesWidget: (value, meta) {
                 if (value == 0) return const SizedBox.shrink();
-                final text = value >= 100 ? '${(value).toInt()}k' : '${value.toInt()}k';
+                final text =
+                    value >= 100 ? '${(value).toInt()}k' : '${value.toInt()}k';
                 return Padding(
                   padding: const EdgeInsets.only(right: 6),
                   child: Text(
@@ -549,7 +600,9 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
               interval: 1,
               getTitlesWidget: (value, meta) {
                 final index = value.toInt();
-                if (index < 0 || index >= points.length) return const SizedBox.shrink();
+                if (index < 0 || index >= points.length) {
+                  return const SizedBox.shrink();
+                }
                 final isSelected = _hoveredIndex == index;
                 return Padding(
                   padding: const EdgeInsets.only(top: 8),
@@ -557,8 +610,11 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
                     points[index].label,
                     style: GoogleFonts.outfit(
                       fontSize: 11,
-                      fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                      color: isSelected ? AppColors.brandGreen : const Color(0xFF64748B),
+                      fontWeight:
+                          isSelected ? FontWeight.w800 : FontWeight.w600,
+                      color: isSelected
+                          ? AppColors.brandGreen
+                          : const Color(0xFF64748B),
                     ),
                   ),
                 );
@@ -571,19 +627,24 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
           LineChartBarData(
             isCurved: true,
             preventCurveOverShooting: true,
-            color: _showProfitCurve ? const Color(0xFF0284C7) : AppColors.brandGreen,
+            color: _showProfitCurve
+                ? const Color(0xFF0284C7)
+                : AppColors.brandGreen,
             barWidth: 3.5,
             isStrokeCapRound: true,
             dotData: FlDotData(
               checkToShowDot: (spot, barData) {
-                return spot.x == (points.length - 1).toDouble() || spot.x == (_hoveredIndex?.toDouble() ?? -1);
+                return spot.x == (points.length - 1).toDouble() ||
+                    spot.x == (_hoveredIndex?.toDouble() ?? -1);
               },
               getDotPainter: (spot, percent, barData, index) {
                 return FlDotCirclePainter(
                   radius: 5,
                   color: Colors.white,
                   strokeWidth: 3,
-                  strokeColor: _showProfitCurve ? const Color(0xFF0284C7) : AppColors.brandGreen,
+                  strokeColor: _showProfitCurve
+                      ? const Color(0xFF0284C7)
+                      : AppColors.brandGreen,
                 );
               },
             ),
@@ -606,7 +667,10 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
             spots: List.generate(points.length, (i) {
               final p = points[i];
               final factor = _showProfitCurve ? 0.38 : 1.0;
-              final val = (p.y * factor) + (i == points.length - 1 && _hoveredIndex == null ? _liveFluctuation : 0);
+              final val = (p.y * factor) +
+                  (i == points.length - 1 && _hoveredIndex == null
+                      ? _liveFluctuation
+                      : 0);
               return FlSpot(p.x, val);
             }),
           ),
@@ -657,13 +721,18 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: (isPositive ? const Color(0xFF10B981) : const Color(0xFFEF4444)).withValues(alpha: 0.1),
+                  color: (isPositive
+                          ? const Color(0xFF10B981)
+                          : const Color(0xFFEF4444))
+                      .withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
                   change,
                   style: GoogleFonts.outfit(
-                    color: isPositive ? const Color(0xFF059669) : const Color(0xFFDC2626),
+                    color: isPositive
+                        ? const Color(0xFF059669)
+                        : const Color(0xFFDC2626),
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
                   ),
@@ -700,10 +769,30 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
 
   Widget _buildLeaderboardTile(int index) {
     final advocates = [
-      {'name': 'Arun J.', 'referrals': 42, 'earned': '₹12,400', 'badge': 'Top Influencer'},
-      {'name': 'Sima K.', 'referrals': 38, 'earned': '₹10,800', 'badge': 'Super Advocate'},
-      {'name': 'Rahul V.', 'referrals': 29, 'earned': '₹8,200', 'badge': 'Pro Referrer'},
-      {'name': 'Meena P.', 'referrals': 24, 'earned': '₹6,900', 'badge': 'Rising Star'},
+      {
+        'name': 'Arun J.',
+        'referrals': 42,
+        'earned': '₹12,400',
+        'badge': 'Top Influencer'
+      },
+      {
+        'name': 'Sima K.',
+        'referrals': 38,
+        'earned': '₹10,800',
+        'badge': 'Super Advocate'
+      },
+      {
+        'name': 'Rahul V.',
+        'referrals': 29,
+        'earned': '₹8,200',
+        'badge': 'Pro Referrer'
+      },
+      {
+        'name': 'Meena P.',
+        'referrals': 24,
+        'earned': '₹6,900',
+        'badge': 'Rising Star'
+      },
     ];
     final adv = advocates[index];
 
@@ -764,7 +853,8 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
                     ),
                     const SizedBox(width: 6),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 1),
                       decoration: BoxDecoration(
                         color: AppColors.brandGreen.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(4),

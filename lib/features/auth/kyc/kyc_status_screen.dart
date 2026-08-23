@@ -54,9 +54,9 @@ class KycStatusScreen extends ConsumerWidget {
                 !snapshot.hasData) {
               return const Center(child: CircularProgressIndicator());
             }
-  
+
             final docs = snapshot.data ?? [];
-  
+
             if (docs.isEmpty) {
               return Center(
                 child: Padding(
@@ -85,11 +85,11 @@ class KycStatusScreen extends ConsumerWidget {
                 ),
               );
             }
-  
+
             final allApproved = docs.length >= 4 &&
                 docs.every((doc) => doc['status'] == 'approved');
             final profileApproved = userState.user?.kycStatus == 'approved';
-  
+
             return SingleChildScrollView(
               padding: const EdgeInsets.all(24),
               child: Column(
@@ -142,7 +142,8 @@ class KycStatusScreen extends ConsumerWidget {
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text('Refreshed: Role=${freshUser?.role.name}, KYC=${freshUser?.kycStatus}, Approved=${freshUser?.isApproved}'),
+                                content: Text(
+                                    'Refreshed: Role=${freshUser?.role.name}, KYC=${freshUser?.kycStatus}, Approved=${freshUser?.isApproved}'),
                                 backgroundColor: AppColors.brandGreen,
                               ),
                             );

@@ -85,9 +85,9 @@ class TaxiState {
   final double tipAmount;
   final DateTime? scheduledFor;
   final String? razorpayPaymentId; // stored after online payment
-  final bool refundInitiated;       // true after auto-refund triggered
-  final bool isLoadingLocation;     // true while GPS is being fetched
-  final bool isLoadingOptions;      // true while ride options are loading
+  final bool refundInitiated; // true after auto-refund triggered
+  final bool isLoadingLocation; // true while GPS is being fetched
+  final bool isLoadingOptions; // true while ride options are loading
 
   TaxiState({
     this.status = RideStatus.idle,
@@ -168,7 +168,8 @@ class TaxiState {
       roadroboName: identical(roadroboName, _kClear)
           ? this.roadroboName
           : roadroboName as String?,
-      driverId: identical(driverId, _kClear) ? this.driverId : driverId as String?,
+      driverId:
+          identical(driverId, _kClear) ? this.driverId : driverId as String?,
       eta: identical(eta, _kClear) ? this.eta : eta as String?,
       distance: distance ?? this.distance,
       otp: identical(otp, _kClear) ? this.otp : otp as String?,
@@ -230,8 +231,9 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
   StreamSubscription? _driverLocationSubscription;
   StreamSubscription? _rideSubscription;
   Timer? _searchTimeoutTimer;
-  Timer? _mockMovementTimer; // tracks Timer.periodic for simulated driver movement
-  Timer? _distanceDebounce;  // debounce for _calculateDistance()
+  Timer?
+      _mockMovementTimer; // tracks Timer.periodic for simulated driver movement
+  Timer? _distanceDebounce; // debounce for _calculateDistance()
   final _trackingService = UserTrackingService();
   // Single OSMMapsService instance — avoid creating per-call
   final _osmService = OSMMapsService();
@@ -407,7 +409,8 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
           final lat = startPos.latitude +
               (state.dropoffLocation!.latitude - startPos.latitude) * fraction;
           final lng = startPos.longitude +
-              (state.dropoffLocation!.longitude - startPos.longitude) * fraction;
+              (state.dropoffLocation!.longitude - startPos.longitude) *
+                  fraction;
 
           final currentPos = LatLng(lat, lng);
           const distanceCalc = Distance();
@@ -461,7 +464,8 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
           (1000 + random.nextInt(9000)).toString(); // 4 digit OTP
 
       final isDemoUser = user.user?.id == null || user.user!.id == 'demo';
-      final custId = isDemoUser ? '00000000-0000-0000-0000-000000000000' : user.user!.id;
+      final custId =
+          isDemoUser ? '00000000-0000-0000-0000-000000000000' : user.user!.id;
 
       final booking = RideBooking(
         id: '',
@@ -485,11 +489,13 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
         try {
           final paymentService = ref.read(paymentServiceProvider.notifier);
           paymentId = await paymentService.startPayment(PaymentDetails(
-            bookingId: '00000000-0000-0000-0000-000000000000', // Typically generated before payment
+            bookingId:
+                '00000000-0000-0000-0000-000000000000', // Typically generated before payment
             bookingType: BookingType.ride,
             totalCost: booking.fare,
             userId: custId,
-            description: 'Taxi Ride - ${state.selectedOption?.title ?? 'Standard'}',
+            description:
+                'Taxi Ride - ${state.selectedOption?.title ?? 'Standard'}',
             contact: user.user?.phone ?? '9999999999',
             email: user.user?.email ?? 'test@example.com',
           ));
@@ -529,8 +535,8 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
           rideId: bookingId,
           otp: generatedOtp,
           isOtpVerified: false,
-          razorpayPaymentId: state.paymentMethod == 'Online' ? paymentId : null);
-
+          razorpayPaymentId:
+              state.paymentMethod == 'Online' ? paymentId : null);
 
       if (nearbyDrivers.isEmpty) {
         // In production (or when _simulateMockDriver is false): signal UI to
@@ -594,8 +600,7 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
           }
 
           if (updatedRide.status == 'arrived') {
-            state =
-                state.copyWith(status: RideStatus.atPickup, eta: 'Arrived');
+            state = state.copyWith(status: RideStatus.atPickup, eta: 'Arrived');
           } else if (updatedRide.status == 'started') {
             state = state.copyWith(status: RideStatus.headingToDropoff);
           } else if (updatedRide.status == 'completed') {
@@ -653,8 +658,7 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
       int steps = 0;
       const totalSteps = 10;
       _mockMovementTimer?.cancel();
-      _mockMovementTimer =
-          Timer.periodic(const Duration(seconds: 2), (timer) {
+      _mockMovementTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
         if (!mounted || state.status != RideStatus.tracking) {
           timer.cancel();
           return;
@@ -737,10 +741,12 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
   Future<void> scheduleRideForLater(DateTime scheduledTime) async {
     final bookingId = state.rideId;
     if (bookingId == null || bookingId.isEmpty) return;
-    
+
     try {
       if (bookingId != '00000000-0000-0000-0000-000000000000') {
-        await ref.read(rideBookingRepositoryProvider).updateScheduledTime(bookingId, scheduledTime);
+        await ref
+            .read(rideBookingRepositoryProvider)
+            .updateScheduledTime(bookingId, scheduledTime);
       }
       reset();
     } catch (e) {
@@ -898,8 +904,6 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
 
     reset();
   }
-
-
 
   Future<void> _cancelBookingOnBackend() async {
     final bookingId = state.rideId;

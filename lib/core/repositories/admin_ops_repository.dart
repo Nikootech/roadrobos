@@ -58,10 +58,8 @@ class AdminOpsRepository {
         .stream(primaryKey: ['id']).asyncMap((_) async {
       try {
         // 1. Active rides (proactively cancel expired searching rides > 90s)
-        final cutoff = DateTime.now()
-            .toUtc()
-            .subtract(const Duration(seconds: 90))
-            .toIso8601String();
+        final DateTime now = DateTime.now().toUtc();
+        final cutoff = now.subtract(const Duration(seconds: 90)).utcIso;
 
         final activeRidesRes = await _supabase
             .from('ride_bookings')
@@ -89,7 +87,9 @@ class AdminOpsRepository {
         for (final r in completedRidesRes) {
           final fare = r['fare'];
           if (fare != null) {
-            revenue += (fare is num) ? fare.toDouble() : double.tryParse(fare.toString()) ?? 0.0;
+            revenue += (fare is num)
+                ? fare.toDouble()
+                : double.tryParse(fare.toString()) ?? 0.0;
           }
         }
 
@@ -107,7 +107,9 @@ class AdminOpsRepository {
         for (final s in completedServiceRes) {
           final cost = s['total_cost'];
           if (cost != null) {
-            revenue += (cost is num) ? cost.toDouble() : double.tryParse(cost.toString()) ?? 0.0;
+            revenue += (cost is num)
+                ? cost.toDouble()
+                : double.tryParse(cost.toString()) ?? 0.0;
           }
         }
 
@@ -131,8 +133,10 @@ class AdminOpsRepository {
             .eq('role', 'customer');
 
         // 5. Drivers & Technicians
-        final driversRes = await _supabase.from('drivers').select('id, is_online');
-        final onlineDriversCount = driversRes.where((d) => d['is_online'] == true).length;
+        final driversRes =
+            await _supabase.from('drivers').select('id, is_online');
+        final onlineDriversCount =
+            driversRes.where((d) => d['is_online'] == true).length;
         final totalDriversCount = driversRes.length;
 
         final jobsRes = await _supabase
@@ -231,12 +235,9 @@ class AdminOpsRepository {
   /// Acknowledge emergency alert
   Future<void> acknowledgeEmergencyAlert(String id) async {
     try {
-      await _supabase
-          .from('emergency_alerts')
-          .update({
-            'is_acknowledged': true,
-          })
-          .eq('id', id);
+      await _supabase.from('emergency_alerts').update({
+        'is_acknowledged': true,
+      }).eq('id', id);
     } catch (e) {
       throw AdminOpsRepositoryException('Failed to acknowledge alert', e);
     }
@@ -322,11 +323,13 @@ class AdminOpsRepository {
       // Add existing DB profiles enriched with stats
       for (final c in customers) {
         final cid = c['id']?.toString() ?? '';
-        final custBookings = bookings.where((b) =>
-            b['customer_id'] == cid || b['user_id'] == cid).toList();
-        
+        final custBookings = bookings
+            .where((b) => b['customer_id'] == cid || b['user_id'] == cid)
+            .toList();
+
         final double spent = custBookings.fold(0.0, (sum, b) {
-          final cost = double.tryParse(b['total_cost']?.toString() ?? '') ?? 0.0;
+          final cost =
+              double.tryParse(b['total_cost']?.toString() ?? '') ?? 0.0;
           return sum + cost;
         });
 
@@ -352,10 +355,12 @@ class AdminOpsRepository {
           'name': c['name'] ?? c['full_name'] ?? 'Sudhan M.',
           'phone': c['phone'] ?? c['phone_number'] ?? '+91 98401 23456',
           'email': c['email'] ?? 'sudhan@roadrobos.com',
-          'created_at': c['created_at'] ?? DateTime.now().toIso8601String(),
+          'created_at': c['created_at'] ?? DateTime.now().utcIso,
           'ltv': spent > 0 ? spent : 18500.0,
-          'total_rides': custBookings.where((b) => b['type'] == 'Ride').length + 8,
-          'total_rentals': custBookings.where((b) => b['type'] == 'Rental').length + 2,
+          'total_rides':
+              custBookings.where((b) => b['type'] == 'Ride').length + 8,
+          'total_rentals':
+              custBookings.where((b) => b['type'] == 'Rental').length + 2,
           'total_services': activities.length,
           'recent_bookings': activities,
         });
@@ -368,7 +373,8 @@ class AdminOpsRepository {
           'name': 'Ananya Sharma',
           'phone': '+91 98210 98765',
           'email': 'ananya.s@gmail.com',
-          'created_at': DateTime.now().subtract(const Duration(days: 90)).toIso8601String(),
+          'created_at':
+              DateTime.now().toUtc().subtract(const Duration(days: 90)).utcIso,
           'ltv': 12400.0,
           'total_rides': 8,
           'total_rentals': 2,
@@ -393,7 +399,8 @@ class AdminOpsRepository {
           'name': 'Rahul Verma',
           'phone': '+91 97110 55432',
           'email': 'rahul.verma@outlook.com',
-          'created_at': DateTime.now().subtract(const Duration(days: 45)).toIso8601String(),
+          'created_at':
+              DateTime.now().toUtc().subtract(const Duration(days: 45)).utcIso,
           'ltv': 6800.0,
           'total_rides': 19,
           'total_rentals': 0,
@@ -412,7 +419,8 @@ class AdminOpsRepository {
           'name': 'Priya Patel',
           'phone': '+91 99300 11223',
           'email': 'priya.patel@corp.in',
-          'created_at': DateTime.now().subtract(const Duration(days: 200)).toIso8601String(),
+          'created_at':
+              DateTime.now().toUtc().subtract(const Duration(days: 200)).utcIso,
           'ltv': 24900.0,
           'total_rides': 25,
           'total_rentals': 5,
@@ -431,7 +439,8 @@ class AdminOpsRepository {
           'name': 'Vikram Deshmukh',
           'phone': '+91 98190 77889',
           'email': 'vikram.d@gmail.com',
-          'created_at': DateTime.now().subtract(const Duration(days: 15)).toIso8601String(),
+          'created_at':
+              DateTime.now().toUtc().subtract(const Duration(days: 15)).utcIso,
           'ltv': 3200.0,
           'total_rides': 4,
           'total_rentals': 1,
@@ -448,7 +457,8 @@ class AdminOpsRepository {
       ];
 
       for (final sample in sampleCustomers) {
-        if (!resultList.any((r) => r['name'] == sample['name'] || r['id'] == sample['id'])) {
+        if (!resultList.any(
+            (r) => r['name'] == sample['name'] || r['id'] == sample['id'])) {
           resultList.add(sample);
         }
       }
@@ -478,7 +488,8 @@ class AdminOpsRepository {
           'name': 'Rajesh Kumar',
           'phone': '+91 98200 11223',
           'specialization': 'Senior EV & Battery Specialist',
-          'created_at': DateTime.now().subtract(const Duration(days: 300)).toIso8601String(),
+          'created_at':
+              DateTime.now().toUtc().subtract(const Duration(days: 300)).utcIso,
           'booked_jobs': 2,
           'ongoing_jobs': 1,
           'completed_jobs': 48,
@@ -489,7 +500,8 @@ class AdminOpsRepository {
           'name': 'Suresh Sharma',
           'phone': '+91 98111 44556',
           'specialization': 'Brake & Suspension Lead',
-          'created_at': DateTime.now().subtract(const Duration(days: 180)).toIso8601String(),
+          'created_at':
+              DateTime.now().toUtc().subtract(const Duration(days: 180)).utcIso,
           'booked_jobs': 1,
           'ongoing_jobs': 2,
           'completed_jobs': 34,
@@ -500,7 +512,8 @@ class AdminOpsRepository {
           'name': 'Vikram Patel',
           'phone': '+91 98333 77889',
           'specialization': 'Diagnostics & Engine Specialist',
-          'created_at': DateTime.now().subtract(const Duration(days: 90)).toIso8601String(),
+          'created_at':
+              DateTime.now().toUtc().subtract(const Duration(days: 90)).utcIso,
           'booked_jobs': 3,
           'ongoing_jobs': 0,
           'completed_jobs': 21,
@@ -584,42 +597,81 @@ class AdminOpsRepository {
           'id': 'DRV-8801',
           'name': 'Amit Singh',
           'phone': '+91 98700 33445',
-          'created_at': DateTime.now().subtract(const Duration(days: 150)).toIso8601String(),
+          'created_at':
+              DateTime.now().toUtc().subtract(const Duration(days: 150)).utcIso,
           'rating': 4.9,
           'total_rides': 230,
           'wallet_request': 4500.0,
           'kyc_documents': [
-            {'title': 'Driving License', 'status': 'Approved', 'uploaded_at': '2026-01-10'},
-            {'title': 'Vehicle RC Book', 'status': 'Approved', 'uploaded_at': '2026-01-10'},
-            {'title': 'Police Verification', 'status': 'Approved', 'uploaded_at': '2026-01-12'},
-            {'title': 'Aadhaar Card', 'status': 'Approved', 'uploaded_at': '2026-01-10'},
+            {
+              'title': 'Driving License',
+              'status': 'Approved',
+              'uploaded_at': '2026-01-10'
+            },
+            {
+              'title': 'Vehicle RC Book',
+              'status': 'Approved',
+              'uploaded_at': '2026-01-10'
+            },
+            {
+              'title': 'Police Verification',
+              'status': 'Approved',
+              'uploaded_at': '2026-01-12'
+            },
+            {
+              'title': 'Aadhaar Card',
+              'status': 'Approved',
+              'uploaded_at': '2026-01-10'
+            },
           ],
         },
         {
           'id': 'DRV-8802',
           'name': 'Ramesh Patil',
           'phone': '+91 98922 66778',
-          'created_at': DateTime.now().subtract(const Duration(days: 60)).toIso8601String(),
+          'created_at':
+              DateTime.now().toUtc().subtract(const Duration(days: 60)).utcIso,
           'rating': 4.7,
           'total_rides': 85,
           'wallet_request': 0.0,
           'kyc_documents': [
-            {'title': 'Driving License', 'status': 'Approved', 'uploaded_at': '2026-03-01'},
-            {'title': 'Commercial Insurance', 'status': 'Pending', 'uploaded_at': '2026-05-18'},
-            {'title': 'Vehicle Fitness', 'status': 'Pending', 'uploaded_at': '2026-05-18'},
+            {
+              'title': 'Driving License',
+              'status': 'Approved',
+              'uploaded_at': '2026-03-01'
+            },
+            {
+              'title': 'Commercial Insurance',
+              'status': 'Pending',
+              'uploaded_at': '2026-05-18'
+            },
+            {
+              'title': 'Vehicle Fitness',
+              'status': 'Pending',
+              'uploaded_at': '2026-05-18'
+            },
           ],
         },
         {
           'id': 'DRV-8803',
           'name': 'Sunil Gawande',
           'phone': '+91 98199 88990',
-          'created_at': DateTime.now().subtract(const Duration(days: 20)).toIso8601String(),
+          'created_at':
+              DateTime.now().toUtc().subtract(const Duration(days: 20)).utcIso,
           'rating': 5.0,
           'total_rides': 18,
           'wallet_request': 1200.0,
           'kyc_documents': [
-            {'title': 'Driving License', 'status': 'Approved', 'uploaded_at': '2026-05-02'},
-            {'title': 'Aadhaar Card', 'status': 'Approved', 'uploaded_at': '2026-05-02'},
+            {
+              'title': 'Driving License',
+              'status': 'Approved',
+              'uploaded_at': '2026-05-02'
+            },
+            {
+              'title': 'Aadhaar Card',
+              'status': 'Approved',
+              'uploaded_at': '2026-05-02'
+            },
           ],
         },
       ];
@@ -692,8 +744,7 @@ class AdminOpsRepository {
       if (roleFilter != null && roleFilter.isNotEmpty && roleFilter != 'all') {
         rows = rows
             .where((r) =>
-                r['role']?.toString().toLowerCase() ==
-                roleFilter.toLowerCase())
+                r['role']?.toString().toLowerCase() == roleFilter.toLowerCase())
             .toList();
       }
 
@@ -732,7 +783,9 @@ class AdminOpsRepository {
   /// Update any user or employee role dynamically
   Future<void> updateUserRole(String userId, String newRole) async {
     try {
-      await _supabase.from('profiles').update({'role': newRole}).eq('id', userId);
+      await _supabase
+          .from('profiles')
+          .update({'role': newRole}).eq('id', userId);
     } catch (e) {
       throw AdminOpsRepositoryException('Failed to update user role', e);
     }
@@ -841,10 +894,8 @@ class AdminOpsRepository {
   /// Fetch all active or searching ride bookings (filtering out stale searching > 90s)
   Future<List<Map<String, dynamic>>> getActiveSearchingRides() async {
     try {
-      final cutoff = DateTime.now()
-          .toUtc()
-          .subtract(const Duration(seconds: 90))
-          .toIso8601String();
+      final cutoff =
+          DateTime.now().toUtc().subtract(const Duration(seconds: 90)).utcIso;
       final response = await _supabase
           .from('ride_bookings')
           .select()
