@@ -146,18 +146,19 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
-      - name: Decode keystore
+      - name: Configure Keystore if secret exists
         run: |
-          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/app/upload-keystore.jks
-
-      - name: Create key.properties
-        run: |
-          cat > android/key.properties << EOF
-          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
-          keyPassword=${{ secrets.KEY_PASSWORD }}
-          keyAlias=${{ secrets.KEY_ALIAS }}
-          storeFile=upload-keystore.jks
-          EOF
+          if [ -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
+            echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/app/upload-keystore.jks
+            cat > android/key.properties << EOF
+            storePassword=${{ secrets.KEYSTORE_PASSWORD }}
+            keyPassword=${{ secrets.KEY_PASSWORD }}
+            keyAlias=${{ secrets.KEY_ALIAS }}
+            storeFile=upload-keystore.jks
+            EOF
+          else
+            echo "::warning::ANDROID_KEYSTORE_BASE64 secret not found. Building release bundle with CI debug signature."
+          fi
 
       - name: Build release AAB
         run: |
@@ -198,7 +199,13 @@ jobs:
         working-directory: "."
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
         run: |
-          supabase db push \
-            --project-ref ${{ secrets.SUPABASE_PROJECT_REF }} \
-            --db-url "postgresql://postgres:${{ secrets.SUPABASE_DB_PASSWORD }}@db.${{ secrets.SUPABASE_PROJECT_REF }}.supabase.co:5432/postgres"
+          if [ -n "$SUPABASE_ACCESS_TOKEN" ] && [ -n "$SUPABASE_PROJECT_REF" ]; then
+            supabase db push \
+              --project-ref "$SUPABASE_PROJECT_REF" \
+              --db-url "postgresql://postgres:${SUPABASE_DB_PASSWORD}@db.${SUPABASE_PROJECT_REF}.supabase.co:5432/postgres"
+          else
+            echo "::warning::SUPABASE_ACCESS_TOKEN or SUPABASE_PROJECT_REF not configured. Skipping automatic remote migration in CI."
+          fi

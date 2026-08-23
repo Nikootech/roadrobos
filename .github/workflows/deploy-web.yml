@@ -17,20 +17,24 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Create .dart_defines file
+      - name: Create .dart_defines.json file
         run: |
-          echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> .dart_defines
-          echo "SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}" >> .dart_defines
-          echo "RAZORPAY_KEY_ID=${{ secrets.RAZORPAY_KEY_ID }}" >> .dart_defines
-          echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" >> .dart_defines
-          echo "MAPS_API_KEY=${{ secrets.MAPS_API_KEY }}" >> .dart_defines
-          echo "ENV=prod" >> .dart_defines
+          cat << 'EOF' > .dart_defines.json
+          {
+            "SUPABASE_URL": "${{ secrets.SUPABASE_URL }}",
+            "SUPABASE_ANON_KEY": "${{ secrets.SUPABASE_ANON_KEY }}",
+            "RAZORPAY_KEY_ID": "${{ secrets.RAZORPAY_KEY_ID }}",
+            "GOOGLE_CLIENT_ID": "${{ secrets.GOOGLE_CLIENT_ID }}",
+            "MAPS_API_KEY": "${{ secrets.MAPS_API_KEY }}",
+            "ENV": "prod"
+          }
+          EOF
 
       - name: Install dependencies
         run: flutter pub get
 
       - name: Build Web Release
-        run: flutter build web --release --dart-define-from-file=.dart_defines --no-tree-shake-icons
+        run: flutter build web --release --dart-define-from-file=.dart_defines.json --no-tree-shake-icons
 
       - name: Check for Vercel Secrets
         id: check_secrets
