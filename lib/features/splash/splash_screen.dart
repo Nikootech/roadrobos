@@ -54,6 +54,30 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       // Auth still resolving — keep waiting
       if (authState.isLoading) continue;
 
+      // ── Enforce pending role re-login ──────────────────────────────────────
+      final isRoleReloginPending =
+          await localStorage.isPendingRoleReloginRequired();
+      if (isRoleReloginPending) {
+        _navigationHandled = true;
+        await localStorage.clearPendingRoleReloginRequired();
+        await localStorage.clearSelectedRole();
+        await localStorage.clearLastHomeRoute();
+        await ref.read(userProvider.notifier).logout();
+        if (!mounted) return;
+        debugPrint(
+            'SplashScreen: Pending role change re-login enforced → /auth/login');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+                'Your account role was updated by an Administrator. Please log in again to enter your new workspace.'),
+            backgroundColor: Color(0xFF006241),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        context.go('/auth/login');
+        return;
+      }
+
       // ── Not logged in ──────────────────────────────────────────────────────
       if (authState.value == null) {
         // If there is an active code exchange in the URL, wait for it

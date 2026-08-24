@@ -12,6 +12,7 @@ class LocalStorageService {
   static const String _keyDeviceId = 'local_device_id';
   static const String _keyMultiDeviceLogout = 'multi_device_logout';
   static const String _keyLastHomeRoute = 'last_home_route';
+  static const String _keyPendingRoleRelogin = 'pending_role_relogin';
 
   /// Check if this is the first time the app is launched
   Future<bool> isFirstLaunch() async {
@@ -94,5 +95,23 @@ class LocalStorageService {
   Future<void> clearLastHomeRoute() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_keyLastHomeRoute);
+  }
+
+  /// Mark that the user's role was changed by Admin and re-login is required
+  Future<void> setPendingRoleReloginRequired(bool val) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keyPendingRoleRelogin, val);
+  }
+
+  /// Check whether role changed re-login is pending
+  Future<bool> isPendingRoleReloginRequired() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_keyPendingRoleRelogin) ?? false;
+  }
+
+  /// Clear pending role re-login requirement
+  Future<void> clearPendingRoleReloginRequired() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_keyPendingRoleRelogin);
   }
 }

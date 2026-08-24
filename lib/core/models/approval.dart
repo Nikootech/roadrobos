@@ -150,4 +150,32 @@ class ApprovalRequest {
       return ApprovalStatus.pending;
     }
   }
+
+  ApprovalRequest copyWith({
+    String? id,
+    ApprovalType? type,
+    String? entityType,
+    String? entityId,
+    Map<String, dynamic>? payload,
+    String? makerId,
+    String? checkerId,
+    ApprovalStatus? status,
+    String? rejectionReason,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return ApprovalRequest(
+      id: id ?? this.id,
+      type: type ?? this.type,
+      entityType: entityType ?? this.entityType,
+      entityId: entityId ?? this.entityId,
+      payload: payload ?? this.payload,
+      makerId: makerId ?? this.makerId,
+      checkerId: checkerId ?? this.checkerId,
+      status: status ?? this.status,
+      rejectionReason: rejectionReason ?? this.rejectionReason,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
 }

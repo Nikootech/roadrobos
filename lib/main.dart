@@ -15,6 +15,8 @@ import 'core/config/app_config.dart';
 import 'navigation/app_router.dart';
 import 'features/rentals/rental_providers.dart';
 import 'shared/widgets/rental_completion_dialog.dart';
+import 'shared/widgets/role_changed_dialog.dart';
+import 'features/profile/user_provider.dart';
 import 'shared/widgets/error_screen.dart';
 import 'core/providers/theme_provider.dart';
 import 'core/services/notification_service.dart';
@@ -277,6 +279,20 @@ class RoadRobosApp extends ConsumerWidget {
           final ctx = rootNavigatorKey.currentContext;
           if (ctx != null && ctx.mounted) {
             _showCompletionDialog(ctx, ref, next!.vehicle['name'] ?? 'Vehicle');
+          }
+        });
+      }
+    });
+
+    // Global listener for in-app role change notification
+    ref.listen<UserState>(userProvider, (previous, next) {
+      if (next.showRoleChangedPrompt &&
+          (previous == null || !previous.showRoleChangedPrompt) &&
+          next.pendingNewRole != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          final ctx = rootNavigatorKey.currentContext;
+          if (ctx != null && ctx.mounted) {
+            RoleChangedDialog.show(ctx, next.pendingNewRole!);
           }
         });
       }

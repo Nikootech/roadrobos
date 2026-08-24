@@ -4,6 +4,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/models/approval.dart';
 import '../../../core/repositories/approval_repository.dart';
 
+import '../../../core/models/user_role.dart';
+
 class ApprovalNotifier extends AsyncNotifier<List<ApprovalRequest>> {
   @override
   Future<List<ApprovalRequest>> build() async {
@@ -120,6 +122,31 @@ class ApprovalNotifier extends AsyncNotifier<List<ApprovalRequest>> {
       id: id,
       status: ApprovalStatus.rejected,
       reason: reason,
+    );
+  }
+
+  Future<void> updateCorrection({
+    required String approvalId,
+    required String targetUserId,
+    required String name,
+    required String phone,
+    String? email,
+    required UserRole role,
+    required bool isApproved,
+    required Map<String, dynamic> currentPayload,
+    String? correctionNotes,
+  }) async {
+    final repository = ref.read(approvalRepositoryProvider);
+    await repository.updateApprovalUserCorrection(
+      approvalId: approvalId,
+      targetUserId: targetUserId,
+      name: name,
+      phone: phone,
+      email: email,
+      role: role,
+      isApproved: isApproved,
+      currentPayload: currentPayload,
+      correctionNotes: correctionNotes,
     );
   }
 }

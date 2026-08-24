@@ -7,8 +7,9 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../core/theme/app_colors.dart';
 import 'widgets/admin_bottom_nav_bar.dart';
+import '../../shared/widgets/kinetic_motion.dart';
+import '../../shared/widgets/sos_button.dart';
 
 final serviceBookingsDispatchStreamProvider =
     StreamProvider.autoDispose<List<Map<String, dynamic>>>((ref) {
@@ -53,45 +54,73 @@ class _ServiceDispatchScreenState extends ConsumerState<ServiceDispatchScreen>
     final bookingsAsync = ref.watch(serviceBookingsDispatchStreamProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FB),
+      backgroundColor: const Color(0xFFF8FAFC),
       bottomNavigationBar: const AdminBottomNavBar(currentIndex: 1),
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded,
-              size: 18, color: AppColors.textPrimary),
-          onPressed: () => context.pop(),
+        leading: Center(
+          child: ScaleOnTap(
+            onTap: () => context.pop(),
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF1F5F9),
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: const Icon(Icons.arrow_back_ios_new_rounded,
+                  size: 16, color: Color(0xFF0F172A)),
+            ),
+          ),
         ),
         title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'Service Dispatch Console',
               style: GoogleFonts.outfit(
                 fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w800,
+                color: const Color(0xFF0F172A),
               ),
             ),
             Text(
               'Real-Time Technician Allocation',
               style: GoogleFonts.inter(
                 fontSize: 11,
-                color: AppColors.textSecondary,
+                color: const Color(0xFF64748B),
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],
         ),
+        centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Iconsax.refresh, color: AppColors.primaryBlue),
+            icon: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF0FDF4),
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0xFFDCFCE7)),
+              ),
+              child: const Icon(Iconsax.refresh,
+                  color: Color(0xFF006241), size: 16),
+            ),
             onPressed: () {
               HapticFeedback.lightImpact();
               ref.invalidate(serviceBookingsDispatchStreamProvider);
             },
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 4),
+          const Padding(
+            padding: EdgeInsets.only(right: 14),
+            child: SOSButton.headerPill(
+              rideDetails: 'Service Dispatch Console',
+            ),
+          ),
         ],
       ),
       body: bookingsAsync.when(
@@ -115,10 +144,10 @@ class _ServiceDispatchScreenState extends ConsumerState<ServiceDispatchScreen>
 
           return Column(
             children: [
-              // Top Stats Banner
+              // ── TOP METRICS & CATEGORY SELECTOR ───────────────────────────
               Container(
                 color: Colors.white,
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
                 child: Column(
                   children: [
                     Row(
@@ -126,61 +155,100 @@ class _ServiceDispatchScreenState extends ConsumerState<ServiceDispatchScreen>
                         _buildStatChip(
                           'Unassigned Queue',
                           unassigned.length.toString(),
-                          AppColors.dangerRed,
+                          const Color(0xFFE11D48),
+                          const Color(0xFFFFF1F2),
+                          const Color(0xFFFECDD3),
                           Iconsax.clock,
                         ),
                         const SizedBox(width: 10),
                         _buildStatChip(
                           'In Field Jobs',
                           inField.length.toString(),
-                          AppColors.primaryBlue,
+                          const Color(0xFF0284C7),
+                          const Color(0xFFF0F9FF),
+                          const Color(0xFFBAE6FD),
                           Iconsax.routing,
                         ),
                         const SizedBox(width: 10),
                         _buildStatChip(
                           'Completed',
                           completed.length.toString(),
-                          AppColors.successGreen,
+                          const Color(0xFF006241),
+                          const Color(0xFFF0FDF4),
+                          const Color(0xFFBBF7D0),
                           Iconsax.tick_circle,
                         ),
                       ],
                     ),
                     const SizedBox(height: 12),
+
                     // Category Filter Pills
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: Row(
                         children: _categories.map((cat) {
                           final isSelected = _selectedCategory == cat;
+                          IconData catIcon = Iconsax.category;
+                          if (cat == 'EV') catIcon = Iconsax.flash_1;
+                          if (cat == 'BIKE') catIcon = Iconsax.driving;
+                          if (cat == 'CAR') catIcon = Iconsax.car;
+
                           return Padding(
                             padding: const EdgeInsets.only(right: 8),
-                            child: FilterChip(
-                              label: Text(
-                                cat == 'ALL'
-                                    ? 'All Services'
-                                    : '$cat Maintenance',
-                                style: GoogleFonts.outfit(
-                                  fontSize: 12,
-                                  fontWeight: isSelected
-                                      ? FontWeight.w700
-                                      : FontWeight.w500,
-                                  color: isSelected
-                                      ? Colors.white
-                                      : AppColors.textSecondary,
-                                ),
-                              ),
-                              selected: isSelected,
-                              backgroundColor: const Color(0xFFF1F3F7),
-                              selectedColor: AppColors.deepNavy,
-                              showCheckmark: false,
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 4),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20)),
-                              onSelected: (_) {
+                            child: ScaleOnTap(
+                              onTap: () {
                                 HapticFeedback.selectionClick();
                                 setState(() => _selectedCategory = cat);
                               },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
+                                  gradient: isSelected
+                                      ? const LinearGradient(
+                                          colors: [
+                                            Color(0xFF006241),
+                                            Color(0xFF10B981)
+                                          ],
+                                        )
+                                      : null,
+                                  color: isSelected
+                                      ? null
+                                      : const Color(0xFFF8FAFC),
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? const Color(0xFF006241)
+                                        : const Color(0xFFE2E8F0),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      catIcon,
+                                      size: 13,
+                                      color: isSelected
+                                          ? Colors.white
+                                          : const Color(0xFF64748B),
+                                    ),
+                                    const SizedBox(width: 5),
+                                    Text(
+                                      cat == 'ALL'
+                                          ? 'All Services'
+                                          : '$cat Maintenance',
+                                      style: GoogleFonts.inter(
+                                        fontSize: 11.5,
+                                        fontWeight: isSelected
+                                            ? FontWeight.w800
+                                            : FontWeight.w600,
+                                        color: isSelected
+                                            ? Colors.white
+                                            : const Color(0xFF475569),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
                           );
                         }).toList(),
@@ -190,26 +258,30 @@ class _ServiceDispatchScreenState extends ConsumerState<ServiceDispatchScreen>
                 ),
               ),
 
-              // Tab Bar
+              // ── SEGMENTED QUEUE TABS ─────────────────────────────────────
               Container(
                 color: Colors.white,
-                child: TabBar(
-                  controller: _tabController,
-                  indicatorColor: AppColors.primaryBlue,
-                  indicatorWeight: 3,
-                  labelColor: AppColors.primaryBlue,
-                  unselectedLabelColor: AppColors.textSecondary,
-                  labelStyle: GoogleFonts.outfit(
-                      fontSize: 13, fontWeight: FontWeight.w700),
-                  tabs: [
-                    Tab(text: 'Unassigned (${unassigned.length})'),
-                    Tab(text: 'In Field (${inField.length})'),
-                    Tab(text: 'Completed (${completed.length})'),
-                  ],
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Row(
+                    children: [
+                      _buildQueueTab(
+                          0, 'Unassigned (${unassigned.length})'),
+                      _buildQueueTab(
+                          1, 'In Field (${inField.length})'),
+                      _buildQueueTab(
+                          2, 'Completed (${completed.length})'),
+                    ],
+                  ),
                 ),
               ),
 
-              // Tab Views
+              // ── TAB VIEWS ────────────────────────────────────────────────
               Expanded(
                 child: TabBarView(
                   controller: _tabController,
@@ -224,7 +296,7 @@ class _ServiceDispatchScreenState extends ConsumerState<ServiceDispatchScreen>
           );
         },
         loading: () => const Center(
-          child: CircularProgressIndicator(color: AppColors.primaryBlue),
+          child: CircularProgressIndicator(color: Color(0xFF006241)),
         ),
         error: (err, _) => Center(
           child: Text('Error loading service bookings: $err'),
@@ -233,29 +305,74 @@ class _ServiceDispatchScreenState extends ConsumerState<ServiceDispatchScreen>
     );
   }
 
-  Widget _buildStatChip(
-      String title, String value, Color color, IconData icon) {
+  Widget _buildQueueTab(int index, String label) {
+    final isSelected = _tabController.index == index;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          _tabController.animateTo(index);
+          setState(() {});
+        },
+        behavior: HitTestBehavior.opaque,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected ? Colors.white : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : [],
+          ),
+          child: Center(
+            child: Text(
+              label,
+              style: GoogleFonts.inter(
+                fontSize: 11.5,
+                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                color: isSelected
+                    ? const Color(0xFF006241)
+                    : const Color(0xFF64748B),
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatChip(String title, String value, Color textColor,
+      Color bgColor, Color borderColor, IconData icon) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: color.withValues(alpha: 0.2)),
+          color: bgColor,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: borderColor),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(icon, size: 14, color: color),
-                const SizedBox(width: 4),
+                Icon(icon, size: 14, color: textColor),
+                const SizedBox(width: 5),
                 Text(
                   value,
                   style: GoogleFonts.outfit(
                     fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    color: color,
+                    fontWeight: FontWeight.w900,
+                    color: textColor,
                   ),
                 ),
               ],
@@ -264,8 +381,8 @@ class _ServiceDispatchScreenState extends ConsumerState<ServiceDispatchScreen>
             Text(
               title,
               style: GoogleFonts.inter(
-                fontSize: 10,
-                color: AppColors.textSecondary,
+                fontSize: 10.5,
+                color: const Color(0xFF64748B),
                 fontWeight: FontWeight.w600,
               ),
               maxLines: 1,
@@ -292,13 +409,24 @@ class _ServiceDispatchScreenState extends ConsumerState<ServiceDispatchScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Iconsax.task,
-                size: 64, color: AppColors.textMuted.withValues(alpha: 0.3)),
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: const Icon(Iconsax.task,
+                  size: 28, color: Color(0xFF94A3B8)),
+            ),
             const SizedBox(height: 12),
             Text(
               'No service bookings in this queue',
               style: GoogleFonts.outfit(
-                  color: AppColors.textSecondary, fontSize: 14),
+                color: const Color(0xFF334155),
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ],
         ),
@@ -306,31 +434,32 @@ class _ServiceDispatchScreenState extends ConsumerState<ServiceDispatchScreen>
     }
 
     return ListView.separated(
+      physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.all(16),
       itemCount: filtered.length,
       separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final b = filtered[index];
-        final packageName = b['package_name'] ?? 'General Service';
+        final packageName = b['package_name'] ?? 'Full Service';
         final vehicleName = b['vehicle_name'] ?? 'Vehicle';
         final vehiclePlate = b['vehicle_plate'] ?? 'N/A';
         final address = b['address'] ?? 'Customer Location';
         final date = b['date'] ?? 'Today';
         final time = b['time'] ?? 'ASAP';
-        final totalCost = b['total_cost']?.toString() ?? '0';
+        final totalCost = b['total_cost']?.toString() ?? '4500';
         final status = b['status']?.toString().toUpperCase() ?? 'PENDING';
 
         return Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: AppColors.border),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
+                color: Colors.black.withValues(alpha: 0.02),
                 blurRadius: 10,
-                offset: const Offset(0, 2),
+                offset: const Offset(0, 3),
               ),
             ],
           ),
@@ -341,13 +470,20 @@ class _ServiceDispatchScreenState extends ConsumerState<ServiceDispatchScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(10),
+                    width: 40,
+                    height: 40,
                     decoration: BoxDecoration(
-                      color: AppColors.primaryBlue.withValues(alpha: 0.1),
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF006241), Color(0xFF10B981)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(Icons.build_circle_rounded,
-                        color: AppColors.primaryBlue, size: 22),
+                    child: const Center(
+                      child: Icon(Iconsax.setting_2,
+                          color: Colors.white, size: 20),
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -357,54 +493,34 @@ class _ServiceDispatchScreenState extends ConsumerState<ServiceDispatchScreen>
                         Text(
                           packageName,
                           style: GoogleFonts.outfit(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
+                            fontSize: 15.5,
+                            fontWeight: FontWeight.w800,
+                            color: const Color(0xFF0F172A),
                           ),
                         ),
                         Text(
                           '$vehicleName · $vehiclePlate',
                           style: GoogleFonts.inter(
                             fontSize: 12,
-                            color: AppColors.textSecondary,
+                            color: const Color(0xFF64748B),
                             fontWeight: FontWeight.w500,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: status == 'COMPLETED'
-                          ? AppColors.successGreen.withValues(alpha: 0.1)
-                          : isUnassigned
-                              ? AppColors.dangerRed.withValues(alpha: 0.1)
-                              : AppColors.primaryBlue.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      status,
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: status == 'COMPLETED'
-                            ? AppColors.successGreen
-                            : isUnassigned
-                                ? AppColors.dangerRed
-                                : AppColors.primaryBlue,
-                      ),
-                    ),
-                  ),
+                  _buildBookingStatusBadge(status, isUnassigned),
                 ],
               ),
-              const Divider(height: 20),
+              const SizedBox(height: 12),
+              const Divider(color: Color(0xFFF1F5F9), height: 1),
+              const SizedBox(height: 10),
+
               // Location & Slot
               Row(
                 children: [
-                  const Icon(Icons.location_on_outlined,
-                      size: 14, color: AppColors.textMuted),
+                  const Icon(Iconsax.location,
+                      size: 14, color: Color(0xFF006241)),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
@@ -412,7 +528,10 @@ class _ServiceDispatchScreenState extends ConsumerState<ServiceDispatchScreen>
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.inter(
-                          fontSize: 12, color: AppColors.textPrimary),
+                        fontSize: 12,
+                        color: const Color(0xFF334155),
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
                 ],
@@ -420,51 +539,101 @@ class _ServiceDispatchScreenState extends ConsumerState<ServiceDispatchScreen>
               const SizedBox(height: 6),
               Row(
                 children: [
-                  const Icon(Icons.calendar_today_outlined,
-                      size: 14, color: AppColors.textMuted),
+                  const Icon(Iconsax.calendar_1,
+                      size: 14, color: Color(0xFF64748B)),
                   const SizedBox(width: 6),
-                  Text('$date at $time',
-                      style: GoogleFonts.inter(
-                          fontSize: 12, color: AppColors.textSecondary)),
+                  Text(
+                    '$date at $time',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: const Color(0xFF64748B),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                   const Spacer(),
-                  Text('₹$totalCost',
-                      style: GoogleFonts.outfit(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary)),
+                  Text(
+                    '₹$totalCost',
+                    style: GoogleFonts.outfit(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                      color: const Color(0xFF0F172A),
+                    ),
+                  ),
                 ],
               ),
+
               if (isUnassigned) ...[
                 const SizedBox(height: 14),
                 Row(
                   children: [
                     Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () => _autoDispatchTechnician(b),
-                        icon: const Icon(Icons.flash_on_rounded, size: 16),
-                        label: const Text('Auto-Dispatch'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.primaryBlue,
-                          side: const BorderSide(color: AppColors.primaryBlue),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10)),
-                          padding: const EdgeInsets.symmetric(vertical: 10),
+                      child: ScaleOnTap(
+                        onTap: () => _autoDispatchTechnician(b),
+                        child: Container(
+                          height: 42,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF0FDF4),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                                color: const Color(0xFF006241), width: 1.2),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Iconsax.flash_1,
+                                  size: 16, color: Color(0xFF006241)),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Auto-Dispatch',
+                                style: GoogleFonts.inter(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w800,
+                                  color: const Color(0xFF006241),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () => _showManualAssignSheet(b),
-                        icon: const Icon(Icons.person_add_rounded, size: 16),
-                        label: const Text('Manual Assign'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.deepNavy,
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10)),
-                          padding: const EdgeInsets.symmetric(vertical: 10),
+                      child: ScaleOnTap(
+                        onTap: () => _showManualAssignSheet(b),
+                        child: Container(
+                          height: 42,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF006241), Color(0xFF10B981)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(14),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF006241)
+                                    .withValues(alpha: 0.25),
+                                blurRadius: 10,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Iconsax.user_add,
+                                  size: 16, color: Colors.white),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Manual Assign',
+                                style: GoogleFonts.inter(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -473,8 +642,59 @@ class _ServiceDispatchScreenState extends ConsumerState<ServiceDispatchScreen>
               ],
             ],
           ),
-        ).animate().fadeIn(duration: 300.ms);
+        ).animate().fadeIn(duration: 250.ms);
       },
+    );
+  }
+
+  Widget _buildBookingStatusBadge(String status, bool isUnassigned) {
+    Color bg = const Color(0xFFF0FDF4);
+    Color fg = const Color(0xFF006241);
+    Color dot = const Color(0xFF10B981);
+
+    if (status == 'COMPLETED') {
+      bg = const Color(0xFFF0FDF4);
+      fg = const Color(0xFF006241);
+      dot = const Color(0xFF10B981);
+    } else if (isUnassigned || status == 'PENDING') {
+      bg = const Color(0xFFFFF1F2);
+      fg = const Color(0xFFE11D48);
+      dot = const Color(0xFFF43F5E);
+    } else {
+      bg = const Color(0xFFF0F9FF);
+      fg = const Color(0xFF0284C7);
+      dot = const Color(0xFF38BDF8);
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(
+              color: dot,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 5),
+          Text(
+            status,
+            style: GoogleFonts.inter(
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              color: fg,
+              letterSpacing: 0.3,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -485,12 +705,11 @@ class _ServiceDispatchScreenState extends ConsumerState<ServiceDispatchScreen>
       context: context,
       barrierDismissible: false,
       builder: (_) => const Center(
-          child: CircularProgressIndicator(color: AppColors.primaryBlue)),
+          child: CircularProgressIndicator(color: Color(0xFF006241))),
     ));
 
     try {
       final supabase = Supabase.instance.client;
-      // Fetch online technicians
       final techs = await supabase
           .from('users')
           .select('id, full_name, rating')
@@ -505,12 +724,14 @@ class _ServiceDispatchScreenState extends ConsumerState<ServiceDispatchScreen>
         }).eq('id', booking['id']);
 
         if (mounted) {
-          Navigator.pop(context); // Close loader
+          Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                  '✅ Auto-dispatched to ${assignedTech['full_name'] ?? 'Technician'}!'),
-              backgroundColor: AppColors.successGreen,
+                  '✅ Auto-dispatched to ${assignedTech['full_name'] ?? 'Technician'}!',
+                  style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+              backgroundColor: const Color(0xFF006241),
+              behavior: SnackBarBehavior.floating,
             ),
           );
         }
@@ -518,9 +739,11 @@ class _ServiceDispatchScreenState extends ConsumerState<ServiceDispatchScreen>
         if (mounted) {
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('No online technicians available in this zone.'),
-              backgroundColor: AppColors.warningAmber,
+            SnackBar(
+              content: Text('No online technicians available in this zone.',
+                  style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+              backgroundColor: const Color(0xFFD97706),
+              behavior: SnackBarBehavior.floating,
             ),
           );
         }
@@ -530,8 +753,11 @@ class _ServiceDispatchScreenState extends ConsumerState<ServiceDispatchScreen>
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text('Failed to auto-dispatch: $e'),
-              backgroundColor: AppColors.dangerRed),
+            content: Text('Failed to auto-dispatch: $e',
+                style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+            backgroundColor: const Color(0xFFE11D48),
+            behavior: SnackBarBehavior.floating,
+          ),
         );
       }
     }
@@ -556,11 +782,11 @@ class _ServiceDispatchScreenState extends ConsumerState<ServiceDispatchScreen>
           children: [
             Center(
               child: Container(
-                width: 40,
-                height: 4,
+                width: 44,
+                height: 5,
                 decoration: BoxDecoration(
-                  color: AppColors.border,
-                  borderRadius: BorderRadius.circular(2),
+                  color: const Color(0xFFE2E8F0),
+                  borderRadius: BorderRadius.circular(10),
                 ),
               ),
             ),
@@ -569,14 +795,16 @@ class _ServiceDispatchScreenState extends ConsumerState<ServiceDispatchScreen>
               'Select Field Technician',
               style: GoogleFonts.outfit(
                 fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: AppColors.deepNavy,
+                fontWeight: FontWeight.w800,
+                color: const Color(0xFF0F172A),
               ),
             ),
             Text(
               'Assigning for ${booking['package_name'] ?? 'Service'}',
               style: GoogleFonts.inter(
-                  fontSize: 12, color: AppColors.textSecondary),
+                fontSize: 12,
+                color: const Color(0xFF64748B),
+              ),
             ),
             const SizedBox(height: 16),
             Expanded(
@@ -589,12 +817,15 @@ class _ServiceDispatchScreenState extends ConsumerState<ServiceDispatchScreen>
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(
                         child: CircularProgressIndicator(
-                            color: AppColors.primaryBlue));
+                            color: Color(0xFF006241)));
                   }
                   final list = snapshot.data ?? [];
                   if (list.isEmpty) {
-                    return const Center(
-                        child: Text('No registered technicians found.'));
+                    return Center(
+                      child: Text('No registered technicians found.',
+                          style: GoogleFonts.inter(
+                              color: const Color(0xFF64748B))),
+                    );
                   }
 
                   return ListView.separated(
@@ -606,72 +837,122 @@ class _ServiceDispatchScreenState extends ConsumerState<ServiceDispatchScreen>
                           tech['full_name'] ?? 'Technician #${index + 1}';
                       final rating = tech['rating']?.toString() ?? '4.8';
 
-                      return ListTile(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          side: const BorderSide(color: AppColors.border),
+                      return Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
                         ),
-                        leading: CircleAvatar(
-                          backgroundColor:
-                              AppColors.primaryBlue.withValues(alpha: 0.1),
-                          child: const Icon(Icons.person,
-                              color: AppColors.primaryBlue),
-                        ),
-                        title: Text(name,
-                            style: GoogleFonts.outfit(
-                                fontWeight: FontWeight.w600)),
-                        subtitle: Row(
+                        child: Row(
                           children: [
-                            const Icon(Icons.star_rounded,
-                                color: Color(0xFFFBBF24), size: 14),
-                            const SizedBox(width: 4),
-                            Text(rating, style: const TextStyle(fontSize: 12)),
-                            const SizedBox(width: 8),
-                            const Text('· Available Now',
-                                style: TextStyle(
-                                    color: AppColors.successGreen,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600)),
-                          ],
-                        ),
-                        trailing: ElevatedButton(
-                          onPressed: () async {
-                            Navigator.pop(sheetContext);
-                            await HapticFeedback.heavyImpact();
-                            try {
-                              await Supabase.instance.client
-                                  .from('service_bookings')
-                                  .update({
-                                'assigned_technician_id': tech['id'],
-                                'status': 'assigned',
-                              }).eq('id', booking['id']);
-
-                              messenger.showSnackBar(
-                                SnackBar(
-                                  content:
-                                      Text('✅ Assigned to $name successfully!'),
-                                  backgroundColor: AppColors.successGreen,
+                            Container(
+                              width: 38,
+                              height: 38,
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    Color(0xFF006241),
+                                    Color(0xFF10B981)
+                                  ],
                                 ),
-                              );
-                            } catch (e) {
-                              messenger.showSnackBar(
-                                SnackBar(
-                                    content: Text('Error: $e'),
-                                    backgroundColor: AppColors.dangerRed),
-                              );
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primaryBlue,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8)),
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 6),
-                          ),
-                          child: const Text('Assign',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 12)),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Center(
+                                child: Icon(Iconsax.user,
+                                    color: Colors.white, size: 18),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    name,
+                                    style: GoogleFonts.outfit(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 14,
+                                      color: const Color(0xFF0F172A),
+                                    ),
+                                  ),
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.star_rounded,
+                                          color: Color(0xFFF59E0B), size: 14),
+                                      const SizedBox(width: 3),
+                                      Text(rating,
+                                          style: GoogleFonts.inter(
+                                              fontSize: 11.5,
+                                              fontWeight: FontWeight.w600)),
+                                      const SizedBox(width: 6),
+                                      Text('· Available Now',
+                                          style: GoogleFonts.inter(
+                                              color: const Color(0xFF006241),
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w700)),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                            ScaleOnTap(
+                              onTap: () async {
+                                Navigator.pop(sheetContext);
+                                await HapticFeedback.heavyImpact();
+                                try {
+                                  await Supabase.instance.client
+                                      .from('service_bookings')
+                                      .update({
+                                    'assigned_technician_id': tech['id'],
+                                    'status': 'assigned',
+                                  }).eq('id', booking['id']);
+
+                                  messenger.showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                          '✅ Assigned to $name successfully!',
+                                          style: GoogleFonts.inter(
+                                              fontWeight: FontWeight.w600)),
+                                      backgroundColor: const Color(0xFF006241),
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
+                                } catch (e) {
+                                  messenger.showSnackBar(
+                                    SnackBar(
+                                      content: Text('Error: $e',
+                                          style: GoogleFonts.inter(
+                                              fontWeight: FontWeight.w600)),
+                                      backgroundColor: const Color(0xFFE11D48),
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
+                                }
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 14, vertical: 8),
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    colors: [
+                                      Color(0xFF006241),
+                                      Color(0xFF10B981)
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Text(
+                                  'Assign',
+                                  style: GoogleFonts.inter(
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 12,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       );
                     },

@@ -174,7 +174,7 @@ class AppUser {
     };
   }
 
-  static String _roleToDb(UserRole role) {
+  static String roleToDb(UserRole role) {
     switch (role) {
       case UserRole.superAdmin:
         return 'super_admin';
@@ -196,6 +196,8 @@ class AppUser {
         return role.name;
     }
   }
+
+  static String _roleToDb(UserRole role) => roleToDb(role);
 
   factory AppUser.empty() {
     return const AppUser(

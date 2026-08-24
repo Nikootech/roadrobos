@@ -3,20 +3,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
-import '../../core/theme/app_colors.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'widgets/admin_bottom_nav_bar.dart';
+import '../../shared/widgets/kinetic_motion.dart';
+import '../../shared/widgets/sos_button.dart';
 
-class RevenuePoint {
+class RevenueDataPoint {
   final double x;
-  final double y; // in thousands of INR
+  final double y; // in Thousands (e.g. 19.8 = ₹19,800)
   final String label;
   final String date;
   final int orders;
 
-  const RevenuePoint({
+  RevenueDataPoint({
     required this.x,
     required this.y,
     required this.label,
@@ -36,58 +37,66 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
   String _selectedRange = '7D';
   int? _hoveredIndex;
   bool _showProfitCurve = false;
-
-  Timer? _liveTicker;
   double _liveFluctuation = 0.0;
+  Timer? _liveTimer;
 
-  final Map<String, List<RevenuePoint>> _timeframeData = {
-    '7D': const [
-      RevenuePoint(x: 0, y: 14.2, label: 'Mon', date: '10 Aug', orders: 28),
-      RevenuePoint(x: 1, y: 18.5, label: 'Tue', date: '11 Aug', orders: 34),
-      RevenuePoint(x: 2, y: 16.0, label: 'Wed', date: '12 Aug', orders: 31),
-      RevenuePoint(x: 3, y: 22.4, label: 'Thu', date: '13 Aug', orders: 42),
-      RevenuePoint(x: 4, y: 19.8, label: 'Fri', date: '14 Aug', orders: 39),
-      RevenuePoint(x: 5, y: 28.6, label: 'Sat', date: '15 Aug', orders: 58),
-      RevenuePoint(
-          x: 6, y: 32.1, label: 'Sun', date: '16 Aug (Live)', orders: 64),
+  // Datasets for Timeframes
+  final Map<String, List<RevenueDataPoint>> _datasets = {
+    '7D': [
+      RevenueDataPoint(
+          x: 0, y: 16.2, label: 'Mon', date: '10 Aug', orders: 28),
+      RevenueDataPoint(
+          x: 1, y: 21.5, label: 'Tue', date: '11 Aug', orders: 34),
+      RevenueDataPoint(
+          x: 2, y: 18.0, label: 'Wed', date: '12 Aug', orders: 31),
+      RevenueDataPoint(
+          x: 3, y: 25.4, label: 'Thu', date: '13 Aug', orders: 45),
+      RevenueDataPoint(
+          x: 4, y: 19.8, label: 'Fri', date: '14 Aug', orders: 39),
+      RevenueDataPoint(
+          x: 5, y: 31.0, label: 'Sat', date: '15 Aug', orders: 58),
+      RevenueDataPoint(
+          x: 6, y: 35.6, label: 'Sun', date: '16 Aug', orders: 64),
     ],
-    '30D': const [
-      RevenuePoint(
-          x: 0, y: 82.0, label: 'W1', date: 'Jul 20 - Jul 26', orders: 164),
-      RevenuePoint(
-          x: 1, y: 94.5, label: 'W2', date: 'Jul 27 - Aug 02', orders: 188),
-      RevenuePoint(
-          x: 2, y: 110.2, label: 'W3', date: 'Aug 03 - Aug 09', orders: 215),
-      RevenuePoint(
-          x: 3, y: 138.6, label: 'W4', date: 'Aug 10 - Aug 16', orders: 276),
+    '30D': [
+      RevenueDataPoint(
+          x: 0, y: 82.0, label: 'W1', date: '1-7 Jul', orders: 180),
+      RevenueDataPoint(
+          x: 1, y: 94.5, label: 'W2', date: '8-14 Jul', orders: 210),
+      RevenueDataPoint(
+          x: 2, y: 89.2, label: 'W3', date: '15-21 Jul', orders: 195),
+      RevenueDataPoint(
+          x: 3, y: 115.0, label: 'W4', date: '22-28 Jul', orders: 270),
     ],
-    '90D': const [
-      RevenuePoint(
-          x: 0, y: 240.0, label: 'Jun', date: 'June 2026', orders: 520),
-      RevenuePoint(
-          x: 1, y: 310.5, label: 'Jul', date: 'July 2026', orders: 684),
-      RevenuePoint(
-          x: 2, y: 425.8, label: 'Aug', date: 'August 2026 (MTD)', orders: 940),
+    '90D': [
+      RevenueDataPoint(
+          x: 0, y: 320.0, label: 'May', date: 'May 2026', orders: 740),
+      RevenueDataPoint(
+          x: 1, y: 380.5, label: 'Jun', date: 'Jun 2026', orders: 860),
+      RevenueDataPoint(
+          x: 2, y: 442.0, label: 'Jul', date: 'Jul 2026', orders: 980),
     ],
-    '1Y': const [
-      RevenuePoint(
-          x: 0, y: 110.0, label: 'Q3 25', date: 'Q3 2025', orders: 320),
-      RevenuePoint(
-          x: 1, y: 185.0, label: 'Q4 25', date: 'Q4 2025', orders: 490),
-      RevenuePoint(
-          x: 2, y: 280.0, label: 'Q1 26', date: 'Q1 2026', orders: 680),
-      RevenuePoint(
-          x: 3, y: 440.0, label: 'Q2 26', date: 'Q2 2026', orders: 1120),
+    '1Y': [
+      RevenueDataPoint(
+          x: 0, y: 950.0, label: 'Q1', date: 'Q1 2026', orders: 2200),
+      RevenueDataPoint(
+          x: 1, y: 1240.0, label: 'Q2', date: 'Q2 2026', orders: 2950),
+      RevenueDataPoint(
+          x: 2, y: 1580.0, label: 'Q3', date: 'Q3 2026 (Est)', orders: 3600),
+      RevenueDataPoint(
+          x: 3, y: 1820.0, label: 'Q4', date: 'Q4 2026 (Proj)', orders: 4100),
     ],
   };
 
   @override
   void initState() {
     super.initState();
-    _liveTicker = Timer.periodic(const Duration(seconds: 3), (timer) {
-      if (mounted) {
+    // Simulate subtle real-time telemetry pulsing
+    _liveTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      if (mounted && _hoveredIndex == null) {
         setState(() {
-          _liveFluctuation = (_liveFluctuation == 0.0) ? 0.6 : 0.0;
+          _liveFluctuation =
+              (_liveFluctuation == 0.0) ? 0.35 : 0.0;
         });
       }
     });
@@ -95,62 +104,57 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
 
   @override
   void dispose() {
-    _liveTicker?.cancel();
+    _liveTimer?.cancel();
     super.dispose();
   }
 
-  List<RevenuePoint> get _currentPoints =>
-      _timeframeData[_selectedRange] ?? _timeframeData['7D']!;
-
-  RevenuePoint get _activePoint {
-    final points = _currentPoints;
-    if (_hoveredIndex != null &&
-        _hoveredIndex! >= 0 &&
-        _hoveredIndex! < points.length) {
-      return points[_hoveredIndex!];
-    }
-    return points.last;
-  }
+  List<RevenueDataPoint> get _currentPoints =>
+      _datasets[_selectedRange] ?? _datasets['7D']!;
 
   @override
   Widget build(BuildContext context) {
-    final activePt = _activePoint;
+    final points = _currentPoints;
+    final activePt = (_hoveredIndex != null && _hoveredIndex! < points.length)
+        ? points[_hoveredIndex!]
+        : points.last;
+
     final activeRevenueVal =
-        (activePt.y + (_hoveredIndex == null ? _liveFluctuation : 0)) * 1000;
+        (activePt.y * (_showProfitCurve ? 0.38 : 1.0) * 1000);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F8FA),
+      backgroundColor: const Color(0xFFF8FAFC),
       bottomNavigationBar: const AdminBottomNavBar(currentIndex: 4),
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        scrolledUnderElevation: 0,
-        toolbarHeight: 65,
-        leading: IconButton(
-          icon: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF1F5F9),
-              borderRadius: BorderRadius.circular(10),
+        leading: Center(
+          child: ScaleOnTap(
+            onTap: () => context.pop(),
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF1F5F9),
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: const Icon(Icons.arrow_back_ios_new_rounded,
+                  size: 16, color: Color(0xFF0F172A)),
             ),
-            child: const Icon(Icons.arrow_back_ios_new_rounded,
-                size: 16, color: AppColors.textPrimary),
           ),
-          onPressed: () => context.pop(),
         ),
         title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'Revenue & Telemetry',
               style: GoogleFonts.outfit(
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
-                letterSpacing: -0.3,
+                color: const Color(0xFF0F172A),
               ),
             ),
             Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
                   width: 6,
@@ -163,9 +167,9 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
                 const SizedBox(width: 5),
                 Text(
                   'Live Financial Stream',
-                  style: TextStyle(
+                  style: GoogleFonts.inter(
                     fontSize: 11,
-                    color: AppColors.textSecondary.withValues(alpha: 0.8),
+                    color: const Color(0xFF64748B),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -173,68 +177,77 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
             ),
           ],
         ),
+        centerTitle: true,
         actions: [
           Container(
-            margin: const EdgeInsets.only(right: 14),
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            margin: const EdgeInsets.only(right: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: const Color(0xFF10B981).withValues(alpha: 0.1),
+              color: const Color(0xFFF0FDF4),
               borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFFDCFCE7)),
             ),
             child: Row(
               children: [
-                const Icon(Iconsax.radar_2, size: 14, color: Color(0xFF10B981)),
+                const Icon(Iconsax.radar_2, size: 14, color: Color(0xFF006241)),
                 const SizedBox(width: 4),
                 Text(
                   'LIVE',
-                  style: GoogleFonts.outfit(
-                    fontSize: 11,
+                  style: GoogleFonts.inter(
+                    fontSize: 10.5,
                     fontWeight: FontWeight.w800,
-                    color: const Color(0xFF10B981),
+                    color: const Color(0xFF006241),
                   ),
                 ),
               ],
             ),
           ),
+          const Padding(
+            padding: EdgeInsets.only(right: 14),
+            child: SOSButton.headerPill(
+              rideDetails: 'Revenue & Telemetry Console',
+            ),
+          ),
         ],
       ),
       body: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // KPI Summary Grid
+            // ── KPI SUMMARY GRID ───────────────────────────────────────────
             GridView.count(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               crossAxisCount: 2,
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
-              childAspectRatio: 1.45,
+              childAspectRatio: 1.42,
               children: [
                 _buildKpiCard('Total Revenue', '₹12.4L', '+18.4%',
-                    Iconsax.wallet_3, const Color(0xFF059669), true),
+                    Iconsax.wallet_3, const Color(0xFF006241), true),
                 _buildKpiCard('Active Referrals', '1,284', '+12.1%',
                     Iconsax.profile_2user, const Color(0xFF0284C7), true),
                 _buildKpiCard('Referral Payouts', '₹45.2K', '-4.8%',
                     Iconsax.money_send, const Color(0xFFD97706), false),
                 _buildKpiCard('Avg. Order Value', '₹850', '+6.2%',
-                    Iconsax.receipt_2, const Color(0xFF4F46E5), true),
+                    Iconsax.receipt_2, const Color(0xFF0D9488), true),
               ],
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 18),
 
-            // Interactive Graph Card Container
+            // ── REVENUE GROWTH CHART CARD ──────────────────────────────────
             Container(
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(22),
+                borderRadius: BorderRadius.circular(24),
                 border: Border.all(color: const Color(0xFFE2E8F0)),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.03),
-                    blurRadius: 16,
+                    color: Colors.black.withValues(alpha: 0.025),
+                    blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
                 ],
@@ -242,7 +255,6 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Top Inspector Header: Live Point Value Display
                   Padding(
                     padding: const EdgeInsets.fromLTRB(18, 16, 18, 12),
                     child: Column(
@@ -255,28 +267,31 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
                               'Revenue Growth',
                               style: GoogleFonts.outfit(
                                 fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.textPrimary,
+                                fontWeight: FontWeight.w800,
+                                color: const Color(0xFF0F172A),
                               ),
                             ),
-                            // Curve Mode Switcher
-                            InkWell(
+                            // Curve Switcher
+                            ScaleOnTap(
                               onTap: () {
                                 HapticFeedback.selectionClick();
                                 setState(() {
                                   _showProfitCurve = !_showProfitCurve;
                                 });
                               },
-                              borderRadius: BorderRadius.circular(8),
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 8, vertical: 4),
                                 decoration: BoxDecoration(
                                   color: _showProfitCurve
-                                      ? const Color(0xFF0284C7)
-                                          .withValues(alpha: 0.1)
+                                      ? const Color(0xFFF0F9FF)
                                       : const Color(0xFFF1F5F9),
                                   borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: _showProfitCurve
+                                        ? const Color(0xFFBAE6FD)
+                                        : const Color(0xFFE2E8F0),
+                                  ),
                                 ),
                                 child: Row(
                                   children: [
@@ -284,22 +299,22 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
                                       _showProfitCurve
                                           ? Iconsax.chart_21
                                           : Iconsax.chart_2,
-                                      size: 14,
+                                      size: 13,
                                       color: _showProfitCurve
                                           ? const Color(0xFF0284C7)
-                                          : AppColors.textSecondary,
+                                          : const Color(0xFF64748B),
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
                                       _showProfitCurve
                                           ? 'Net Margin'
                                           : 'Gross Rev',
-                                      style: TextStyle(
+                                      style: GoogleFonts.inter(
                                         fontSize: 11,
-                                        fontWeight: FontWeight.w600,
+                                        fontWeight: FontWeight.w700,
                                         color: _showProfitCurve
                                             ? const Color(0xFF0284C7)
-                                            : AppColors.textSecondary,
+                                            : const Color(0xFF64748B),
                                       ),
                                     ),
                                   ],
@@ -309,7 +324,7 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
                           ],
                         ),
                         const SizedBox(height: 8),
-                        // Live Telemetry readout
+
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.baseline,
                           textBaseline: TextBaseline.alphabetic,
@@ -321,25 +336,24 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
                                 fontWeight: FontWeight.w900,
                                 color: _showProfitCurve
                                     ? const Color(0xFF0284C7)
-                                    : AppColors.brandGreen,
+                                    : const Color(0xFF006241),
                                 letterSpacing: -0.5,
                               ),
                             ),
                             const SizedBox(width: 8),
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 2),
+                                  horizontal: 7, vertical: 2),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF10B981)
-                                    .withValues(alpha: 0.12),
+                                color: const Color(0xFFF0FDF4),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
                                 '${activePt.orders} Orders • ${activePt.date}',
-                                style: const TextStyle(
+                                style: GoogleFonts.inter(
                                   fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFF059669),
+                                  fontWeight: FontWeight.w700,
+                                  color: const Color(0xFF006241),
                                 ),
                               ),
                             ),
@@ -350,17 +364,16 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
                           _hoveredIndex != null
                               ? 'Scrubbing point at ${activePt.label}'
                               : 'Touch or slide across the curve to inspect intervals',
-                          style: TextStyle(
+                          style: GoogleFonts.inter(
                             fontSize: 11,
-                            color:
-                                AppColors.textSecondary.withValues(alpha: 0.8),
+                            color: const Color(0xFF94A3B8),
                           ),
                         ),
                       ],
                     ),
                   ),
 
-                  // Interactive Timeframe Filter Tabs
+                  // Range Tabs
                   Container(
                     margin: const EdgeInsets.symmetric(horizontal: 16),
                     padding: const EdgeInsets.all(4),
@@ -404,14 +417,14 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
                               child: Center(
                                 child: Text(
                                   range,
-                                  style: GoogleFonts.outfit(
-                                    fontSize: 12,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 11.5,
                                     fontWeight: isSelected
                                         ? FontWeight.w800
                                         : FontWeight.w600,
                                     color: isSelected
-                                        ? AppColors.textPrimary
-                                        : AppColors.textSecondary,
+                                        ? const Color(0xFF0F172A)
+                                        : const Color(0xFF64748B),
                                   ),
                                 ),
                               ),
@@ -424,9 +437,9 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
 
                   const SizedBox(height: 16),
 
-                  // Real-time Interactive Line Chart Canvas
+                  // Interactive Chart
                   Container(
-                    height: 220,
+                    height: 210,
                     padding:
                         const EdgeInsets.only(right: 20, left: 6, bottom: 8),
                     child: _buildInteractiveChart(),
@@ -437,7 +450,7 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
 
             const SizedBox(height: 24),
 
-            // Referral Leaderboard
+            // ── REFERRAL LEADERBOARD ───────────────────────────────────────
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -446,16 +459,16 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
                   style: GoogleFonts.outfit(
                     fontSize: 17,
                     fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
+                    color: const Color(0xFF0F172A),
                     letterSpacing: -0.2,
                   ),
                 ),
                 Text(
                   'Top Advocates',
-                  style: TextStyle(
+                  style: GoogleFonts.inter(
                     fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary.withValues(alpha: 0.8),
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF64748B),
                   ),
                 ),
               ],
@@ -480,7 +493,8 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
 
   Widget _buildInteractiveChart() {
     final points = _currentPoints;
-    final maxY = points.map((p) => p.y).reduce((a, b) => a > b ? a : b) * 1.25;
+    final maxY =
+        points.map((p) => p.y).reduce((a, b) => a > b ? a : b) * 1.25;
 
     return LineChart(
       LineChartData(
@@ -507,7 +521,7 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
             return spotIndexes.map((spotIndex) {
               return TouchedSpotIndicatorData(
                 FlLine(
-                  color: AppColors.brandGreen.withValues(alpha: 0.5),
+                  color: const Color(0xFF006241).withValues(alpha: 0.5),
                   dashArray: const [4, 4],
                 ),
                 FlDotData(
@@ -518,7 +532,7 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
                       strokeWidth: 3,
                       strokeColor: _showProfitCurve
                           ? const Color(0xFF0284C7)
-                          : AppColors.brandGreen,
+                          : const Color(0xFF006241),
                     );
                   },
                 ),
@@ -545,8 +559,8 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
                   children: [
                     TextSpan(
                       text: pt.label,
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.7),
+                      style: GoogleFonts.inter(
+                        color: Colors.white70,
                         fontWeight: FontWeight.w500,
                         fontSize: 10,
                       ),
@@ -576,13 +590,14 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
               interval: (maxY / 4).clamp(1.0, 500.0),
               getTitlesWidget: (value, meta) {
                 if (value == 0) return const SizedBox.shrink();
-                final text =
-                    value >= 100 ? '${(value).toInt()}k' : '${value.toInt()}k';
+                final text = value >= 100
+                    ? '${(value).toInt()}k'
+                    : '${value.toInt()}k';
                 return Padding(
                   padding: const EdgeInsets.only(right: 6),
                   child: Text(
                     '₹$text',
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.inter(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
                       color: const Color(0xFF94A3B8),
@@ -608,12 +623,12 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
                   padding: const EdgeInsets.only(top: 8),
                   child: Text(
                     points[index].label,
-                    style: GoogleFonts.outfit(
+                    style: GoogleFonts.inter(
                       fontSize: 11,
                       fontWeight:
                           isSelected ? FontWeight.w800 : FontWeight.w600,
                       color: isSelected
-                          ? AppColors.brandGreen
+                          ? const Color(0xFF006241)
                           : const Color(0xFF64748B),
                     ),
                   ),
@@ -629,7 +644,7 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
             preventCurveOverShooting: true,
             color: _showProfitCurve
                 ? const Color(0xFF0284C7)
-                : AppColors.brandGreen,
+                : const Color(0xFF006241),
             barWidth: 3.5,
             isStrokeCapRound: true,
             dotData: FlDotData(
@@ -644,7 +659,7 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
                   strokeWidth: 3,
                   strokeColor: _showProfitCurve
                       ? const Color(0xFF0284C7)
-                      : AppColors.brandGreen,
+                      : const Color(0xFF006241),
                 );
               },
             ),
@@ -655,12 +670,12 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
                 end: Alignment.bottomCenter,
                 colors: _showProfitCurve
                     ? [
-                        const Color(0xFF0284C7).withValues(alpha: 0.28),
+                        const Color(0xFF0284C7).withValues(alpha: 0.25),
                         const Color(0xFF0284C7).withValues(alpha: 0.0),
                       ]
                     : [
-                        AppColors.brandGreen.withValues(alpha: 0.28),
-                        AppColors.brandGreen.withValues(alpha: 0.0),
+                        const Color(0xFF006241).withValues(alpha: 0.25),
+                        const Color(0xFF006241).withValues(alpha: 0.0),
                       ],
               ),
             ),
@@ -690,10 +705,10 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
     bool isPositive,
   ) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
@@ -711,15 +726,16 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                padding: const EdgeInsets.all(6),
+                padding: const EdgeInsets.all(7),
                 decoration: BoxDecoration(
                   color: accentColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(icon, color: accentColor, size: 16),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
                   color: (isPositive
                           ? const Color(0xFF10B981)
@@ -729,12 +745,12 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
                 ),
                 child: Text(
                   change,
-                  style: GoogleFonts.outfit(
+                  style: GoogleFonts.inter(
                     color: isPositive
-                        ? const Color(0xFF059669)
+                        ? const Color(0xFF006241)
                         : const Color(0xFFDC2626),
                     fontSize: 10,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
               ),
@@ -746,16 +762,16 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
               Text(
                 value,
                 style: GoogleFonts.outfit(
-                  color: AppColors.textPrimary,
+                  color: const Color(0xFF0F172A),
                   fontSize: 19,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w900,
                   letterSpacing: -0.5,
                 ),
               ),
               Text(
                 title,
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
+                style: GoogleFonts.inter(
+                  color: const Color(0xFF64748B),
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
                 ),
@@ -800,7 +816,7 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
@@ -813,15 +829,15 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
       child: Row(
         children: [
           Container(
-            width: 32,
-            height: 32,
+            width: 34,
+            height: 34,
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: index == 0
                     ? [const Color(0xFFF59E0B), const Color(0xFFD97706)]
                     : index == 1
                         ? [const Color(0xFF94A3B8), const Color(0xFF64748B)]
-                        : [const Color(0xFFB45309), const Color(0xFF78350F)],
+                        : [const Color(0xFF006241), const Color(0xFF10B981)],
               ),
               shape: BoxShape.circle,
             ),
@@ -830,8 +846,8 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
                 '${index + 1}',
                 style: GoogleFonts.outfit(
                   color: Colors.white,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 13,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 14,
                 ),
               ),
             ),
@@ -846,25 +862,25 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
                     Text(
                       adv['name'] as String,
                       style: GoogleFonts.outfit(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF0F172A),
+                        fontWeight: FontWeight.w800,
                         fontSize: 14,
                       ),
                     ),
                     const SizedBox(width: 6),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 1),
+                          horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: AppColors.brandGreen.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(4),
+                        color: const Color(0xFFF0FDF4),
+                        borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
                         adv['badge'] as String,
-                        style: GoogleFonts.outfit(
+                        style: GoogleFonts.inter(
                           fontSize: 9.5,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.brandGreen,
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFF006241),
                         ),
                       ),
                     ),
@@ -873,8 +889,8 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
                 const SizedBox(height: 2),
                 Text(
                   '${adv['referrals']} Successful Referrals',
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
+                  style: GoogleFonts.inter(
+                    color: const Color(0xFF64748B),
                     fontSize: 11,
                   ),
                 ),
@@ -884,13 +900,13 @@ class _RevenueReferralScreenState extends State<RevenueReferralScreen> {
           Text(
             adv['earned'] as String,
             style: GoogleFonts.outfit(
-              color: AppColors.brandGreen,
-              fontWeight: FontWeight.w800,
+              color: const Color(0xFF006241),
+              fontWeight: FontWeight.w900,
               fontSize: 15,
             ),
           ),
         ],
       ),
-    ).animate().fadeIn(delay: 50.ms * index).slideX(begin: 0.1, end: 0);
+    ).animate().fadeIn(delay: 50.ms * index).slideX(begin: 0.05, end: 0);
   }
 }

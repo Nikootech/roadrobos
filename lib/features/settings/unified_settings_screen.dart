@@ -8,8 +8,9 @@ import 'package:iconsax/iconsax.dart';
 import '../../core/models/user_role.dart';
 import '../../core/providers/theme_provider.dart';
 import '../../core/services/biometric_service.dart';
-import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/react_switch.dart';
+import '../../shared/widgets/kinetic_motion.dart';
+import '../../shared/widgets/sos_button.dart';
 import '../profile/user_provider.dart';
 
 /// Unified Settings Screen — works for all user roles:
@@ -48,9 +49,11 @@ class _UnifiedSettingsScreenState extends ConsumerState<UnifiedSettingsScreen> {
       if (!available) {
         messenger.showSnackBar(
           SnackBar(
-            content: const Text(
-                'Biometric authentication is not available on this device.'),
-            backgroundColor: AppColors.dangerRed,
+            content: Text(
+              'Biometric authentication is not available on this device.',
+              style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+            ),
+            backgroundColor: const Color(0xFFE11D48),
             behavior: SnackBarBehavior.floating,
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -65,7 +68,10 @@ class _UnifiedSettingsScreenState extends ConsumerState<UnifiedSettingsScreen> {
     messenger.showSnackBar(
       SnackBar(
         content: Text(
-            value ? 'Biometric login enabled.' : 'Biometric login disabled.'),
+          value ? 'Biometric login enabled.' : 'Biometric login disabled.',
+          style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+        ),
+        backgroundColor: const Color(0xFF006241),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
@@ -79,21 +85,32 @@ class _UnifiedSettingsScreenState extends ConsumerState<UnifiedSettingsScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(
           'Sign Out?',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.w800),
+          style: GoogleFonts.outfit(
+            fontWeight: FontWeight.w800,
+            color: const Color(0xFF0F172A),
+          ),
         ),
-        content: const Text(
-            'You will be returned to the login screen. All local preferences are preserved.'),
+        content: Text(
+          'You will be returned to the login screen. All local preferences are preserved.',
+          style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF64748B)),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel',
-                style: TextStyle(color: AppColors.textSecondary)),
+            child: Text('Cancel',
+                style: GoogleFonts.inter(
+                    color: const Color(0xFF64748B),
+                    fontWeight: FontWeight.w600)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Sign Out',
-                style: TextStyle(
-                    color: AppColors.dangerRed, fontWeight: FontWeight.w800)),
+            child: Text(
+              'Sign Out',
+              style: GoogleFonts.inter(
+                color: const Color(0xFFE11D48),
+                fontWeight: FontWeight.w800,
+              ),
+            ),
           ),
         ],
       ),
@@ -112,20 +129,26 @@ class _UnifiedSettingsScreenState extends ConsumerState<UnifiedSettingsScreen> {
         title: Text(
           'Request Account Deletion?',
           style: GoogleFonts.outfit(
-              color: AppColors.dangerRed, fontWeight: FontWeight.w800),
+              color: const Color(0xFFE11D48), fontWeight: FontWeight.w800),
         ),
-        content: const Text(
-            'This will flag your account for permanent deletion by an admin. This action cannot be undone once processed.'),
+        content: Text(
+          'This will flag your account for permanent deletion by an admin. This action cannot be undone once processed.',
+          style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF64748B)),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: Text('Cancel',
+                style: GoogleFonts.inter(
+                    color: const Color(0xFF64748B),
+                    fontWeight: FontWeight.w600)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Confirm Deletion',
-                style: TextStyle(
-                    color: AppColors.dangerRed, fontWeight: FontWeight.w900)),
+            child: Text('Confirm Deletion',
+                style: GoogleFonts.inter(
+                    color: const Color(0xFFE11D48),
+                    fontWeight: FontWeight.w900)),
           ),
         ],
       ),
@@ -154,61 +177,86 @@ class _UnifiedSettingsScreenState extends ConsumerState<UnifiedSettingsScreen> {
     final roleColor = _roleColor(role);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F8FA),
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         scrolledUnderElevation: 0,
         toolbarHeight: 64,
-        leading: IconButton(
-          icon: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF1F5F9),
-              borderRadius: BorderRadius.circular(10),
+        leading: Center(
+          child: ScaleOnTap(
+            onTap: () => context.pop(),
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF1F5F9),
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: const Icon(Icons.arrow_back_ios_new_rounded,
+                  size: 16, color: Color(0xFF0F172A)),
             ),
-            child: const Icon(Icons.arrow_back_ios_new_rounded,
-                size: 15, color: AppColors.textPrimary),
-          ),
-          onPressed: () => context.pop(),
-        ),
-        title: Text(
-          'Settings',
-          style: GoogleFonts.outfit(
-            fontSize: 19,
-            fontWeight: FontWeight.w800,
-            color: AppColors.textPrimary,
-            letterSpacing: -0.3,
           ),
         ),
+        title: Column(
+          children: [
+            Text(
+              'Settings',
+              style: GoogleFonts.outfit(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: const Color(0xFF0F172A),
+              ),
+            ),
+            Text(
+              'Preferences & Account Controls',
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                color: const Color(0xFF64748B),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+        centerTitle: true,
+        actions: const [
+          Padding(
+            padding: EdgeInsets.only(right: 14),
+            child: SOSButton.headerPill(
+              rideDetails: 'Settings & Security',
+            ),
+          ),
+        ],
       ),
       body: _isLoggingOut
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(
+              child: CircularProgressIndicator(color: Color(0xFF006241)))
           : ListView(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 40),
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               children: [
-                // ── Profile Header ─────────────────────────────────────────
-                _buildProfileHeader(userState, roleLabel, roleColor)
-                    .animate()
-                    .fadeIn(duration: 300.ms)
-                    .slideY(begin: -0.06, end: 0),
+                // ── Profile Summary Card ───────────────────────────────────
+                _buildProfileHeader(userState, roleLabel, roleColor),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 18),
 
-                // ── Account ────────────────────────────────────────────────
-                _buildSection('ACCOUNT', [
+                // ── Account & Preferences ──────────────────────────────────
+                _buildSection('ACCOUNT & PREFERENCES', [
                   _buildTile(
                     icon: Iconsax.personalcard,
-                    color: const Color(0xFF3B82F6),
+                    color: const Color(0xFF0284C7),
                     title: 'Edit Profile',
-                    subtitle: userState.name,
+                    subtitle: userState.name.isNotEmpty
+                        ? userState.name
+                        : 'Update personal details',
                     onTap: () => context.push('/account-settings'),
                   ),
                   _buildDivider(),
                   if (isCustomer || isDriver || isTechnician) ...[
                     _buildTile(
                       icon: Iconsax.notification,
-                      color: const Color(0xFFF59E0B),
+                      color: const Color(0xFFD97706),
                       title: 'Notification Preferences',
                       subtitle: 'Push, email, SMS, WhatsApp',
                       onTap: () => context.push('/notification-settings'),
@@ -218,17 +266,17 @@ class _UnifiedSettingsScreenState extends ConsumerState<UnifiedSettingsScreen> {
                   if (isCustomer) ...[
                     _buildTile(
                       icon: Iconsax.location,
-                      color: const Color(0xFF10B981),
+                      color: const Color(0xFF006241),
                       title: 'Saved Locations',
-                      subtitle: 'Home, office, and more',
+                      subtitle: 'Home, office, and quick access',
                       onTap: () => context.push('/saved-locations'),
                     ),
                     _buildDivider(),
                     _buildTile(
                       icon: Iconsax.car,
-                      color: const Color(0xFF8B5CF6),
+                      color: const Color(0xFF0D9488),
                       title: 'My Vehicles',
-                      subtitle: 'Vehicle details and RC documents',
+                      subtitle: 'Vehicle details & documents',
                       onTap: () => context.push('/my-vehicles'),
                     ),
                     _buildDivider(),
@@ -236,7 +284,7 @@ class _UnifiedSettingsScreenState extends ConsumerState<UnifiedSettingsScreen> {
                   if (isAdmin) ...[
                     _buildTile(
                       icon: Iconsax.notification,
-                      color: const Color(0xFFF59E0B),
+                      color: const Color(0xFFD97706),
                       title: 'Notification Preferences',
                       subtitle: 'Push, email, SMS, WhatsApp',
                       onTap: () => context.push('/notification-settings'),
@@ -244,7 +292,7 @@ class _UnifiedSettingsScreenState extends ConsumerState<UnifiedSettingsScreen> {
                     _buildDivider(),
                     _buildTile(
                       icon: Iconsax.shield_tick,
-                      color: const Color(0xFF6366F1),
+                      color: const Color(0xFF006241),
                       title: 'Admin Permissions',
                       subtitle: 'Role — $roleLabel',
                       trailing: Container(
@@ -256,9 +304,9 @@ class _UnifiedSettingsScreenState extends ConsumerState<UnifiedSettingsScreen> {
                         ),
                         child: Text(
                           roleLabel,
-                          style: GoogleFonts.outfit(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
+                          style: GoogleFonts.inter(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w800,
                             color: roleColor,
                           ),
                         ),
@@ -267,7 +315,7 @@ class _UnifiedSettingsScreenState extends ConsumerState<UnifiedSettingsScreen> {
                     _buildDivider(),
                     _buildTile(
                       icon: Iconsax.activity,
-                      color: const Color(0xFF0EA5E9),
+                      color: const Color(0xFF0284C7),
                       title: 'Audit Logs',
                       subtitle: 'View your admin activity trail',
                       onTap: () => context.push('/admin/audit-logs'),
@@ -277,7 +325,7 @@ class _UnifiedSettingsScreenState extends ConsumerState<UnifiedSettingsScreen> {
                   if (isDriver) ...[
                     _buildTile(
                       icon: Iconsax.document_text,
-                      color: const Color(0xFF10B981),
+                      color: const Color(0xFF006241),
                       title: 'My Documents',
                       subtitle: 'License, RC book, and KYC uploads',
                       onTap: () => context.push('/driver-profile'),
@@ -295,7 +343,7 @@ class _UnifiedSettingsScreenState extends ConsumerState<UnifiedSettingsScreen> {
                   if (isTechnician) ...[
                     _buildTile(
                       icon: Iconsax.document_text,
-                      color: const Color(0xFF10B981),
+                      color: const Color(0xFF006241),
                       title: 'My Certifications',
                       subtitle: 'Upload training and skill docs',
                       onTap: () => context.push('/tech-profile'),
@@ -310,15 +358,15 @@ class _UnifiedSettingsScreenState extends ConsumerState<UnifiedSettingsScreen> {
                     ),
                     _buildDivider(),
                   ],
-                ]).animate().fadeIn(duration: 300.ms, delay: 60.ms),
+                ]).animate().fadeIn(duration: 250.ms),
 
                 const SizedBox(height: 16),
 
-                // ── Security ───────────────────────────────────────────────
-                _buildSection('SECURITY', [
+                // ── Security & Access ──────────────────────────────────────
+                _buildSection('SECURITY & ACCESS', [
                   _buildTile(
                     icon: Iconsax.lock,
-                    color: const Color(0xFFEF4444),
+                    color: const Color(0xFFE11D48),
                     title: 'Change Password',
                     subtitle: 'Update your login credentials',
                     onTap: () => context.push('/account-settings'),
@@ -326,73 +374,73 @@ class _UnifiedSettingsScreenState extends ConsumerState<UnifiedSettingsScreen> {
                   _buildDivider(),
                   _buildSwitchTile(
                     icon: Iconsax.finger_scan,
-                    color: const Color(0xFF8B5CF6),
+                    color: const Color(0xFF0D9488),
                     title: 'Biometric Login',
                     subtitle: 'Fingerprint or Face ID unlock',
                     value: _isBiometricEnabled,
                     onChanged: _toggleBiometric,
                   ),
-                ]).animate().fadeIn(duration: 300.ms, delay: 120.ms),
+                ]).animate().fadeIn(duration: 250.ms, delay: 50.ms),
 
                 const SizedBox(height: 16),
 
-                // ── Appearance ─────────────────────────────────────────────
-                _buildSection('APPEARANCE', [
+                // ── Appearance & Theme ─────────────────────────────────────
+                _buildSection('APPEARANCE & THEME', [
                   _buildTile(
                     icon: themeNotifier.currentIcon,
-                    color: const Color(0xFF6366F1),
+                    color: const Color(0xFF0284C7),
                     title: 'App Theme',
-                    subtitle: '${themeNotifier.currentLabel} Mode',
+                    subtitle: '${themeNotifier.currentLabel} Mode active',
                     trailing: _ThemeToggleChip(themeMode: themeMode),
                     onTap: () {
                       HapticFeedback.selectionClick();
                       themeNotifier.toggleThemeMode();
                     },
                   ),
-                ]).animate().fadeIn(duration: 300.ms, delay: 180.ms),
+                ]).animate().fadeIn(duration: 250.ms, delay: 100.ms),
 
                 const SizedBox(height: 16),
 
-                // ── Support ────────────────────────────────────────────────
-                _buildSection('SUPPORT & LEGAL', [
+                // ── Support & Compliance ───────────────────────────────────
+                _buildSection('SUPPORT & COMPLIANCE', [
                   _buildTile(
                     icon: Iconsax.message_question,
-                    color: const Color(0xFF0EA5E9),
+                    color: const Color(0xFF0284C7),
                     title: 'Help & Support',
-                    subtitle: 'FAQs, chat, and contact us',
+                    subtitle: 'FAQs, chat, and emergency assist',
                     onTap: () => context.push('/help-center'),
                   ),
                   _buildDivider(),
                   _buildTile(
                     icon: Iconsax.security_safe,
-                    color: const Color(0xFF10B981),
+                    color: const Color(0xFF006241),
                     title: 'Privacy Policy',
-                    subtitle: 'How we handle your data',
+                    subtitle: 'How we protect your telemetry',
                     onTap: () => context.push('/privacy-policy'),
                   ),
                   _buildDivider(),
                   _buildTile(
                     icon: Iconsax.document,
-                    color: const Color(0xFFF59E0B),
+                    color: const Color(0xFFD97706),
                     title: 'Terms of Service',
-                    subtitle: 'Read our terms and conditions',
+                    subtitle: 'Operational terms & conditions',
                     onTap: () => context.push('/terms-of-service'),
                   ),
                   _buildDivider(),
                   _buildTile(
                     icon: Iconsax.info_circle,
-                    color: const Color(0xFF94A3B8),
+                    color: const Color(0xFF64748B),
                     title: 'App Version',
                     subtitle: 'RoadRobos v2.4.1 (Build 241)',
                   ),
-                ]).animate().fadeIn(duration: 300.ms, delay: 240.ms),
+                ]).animate().fadeIn(duration: 250.ms, delay: 150.ms),
 
                 const SizedBox(height: 24),
 
                 // ── Sign Out ───────────────────────────────────────────────
                 _buildSignOutButton()
                     .animate()
-                    .fadeIn(duration: 300.ms, delay: 300.ms),
+                    .fadeIn(duration: 250.ms, delay: 200.ms),
 
                 const SizedBox(height: 8),
 
@@ -402,15 +450,15 @@ class _UnifiedSettingsScreenState extends ConsumerState<UnifiedSettingsScreen> {
                     onPressed: _requestDeleteAccount,
                     child: Text(
                       'Delete Account',
-                      style: TextStyle(
-                        color: AppColors.dangerRed.withValues(alpha: 0.45),
+                      style: GoogleFonts.inter(
+                        color: const Color(0xFFE11D48).withValues(alpha: 0.65),
                         fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.3,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.2,
                       ),
                     ),
                   ),
-                ).animate().fadeIn(duration: 300.ms, delay: 360.ms),
+                ).animate().fadeIn(duration: 250.ms, delay: 250.ms),
               ],
             ),
     );
@@ -424,11 +472,11 @@ class _UnifiedSettingsScreenState extends ConsumerState<UnifiedSettingsScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(22),
         border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -436,22 +484,41 @@ class _UnifiedSettingsScreenState extends ConsumerState<UnifiedSettingsScreen> {
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 28,
-            backgroundColor: AppColors.brandGreen.withValues(alpha: 0.1),
-            backgroundImage: state.profileImageUrl.isNotEmpty
-                ? NetworkImage(state.profileImageUrl)
-                : null,
-            child: state.profileImageUrl.isEmpty
-                ? Text(
-                    state.name.isNotEmpty ? state.name[0].toUpperCase() : 'U',
-                    style: GoogleFonts.outfit(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.brandGreen,
+          Container(
+            width: 54,
+            height: 54,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF006241), Color(0xFF10B981)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF006241).withValues(alpha: 0.25),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: state.profileImageUrl.isNotEmpty
+                ? ClipOval(
+                    child: Image.network(
+                      state.profileImageUrl,
+                      fit: BoxFit.cover,
                     ),
                   )
-                : null,
+                : Center(
+                    child: Text(
+                      state.name.isNotEmpty ? state.name[0].toUpperCase() : 'U',
+                      style: GoogleFonts.outfit(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -459,40 +526,53 @@ class _UnifiedSettingsScreenState extends ConsumerState<UnifiedSettingsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  state.name,
+                  state.name.isNotEmpty ? state.name : 'Authenticated User',
                   style: GoogleFonts.outfit(
-                    fontSize: 17,
+                    fontSize: 16.5,
                     fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
-                    letterSpacing: -0.2,
+                    color: const Color(0xFF0F172A),
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  state.email.isNotEmpty ? state.email : state.phone,
-                  style: const TextStyle(
+                  state.phone.isNotEmpty ? state.phone : state.email,
+                  style: GoogleFonts.inter(
                     fontSize: 12,
-                    color: AppColors.textSecondary,
+                    color: const Color(0xFF64748B),
                     fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: roleColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    roleLabel,
+                    style: GoogleFonts.inter(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w800,
+                      color: roleColor,
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: roleColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: roleColor.withValues(alpha: 0.2)),
-            ),
-            child: Text(
-              roleLabel,
-              style: GoogleFonts.outfit(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: roleColor,
+          ScaleOnTap(
+            onTap: () => context.push('/account-settings'),
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0xFFE2E8F0)),
               ),
+              child: const Icon(Iconsax.edit_2,
+                  size: 16, color: Color(0xFF0F172A)),
             ),
           ),
         ],
@@ -508,10 +588,10 @@ class _UnifiedSettingsScreenState extends ConsumerState<UnifiedSettingsScreen> {
           padding: const EdgeInsets.only(left: 4, bottom: 8),
           child: Text(
             title,
-            style: GoogleFonts.outfit(
+            style: GoogleFonts.inter(
               fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w800,
+              color: const Color(0xFF64748B),
               letterSpacing: 0.8,
             ),
           ),
@@ -519,11 +599,11 @@ class _UnifiedSettingsScreenState extends ConsumerState<UnifiedSettingsScreen> {
         Container(
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(20),
             border: Border.all(color: const Color(0xFFE2E8F0)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.025),
+                color: Colors.black.withValues(alpha: 0.02),
                 blurRadius: 10,
                 offset: const Offset(0, 3),
               ),
@@ -545,17 +625,17 @@ class _UnifiedSettingsScreenState extends ConsumerState<UnifiedSettingsScreen> {
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(20),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
           children: [
             Container(
-              width: 36,
-              height: 36,
+              width: 38,
+              height: 38,
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: color, size: 18),
             ),
@@ -567,17 +647,17 @@ class _UnifiedSettingsScreenState extends ConsumerState<UnifiedSettingsScreen> {
                   Text(
                     title,
                     style: GoogleFonts.outfit(
-                      fontSize: 14,
+                      fontSize: 14.5,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
+                      color: const Color(0xFF0F172A),
                     ),
                   ),
                   const SizedBox(height: 1),
                   Text(
                     subtitle,
-                    style: const TextStyle(
+                    style: GoogleFonts.inter(
                       fontSize: 11.5,
-                      color: AppColors.textSecondary,
+                      color: const Color(0xFF64748B),
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -586,8 +666,8 @@ class _UnifiedSettingsScreenState extends ConsumerState<UnifiedSettingsScreen> {
             ),
             trailing ??
                 (onTap != null
-                    ? const Icon(Icons.chevron_right_rounded,
-                        size: 18, color: AppColors.textMuted)
+                    ? const Icon(Icons.arrow_forward_ios_rounded,
+                        size: 14, color: Color(0xFF94A3B8))
                     : const SizedBox.shrink()),
           ],
         ),
@@ -608,11 +688,11 @@ class _UnifiedSettingsScreenState extends ConsumerState<UnifiedSettingsScreen> {
       child: Row(
         children: [
           Container(
-            width: 36,
-            height: 36,
+            width: 38,
+            height: 38,
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: color, size: 18),
           ),
@@ -624,17 +704,17 @@ class _UnifiedSettingsScreenState extends ConsumerState<UnifiedSettingsScreen> {
                 Text(
                   title,
                   style: GoogleFonts.outfit(
-                    fontSize: 14,
+                    fontSize: 14.5,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
+                    color: const Color(0xFF0F172A),
                   ),
                 ),
                 const SizedBox(height: 1),
                 Text(
                   subtitle,
-                  style: const TextStyle(
+                  style: GoogleFonts.inter(
                     fontSize: 11.5,
-                    color: AppColors.textSecondary,
+                    color: const Color(0xFF64748B),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -652,29 +732,37 @@ class _UnifiedSettingsScreenState extends ConsumerState<UnifiedSettingsScreen> {
 
   Widget _buildDivider() {
     return const Padding(
-      padding: EdgeInsets.only(left: 66),
+      padding: EdgeInsets.only(left: 68),
       child: Divider(height: 1, color: Color(0xFFF1F5F9)),
     );
   }
 
   Widget _buildSignOutButton() {
-    return SizedBox(
-      width: double.infinity,
-      child: OutlinedButton.icon(
-        onPressed: _logout,
-        icon: const Icon(Iconsax.logout, size: 18),
-        label: const Text('Sign Out'),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.dangerRed,
-          side: BorderSide(color: AppColors.dangerRed.withValues(alpha: 0.4)),
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          textStyle: GoogleFonts.outfit(
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.3,
-          ),
+    return ScaleOnTap(
+      onTap: _logout,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFF1F2),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFFECDD3)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Iconsax.logout, size: 18, color: Color(0xFFE11D48)),
+            const SizedBox(width: 8),
+            Text(
+              'Sign Out',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                color: const Color(0xFFE11D48),
+                letterSpacing: 0.2,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -714,10 +802,10 @@ class _UnifiedSettingsScreenState extends ConsumerState<UnifiedSettingsScreen> {
   }
 
   Color _roleColor(UserRole role) {
-    if (role.isAdmin) return const Color(0xFF6366F1);
-    if (role == UserRole.driver) return const Color(0xFF0EA5E9);
-    if (role == UserRole.technician) return const Color(0xFFF59E0B);
-    return AppColors.brandGreen;
+    if (role.isAdmin) return const Color(0xFF006241);
+    if (role == UserRole.driver) return const Color(0xFF0284C7);
+    if (role == UserRole.technician) return const Color(0xFFD97706);
+    return const Color(0xFF006241);
   }
 }
 
@@ -735,9 +823,9 @@ class _ThemeToggleChip extends StatelessWidget {
       ThemeMode.system => 'System',
     };
     final color = switch (themeMode) {
-      ThemeMode.light => const Color(0xFFF59E0B),
-      ThemeMode.dark => const Color(0xFF6366F1),
-      ThemeMode.system => const Color(0xFF0EA5E9),
+      ThemeMode.light => const Color(0xFFD97706),
+      ThemeMode.dark => const Color(0xFF0F172A),
+      ThemeMode.system => const Color(0xFF0284C7),
     };
 
     return AnimatedSwitcher(
@@ -746,15 +834,15 @@ class _ThemeToggleChip extends StatelessWidget {
         key: ValueKey(label),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.12),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: color.withValues(alpha: 0.2)),
         ),
         child: Text(
           label,
-          style: GoogleFonts.outfit(
+          style: GoogleFonts.inter(
             fontSize: 11,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w800,
             color: color,
           ),
         ),

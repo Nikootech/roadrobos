@@ -49,6 +49,8 @@ class UserState {
   final String? error;
   final bool showSessionMismatchPrompt;
   final AppUser? pendingUser;
+  final bool showRoleChangedPrompt;
+  final UserRole? pendingNewRole;
 
   /// Whether TOTP 2FA is currently active for this user
   final bool mfaEnabled;
@@ -60,6 +62,8 @@ class UserState {
     this.error,
     this.showSessionMismatchPrompt = false,
     this.pendingUser,
+    this.showRoleChangedPrompt = false,
+    this.pendingNewRole,
     this.mfaEnabled = false,
   });
 
@@ -79,6 +83,8 @@ class UserState {
     String? error,
     bool? showSessionMismatchPrompt,
     AppUser? pendingUser,
+    bool? showRoleChangedPrompt,
+    UserRole? pendingNewRole,
     bool? mfaEnabled,
   }) {
     return UserState(
@@ -89,6 +95,9 @@ class UserState {
       showSessionMismatchPrompt:
           showSessionMismatchPrompt ?? this.showSessionMismatchPrompt,
       pendingUser: pendingUser ?? this.pendingUser,
+      showRoleChangedPrompt:
+          showRoleChangedPrompt ?? this.showRoleChangedPrompt,
+      pendingNewRole: pendingNewRole ?? this.pendingNewRole,
       mfaEnabled: mfaEnabled ?? this.mfaEnabled,
     );
   }
@@ -182,6 +191,9 @@ class UserNotifier extends StateNotifier<UserState> {
           await _ref
               .read(localStorageServiceProvider)
               .saveLastHomeRoute(newRoute);
+          await _ref
+              .read(localStorageServiceProvider)
+              .setPendingRoleReloginRequired(true);
         }
 
         // Only update if data actually changed to avoid UI flickers
@@ -195,7 +207,11 @@ class UserNotifier extends StateNotifier<UserState> {
             updatedUser.currentDeviceId != state.user?.currentDeviceId ||
             updatedUser.isApproved != state.user?.isApproved ||
             roleChanged) {
-          state = state.copyWith(user: updatedUser);
+          state = state.copyWith(
+            user: updatedUser,
+            showRoleChangedPrompt: roleChanged ? true : state.showRoleChangedPrompt,
+            pendingNewRole: roleChanged ? updatedUser.role : state.pendingNewRole,
+          );
           debugPrint(
               'Real-time Profile Update Received: ${updatedUser.name} (Role: ${updatedUser.role.name})');
         }
@@ -658,6 +674,15 @@ class UserNotifier extends StateNotifier<UserState> {
       debugPrint('Notification Preferences Update Error: $e');
       state = state.copyWith(isLoading: false, error: e.toString());
     }
+  }
+
+  void dismissRoleChangedPrompt() {
+    state = state.copyWith(showRoleChangedPrompt: false);
+  }
+
+  Future<void> executeRoleChangeLogout() async {
+    await _ref.read(localStorageServiceProvider).clearPendingRoleReloginRequired();
+    await logout();
   }
 
   Future<void> logout() async {
