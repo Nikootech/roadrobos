@@ -49,6 +49,15 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
     });
   }
 
+  // Consistent FlutterSecureStorage options used across ALL read/write/delete
+  // operations in this file. Android uses EncryptedSharedPreferences (API 23+).
+  // iOS uses firstUnlock so credentials survive a reboot-before-first-unlock
+  // scenario (e.g. after a phone restart, before Face ID setup completes).
+  static const _secureStorage = FlutterSecureStorage(
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+    iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
+  );
+
   Future<void> _toggleBiometric(bool value) async {
     final messenger = ScaffoldMessenger.of(context);
     final biometricService = ref.read(biometricServiceProvider);
@@ -159,19 +168,23 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
 
         await authService.reauthenticate(email, password);
 
-        if (mounted) Navigator.pop(context); // Dismiss loading spinner
-
+        // ── FIX: Trigger biometric prompt FIRST (before writing prefs/storage).
+        // The dismiss of the loading dialog is deferred until AFTER storage writes
+        // complete to prevent the auth state change from routing away mid-write.
         final authenticated = await biometricService.authenticate(
           localizedReason: 'Confirm biometric login setup',
         );
 
         if (authenticated) {
+          // Write credentials to secure storage BEFORE dismissing loading dialog.
+          // This prevents a race condition where Supabase's auth state change
+          // (from reauthenticate) triggers router navigation before writes finish.
           final prefs = ref.read(sharedPreferencesProvider);
           await prefs.setBool('biometric_enabled', true);
-          const storage = FlutterSecureStorage();
-          await storage.write(key: 'email', value: email);
-          await storage.write(key: 'password', value: password);
+          await _secureStorage.write(key: 'bio_email', value: email);
+          await _secureStorage.write(key: 'bio_password', value: password);
 
+          if (mounted) Navigator.pop(context); // Dismiss loading spinner
           setState(() => _isBiometricEnabled = true);
           messenger.showSnackBar(
             const SnackBar(
@@ -181,6 +194,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
             ),
           );
         } else {
+          if (mounted) Navigator.pop(context); // Dismiss loading spinner
           messenger.showSnackBar(
             const SnackBar(
               content: Text('Biometric authentication failed.'),
@@ -192,7 +206,6 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
       } catch (e) {
         if (mounted) Navigator.pop(context); // Dismiss loading spinner
         String errorMsg = e.toString();
-        // Make error messages user-friendly
         if (errorMsg.contains('Invalid login credentials') ||
             errorMsg.contains('invalid_credentials') ||
             errorMsg.contains('Incorrect password')) {
@@ -210,9 +223,8 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
     } else {
       final prefs = ref.read(sharedPreferencesProvider);
       await prefs.setBool('biometric_enabled', false);
-      const storage = FlutterSecureStorage();
-      await storage.delete(key: 'email');
-      await storage.delete(key: 'password');
+      await _secureStorage.delete(key: 'bio_email');
+      await _secureStorage.delete(key: 'bio_password');
 
       setState(() => _isBiometricEnabled = false);
       messenger.showSnackBar(

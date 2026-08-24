@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/services/auth_service.dart';
+import '../core/services/local_storage_service.dart';
 import '../features/profile/user_provider.dart';
 import '../core/models/user_role.dart';
 import '../shared/widgets/not_found_screen.dart';
@@ -27,6 +28,10 @@ final bool _demoModeEnabled =
 
 final rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
 
+/// Cached first-launch flag so the sync redirect function can read it.
+/// `null` means not yet loaded. `true` = fresh install. `false` = returning user.
+final firstLaunchCacheProvider = StateProvider<bool?>((ref) => null);
+
 /// Maps a loaded user's role to their home route path.
 String _homeRouteForUser(AppUser user) {
   if (user.role.isAdmin) return '/admin-home';
@@ -46,6 +51,13 @@ class RouterNotifier extends ChangeNotifier {
     _ref.listen(authNotifierProvider, (_, __) => notifyListeners());
     _ref.listen(userProvider, (_, __) => notifyListeners());
     _ref.listen(passwordRecoveryProvider, (_, __) => notifyListeners());
+    _ref.listen(firstLaunchCacheProvider, (_, __) => notifyListeners());
+
+    // Load and cache the first-launch flag once asynchronously.
+    // When it resolves the notifier fires, causing the redirect to re-evaluate.
+    _ref.read(localStorageServiceProvider).isFirstLaunch().then((value) {
+      _ref.read(firstLaunchCacheProvider.notifier).state = value;
+    });
   }
 }
 
@@ -150,11 +162,26 @@ final routerProvider = Provider<GoRouter>((ref) {
       ];
       final isPublicPath = publicPaths.contains(location);
 
+      // ── Unauthenticated redirect ───────────────────────────────────────────
+      // FLOW:
+      //   Fresh install  → Splash → /onboarding → /auth/role-selection → /auth/login → Home
+      //   Returning user → Splash → /auth/login → Home
+      //
+      // The splash screen owns the initial routing decision (onboarding vs login).
+      // The router guard here only fires when the user navigates to a protected
+      // route without being logged in (e.g. after logout, deep link, back-press).
+      // In that case we send returning users directly to /auth/login, NOT to
+      // role-selection (which is a first-time-only screen).
       if (!isLoggedIn && !isPublicPath) {
+        final isFirstLaunch = ref.read(firstLaunchCacheProvider);
+        // If the flag hasn't loaded yet, default to /auth/login (safe fallback).
+        final loginEntry =
+            (isFirstLaunch == true) ? '/auth/role-selection' : '/auth/login';
         if (kDebugMode) {
-          debugPrint('Router: unauthenticated → /auth/role-selection');
+          debugPrint(
+              'Router: unauthenticated → $loginEntry (firstLaunch=$isFirstLaunch)');
         }
-        return '/auth/role-selection';
+        return loginEntry;
       }
 
       // Enforce Employee approval checks

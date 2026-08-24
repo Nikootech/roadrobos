@@ -97,9 +97,18 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
         }
 
         if (!mounted) return;
-        debugPrint(
-            'SplashScreen: Not logged in → ${isFirstLaunch ? "/onboarding" : "/auth/role-selection"}');
-        context.go(isFirstLaunch ? '/onboarding' : '/auth/role-selection');
+
+        if (isFirstLaunch) {
+          // Fresh install: show onboarding slides → role selection → login → home
+          debugPrint('SplashScreen: First launch → /onboarding');
+          context.go('/onboarding');
+        } else {
+          // Returning user (already saw onboarding): go straight to login.
+          // Role selection was already done on first install; the saved role
+          // is used automatically when the user signs in.
+          debugPrint('SplashScreen: Returning user → /auth/login');
+          context.go('/auth/login');
+        }
         return;
       }
 

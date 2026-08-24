@@ -7,6 +7,9 @@ import 'package:iconsax/iconsax.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../features/profile/user_provider.dart';
 import 'kinetic_motion.dart';
 
 /// SOS / Emergency Safety Button complying with:
@@ -255,7 +258,7 @@ class _SOSButtonState extends State<SOSButton>
 }
 
 /// Bangalore & Karnataka MoRTH Compliant Emergency Safety Sheet
-class KarnatakaSafetyHubModal extends StatefulWidget {
+class KarnatakaSafetyHubModal extends ConsumerStatefulWidget {
   final String? rideDetails;
   final String? driverName;
   final String? vehicleNumber;
@@ -290,28 +293,60 @@ class KarnatakaSafetyHubModal extends StatefulWidget {
   }
 
   @override
-  State<KarnatakaSafetyHubModal> createState() =>
+  ConsumerState<KarnatakaSafetyHubModal> createState() =>
       _KarnatakaSafetyHubModalState();
 }
 
-class _KarnatakaSafetyHubModalState extends State<KarnatakaSafetyHubModal> {
+class _KarnatakaSafetyHubModalState
+    extends ConsumerState<KarnatakaSafetyHubModal> {
   bool _isSirenActive = false;
   Timer? _sirenTimer;
+  final AudioPlayer _audioPlayer = AudioPlayer();
+
+  @override
+  void initState() {
+    super.initState();
+    _initAudioPlayer();
+  }
+
+  Future<void> _initAudioPlayer() async {
+    try {
+      await _audioPlayer.setReleaseMode(ReleaseMode.loop);
+      await _audioPlayer.setVolume(1.0);
+    } catch (e) {
+      debugPrint('AudioPlayer init error: $e');
+    }
+  }
 
   @override
   void dispose() {
     _sirenTimer?.cancel();
+    _audioPlayer.stop();
+    _audioPlayer.dispose();
     super.dispose();
   }
 
-  void _toggleSiren() {
+  Future<void> _toggleSiren() async {
     setState(() => _isSirenActive = !_isSirenActive);
     if (_isSirenActive) {
-      HapticFeedback.heavyImpact();
-      _sirenTimer = Timer.periodic(const Duration(milliseconds: 300), (t) {
+      try {
+        await _audioPlayer.stop();
+        await _audioPlayer.setReleaseMode(ReleaseMode.loop);
+        await _audioPlayer.setVolume(1.0);
+        await _audioPlayer.play(AssetSource('sounds/emergency_siren.wav'));
+      } catch (e) {
+        debugPrint('Failed to play siren sound: $e');
+      }
+
+      await HapticFeedback.heavyImpact();
+      _sirenTimer?.cancel();
+      _sirenTimer = Timer.periodic(const Duration(milliseconds: 350), (t) {
         HapticFeedback.vibrate();
       });
     } else {
+      try {
+        await _audioPlayer.stop();
+      } catch (_) {}
       _sirenTimer?.cancel();
     }
   }
@@ -334,44 +369,133 @@ class _KarnatakaSafetyHubModalState extends State<KarnatakaSafetyHubModal> {
     }
   }
 
+  /// Determines whether the current user is based in India or internationally
+  bool _isUserIndiaBased() {
+    // 1. Check user profile phone number
+    final userPhone = ref.read(userProvider).user?.phone.trim() ?? '';
+    if (userPhone.isNotEmpty) {
+      if (userPhone.startsWith('+91') || userPhone.startsWith('91')) {
+        return true;
+      }
+      if (userPhone.startsWith('+') && !userPhone.startsWith('+91')) {
+        return false;
+      }
+    }
+
+    // 2. Check device system locale country code
+    final locale = WidgetsBinding.instance.platformDispatcher.locale;
+    final countryCode = locale.countryCode?.toUpperCase();
+    if (countryCode == 'IN') {
+      return true;
+    }
+    if (countryCode != null && countryCode.isNotEmpty && countryCode != 'IN') {
+      return false;
+    }
+
+    // Default fallback: India based
+    return true;
+  }
+
+  /// RoadRobos Safety 24/7 Command Desk:
+  /// - India based: Direct phone call to +91 95384 83554
+  /// - Outside India: WhatsApp call/chat to +91 95384 83554
   Future<void> _callRoadRobosCommandCenter() async {
     await HapticFeedback.mediumImpact();
-    final Uri url = Uri(scheme: 'tel', path: '08045678900');
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url);
+    const rawNumber = '+919538483554';
+    const whatsappDigits = '919538483554';
+    final isIndia = _isUserIndiaBased();
+
+    if (isIndia) {
+      // Direct phone call for India based users
+      final Uri telUri = Uri(scheme: 'tel', path: rawNumber);
+      if (await canLaunchUrl(telUri)) {
+        await launchUrl(telUri);
+      } else {
+        // Fallback to WhatsApp if tel dialer fails
+        final Uri waUri = Uri.parse(
+            'https://wa.me/$whatsappDigits?text=Emergency%20RoadRobos%20Safety%20Support%20Needed');
+        await launchUrl(waUri, mode: LaunchMode.externalApplication);
+      }
+    } else {
+      // Connect call via WhatsApp ONLY for international users
+      final Uri waAppUri = Uri.parse(
+          'whatsapp://send?phone=$rawNumber&text=Emergency%20RoadRobos%20Safety%20Support%20Needed');
+      final Uri waWebUri = Uri.parse(
+          'https://wa.me/$whatsappDigits?text=Emergency%20RoadRobos%20Safety%20Support%20Needed');
+
+      if (await canLaunchUrl(waAppUri)) {
+        await launchUrl(waAppUri);
+      } else if (await canLaunchUrl(waWebUri)) {
+        await launchUrl(waWebUri, mode: LaunchMode.externalApplication);
+      } else {
+        // Final fallback to phone dialer if whatsapp is unavailable
+        final Uri telUri = Uri(scheme: 'tel', path: rawNumber);
+        if (await canLaunchUrl(telUri)) {
+          await launchUrl(telUri);
+        }
+      }
     }
   }
 
+  /// Share Live Trip & Live GPS tracking details with wished contact / loved ones
   Future<void> _shareLiveTrip(BuildContext context) async {
     await HapticFeedback.lightImpact();
     String locString = '';
     try {
-      final pos = await Geolocator.getCurrentPosition();
+      final pos = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 5),
+      );
       locString = 'https://maps.google.com/?q=${pos.latitude},${pos.longitude}';
     } catch (_) {
-      locString = 'Live GPS unavailable';
+      locString =
+          'Live GPS unavailable (Please verify device Location Services)';
     }
 
+    final user = ref.read(userProvider).user;
+    final passengerName = (user != null && user.name.isNotEmpty)
+        ? user.name
+        : 'RoadRobos Passenger';
+    final passengerPhone = user?.phone ?? '';
+
     final driver = widget.driverName ?? 'RoadRobos Verified Driver';
-    final vehicle = widget.vehicleNumber ?? 'KA-01-Cab';
+    final vehicle = widget.vehicleNumber ?? 'KA-Cab';
     final trip = widget.rideDetails ?? 'Active RoadRobos Trip';
 
-    final message = '🚨 EMERGENCY ALERT (RoadRobos Safety)\n'
-        'I am sharing my live trip details for safety:\n'
-        '• Trip: $trip\n'
+    final message = '🚨 EMERGENCY LIVE TRIP ALERT (RoadRobos Safety)\n\n'
+        'I am sharing my live trip details with you for safety:\n'
+        '• Passenger: $passengerName ${passengerPhone.isNotEmpty ? "($passengerPhone)" : ""}\n'
+        '• Trip Status: $trip\n'
         '• Driver: $driver\n'
-        '• Vehicle: $vehicle\n'
-        '• Live Location: $locString\n'
-        '• State Emergency ERSS: Dial 112\n'
-        'Verified under Karnataka Aggregator Safety Norms.';
+        '• Vehicle Reg: $vehicle\n'
+        '• Live GPS Tracking: $locString\n\n'
+        'Safety Help Desks:\n'
+        '• RoadRobos Command Desk: +91 95384 83554\n'
+        '• Police ERSS: Dial 112\n'
+        'Verified under Karnataka MoRTH Aggregator Safety Norms.';
 
-    await Share.share(message,
-        subject: 'RoadRobos Live Emergency Trip Details');
+    await Share.share(
+      message,
+      subject: '🚨 RoadRobos Emergency Live Trip Details - $passengerName',
+    );
+
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Trip & GPS coordinates ready to share.',
-              style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+          content: Row(
+            children: [
+              const Icon(Icons.check_circle_rounded,
+                  color: Colors.white, size: 18),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Trip & live GPS coordinates ready to share with loved ones.',
+                  style: GoogleFonts.inter(
+                      fontWeight: FontWeight.w600, fontSize: 12.5),
+                ),
+              ),
+            ],
+          ),
           backgroundColor: const Color(0xFF006241),
           behavior: SnackBarBehavior.floating,
         ),

@@ -32,12 +32,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _passwordController = TextEditingController();
 
   bool _isLoading = false;
-  bool _isSigningUp = false; // Toggle for register vs login
+  bool _isSigningUp = false;
   bool _dialogShowing = false;
+  // true = fresh install (came via onboarding → role-selection → login).
+  // false = returning user (came directly from splash → login).
+  // Drives whether the back-button is shown in the top nav.
+  bool _isFirstTimeLaunch = false;
 
   @override
   void initState() {
     super.initState();
+    // Load first-launch flag so the back-button visibility is correct.
+    ref.read(localStorageServiceProvider).isFirstLaunch().then((first) {
+      if (mounted) setState(() => _isFirstTimeLaunch = first);
+    });
+
     // Check for multi-device logout
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final wasMultiDeviceLogout = await ref
@@ -231,11 +240,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             localizedReason: 'Authenticate to enable biometrics');
         if (authenticated) {
           await prefs.setBool('biometric_enabled', true);
-          const storage = FlutterSecureStorage();
-          await storage.write(
-              key: 'email', value: _emailController.text.trim());
-          await storage.write(
-              key: 'password', value: _passwordController.text.trim());
+          // Use namespaced keys + platform options to match settings screen
+          await _secureStorage.write(
+              key: 'bio_email', value: _emailController.text.trim());
+          await _secureStorage.write(
+              key: 'bio_password', value: _passwordController.text.trim());
         }
       }
     }
@@ -292,6 +301,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
+  // Consistent secure storage options — must match exactly what is used in
+  // account_settings_screen.dart so that reads never miss what was written.
+  static const _secureStorage = FlutterSecureStorage(
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+    iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
+  );
+
   Future<void> _handleBiometricLogin() async {
     final prefs = await SharedPreferences.getInstance();
     final isEnabled = prefs.getBool('biometric_enabled') ?? false;
@@ -325,9 +341,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     if (didAuthenticate && mounted) {
       setState(() => _isLoading = true);
-      const storage = FlutterSecureStorage();
-      final email = await storage.read(key: 'email');
-      final password = await storage.read(key: 'password');
+      // Use namespaced keys (bio_email / bio_password) with platform options
+      // to guarantee we read exactly what account_settings_screen.dart wrote.
+      final email = await _secureStorage.read(key: 'bio_email');
+      final password = await _secureStorage.read(key: 'bio_password');
 
       if (email != null && password != null) {
         try {
@@ -350,12 +367,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 data: {'method': 'biometric', 'error': e.toString()},
               ),
             ));
-            NavHelpers.showError(context, 'Biometric Login Failed: $e');
+            // Stored credentials are stale (password changed externally).
+            // Clear biometric state so the user isn't permanently locked out.
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setBool('biometric_enabled', false);
+            await _secureStorage.delete(key: 'bio_email');
+            await _secureStorage.delete(key: 'bio_password');
+            if (!mounted) return;
+            NavHelpers.showError(
+                context,
+                'Biometric Login Failed. Please sign in with email to re-enable biometrics.');
           }
         }
       } else {
         if (mounted) {
           setState(() => _isLoading = false);
+          // Credentials missing — reset biometric flag so toggle re-enables cleanly.
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setBool('biometric_enabled', false);
           unawaited(Sentry.addBreadcrumb(
             Breadcrumb(
               message: 'Login failed',
@@ -367,8 +396,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               },
             ),
           ));
+          if (!mounted) return;
           NavHelpers.showError(
-              context, 'No credentials found for Biometric Login');
+              context,
+              'Biometric credentials not found. Please sign in with email and re-enable Biometric Login in Account Settings.');
         }
       }
     }
@@ -588,25 +619,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    GestureDetector(
-                      onTap: () => context.go('/onboarding'),
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: const Color(0xFFF8FAFC),
-                          border: Border.all(
-                            color: const Color(0xFFE2E8F0),
+                    // Back button: only shown for first-time users who came
+                    // via onboarding → role-selection → login flow.
+                    // Returning users land here directly from splash, so
+                    // there is nothing to go back to — hide the button.
+                    if (_isFirstTimeLaunch)
+                      GestureDetector(
+                        onTap: () => context.go('/auth/role-selection'),
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: const Color(0xFFF8FAFC),
+                            border: Border.all(
+                              color: const Color(0xFFE2E8F0),
+                            ),
+                          ),
+                          child: const Icon(
+                            Icons.arrow_back_ios_new_rounded,
+                            size: 15,
+                            color: Color(0xFF0F172A),
                           ),
                         ),
-                        child: const Icon(
-                          Icons.arrow_back_ios_new_rounded,
-                          size: 15,
-                          color: Color(0xFF0F172A),
-                        ),
-                      ),
-                    ),
+                      )
+                    else
+                      // Invisible placeholder keeps the badge right-aligned
+                      const SizedBox(width: 40),
                     Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 6),

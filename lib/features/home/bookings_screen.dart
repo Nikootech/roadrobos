@@ -7,6 +7,7 @@ import 'package:iconsax/iconsax.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/connectivity_provider.dart';
 import 'user_bookings_provider.dart';
+import 'package:intl/intl.dart';
 
 /// Bookings Screen - World-Class React Tier-1 Booking Management
 /// Matches Figma Screen [21]: "My Rides History"
@@ -19,10 +20,24 @@ class BookingsScreen extends ConsumerStatefulWidget {
 
 class _BookingsScreenState extends ConsumerState<BookingsScreen> {
   String _selectedFilter = 'All';
+  // Tracks whether the cleanup snackbar has already been shown this session
+  bool _cleanupNotified = false;
 
   @override
   Widget build(BuildContext context) {
     final bookingsAsync = ref.watch(userBookingsProvider);
+
+    // Watch cleanup provider — auto-cancels stale pending rentals on screen open
+    final cleanupAsync = ref.watch(expiredPendingCleanupProvider);
+    cleanupAsync.whenData((result) {
+      if (!_cleanupNotified && result.hasActivity && mounted) {
+        _cleanupNotified = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          _showExpiredCancelledBanner(context, result);
+        });
+      }
+    });
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -347,7 +362,8 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
       } else if (_selectedFilter == 'Pending') {
         return s == 'payment_pending' || s == 'pending';
       } else if (_selectedFilter == 'Cancelled') {
-        return s == 'cancelled';
+        // cancelled_expired groups under Cancelled filter
+        return s == 'cancelled' || s == 'cancelled_expired';
       }
       return true;
     }).toList();
@@ -495,6 +511,99 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
     );
   }
 
+  /// Shows a prominent SnackBar informing the user about auto-cancelled bookings
+  /// and wallet refund (if applicable).
+  void _showExpiredCancelledBanner(
+      BuildContext context, ExpiredRentalCleanupResult result) {
+    final hasRefund = result.hasRefund;
+    final amountStr =
+        NumberFormat.currency(locale: 'en_IN', symbol: '\u20b9', decimalDigits: 0)
+            .format(result.refundedAmount);
+
+    final content = hasRefund
+        ? 'Your ${result.cancelledCount} pending rental(s) expired and were cancelled. '
+            '$amountStr has been refunded to your wallet.'
+        : 'Your ${result.cancelledCount} pending rental(s) expired and were automatically cancelled.';
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        duration: const Duration(seconds: 6),
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 80),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        content: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: hasRefund
+                ? const Color(0xFF064E3B) // deep green for refund
+                : const Color(0xFF1E293B), // dark slate for simple cancel
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.18),
+                blurRadius: 20,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: hasRefund
+                      ? const Color(0xFF059669).withValues(alpha: 0.25)
+                      : const Color(0xFFE11D48).withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  hasRefund ? Iconsax.wallet_check : Iconsax.calendar_remove,
+                  color: hasRefund
+                      ? const Color(0xFF34D399)
+                      : const Color(0xFFFB7185),
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      hasRefund
+                          ? 'Booking Expired • Refund Initiated'
+                          : 'Booking Expired • Auto-Cancelled',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                        letterSpacing: -0.1,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      content,
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: Colors.white.withValues(alpha: 0.75),
+                        fontWeight: FontWeight.w500,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   (List<Color>, IconData) _getServiceStyle(BookingType type, String title) {
     final t = title.toLowerCase();
     if (t.contains('taxi') || t.contains('ride') || type == BookingType.ride) {
@@ -553,6 +662,14 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
           const Color(0xFFFFF1F2),
           const Color(0xFFFECDD3),
           'CANCELLED',
+        );
+      // Booking was auto-cancelled because payment window expired
+      case 'cancelled_expired':
+        return (
+          const Color(0xFFDC2626),
+          const Color(0xFFFFF1F2),
+          const Color(0xFFFCA5A5),
+          'EXPIRED',
         );
       default:
         return (

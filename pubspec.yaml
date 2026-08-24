@@ -1,7 +1,7 @@
 name: roadrobos
 description: "RoadRobos - Vehicle Service & Ride Booking App"
 publish_to: 'none'
-version: 1.0.7+12
+version: 1.0.8+13
 
 environment:
   sdk: '>=3.3.4 <4.0.0'
@@ -102,6 +102,7 @@ dependencies:
   upgrader: ^13.5.0
   firebase_in_app_messaging: ^0.8.1+10
   flutter_background_service: ^5.1.0
+  audioplayers: ^6.7.1
 
 dev_dependencies:
   flutter_test:
@@ -145,3 +146,4 @@ flutter:
     - assets/app_icon.png
     - assets/signin_icon.png
     - assets/rentals/
+    - assets/sounds/
