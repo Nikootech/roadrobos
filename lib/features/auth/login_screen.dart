@@ -7,9 +7,7 @@ import 'package:iconsax/iconsax.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../navigation/nav_helpers.dart';
-import '../../core/constants/app_strings.dart';
 import '../profile/user_provider.dart';
-import '../../shared/widgets/custom_button.dart';
 import '../../shared/widgets/custom_text_field.dart';
 import '../../core/models/user_role.dart';
 import '../../core/services/local_storage_service.dart';
@@ -18,6 +16,7 @@ import '../../core/services/auth_service.dart';
 import '../../core/services/biometric_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -575,89 +574,122 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     });
 
     return Scaffold(
-      backgroundColor: AppColors.brandGreenBg,
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // ── Top Navigation Bar ──
               Padding(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     GestureDetector(
                       onTap: () => context.go('/onboarding'),
                       child: Container(
-                        width: 42,
-                        height: 42,
+                        width: 40,
+                        height: 40,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: AppColors.bgWhite,
+                          color: const Color(0xFFF8FAFC),
                           border: Border.all(
-                              color:
-                                  AppColors.brandGreen.withValues(alpha: 0.2)),
+                            color: const Color(0xFFE2E8F0),
+                          ),
                         ),
-                        child: const Icon(Icons.arrow_back_ios_new_rounded,
-                            size: 16, color: AppColors.brandGreen),
+                        child: const Icon(
+                          Icons.arrow_back_ios_new_rounded,
+                          size: 15,
+                          color: Color(0xFF0F172A),
+                        ),
                       ),
                     ),
-                    const Expanded(
-                      child: Text(
-                        'Sign In',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF0FDF4),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: const Color(0xFF86EFAC).withValues(alpha: 0.6),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.verified_user_rounded,
+                            size: 13,
+                            color: Color(0xFF006241),
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            'Secure Access',
+                            style: GoogleFonts.inter(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF006241),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(
-                        width:
-                            42), // Keep spacing symmetrical without the info icon
                   ],
                 ),
               ),
 
+              // ── Centered Hero Brand Stage ──
               _buildHeroSection(),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
 
+              // ── Header Typography ──
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      AppStrings.welcomeBack,
-                      style: GoogleFonts.outfit(
-                          fontSize: 30,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary),
+                      _isSigningUp ? 'Create Account' : 'Welcome Back',
+                      style: GoogleFonts.inter(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF0F172A),
+                        letterSpacing: -0.6,
+                      ),
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      AppStrings.loginSubtitle,
-                      style: TextStyle(
-                          fontSize: 14,
-                          color:
-                              AppColors.textSecondary.withValues(alpha: 0.8)),
+                      _isSigningUp
+                          ? 'Join RoadRobos to book services, rides, and track in real-time.'
+                          : 'Enter your credentials to access your account and services.',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w400,
+                        color: const Color(0xFF64748B),
+                        height: 1.45,
+                      ),
                     ),
                   ],
                 ),
-              ),
+              ).animate().fadeIn(duration: 350.ms).slideY(begin: 0.08, end: 0),
 
               const SizedBox(height: 24),
 
-              // Form Fields
+              // ── Form Section ──
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Form(
                   key: _formKey,
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       CustomTextField(
                         label: 'Email Address',
-                        hint: 'Enter your email',
+                        hint: 'name@example.com',
                         prefixIcon: Iconsax.sms,
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
@@ -667,15 +699,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             return 'Email is required';
                           }
                           if (!value.contains('@')) {
-                            return 'Enter a valid email';
+                            return 'Enter a valid email address';
                           }
                           return null;
                         },
                       ),
+                      const SizedBox(height: 16),
                       CustomTextField(
                         label: 'Password',
                         hint: _isSigningUp
-                            ? 'Create a password'
+                            ? 'Create a secure password'
                             : 'Enter your password',
                         prefixIcon: Iconsax.lock,
                         isPassword: true,
@@ -686,184 +719,293 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             return 'Password is required';
                           }
                           if (_isSigningUp && value.length < 6) {
-                            return 'Mini 6 characters';
+                            return 'Password must be at least 6 characters';
                           }
                           return null;
                         },
                       ),
 
                       // Forgot Password Link
-                      if (!_isSigningUp)
+                      if (!_isSigningUp) ...[
+                        const SizedBox(height: 8),
                         Align(
                           alignment: Alignment.centerRight,
-                          child: Padding(
-                            padding: const EdgeInsets.only(top: 8, bottom: 4),
-                            child: GestureDetector(
-                              onTap: _handleForgotPassword,
-                              child: const Text(
-                                'Forgot Password?',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.primaryBlue,
-                                ),
+                          child: GestureDetector(
+                            onTap: _handleForgotPassword,
+                            child: Text(
+                              'Forgot password?',
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF006241),
                               ),
                             ),
                           ),
                         ),
+                      ],
 
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 24),
 
-                      const SizedBox(height: 8),
-
-                      CustomButton(
-                        label: _isSigningUp
-                            ? 'Join RoAd RoBo\'s'
-                            : 'Sign In with Email',
-                        onPressed: _handleLogin,
-                        isLoading: _isLoading,
-                        backgroundColor: AppColors.brandGreen,
-                      ),
-
-                      const SizedBox(height: 20),
-
-                      // Social Login
-                      Row(
-                        children: [
-                          Expanded(
-                              child: Divider(
-                                  color:
-                                      AppColors.border.withValues(alpha: 0.6))),
-                          const Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 16),
-                            child: Text(AppStrings.orContinueWith,
-                                style: TextStyle(
-                                    fontSize: 13, color: AppColors.textMuted)),
-                          ),
-                          Expanded(
-                              child: Divider(
-                                  color:
-                                      AppColors.border.withValues(alpha: 0.6))),
-                        ],
-                      ),
-
-                      const SizedBox(height: 20),
-
+                      // ── Primary Action Button ──
                       GestureDetector(
-                        onTap: _handleGoogleSignIn,
-                        child: Container(
-                          height: 56,
+                        onTap: _isLoading ? null : _handleLogin,
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          height: 52,
                           decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: AppColors.border),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Container(
-                                width: 24,
-                                height: 24,
-                                decoration: const BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: Colors.white,
-                                ),
-                                child: Stack(
-                                  alignment: Alignment.center,
-                                  children: [
-                                    Text(
-                                      'G',
-                                      style: GoogleFonts.outfit(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w900,
-                                        foreground: Paint()
-                                          ..shader = const LinearGradient(
-                                            colors: [
-                                              Color(0xFF4285F4), // Blue
-                                              Color(0xFF34A853), // Green
-                                              Color(0xFFFBBC05), // Yellow
-                                              Color(0xFFEA4335), // Red
-                                            ],
-                                          ).createShader(const Rect.fromLTWH(
-                                              0, 0, 24, 24)),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              const Text(
-                                'Continue with Google',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 16,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      // Biometric Login Button
-                      GestureDetector(
-                        onTap: _handleBiometricLogin,
-                        child: Container(
-                          height: 56,
-                          decoration: BoxDecoration(
-                            gradient: AppColors.primaryGradient,
+                            gradient: const LinearGradient(
+                              colors: [
+                                Color(0xFF006241),
+                                Color(0xFF0D7E54),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.primaryBlue
-                                    .withValues(alpha: 0.3),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
+                                color: const Color(0xFF006241)
+                                    .withValues(alpha: 0.28),
+                                blurRadius: 16,
+                                offset: const Offset(0, 6),
                               ),
                             ],
                           ),
-                          child: const Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Iconsax.finger_scan,
-                                  color: Colors.white, size: 24),
-                              SizedBox(width: 12),
-                              Text(
-                                'Login with Biometrics',
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                    color: Colors.white),
-                              ),
-                            ],
+                          child: Center(
+                            child: _isLoading
+                                ? const SizedBox(
+                                    width: 22,
+                                    height: 22,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.4,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                          Colors.white),
+                                    ),
+                                  )
+                                : Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        _isSigningUp
+                                            ? 'Create Account'
+                                            : 'Sign In with Email',
+                                        style: GoogleFonts.inter(
+                                          fontSize: 15.5,
+                                          fontWeight: FontWeight.w700,
+                                          color: Colors.white,
+                                          letterSpacing: -0.2,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      const Icon(
+                                        Iconsax.arrow_right_1,
+                                        color: Colors.white,
+                                        size: 18,
+                                      ),
+                                    ],
+                                  ),
                           ),
                         ),
                       ),
 
                       const SizedBox(height: 24),
 
+                      // ── Divider ──
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Container(
+                              height: 1,
+                              color: const Color(0xFFE2E8F0),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 14),
+                            child: Text(
+                              'Or continue with',
+                              style: GoogleFonts.inter(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w500,
+                                color: const Color(0xFF94A3B8),
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Container(
+                              height: 1,
+                              color: const Color(0xFFE2E8F0),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // ── Google Sign-In Button ──
+                      GestureDetector(
+                        onTap: _handleGoogleSignIn,
+                        child: Container(
+                          height: 52,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: const Color(0xFFE2E8F0),
+                              width: 1.2,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.03),
+                                blurRadius: 10,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                width: 22,
+                                height: 22,
+                                decoration: const BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.white,
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    'G',
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.w900,
+                                      foreground: Paint()
+                                        ..shader = const LinearGradient(
+                                          colors: [
+                                            Color(0xFF4285F4),
+                                            Color(0xFF34A853),
+                                            Color(0xFFFBBC05),
+                                            Color(0xFFEA4335),
+                                          ],
+                                        ).createShader(
+                                            const Rect.fromLTWH(0, 0, 22, 22)),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                'Continue with Google',
+                                style: GoogleFonts.inter(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 15,
+                                  color: const Color(0xFF0F172A),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 14),
+
+                      // ── Biometric Login Button ──
+                      GestureDetector(
+                        onTap: _handleBiometricLogin,
+                        child: Container(
+                          height: 52,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF0FDF4),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: const Color(0xFF86EFAC)
+                                  .withValues(alpha: 0.8),
+                              width: 1.2,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF10B981)
+                                    .withValues(alpha: 0.08),
+                                blurRadius: 12,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Iconsax.finger_scan,
+                                color: Color(0xFF006241),
+                                size: 22,
+                              ),
+                              const SizedBox(width: 10),
+                              Text(
+                                'Sign In with Biometrics',
+                                style: GoogleFonts.inter(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 15,
+                                  color: const Color(0xFF006241),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 28),
+
+                      // ── Bottom Mode Switcher ──
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                              _isSigningUp
-                                  ? 'Already have an account?'
-                                  : AppStrings.dontHaveAccount,
-                              style: const TextStyle(
-                                  fontSize: 14,
-                                  color: AppColors.textSecondary)),
+                            _isSigningUp
+                                ? 'Already have an account?'
+                                : "Don't have an account?",
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w400,
+                              color: const Color(0xFF64748B),
+                            ),
+                          ),
                           GestureDetector(
                             onTap: () {
-                              setState(() => _isSigningUp = !_isSigningUp);
+                              if (!_isSigningUp) {
+                                context.go('/auth/role-selection');
+                              } else {
+                                setState(() => _isSigningUp = false);
+                              }
                             },
                             child: Text(
-                                _isSigningUp ? ' Sign In' : ' Sign Up Free',
-                                style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.brandGreen)),
+                              _isSigningUp ? ' Sign In' : ' Sign Up Free',
+                              style: GoogleFonts.inter(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF006241),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // ── Security Guarantee ──
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.lock_outline_rounded,
+                            size: 13,
+                            color: Color(0xFF94A3B8),
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            '256-bit SSL Encrypted • Fast & Secure',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: const Color(0xFF94A3B8),
+                            ),
                           ),
                         ],
                       ),
@@ -871,7 +1013,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 48),
+              const SizedBox(height: 36),
             ],
           ),
         ),
@@ -880,32 +1022,37 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Widget _buildHeroSection() {
-    return Container(
-      height: 220,
-      margin: const EdgeInsets.symmetric(horizontal: 20),
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(32)),
+    return Padding(
+      padding: const EdgeInsets.only(top: 8, bottom: 12),
       child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: Stack(
+          alignment: Alignment.center,
           children: [
             Container(
               width: 100,
               height: 100,
               decoration: BoxDecoration(
-                  color: Colors.white, borderRadius: BorderRadius.circular(30)),
-              padding: const EdgeInsets.all(4),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(26),
-                child:
-                    Image.asset('assets/signin_icon.png', fit: BoxFit.contain),
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    const Color(0xFF006241).withValues(alpha: 0.08),
+                    Colors.transparent,
+                  ],
+                ),
               ),
             ),
-            const SizedBox(height: 12),
-            Text('RoAd RoBo\'s',
-                style: GoogleFonts.outfit(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w900,
-                    color: AppColors.brandGreen)),
+            Image.asset(
+              'assets/app_icon.png',
+              width: 80,
+              height: 80,
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) => Image.asset(
+                'assets/signin_icon.png',
+                width: 80,
+                height: 80,
+                fit: BoxFit.contain,
+              ),
+            ),
           ],
         ),
       ),

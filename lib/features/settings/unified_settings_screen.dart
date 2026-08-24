@@ -9,6 +9,7 @@ import '../../core/models/user_role.dart';
 import '../../core/providers/theme_provider.dart';
 import '../../core/services/biometric_service.dart';
 import '../../core/theme/app_colors.dart';
+import '../../shared/widgets/react_switch.dart';
 import '../profile/user_provider.dart';
 
 /// Unified Settings Screen — works for all user roles:
@@ -331,35 +332,6 @@ class _UnifiedSettingsScreenState extends ConsumerState<UnifiedSettingsScreen> {
                     value: _isBiometricEnabled,
                     onChanged: _toggleBiometric,
                   ),
-                  _buildDivider(),
-                  _buildTile(
-                    icon: Iconsax.shield,
-                    color: const Color(0xFF0EA5E9),
-                    title: 'Two-Factor Authentication',
-                    subtitle: userState.mfaEnabled
-                        ? 'Active — extra login protection'
-                        : 'Add an extra security layer',
-                    trailing: userState.mfaEnabled
-                        ? Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color:
-                                  AppColors.brandGreen.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              'ON',
-                              style: GoogleFonts.outfit(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.brandGreen,
-                              ),
-                            ),
-                          )
-                        : null,
-                    onTap: () => context.push('/account-settings'),
-                  ),
                 ]).animate().fadeIn(duration: 300.ms, delay: 120.ms),
 
                 const SizedBox(height: 16),
@@ -669,10 +641,9 @@ class _UnifiedSettingsScreenState extends ConsumerState<UnifiedSettingsScreen> {
               ],
             ),
           ),
-          Switch(
+          ReactSwitch(
             value: value,
             onChanged: onChanged,
-            activeThumbColor: AppColors.brandGreen,
           ),
         ],
       ),

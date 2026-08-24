@@ -6,11 +6,12 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:async';
 import '../../main.dart' show scaffoldMessengerKey, navigatorKey;
-import '../theme/app_colors.dart';
+import '../../navigation/nav_helpers.dart';
 
 // ── Abstract interface ────────────────────────────────────────────────────────
 // Allows mock injection in widget and integration tests.
@@ -63,6 +64,45 @@ class NotificationService implements INotificationService {
       const InitializationSettings initializationSettings =
           InitializationSettings(android: initializationSettingsAndroid);
       await _localNotifications.initialize(initializationSettings);
+
+      // Create Android Notification Channels
+      final androidPlugin =
+          _localNotifications.resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>();
+      if (androidPlugin != null) {
+        await androidPlugin.createNotificationChannel(
+          const AndroidNotificationChannel(
+            'dispatch_alerts',
+            'Urgent Dispatch & SOS Alerts',
+            description:
+                'Instant alerts for driver ride dispatches, work orders and SOS',
+            importance: Importance.max,
+          ),
+        );
+        await androidPlugin.createNotificationChannel(
+          const AndroidNotificationChannel(
+            'rides_channel',
+            'Rides & Service Updates',
+            description: 'Live updates on taxi arrivals and service progress',
+            importance: Importance.high,
+          ),
+        );
+        await androidPlugin.createNotificationChannel(
+          const AndroidNotificationChannel(
+            'chat_messages',
+            'Chat & In-App Messaging',
+            description: 'Messages from drivers and customer support',
+            importance: Importance.high,
+          ),
+        );
+        await androidPlugin.createNotificationChannel(
+          const AndroidNotificationChannel(
+            'promotions_channel',
+            'Promotions & Offers',
+            description: 'Discounts, coupons and seasonal deals',
+          ),
+        );
+      }
     }
 
     // 3. Handle Foreground Messages
@@ -261,28 +301,60 @@ class NotificationService implements INotificationService {
       debugPrint('Web Error: $title - $error');
     }
 
-    // 2. Show Premium SnackBar
+    final rawDesc =
+        message ?? (error != null ? NavHelpers.cleanErrorMessage(error) : null);
+
+    // 2. Show React Sonner-style floating Toast
+    scaffoldMessengerKey.currentState?.hideCurrentSnackBar();
     scaffoldMessengerKey.currentState?.showSnackBar(
       SnackBar(
         elevation: 0,
         behavior: SnackBarBehavior.floating,
         backgroundColor: Colors.transparent,
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+        padding: EdgeInsets.zero,
         content: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
-            color: AppColors.dangerRed,
-            borderRadius: BorderRadius.circular(20),
+            color: const Color(0xFF0F172A), // Dark slate glassmorphism
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: const Color(0xFFEF4444).withValues(alpha: 0.35),
+              width: 1.2,
+            ),
             boxShadow: [
               BoxShadow(
-                color: AppColors.dangerRed.withValues(alpha: 0.3),
-                blurRadius: 15,
-                offset: const Offset(0, 8),
+                color: Colors.black.withValues(alpha: 0.35),
+                blurRadius: 24,
+                offset: const Offset(0, 10),
+              ),
+              BoxShadow(
+                color: const Color(0xFFEF4444).withValues(alpha: 0.18),
+                blurRadius: 14,
+                offset: const Offset(0, 3),
               ),
             ],
           ),
           child: Row(
             children: [
-              const Icon(Iconsax.warning_2, color: Colors.white, size: 24),
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEF4444).withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: const Color(0xFFEF4444).withValues(alpha: 0.3),
+                  ),
+                ),
+                child: const Center(
+                  child: Icon(
+                    Iconsax.warning_2,
+                    color: Color(0xFFEF4444),
+                    size: 18,
+                  ),
+                ),
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -291,21 +363,25 @@ class NotificationService implements INotificationService {
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(
+                      style: GoogleFonts.inter(
                         color: Colors.white,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13.5,
+                        letterSpacing: -0.2,
                       ),
                     ),
-                    if (message != null)
+                    if (rawDesc != null && rawDesc.isNotEmpty) ...[
+                      const SizedBox(height: 2),
                       Text(
-                        message,
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.9),
+                        rawDesc,
+                        style: GoogleFonts.inter(
+                          color: const Color(0xFF94A3B8),
                           fontSize: 12,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: FontWeight.w400,
+                          height: 1.35,
                         ),
                       ),
+                    ],
                   ],
                 ),
               ),

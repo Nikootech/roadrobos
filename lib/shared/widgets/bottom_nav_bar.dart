@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../core/theme/app_colors.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 /// Data model for a bottom navigation item.
 class NavItemData {
   final IconData icon;
   final IconData activeIcon;
   final String label;
-  const NavItemData(
-      {required this.icon, required this.activeIcon, required this.label});
+  const NavItemData({
+    required this.icon,
+    required this.activeIcon,
+    required this.label,
+  });
 }
 
-/// Unified Bottom Navigation Bar — Classic Animated Design for All User Roles
+/// Unified Bottom Navigation Bar — React / Tier-1 Modern Animated Design
 class CustomBottomNavBar extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
@@ -30,27 +33,29 @@ class CustomBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveActiveColor = activeColor ?? AppColors.brandGreen;
+    final effectiveActiveColor = activeColor ?? const Color(0xFF006241);
     final effectiveInactiveColor = inactiveColor ?? const Color(0xFF94A3B8);
     final bottomPadding = MediaQuery.paddingOf(context).bottom;
 
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        border: const Border(top: BorderSide(color: Color(0xFFE2E8F0))),
+        border: const Border(
+          top: BorderSide(color: Color(0xFFE2E8F0), width: 1.2),
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 12,
-            offset: const Offset(0, -3),
-          )
+            blurRadius: 20,
+            offset: const Offset(0, -6),
+          ),
         ],
       ),
       padding: EdgeInsets.only(
         top: 8,
         bottom: bottomPadding > 0 ? bottomPadding : 10,
-        left: 4,
-        right: 4,
+        left: 12,
+        right: 12,
       ),
       child: Row(
         children: List.generate(items.length, (index) {
@@ -70,48 +75,53 @@ class CustomBottomNavBar extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  AnimatedScale(
-                    scale: isActive ? 1.10 : 1.0,
+                  AnimatedContainer(
                     duration: const Duration(milliseconds: 220),
-                    curve: Curves.easeOutBack,
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 200),
-                      transitionBuilder: (child, animation) {
-                        return FadeTransition(
-                          opacity: animation,
-                          child: ScaleTransition(
-                            scale: Tween<double>(begin: 0.85, end: 1.0)
-                                .animate(animation),
-                            child: child,
-                          ),
-                        );
-                      },
+                    curve: Curves.easeOutCubic,
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: isActive
+                          ? const Color(0xFF006241).withValues(alpha: 0.12)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: AnimatedScale(
+                      scale: isActive ? 1.1 : 1.0,
+                      duration: const Duration(milliseconds: 220),
+                      curve: Curves.easeOutBack,
                       child: Icon(
                         isActive ? item.activeIcon : item.icon,
-                        key: ValueKey('${item.label}_$isActive'),
                         color: isActive
                             ? effectiveActiveColor
                             : effectiveInactiveColor,
-                        size: 24,
+                        size: 22,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  AnimatedDefaultTextStyle(
-                    duration: const Duration(milliseconds: 200),
-                    curve: Curves.easeInOut,
-                    style: TextStyle(
+                  const SizedBox(height: 3),
+                  Text(
+                    item.label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.inter(
                       fontSize: 11,
-                      fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                      fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
                       color: isActive
                           ? effectiveActiveColor
                           : effectiveInactiveColor,
-                      letterSpacing: 0.1,
-                      height: 1.15,
+                      letterSpacing: -0.1,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    child: Text(item.label),
+                  ),
+                  const SizedBox(height: 2),
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    width: isActive ? 4 : 0,
+                    height: isActive ? 4 : 0,
+                    decoration: BoxDecoration(
+                      color: effectiveActiveColor,
+                      shape: BoxShape.circle,
+                    ),
                   ),
                 ],
               ),

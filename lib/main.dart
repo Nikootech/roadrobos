@@ -26,6 +26,7 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 import 'core/utils/app_debugger.dart';
 import 'shared/widgets/startup_error_app.dart';
 import 'core/services/background_service.dart';
+import 'core/theme/system_ui_service.dart';
 
 import 'package:flutter/foundation.dart';
 
@@ -47,6 +48,7 @@ void main() {
     () async {
       WidgetsFlutterBinding.ensureInitialized();
       await initializeBackgroundService();
+      SystemUiService.configureEdgeToEdge();
 
       SharedPreferences? prefs;
       bool isCompromised = false;

@@ -4,14 +4,16 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 import '../../core/theme/app_colors.dart';
 import 'user_provider.dart';
 import '../../core/providers/favorites_provider.dart';
 import '../../core/services/biometric_service.dart';
 import '../../core/services/auth_service.dart';
-import '../../core/services/two_factor_auth_service.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:iconsax/iconsax.dart';
+import '../../shared/widgets/kinetic_motion.dart';
+import '../../shared/widgets/react_switch.dart';
 
 class AccountSettingsScreen extends ConsumerStatefulWidget {
   const AccountSettingsScreen({super.key});
@@ -29,19 +31,6 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
   late TextEditingController _emailController;
   late TextEditingController _phoneController;
   bool _isBiometricEnabled = false;
-
-  // ── 2FA dialog state ──────────────────────────────────────────────────────
-  bool _is2FADialogLoading = false;
-  String? _twoFaQrUri;
-  String? _twoFaSecret;
-  String? _twoFaFactorId;
-  String? _twoFaError;
-  int _twoFaStep = 0; // 0=loading/QR, 1=verify code, 2=success
-  final _totpCodeController = TextEditingController();
-
-  /// Holds the StatefulBuilder's setDialogState so we can trigger dialog redraws
-  /// from outside the dialog's own widget subtree (e.g. after async enrollment).
-  StateSetter? _dialogSetState;
 
   @override
   void initState() {
@@ -240,539 +229,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
     _nameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
-    _totpCodeController.dispose();
     super.dispose();
-  }
-
-  // ── Real 2FA dialog ──────────────────────────────────────────────────────────
-
-  Future<void> _showTwoFactorDialog() async {
-    final userState = ref.read(userProvider);
-
-    // If already enabled → offer to disable
-    if (userState.mfaEnabled) {
-      await _showDisable2FADialog();
-      return;
-    }
-
-    // Reset dialog state
-    setState(() {
-      _is2FADialogLoading = true;
-      _twoFaStep = 0;
-      _twoFaQrUri = null;
-      _twoFaSecret = null;
-      _twoFaFactorId = null;
-      _twoFaError = null;
-      _totpCodeController.clear();
-    });
-
-    // Show dialog immediately (spinner while enrolling)
-    if (!mounted) return;
-    unawaited(showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogCtx) => StatefulBuilder(
-        builder: (ctx, setDialogState) {
-          // Capture the dialog's own setState so async enrollment can trigger redraws
-          _dialogSetState = setDialogState;
-          return _build2FADialog(dialogCtx, setDialogState);
-        },
-      ),
-    ).then((_) {
-      // Clean up reference when dialog is closed
-      _dialogSetState = null;
-    }));
-
-    // Start TOTP enrollment in background
-    try {
-      if (userState.isDemo) {
-        await Future.delayed(const Duration(milliseconds: 500));
-        if (!mounted) return;
-        setState(() {
-          _twoFaQrUri =
-              'otpauth://totp/RoadRobos:demo@roadrobos.com?secret=JBSWY3DPEHPK3PXP&issuer=RoadRobos';
-          _twoFaSecret = 'JBSWY3DPEHPK3PXP';
-          _twoFaFactorId = 'demo_factor_id';
-          _is2FADialogLoading = false;
-          _twoFaStep = 0;
-        });
-        _dialogSetState?.call(() {});
-        return;
-      }
-
-      final svc = ref.read(twoFactorAuthServiceProvider);
-      final result = await svc.enrollTOTP();
-      if (!mounted) return;
-      // Update parent state
-      setState(() {
-        _twoFaQrUri = result.qrCodeUri;
-        _twoFaSecret = result.secret;
-        _twoFaFactorId = result.factorId;
-        _is2FADialogLoading = false;
-        _twoFaStep = 0;
-      });
-      // CRITICAL: Also trigger dialog's own StatefulBuilder to redraw with QR data
-      _dialogSetState?.call(() {});
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _twoFaError = e.toString();
-        _is2FADialogLoading = false;
-      });
-      _dialogSetState?.call(() {});
-    }
-  }
-
-  Widget _build2FADialog(BuildContext dialogCtx, StateSetter setDialogState) {
-    return AlertDialog(
-      backgroundColor: const Color(0xFF1A1F2E),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-      contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
-      title: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppColors.primaryBlue.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(Icons.verified_user_rounded,
-                color: AppColors.primaryBlue, size: 22),
-          ),
-          const SizedBox(width: 12),
-          const Expanded(
-            child: Text(
-              'Two-Factor Authentication',
-              style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 16),
-            ),
-          ),
-        ],
-      ),
-      content: _twoFaError != null
-          ? _build2FAErrorContent(dialogCtx)
-          : _twoFaStep == 2
-              ? _build2FASuccessContent(dialogCtx)
-              : _twoFaStep == 1
-                  ? _build2FAVerifyContent(dialogCtx, setDialogState)
-                  : _build2FAQrContent(dialogCtx),
-    );
-  }
-
-  /// Step 0 — QR code display
-  Widget _build2FAQrContent(BuildContext dialogCtx) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const SizedBox(height: 8),
-        const Text(
-          'Scan this QR code with your Authenticator app (Google Authenticator, Authy, etc.)',
-          textAlign: TextAlign.center,
-          style: TextStyle(color: Color(0xFFB0B8D1), fontSize: 13, height: 1.5),
-        ),
-        const SizedBox(height: 20),
-        SizedBox(
-          width: 204,
-          height: 204,
-          child: _is2FADialogLoading
-              ? const Center(
-                  child:
-                      CircularProgressIndicator(color: AppColors.primaryBlue))
-              : Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: QrImageView(
-                    data: _twoFaQrUri ?? '',
-                    size: 180,
-                    eyeStyle: const QrEyeStyle(
-                      eyeShape: QrEyeShape.square,
-                      color: Color(0xFF1A1F2E),
-                    ),
-                    dataModuleStyle: const QrDataModuleStyle(
-                      dataModuleShape: QrDataModuleShape.square,
-                      color: Color(0xFF1A1F2E),
-                    ),
-                  ),
-                ),
-        ),
-        if (!_is2FADialogLoading && _twoFaSecret != null) ...[
-          const SizedBox(height: 16),
-          const Text(
-            'Or enter this code manually:',
-            style: TextStyle(color: Color(0xFF8892A4), fontSize: 11),
-          ),
-          const SizedBox(height: 6),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              color: const Color(0xFF252B3B),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                  color: AppColors.primaryBlue.withValues(alpha: 0.3)),
-            ),
-            child: SelectableText(
-              _twoFaSecret!,
-              style: const TextStyle(
-                color: AppColors.primaryBlue,
-                fontFamily: 'monospace',
-                fontSize: 13,
-                letterSpacing: 2,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ],
-        const SizedBox(height: 20),
-        Row(
-          children: [
-            Expanded(
-              child: TextButton(
-                onPressed: () => Navigator.pop(dialogCtx),
-                child: const Text('CANCEL',
-                    style: TextStyle(
-                        color: Color(0xFF8892A4), fontWeight: FontWeight.bold)),
-              ),
-            ),
-            Expanded(
-              child: ElevatedButton(
-                onPressed: _is2FADialogLoading
-                    ? null
-                    : () {
-                        setState(() => _twoFaStep = 1);
-                        _dialogSetState?.call(() {});
-                      },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryBlue,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                ),
-                child: const Text('NEXT →',
-                    style: TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.w900)),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  /// Step 1 — Enter TOTP code for verification
-  Widget _build2FAVerifyContent(
-      BuildContext dialogCtx, StateSetter setDialogState) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: AppColors.primaryBlue.withValues(alpha: 0.1),
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(Icons.phonelink_lock_rounded,
-              color: AppColors.primaryBlue, size: 36),
-        ),
-        const SizedBox(height: 16),
-        const Text(
-          'Enter the 6-digit code from your Authenticator app to confirm setup.',
-          textAlign: TextAlign.center,
-          style: TextStyle(color: Color(0xFFB0B8D1), fontSize: 13, height: 1.5),
-        ),
-        const SizedBox(height: 20),
-        TextField(
-          controller: _totpCodeController,
-          keyboardType: TextInputType.number,
-          maxLength: 6,
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 28,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 10,
-          ),
-          decoration: InputDecoration(
-            counterText: '',
-            hintText: '······',
-            hintStyle: const TextStyle(
-                color: Color(0xFF4A5568), fontSize: 28, letterSpacing: 10),
-            filled: true,
-            fillColor: const Color(0xFF252B3B),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(
-                  color: AppColors.primaryBlue.withValues(alpha: 0.4)),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(
-                  color: AppColors.primaryBlue.withValues(alpha: 0.4)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide:
-                  const BorderSide(color: AppColors.primaryBlue, width: 2),
-            ),
-            errorText: _twoFaError,
-            errorStyle: const TextStyle(color: Color(0xFFFF5252), fontSize: 12),
-          ),
-        ),
-        const SizedBox(height: 20),
-        Row(
-          children: [
-            Expanded(
-              child: TextButton(
-                onPressed: () {
-                  setState(() {
-                    _twoFaStep = 0;
-                    _twoFaError = null;
-                    _totpCodeController.clear();
-                  });
-                  _dialogSetState?.call(() {});
-                },
-                child: const Text('← BACK',
-                    style: TextStyle(
-                        color: Color(0xFF8892A4), fontWeight: FontWeight.bold)),
-              ),
-            ),
-            Expanded(
-              child: ElevatedButton(
-                onPressed: _is2FADialogLoading
-                    ? null
-                    : () async {
-                        final code = _totpCodeController.text.trim();
-                        if (code.length != 6) {
-                          setState(() =>
-                              _twoFaError = 'Please enter a 6-digit code.');
-                          _dialogSetState?.call(() {});
-                          return;
-                        }
-                        setState(() {
-                          _is2FADialogLoading = true;
-                          _twoFaError = null;
-                        });
-                        _dialogSetState?.call(() {});
-                        try {
-                          final isDemo = ref.read(userProvider).isDemo;
-                          if (isDemo) {
-                            await Future.delayed(
-                                const Duration(milliseconds: 600));
-                            await ref.read(userProvider.notifier).enable2FA();
-                            if (mounted) {
-                              setState(() {
-                                _twoFaStep = 2;
-                                _is2FADialogLoading = false;
-                              });
-                              _dialogSetState?.call(() {});
-                            }
-                            return;
-                          }
-
-                          final svc = ref.read(twoFactorAuthServiceProvider);
-                          await svc.challengeAndVerify(
-                            factorId: _twoFaFactorId!,
-                            totpCode: code,
-                          );
-                          // Persist to DB + update provider state
-                          await ref.read(userProvider.notifier).enable2FA();
-                          if (mounted) {
-                            setState(() {
-                              _twoFaStep = 2;
-                              _is2FADialogLoading = false;
-                            });
-                            _dialogSetState?.call(() {});
-                          }
-                        } catch (e) {
-                          if (mounted) {
-                            setState(() {
-                              _twoFaError = 'Invalid code. Please try again.';
-                              _is2FADialogLoading = false;
-                            });
-                            _dialogSetState?.call(() {});
-                          }
-                        }
-                      },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryBlue,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                ),
-                child: _is2FADialogLoading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                            color: Colors.white, strokeWidth: 2))
-                    : const Text('VERIFY & ENABLE',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w900,
-                            fontSize: 12)),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  /// Step 2 — Success
-  Widget _build2FASuccessContent(BuildContext dialogCtx) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const SizedBox(height: 12),
-        TweenAnimationBuilder<double>(
-          tween: Tween(begin: 0.0, end: 1.0),
-          duration: const Duration(milliseconds: 600),
-          curve: Curves.elasticOut,
-          builder: (ctx, val, child) =>
-              Transform.scale(scale: val, child: child),
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            decoration: const BoxDecoration(
-              color: Color(0xFF1A3A2A),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.shield_rounded,
-                color: Color(0xFF4CAF50), size: 48),
-          ),
-        ),
-        const SizedBox(height: 20),
-        const Text(
-          '2FA is now Active!',
-          style: TextStyle(
-              color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900),
-        ),
-        const SizedBox(height: 8),
-        const Text(
-          'Your account is now protected with Two-Factor Authentication. You will be asked for a code on future logins.',
-          textAlign: TextAlign.center,
-          style: TextStyle(color: Color(0xFFB0B8D1), fontSize: 12, height: 1.5),
-        ),
-        const SizedBox(height: 24),
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: () => Navigator.pop(dialogCtx),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4CAF50),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-              padding: const EdgeInsets.symmetric(vertical: 14),
-            ),
-            child: const Text('DONE ✓',
-                style: TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.w900)),
-          ),
-        ),
-      ],
-    );
-  }
-
-  /// Error state inside dialog
-  Widget _build2FAErrorContent(BuildContext dialogCtx) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Icon(Icons.error_outline_rounded,
-            color: Color(0xFFFF5252), size: 48),
-        const SizedBox(height: 16),
-        Text(
-          _twoFaError ?? 'An error occurred.',
-          textAlign: TextAlign.center,
-          style: const TextStyle(color: Color(0xFFB0B8D1), fontSize: 13),
-        ),
-        const SizedBox(height: 20),
-        SizedBox(
-          width: double.infinity,
-          child: TextButton(
-            onPressed: () => Navigator.pop(dialogCtx),
-            child: const Text('CLOSE',
-                style: TextStyle(
-                    color: Color(0xFF8892A4), fontWeight: FontWeight.bold)),
-          ),
-        ),
-      ],
-    );
-  }
-
-  /// Shown when 2FA is already enabled — offers to disable it
-  Future<void> _showDisable2FADialog() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogCtx) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1F2E),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: const Text('Disable 2FA?',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900)),
-        content: const Text(
-          'Removing Two-Factor Authentication will make your account less secure. Are you sure?',
-          style: TextStyle(color: Color(0xFFB0B8D1), fontSize: 13, height: 1.5),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogCtx, false),
-            child: const Text('CANCEL',
-                style: TextStyle(
-                    color: Color(0xFF8892A4), fontWeight: FontWeight.bold)),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(dialogCtx, true),
-            child: const Text('DISABLE',
-                style: TextStyle(
-                    color: Color(0xFFFF5252), fontWeight: FontWeight.w900)),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed != true || !mounted) return;
-
-    final isDemo = ref.read(userProvider).isDemo;
-    if (isDemo) {
-      await ref.read(userProvider.notifier).disable2FA();
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Two-Factor Authentication disabled.'),
-          backgroundColor: AppColors.dangerRed,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      return;
-    }
-
-    try {
-      final svc = ref.read(twoFactorAuthServiceProvider);
-      final factor = await svc.getVerifiedTotpFactor();
-      if (factor != null) await svc.unenroll(factor.id);
-      await ref.read(userProvider.notifier).disable2FA();
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Two-Factor Authentication disabled.'),
-          backgroundColor: AppColors.dangerRed,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to disable 2FA: $e'),
-          backgroundColor: AppColors.dangerRed,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
   }
 
   // ── Real-time Change Password dialog ─────────────────────────────────────────
@@ -795,215 +252,308 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
       barrierDismissible: false,
       builder: (dialogCtx) => StatefulBuilder(
         builder: (ctx, setDS) {
-          return AlertDialog(
-            backgroundColor: const Color(0xFF1A1F2E),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-            contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
-            title: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryBlue.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(12),
+          return Dialog(
+            backgroundColor: Colors.transparent,
+            insetPadding:
+                const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(28),
+                border: Border.all(
+                  color: const Color(0xFFE2E8F0),
+                  width: 1.2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 30,
+                    offset: const Offset(0, 10),
                   ),
-                  child: const Icon(Icons.lock_reset_rounded,
-                      color: AppColors.primaryBlue, size: 22),
-                ),
-                const SizedBox(width: 12),
-                const Text(
-                  'Change Password',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 16),
-                ),
-              ],
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(height: 4),
-                const Text(
-                  'Enter your current password then choose a new one.',
-                  style: TextStyle(
-                      color: Color(0xFFB0B8D1), fontSize: 12, height: 1.5),
-                ),
-                const SizedBox(height: 20),
-
-                // ── Current password ───────────────────────────────────────────
-                _buildPwField(
-                  controller: currentPwController,
-                  label: 'Current Password',
-                  obscure: obscureCurrent,
-                  onToggle: () => setDS(() => obscureCurrent = !obscureCurrent),
-                ),
-                const SizedBox(height: 14),
-
-                // ── New password ───────────────────────────────────────────────
-                _buildPwField(
-                  controller: newPwController,
-                  label: 'New Password',
-                  obscure: obscureNew,
-                  onToggle: () => setDS(() => obscureNew = !obscureNew),
-                ),
-                const SizedBox(height: 14),
-
-                // ── Confirm new password ──────────────────────────────────────
-                _buildPwField(
-                  controller: confirmPwController,
-                  label: 'Confirm New Password',
-                  obscure: obscureConfirm,
-                  onToggle: () => setDS(() => obscureConfirm = !obscureConfirm),
-                ),
-
-                if (errorMsg != null) ...[
-                  const SizedBox(height: 12),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF3A1A1A),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Row(
+                ],
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
                       children: [
-                        const Icon(Icons.error_outline_rounded,
-                            color: Color(0xFFFF5252), size: 16),
-                        const SizedBox(width: 8),
+                        Container(
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFFD97706), Color(0xFFF59E0B)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(14),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFFD97706)
+                                    .withValues(alpha: 0.25),
+                                blurRadius: 8,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          child: const Center(
+                            child: Icon(Iconsax.lock,
+                                color: Colors.white, size: 20),
+                          ),
+                        ),
+                        const SizedBox(width: 14),
                         Expanded(
                           child: Text(
-                            errorMsg!,
-                            style: const TextStyle(
-                                color: Color(0xFFFF5252), fontSize: 12),
+                            'Change Password',
+                            style: GoogleFonts.outfit(
+                              color: const Color(0xFF0F172A),
+                              fontWeight: FontWeight.w800,
+                              fontSize: 18,
+                              letterSpacing: -0.3,
+                            ),
+                          ),
+                        ),
+                        ScaleOnTap(
+                          onTap:
+                              isLoading ? null : () => Navigator.pop(dialogCtx),
+                          child: Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF1F5F9),
+                              shape: BoxShape.circle,
+                              border:
+                                  Border.all(color: const Color(0xFFE2E8F0)),
+                            ),
+                            child: const Icon(Icons.close_rounded,
+                                size: 16, color: Color(0xFF64748B)),
                           ),
                         ),
                       ],
                     ),
-                  ),
-                ],
-
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextButton(
-                        onPressed:
-                            isLoading ? null : () => Navigator.pop(dialogCtx),
-                        child: const Text(
-                          'CANCEL',
-                          style: TextStyle(
-                              color: Color(0xFF8892A4),
-                              fontWeight: FontWeight.bold),
+                    const SizedBox(height: 6),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Enter your current credentials to set a new password.',
+                        style: GoogleFonts.inter(
+                          color: const Color(0xFF64748B),
+                          fontSize: 12.5,
                         ),
                       ),
                     ),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: isLoading
-                            ? null
-                            : () async {
-                                final currentPw =
-                                    currentPwController.text.trim();
-                                final newPw = newPwController.text.trim();
-                                final confirmPw =
-                                    confirmPwController.text.trim();
+                    const SizedBox(height: 20),
 
-                                // ── Validation ───────────────────────────────────────
-                                if (currentPw.isEmpty ||
-                                    newPw.isEmpty ||
-                                    confirmPw.isEmpty) {
-                                  setDS(() =>
-                                      errorMsg = 'All fields are required.');
-                                  return;
-                                }
-                                if (newPw.length < 8) {
-                                  setDS(() => errorMsg =
-                                      'New password must be at least 8 characters.');
-                                  return;
-                                }
-                                if (newPw != confirmPw) {
-                                  setDS(() =>
-                                      errorMsg = 'New passwords do not match.');
-                                  return;
-                                }
-                                if (newPw == currentPw) {
-                                  setDS(() => errorMsg =
-                                      'New password must differ from current password.');
-                                  return;
-                                }
+                    // ── Current password ───────────────────────────────────────────
+                    _buildPwField(
+                      controller: currentPwController,
+                      label: 'Current Password',
+                      obscure: obscureCurrent,
+                      onToggle: () =>
+                          setDS(() => obscureCurrent = !obscureCurrent),
+                    ),
+                    const SizedBox(height: 14),
 
-                                setDS(() {
-                                  isLoading = true;
-                                  errorMsg = null;
-                                });
+                    // ── New password ───────────────────────────────────────────────
+                    _buildPwField(
+                      controller: newPwController,
+                      label: 'New Password (min 8 chars)',
+                      obscure: obscureNew,
+                      onToggle: () => setDS(() => obscureNew = !obscureNew),
+                    ),
+                    const SizedBox(height: 14),
 
-                                try {
-                                  final authService =
-                                      ref.read(authServiceProvider);
+                    // ── Confirm new password ──────────────────────────────────────
+                    _buildPwField(
+                      controller: confirmPwController,
+                      label: 'Confirm New Password',
+                      obscure: obscureConfirm,
+                      onToggle: () =>
+                          setDS(() => obscureConfirm = !obscureConfirm),
+                    ),
 
-                                  // Step 1: Re-authenticate with current password
-                                  await authService.signInWithEmail(
-                                      userEmail, currentPw);
-
-                                  // Step 2: Update password in Supabase (real-time, no email)
-                                  await authService.updatePassword(newPw);
-
-                                  if (!dialogCtx.mounted) return;
-                                  Navigator.pop(dialogCtx);
-                                  if (!mounted) return;
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                          'Password changed successfully! ✓'),
-                                      backgroundColor: AppColors.successGreen,
-                                      behavior: SnackBarBehavior.floating,
-                                    ),
-                                  );
-                                } catch (e) {
-                                  String msg = e.toString();
-                                  // Make Supabase error messages user-friendly
-                                  if (msg.contains(
-                                          'Invalid login credentials') ||
-                                      msg.contains('invalid_credentials')) {
-                                    msg = 'Current password is incorrect.';
-                                  } else if (msg
-                                      .contains('Password should be')) {
-                                    msg =
-                                        'New password is too weak. Use at least 8 characters.';
-                                  } else if (msg.contains('same_password')) {
-                                    msg =
-                                        'New password must be different from current password.';
-                                  }
-                                  setDS(() {
-                                    isLoading = false;
-                                    errorMsg = msg;
-                                  });
-                                }
-                              },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primaryBlue,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                          padding: const EdgeInsets.symmetric(vertical: 13),
+                    if (errorMsg != null) ...[
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFF1F2),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFFECDD3)),
                         ),
-                        child: isLoading
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                    color: Colors.white, strokeWidth: 2))
-                            : const Text('UPDATE',
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w900,
-                                    fontSize: 13)),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.error_outline_rounded,
+                                color: Color(0xFFE11D48), size: 16),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                errorMsg!,
+                                style: GoogleFonts.inter(
+                                  color: const Color(0xFFE11D48),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
+                    ],
+
+                    const SizedBox(height: 22),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextButton(
+                            onPressed: isLoading
+                                ? null
+                                : () => Navigator.pop(dialogCtx),
+                            child: Text(
+                              'Cancel',
+                              style: GoogleFonts.inter(
+                                color: const Color(0xFF64748B),
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          flex: 2,
+                          child: ScaleOnTap(
+                            onTap: isLoading
+                                ? null
+                                : () async {
+                                    final currentPw =
+                                        currentPwController.text.trim();
+                                    final newPw = newPwController.text.trim();
+                                    final confirmPw =
+                                        confirmPwController.text.trim();
+
+                                    if (currentPw.isEmpty ||
+                                        newPw.isEmpty ||
+                                        confirmPw.isEmpty) {
+                                      setDS(() => errorMsg =
+                                          'All fields are required.');
+                                      return;
+                                    }
+                                    if (newPw.length < 8) {
+                                      setDS(() => errorMsg =
+                                          'New password must be at least 8 characters.');
+                                      return;
+                                    }
+                                    if (newPw != confirmPw) {
+                                      setDS(() => errorMsg =
+                                          'New passwords do not match.');
+                                      return;
+                                    }
+                                    if (newPw == currentPw) {
+                                      setDS(() => errorMsg =
+                                          'New password must differ from current password.');
+                                      return;
+                                    }
+
+                                    setDS(() {
+                                      isLoading = true;
+                                      errorMsg = null;
+                                    });
+
+                                    try {
+                                      final authService =
+                                          ref.read(authServiceProvider);
+                                      await authService.signInWithEmail(
+                                          userEmail, currentPw);
+                                      await authService.updatePassword(newPw);
+
+                                      if (!dialogCtx.mounted) return;
+                                      Navigator.pop(dialogCtx);
+                                      if (!mounted) return;
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'Password updated successfully! ✓',
+                                            style: GoogleFonts.inter(
+                                                fontWeight: FontWeight.w600),
+                                          ),
+                                          backgroundColor:
+                                              const Color(0xFF006241),
+                                          behavior: SnackBarBehavior.floating,
+                                        ),
+                                      );
+                                    } catch (e) {
+                                      String msg = e.toString();
+                                      if (msg.contains(
+                                              'Invalid login credentials') ||
+                                          msg.contains('invalid_credentials')) {
+                                        msg = 'Current password is incorrect.';
+                                      } else if (msg
+                                          .contains('Password should be')) {
+                                        msg =
+                                            'New password is too weak. Use at least 8 characters.';
+                                      } else if (msg
+                                          .contains('same_password')) {
+                                        msg =
+                                            'New password must be different from current password.';
+                                      }
+                                      setDS(() {
+                                        isLoading = false;
+                                        errorMsg = msg;
+                                      });
+                                    }
+                                  },
+                            child: Container(
+                              height: 48,
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    Color(0xFF006241),
+                                    Color(0xFF10B981)
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF006241)
+                                        .withValues(alpha: 0.3),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ],
+                              ),
+                              child: Center(
+                                child: isLoading
+                                    ? const SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                            color: Colors.white,
+                                            strokeWidth: 2.2),
+                                      )
+                                    : Text(
+                                        'UPDATE PASSWORD',
+                                        style: GoogleFonts.inter(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w800,
+                                          fontSize: 12.5,
+                                          letterSpacing: 0.4,
+                                        ),
+                                      ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
+              ),
             ),
           );
         },
@@ -1015,48 +565,68 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
     confirmPwController.dispose();
   }
 
-  /// Reusable dark-themed password field for Change Password dialog
+  /// Reusable password field for Change Password dialog
   Widget _buildPwField({
     required TextEditingController controller,
     required String label,
     required bool obscure,
     required VoidCallback onToggle,
   }) {
-    return TextField(
-      controller: controller,
-      obscureText: obscure,
-      style: const TextStyle(color: Colors.white, fontSize: 14),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: const TextStyle(color: Color(0xFF8892A4), fontSize: 13),
-        filled: true,
-        fillColor: const Color(0xFF252B3B),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide:
-              BorderSide(color: AppColors.primaryBlue.withValues(alpha: 0.3)),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide:
-              BorderSide(color: AppColors.primaryBlue.withValues(alpha: 0.25)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide:
-              const BorderSide(color: AppColors.primaryBlue, width: 1.5),
-        ),
-        suffixIcon: IconButton(
-          icon: Icon(
-            obscure ? Icons.visibility_off_rounded : Icons.visibility_rounded,
-            color: const Color(0xFF8892A4),
-            size: 20,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 12.5,
+            fontWeight: FontWeight.w700,
+            color: const Color(0xFF334155),
           ),
-          onPressed: onToggle,
         ),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      ),
+        const SizedBox(height: 6),
+        TextField(
+          controller: controller,
+          obscureText: obscure,
+          style: GoogleFonts.inter(
+            color: const Color(0xFF0F172A),
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+          decoration: InputDecoration(
+            hintText: '••••••••',
+            hintStyle: GoogleFonts.inter(color: const Color(0xFF94A3B8)),
+            filled: true,
+            fillColor: const Color(0xFFF8FAFC),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide:
+                  const BorderSide(color: Color(0xFFE2E8F0), width: 1.2),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide:
+                  const BorderSide(color: Color(0xFFE2E8F0), width: 1.2),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide:
+                  const BorderSide(color: Color(0xFF006241), width: 1.5),
+            ),
+            suffixIcon: IconButton(
+              icon: Icon(
+                obscure
+                    ? Icons.visibility_off_rounded
+                    : Icons.visibility_rounded,
+                color: const Color(0xFF64748B),
+                size: 20,
+              ),
+              onPressed: onToggle,
+            ),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          ),
+        ),
+      ],
     );
   }
 
@@ -1191,12 +761,16 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                     ? const SizedBox(
                         width: 20,
                         height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Text('SAVE',
-                        style: TextStyle(
-                            color: AppColors.primaryBlue,
-                            fontWeight: FontWeight.w900,
-                            fontSize: 14)),
+                        child: CircularProgressIndicator(
+                            color: Color(0xFF006241), strokeWidth: 2))
+                    : Text(
+                        'SAVE',
+                        style: GoogleFonts.inter(
+                          color: const Color(0xFF006241),
+                          fontWeight: FontWeight.w900,
+                          fontSize: 14,
+                        ),
+                      ),
               ),
             ),
         ],
@@ -1215,98 +789,97 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
       children: [
         _buildSettingsGroup('Personal Information', [
           _buildSettingsTile(
-            Icons.person_outline_rounded,
+            Iconsax.user_edit,
             'Edit Profile',
             '${user.name} • ${user.email}',
+            gradient: const [Color(0xFF006241), Color(0xFF10B981)],
             onTap: () => setState(() => _isEditingProfile = true),
           ),
-          _buildSettingsTile(Icons.add_location_alt_outlined, 'Saved Locations',
-              'Manage home and office addresses',
-              onTap: () => context.push('/saved-locations')),
-          _buildSettingsTile(Icons.directions_car_filled_rounded, 'My Vehicles',
-              'Vehicle details and RC docs',
-              onTap: () => context.push('/my-vehicles')),
+          _buildSettingsTile(
+            Iconsax.location,
+            'Saved Locations',
+            'Manage home and office addresses',
+            gradient: const [Color(0xFF0284C7), Color(0xFF38BDF8)],
+            onTap: () => context.push('/saved-locations'),
+          ),
+          _buildSettingsTile(
+            Iconsax.car,
+            'My Vehicles',
+            'Vehicle details and RC docs',
+            gradient: const [Color(0xFF0D9488), Color(0xFF14B8A6)],
+            onTap: () => context.push('/my-vehicles'),
+          ),
         ]),
         const SizedBox(height: 24),
         _buildSettingsGroup('Security', [
           _buildSettingsTile(
-            Icons.lock_outline_rounded,
+            Iconsax.lock,
             'Change Password',
             'Update your security credentials',
+            gradient: const [Color(0xFFD97706), Color(0xFFF59E0B)],
             onTap: _showChangePasswordDialog,
           ),
           _buildSettingsTile(
-            Icons.fingerprint_rounded,
+            Iconsax.finger_scan,
             'Biometric Login',
             'Enable Fingerprint/FaceID for login',
-            trailing: Switch(
+            gradient: const [Color(0xFF0F172A), Color(0xFF334155)],
+            trailing: ReactSwitch(
               value: _isBiometricEnabled,
               onChanged: (val) => _toggleBiometric(val),
-              activeThumbColor: AppColors.primaryBlue,
             ),
-          ),
-          _buildSettingsTile(
-            Icons.verified_user_outlined,
-            'Two-Factor Authentication',
-            user.mfaEnabled
-                ? 'Enabled ✓ — Tap to disable'
-                : 'Add extra layer of security',
-            onTap: _showTwoFactorDialog,
-            trailing: user.mfaEnabled
-                ? Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppColors.successGreen.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Text(
-                      'ON',
-                      style: TextStyle(
-                        color: AppColors.successGreen,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  )
-                : const Icon(Icons.arrow_forward_ios_rounded,
-                    size: 14, color: AppColors.textMuted),
           ),
         ]),
         const SizedBox(height: 24),
         _buildSettingsGroup('Legal', [
           _buildSettingsTile(
-            Icons.privacy_tip_outlined,
+            Iconsax.shield_security,
             'Privacy Policy',
             'How we collect, use, and protect your data',
+            gradient: const [Color(0xFF0F172A), Color(0xFF1E293B)],
             onTap: () => context.push('/privacy-policy'),
           ),
           _buildSettingsTile(
-            Icons.description_outlined,
+            Iconsax.document_text,
             'Terms of Service',
             'Read our terms and conditions',
+            gradient: const [Color(0xFF334155), Color(0xFF64748B)],
             onTap: () => context.push('/terms-of-service'),
           ),
         ]),
-        const SizedBox(height: 48),
-        SizedBox(
-          width: double.infinity,
-          child: TextButton(
-            onPressed: () => ref.read(userProvider.notifier).logout(),
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 18),
-              backgroundColor: AppColors.dangerRed.withValues(alpha: 0.08),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16)),
+        const SizedBox(height: 36),
+        ScaleOnTap(
+          onTap: () => ref.read(userProvider.notifier).logout(),
+          child: Container(
+            width: double.infinity,
+            height: 52,
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFF1F2),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: const Color(0xFFFECDD3), width: 1.2),
             ),
-            child: const Text('LOGOUT',
-                style: TextStyle(
-                    color: AppColors.dangerRed,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1)),
+            child: Center(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Iconsax.logout,
+                      color: Color(0xFFE11D48), size: 18),
+                  const SizedBox(width: 8),
+                  Text(
+                    'LOGOUT',
+                    style: GoogleFonts.inter(
+                      color: const Color(0xFFE11D48),
+                      fontWeight: FontWeight.w800,
+                      fontSize: 14,
+                      letterSpacing: 0.8,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 14),
         TextButton(
           onPressed: () {
             showDialog(
@@ -1355,11 +928,11 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
           },
           child: Text(
             'DELETE ACCOUNT',
-            style: TextStyle(
-              color: AppColors.dangerRed.withValues(alpha: 0.5),
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1,
+            style: GoogleFonts.inter(
+              color: const Color(0xFF94A3B8),
+              fontSize: 11.5,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.6,
             ),
           ),
         ),
@@ -1381,13 +954,13 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                   decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                          color: AppColors.primaryBlue.withValues(alpha: 0.2),
+                          color: const Color(0xFF006241).withValues(alpha: 0.2),
                           width: 2)),
                   child: Hero(
                     tag: 'profile_pic',
                     child: CircleAvatar(
                       radius: 54,
-                      backgroundColor: AppColors.bgLightGrey,
+                      backgroundColor: const Color(0xFFF1F5F9),
                       backgroundImage: user.profileImageUrl.isNotEmpty
                           ? NetworkImage(user.profileImageUrl)
                           : null,
@@ -1401,8 +974,8 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                                       color: Colors.white)),
                             )
                           : (user.profileImageUrl.isEmpty
-                              ? const Icon(Icons.person,
-                                  size: 54, color: AppColors.textMuted)
+                              ? const Icon(Iconsax.user,
+                                  size: 48, color: Color(0xFF94A3B8))
                               : null),
                     ),
                   ),
@@ -1410,13 +983,13 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
                 Positioned(
                   bottom: 4,
                   right: 4,
-                  child: InkWell(
+                  child: ScaleOnTap(
                     onTap: user.isLoading ? null : _updateProfilePhoto,
                     child: const CircleAvatar(
                       radius: 18,
-                      backgroundColor: AppColors.primaryBlue,
-                      child: Icon(Icons.camera_alt_rounded,
-                          color: Colors.white, size: 18),
+                      backgroundColor: Color(0xFF006241),
+                      child:
+                          Icon(Iconsax.camera, color: Colors.white, size: 16),
                     ),
                   ),
                 ),
@@ -1424,46 +997,63 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
             ),
           ),
           const SizedBox(height: 32),
-          _buildTextField(
-              'Full Name', _nameController, Icons.person_outline_rounded),
+          _buildTextField('Full Name', _nameController, Iconsax.user),
           const SizedBox(height: 20),
-          _buildTextField(
-              'Email Address', _emailController, Icons.mail_outline_rounded),
+          _buildTextField('Email Address', _emailController, Iconsax.sms),
           const SizedBox(height: 20),
-          _buildTextField(
-              'Phone Number', _phoneController, Icons.phone_outlined),
-          const SizedBox(height: 40),
-          SizedBox(
-            width: double.infinity,
-            height: 56,
-            child: ElevatedButton(
-              onPressed: user.isLoading ? null : _saveProfile,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryBlue,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16)),
-                elevation: 0,
+          _buildTextField('Phone Number', _phoneController, Iconsax.call),
+          const SizedBox(height: 36),
+          ScaleOnTap(
+            onTap: user.isLoading ? null : _saveProfile,
+            child: Container(
+              width: double.infinity,
+              height: 54,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF006241), Color(0xFF10B981)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF006241).withValues(alpha: 0.3),
+                    blurRadius: 14,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-              child: user.isLoading
-                  ? const CircularProgressIndicator(color: Colors.white)
-                  : const Text(
-                      'SAVE CHANGES',
-                      style: TextStyle(
+              child: Center(
+                child: user.isLoading
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                            color: Colors.white, strokeWidth: 2.5),
+                      )
+                    : Text(
+                        'SAVE CHANGES',
+                        style: GoogleFonts.inter(
                           color: Colors.white,
-                          fontWeight: FontWeight.w900,
-                          fontSize: 16,
-                          letterSpacing: 0.5),
-                    ),
+                          fontWeight: FontWeight.w800,
+                          fontSize: 15,
+                          letterSpacing: 0.4,
+                        ),
+                      ),
+              ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
           Center(
             child: TextButton(
               onPressed: () => setState(() => _isEditingProfile = false),
-              child: const Text('Cancel',
-                  style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontWeight: FontWeight.bold)),
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.inter(
+                  color: const Color(0xFF64748B),
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             ),
           ),
         ],
@@ -1476,32 +1066,58 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label,
-            style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary)),
-        const SizedBox(height: 10),
+        Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: const Color(0xFF334155),
+          ),
+        ),
+        const SizedBox(height: 8),
         TextFormField(
           controller: controller,
-          style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary),
+          style: GoogleFonts.inter(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF0F172A),
+          ),
           decoration: InputDecoration(
-            prefixIcon: Icon(icon, color: AppColors.primaryBlue, size: 20),
             filled: true,
             fillColor: Colors.white,
-            border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide.none),
+            prefixIcon: Container(
+              margin: const EdgeInsets.only(left: 12, right: 12),
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: const Color(0xFF006241), size: 18),
+            ),
             contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(18),
+              borderSide:
+                  const BorderSide(color: Color(0xFFE2E8F0), width: 1.2),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(18),
+              borderSide:
+                  const BorderSide(color: Color(0xFFE2E8F0), width: 1.2),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(18),
+              borderSide:
+                  const BorderSide(color: Color(0xFF006241), width: 1.5),
+            ),
             hintText: 'Enter $label',
-            hintStyle: const TextStyle(
-                color: AppColors.textMuted,
-                fontSize: 14,
-                fontWeight: FontWeight.normal),
+            hintStyle: GoogleFonts.inter(
+              color: const Color(0xFF94A3B8),
+              fontSize: 13.5,
+              fontWeight: FontWeight.w500,
+            ),
           ),
           validator: (value) =>
               value == null || value.isEmpty ? 'This field is required' : null,
@@ -1516,56 +1132,119 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
       children: [
         Padding(
           padding: const EdgeInsets.only(left: 4.0),
-          child: Text(title.toUpperCase(),
-              style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textSecondary,
-                  letterSpacing: 1.2)),
+          child: Text(
+            title.toUpperCase(),
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              color: const Color(0xFF64748B),
+              letterSpacing: 1.2,
+            ),
+          ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         Container(
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: const Color(0xFFE2E8F0).withValues(alpha: 0.8),
+              width: 1.2,
+            ),
             boxShadow: [
               BoxShadow(
-                  color: Colors.black12.withValues(alpha: 0.03),
-                  blurRadius: 15,
-                  offset: const Offset(0, 5))
+                color: Colors.black.withValues(alpha: 0.02),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
             ],
           ),
-          child: Column(children: children),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: Column(children: children),
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildSettingsTile(IconData icon, String title, String subtitle,
-      {VoidCallback? onTap, Widget? trailing}) {
-    return ListTile(
+  Widget _buildSettingsTile(
+    IconData icon,
+    String title,
+    String subtitle, {
+    required List<Color> gradient,
+    VoidCallback? onTap,
+    Widget? trailing,
+  }) {
+    return ScaleOnTap(
       onTap: onTap,
-      leading: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-            color: AppColors.bgLightGrey,
-            borderRadius: BorderRadius.circular(12)),
-        child: Icon(icon, color: AppColors.primaryBlue, size: 20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: const BoxDecoration(
+          border: Border(
+            bottom: BorderSide(color: Color(0xFFF1F5F9)),
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: gradient,
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: gradient.first.withValues(alpha: 0.25),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Icon(icon, color: Colors.white, size: 20),
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.inter(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFF0F172A),
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: const Color(0xFF64748B),
+                      fontWeight: FontWeight.w500,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            if (trailing != null)
+              trailing
+            else
+              const Icon(Icons.arrow_forward_ios_rounded,
+                  size: 14, color: Color(0xFF94A3B8)),
+          ],
+        ),
       ),
-      title: Text(title,
-          style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary)),
-      subtitle: Text(subtitle,
-          style: const TextStyle(
-              fontSize: 12,
-              color: AppColors.textSecondary,
-              fontWeight: FontWeight.w500)),
-      trailing: trailing ??
-          const Icon(Icons.arrow_forward_ios_rounded,
-              size: 14, color: AppColors.textMuted),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-    ).animate().fadeIn().slideX(begin: 0.05, end: 0);
+    );
   }
 }

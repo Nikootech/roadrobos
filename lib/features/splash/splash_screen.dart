@@ -275,114 +275,149 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       }
     });
 
-    final size = MediaQuery.of(context).size;
-
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          // Top-left decorative circles (Precisely matched sizes and positions)
-          Positioned(
-            top: -size.width * 0.1,
-            left: -size.width * 0.1,
+          // Ambient background radial glow
+          Center(
             child: Container(
-              width: size.width * 0.5,
-              height: size.width * 0.5,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: Color(0xFFF0F9FF), // Extremely pale blue
-              ),
-            ),
-          ).animate().fadeIn(duration: 800.ms),
-
-          Positioned(
-            top: size.height * 0.05,
-            left: -size.width * 0.2,
-            child: Container(
-              width: size.width * 0.45,
-              height: size.width * 0.45,
+              width: 320,
+              height: 320,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFFE0F2FE)
-                    .withValues(alpha: 0.6), // Soft sky blue
+                gradient: RadialGradient(
+                  colors: [
+                    AppColors.brandGreenLight.withValues(alpha: 0.08),
+                    AppColors.brandGreen.withValues(alpha: 0.02),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ).animate(onPlay: (c) => c.repeat(reverse: true)).scale(
+                  begin: const Offset(0.85, 0.85),
+                  end: const Offset(1.25, 1.25),
+                  duration: 2600.ms,
+                  curve: Curves.easeInOut,
+                ),
+          ),
+
+          // Expanding Pulse Rings behind the logo
+          Center(
+            child: SizedBox(
+              width: 220,
+              height: 220,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Container(
+                    width: 200,
+                    height: 200,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: AppColors.brandGreenMid.withValues(alpha: 0.2),
+                        width: 1.5,
+                      ),
+                    ),
+                  )
+                      .animate(onPlay: (c) => c.repeat())
+                      .scale(
+                        begin: const Offset(0.85, 0.85),
+                        end: const Offset(1.4, 1.4),
+                        duration: 2800.ms,
+                        curve: Curves.easeOut,
+                      )
+                      .fadeOut(duration: 2800.ms),
+                  Container(
+                    width: 200,
+                    height: 200,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color:
+                            AppColors.brandGreenLight.withValues(alpha: 0.18),
+                        width: 1.5,
+                      ),
+                    ),
+                  )
+                      .animate(delay: 900.ms, onPlay: (c) => c.repeat())
+                      .scale(
+                        begin: const Offset(0.85, 0.85),
+                        end: const Offset(1.4, 1.4),
+                        duration: 2800.ms,
+                        curve: Curves.easeOut,
+                      )
+                      .fadeOut(duration: 2800.ms),
+                ],
               ),
             ),
-          ).animate(delay: 200.ms).fadeIn(duration: 800.ms),
+          ),
 
-          // Bottom-right decorative circle (Precisely matched)
-          Positioned(
-            bottom: size.height * 0.15,
-            right: -size.width * 0.1,
-            child: Container(
-              width: size.width * 0.4,
-              height: size.width * 0.4,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: Color(0xFFF0F9FF), // Extremely pale blue
-              ),
-            ),
-          ).animate(delay: 400.ms).fadeIn(duration: 800.ms),
-
-          // Center content
+          // Center Breathing Logo Stage
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Brand Icon Card
-                Container(
-                  width: 120,
-                  height: 120,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(32),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primaryBlue.withValues(alpha: 0.08),
-                        blurRadius: 30,
-                        spreadRadius: 2,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
-                  ),
-                  child: const Center(
-                    child: Icon(
-                      Icons.directions_car_rounded,
-                      size: 64,
-                      color: AppColors.primaryBlue,
+                // Transparent Breathing Logo
+                Image.asset(
+                  'assets/app_icon.png',
+                  width: 160,
+                  height: 160,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) => Image.asset(
+                    'assets/signin_icon.png',
+                    width: 160,
+                    height: 160,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) => const Icon(
+                      Icons.local_shipping_rounded,
+                      size: 80,
+                      color: AppColors.brandGreen,
                     ),
                   ),
-                )
-                    .animate()
-                    .scale(
-                      begin: const Offset(0.8, 0.8),
-                      end: const Offset(1.0, 1.0),
-                      duration: 800.ms,
-                      curve: Curves.easeOutBack,
-                    )
-                    .fadeIn(duration: 400.ms),
+                ).animate(onPlay: (c) => c.repeat(reverse: true)).scale(
+                      begin: const Offset(0.96, 0.96),
+                      end: const Offset(1.08, 1.08),
+                      duration: 1200.ms,
+                      curve: Curves.easeInOut,
+                    ),
 
-                const SizedBox(height: 64), // Significant spacing as per image
+                const SizedBox(height: 36),
 
-                // App name (Navy-black, precise weight)
-                const Text(
+                // Branded App Title
+                Text(
                   AppStrings.appName,
-                  style: TextStyle(
-                    fontSize: 48,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF1E293B), // Navy-black matched to image
-                    letterSpacing: -1.2,
+                  style: GoogleFonts.outfit(
+                    fontSize: 32,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.5,
+                    color: const Color(0xFF12231A),
                   ),
                 )
-                    .animate(delay: 500.ms)
-                    .fadeIn(duration: 600.ms)
-                    .slideY(begin: 0.1, end: 0, duration: 600.ms),
+                    .animate(delay: 300.ms)
+                    .fadeIn(duration: 500.ms)
+                    .slideY(begin: 0.1, end: 0, duration: 500.ms),
+
+                const SizedBox(height: 6),
+
+                // Tagline / Mobility subtitle
+                Text(
+                  'Smart Mobility & Vehicle Assistance',
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0.4,
+                    color: AppColors.brandGreenMid,
+                  ),
+                ).animate(delay: 450.ms).fadeIn(duration: 500.ms),
               ],
             ),
           ),
 
           // Bottom loading indicator
           Positioned(
-            bottom: 60,
+            bottom: 50,
             left: 0,
             right: 0,
             child: Column(
@@ -392,10 +427,22 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                   width: 24,
                   height: 24,
                   child: CircularProgressIndicator(
-                    strokeWidth: 1.2,
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      AppColors.primaryBlue.withValues(alpha: 0.4),
+                    strokeWidth: 2.2,
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                      AppColors.brandGreen,
                     ),
+                    backgroundColor:
+                        AppColors.brandGreen.withValues(alpha: 0.12),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Loading experience...',
+                  style: GoogleFonts.inter(
+                    color: AppColors.brandGreen.withValues(alpha: 0.7),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.5,
                   ),
                 ),
                 if (AppDebugger.startupSteps.values
@@ -411,7 +458,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                   ),
                 ],
               ],
-            ).animate(delay: 800.ms).fadeIn(duration: 500.ms),
+            ).animate(delay: 600.ms).fadeIn(duration: 500.ms),
           ),
         ],
       ),

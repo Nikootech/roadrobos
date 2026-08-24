@@ -354,6 +354,21 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
                   _buildRoundedButton(
                       Icons.arrow_back, () => Navigator.pop(context)),
                   const Spacer(),
+                  // Karnataka Safety SOS Button (Header Pill when planning/selecting options)
+                  if (taxiState.status == RideStatus.idle ||
+                      taxiState.status == RideStatus.selectingPickup ||
+                      taxiState.status == RideStatus.selectingDrop ||
+                      taxiState.status == RideStatus.vehicleSelection ||
+                      taxiState.status == RideStatus.noDriversFound)
+                    SOSButton.headerPill(
+                      rideDetails:
+                          'Route: ${taxiState.pickupAddress ?? "Pickup"} → ${taxiState.dropoffAddress ?? "Destination"}',
+                      onTrigger: () {
+                        final userId =
+                            ref.read(userProvider).user?.id ?? 'demo';
+                        ref.read(sosProvider.notifier).triggerEmergency(userId);
+                      },
+                    ),
                   if (taxiState.status == RideStatus.tracking ||
                       taxiState.status == RideStatus.headingToDropoff)
                     _buildRoundedButton(Icons.share, () {
@@ -400,15 +415,20 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
           _buildBottomUI(context, taxiState, taxiNotifier, pickupController,
               dropoffController),
 
-          // 3b. SOS Button Overlay (Visible during tracking/ride)
-          if (taxiState.status == RideStatus.tracking ||
+          // 3b. Karnataka MoRTH / BTP SOS Floating Button Overlay (Visible during booked, tracking, arrived, ride in-transit)
+          if (taxiState.status == RideStatus.booked ||
+              taxiState.status == RideStatus.tracking ||
               taxiState.status == RideStatus.atPickup ||
               taxiState.status == RideStatus.headingToDropoff)
             Positioned(
               right: 20,
               bottom: MediaQuery.of(context).size.height * 0.45 +
                   20, // Sit above the sheet
-              child: SOSButton(
+              child: SOSButton.floating(
+                driverName: taxiState.roadroboName,
+                vehicleNumber: taxiState.selectedOption?.title,
+                rideDetails:
+                    'Trip: ${taxiState.pickupAddress ?? "Pickup"} → ${taxiState.dropoffAddress ?? "Dropoff"}',
                 onTrigger: () {
                   final userId = ref.read(userProvider).user?.id ?? 'demo';
                   ref.read(sosProvider.notifier).triggerEmergency(userId);

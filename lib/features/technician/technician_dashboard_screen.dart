@@ -12,6 +12,7 @@ import 'widgets/pre_arrival_video_diagnostic_modal.dart';
 import '../driver/widgets/instant_cashout_sheet.dart';
 import '../../core/services/tracking_service.dart';
 import '../../core/services/language_service.dart';
+import '../../shared/widgets/kinetic_motion.dart';
 
 // Technician online/offline availability toggle — persists within session.
 final techOnlineProvider = StateProvider<bool>((ref) => true);
@@ -323,9 +324,8 @@ class _TechnicianDashboardScreenState
                                 color: Color(0xFF1A237E))),
                         const SizedBox(height: 4),
                         // Online / Offline availability toggle
-                        GestureDetector(
+                        ScaleOnTap(
                           onTap: () {
-                            HapticFeedback.mediumImpact();
                             final isOnline = ref.read(techOnlineProvider);
                             ref.read(techOnlineProvider.notifier).state =
                                 !isOnline;
@@ -353,15 +353,11 @@ class _TechnicianDashboardScreenState
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Container(
-                                      width: 7,
-                                      height: 7,
-                                      decoration: BoxDecoration(
-                                        color: isOnline
-                                            ? const Color(0xFF28C76F)
-                                            : Colors.grey,
-                                        shape: BoxShape.circle,
-                                      ),
+                                    PulseBeacon(
+                                      color: isOnline
+                                          ? const Color(0xFF28C76F)
+                                          : Colors.grey,
+                                      size: 7,
                                     ),
                                     const SizedBox(width: 6),
                                     Text(
@@ -384,9 +380,8 @@ class _TechnicianDashboardScreenState
                     ),
                     Row(
                       children: [
-                        GestureDetector(
+                        ScaleOnTap(
                           onTap: () {
-                            HapticFeedback.lightImpact();
                             context.push('/tech-qr-scanner');
                           },
                           child: Container(

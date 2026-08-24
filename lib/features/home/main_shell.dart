@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:iconsax/iconsax.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../shared/widgets/bottom_nav_bar.dart';
@@ -317,21 +318,18 @@ class _MainShellState extends State<MainShell> {
   ];
 
   static const List<NavItemData> _customerNavItems = [
+    NavItemData(icon: Iconsax.home, activeIcon: Iconsax.home_15, label: 'Home'),
     NavItemData(
-        icon: Icons.home_outlined,
-        activeIcon: Icons.home_rounded,
-        label: 'Home'),
-    NavItemData(
-        icon: Icons.calendar_today_outlined,
-        activeIcon: Icons.calendar_today_rounded,
+        icon: Iconsax.calendar_1,
+        activeIcon: Iconsax.calendar5,
         label: 'Bookings'),
     NavItemData(
-        icon: Icons.explore_outlined,
-        activeIcon: Icons.explore_rounded,
+        icon: Iconsax.discover,
+        activeIcon: Iconsax.discover5,
         label: 'Explore'),
     NavItemData(
-        icon: Icons.person_outline_rounded,
-        activeIcon: Icons.person_rounded,
+        icon: Iconsax.user,
+        activeIcon: Iconsax.profile_circle,
         label: 'Profile'),
   ];
 

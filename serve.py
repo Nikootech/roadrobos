@@ -47,8 +47,9 @@ class SPAHandler(http.server.SimpleHTTPRequestHandler):
             return  # silent on Windows
         super().handle_error(request, client_address)
 
-class QuietTCPServer(socketserver.TCPServer):
+class QuietTCPServer(socketserver.ThreadingTCPServer):
     allow_reuse_address = True
+    daemon_threads = True
 
     def handle_error(self, request, client_address):
         exc = sys.exc_info()[1]

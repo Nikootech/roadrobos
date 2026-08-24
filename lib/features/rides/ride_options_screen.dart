@@ -2,11 +2,15 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_animate/flutter_animate.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:iconsax/iconsax.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/live_map_widget.dart';
+import '../../shared/widgets/sos_button.dart';
 import '../../providers/taxi_provider.dart';
+import '../profile/sos_provider.dart';
+import '../profile/user_provider.dart';
 
 class RideOptionsScreen extends ConsumerStatefulWidget {
   const RideOptionsScreen({super.key});
@@ -36,7 +40,7 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen>
       Future.delayed(const Duration(milliseconds: 300), () {
         if (_sheetController.isAttached && mounted) {
           _sheetController.animateTo(
-            0.85,
+            0.88,
             duration: const Duration(milliseconds: 600),
             curve: Curves.easeOutCubic,
           );
@@ -67,117 +71,66 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen>
             ),
           ),
 
-          // 2. Floating Header with Back Button and Route Info Card
+          // 2. Floating Top Back Button
           Positioned(
-            top: MediaQuery.of(context).padding.top + 16,
+            top: MediaQuery.of(context).padding.top + 12,
             left: 16,
-            right: 16,
-            child: Row(
-              children: [
-                // Back Button
-                Container(
-                  decoration: const BoxDecoration(
+            child: Semantics(
+              label: 'Go back',
+              button: true,
+              child: GestureDetector(
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  context.pop();
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
                     color: Colors.white,
                     shape: BoxShape.circle,
                     boxShadow: [
-                      BoxShadow(color: Colors.black12, blurRadius: 8)
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
+                      ),
                     ],
                   ),
-                  child: IconButton(
-                    onPressed: () => context.pop(),
-                    icon: const Icon(Icons.arrow_back, color: Colors.black),
-                    style: IconButton.styleFrom(
-                      padding: const EdgeInsets.all(12),
-                    ),
-                  ),
+                  child: const Icon(Icons.arrow_back_rounded,
+                      size: 20, color: Color(0xFF0F172A)),
                 ),
-                const SizedBox(width: 12),
-
-                // Route Card
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: const [
-                        BoxShadow(
-                            color: Colors.black12,
-                            blurRadius: 10,
-                            offset: Offset(0, 2))
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Row(
-                          children: [
-                            const Icon(Icons.circle,
-                                size: 8, color: Colors.green),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                taxiState.pickupAddress ?? 'Pickup Location',
-                                style: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.black87),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Padding(
-                          padding:
-                              const EdgeInsets.only(left: 3, top: 2, bottom: 2),
-                          child: Container(
-                            width: 2,
-                            height: 6,
-                            color: Colors.black12,
-                          ),
-                        ),
-                        Row(
-                          children: [
-                            const Icon(Icons.location_on,
-                                size: 10, color: Colors.red),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                taxiState.dropoffAddress ?? 'Destination',
-                                style: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.black87),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
 
+          // 2b. Karnataka MoRTH / BTP Safety SOS Header Pill
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 14,
+            right: 16,
+            child: SOSButton.headerPill(
+              rideDetails:
+                  'Reviewing Options: ${taxiState.pickupAddress ?? "Pickup"} → ${taxiState.dropoffAddress ?? "Dropoff"}',
+              onTrigger: () {
+                final userId = ref.read(userProvider).user?.id ?? 'demo';
+                ref.read(sosProvider.notifier).triggerEmergency(userId);
+              },
+            ),
+          ),
+
+          // 3. Draggable React-Style Bottom Sheet
           Builder(
             builder: (context) {
               final screenHeight = MediaQuery.of(context).size.height;
-              final double initialSize = screenHeight < 850 ? 0.58 : 0.45;
-              final double minSize = screenHeight < 850 ? 0.48 : 0.4;
+              final double initialSize = screenHeight < 850 ? 0.65 : 0.58;
+              final double minSize = screenHeight < 850 ? 0.50 : 0.45;
 
               return DraggableScrollableSheet(
                 controller: _sheetController,
                 initialChildSize: initialSize,
                 minChildSize: minSize,
-                maxChildSize: 0.85,
+                maxChildSize: 0.92,
                 snap: true,
-                snapSizes: [minSize, 0.85],
+                snapSizes: [minSize, 0.92],
                 builder: (context, scrollController) {
                   return Container(
                     decoration: const BoxDecoration(
@@ -185,66 +138,163 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen>
                       borderRadius:
                           BorderRadius.vertical(top: Radius.circular(32)),
                       boxShadow: [
-                        BoxShadow(color: Colors.black12, blurRadius: 20)
+                        BoxShadow(
+                          color: Color(0x1A0F172A),
+                          blurRadius: 28,
+                          offset: Offset(0, -6),
+                        ),
                       ],
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Drag handle
+                        // Drag Handle
                         Center(
                           child: Container(
-                            margin: const EdgeInsets.symmetric(vertical: 12),
-                            width: 40,
-                            height: 4,
+                            margin: const EdgeInsets.only(top: 12, bottom: 12),
+                            width: 42,
+                            height: 4.5,
                             decoration: BoxDecoration(
-                                color: Colors.grey[300],
-                                borderRadius: BorderRadius.circular(2)),
+                              color: const Color(0xFFE2E8F0),
+                              borderRadius: BorderRadius.circular(3),
+                            ),
                           ),
                         ),
 
-                        // Title and Distance (Image 3)
+                        // Title: Plan Your Ride
                         Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 8),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text('Suggested rides',
-                                  style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w900)),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 10, vertical: 4),
-                                decoration: BoxDecoration(
-                                    color: Colors.black,
-                                    borderRadius: BorderRadius.circular(20)),
-                                child: Text(
-                                  '${taxiState.distance.toStringAsFixed(1)}km • ${taxiState.eta ?? '15 min'}',
-                                  style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w700),
-                                ),
-                              ),
-                            ],
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Text(
+                            'Plan Your Ride',
+                            style: GoogleFonts.inter(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w900,
+                              color: const Color(0xFF0F172A),
+                              letterSpacing: -0.5,
+                            ),
                           ),
                         ),
-                        const SizedBox(height: 8),
+
+                        // Interconnected Route Card
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 12, 20, 10),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF8FAFC),
+                              borderRadius: BorderRadius.circular(18),
+                              border:
+                                  Border.all(color: const Color(0xFFE2E8F0)),
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      // Pickup Row
+                                      Row(
+                                        children: [
+                                          Container(
+                                            width: 8,
+                                            height: 8,
+                                            decoration: const BoxDecoration(
+                                              color: Color(0xFF22C55E),
+                                              shape: BoxShape.circle,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 10),
+                                          Expanded(
+                                            child: Text(
+                                              taxiState.pickupAddress ??
+                                                  'Pickup Location',
+                                              style: GoogleFonts.inter(
+                                                fontSize: 12.5,
+                                                fontWeight: FontWeight.w600,
+                                                color: const Color(0xFF0F172A),
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                            left: 3, top: 3, bottom: 3),
+                                        child: Container(
+                                          width: 2,
+                                          height: 10,
+                                          color: const Color(0xFFE2E8F0),
+                                        ),
+                                      ),
+                                      // Destination Row
+                                      Row(
+                                        children: [
+                                          Container(
+                                            width: 8,
+                                            height: 8,
+                                            decoration: const BoxDecoration(
+                                              color: Color(0xFFEF4444),
+                                              shape: BoxShape.circle,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 10),
+                                          Expanded(
+                                            child: Text(
+                                              taxiState.dropoffAddress ??
+                                                  'Destination',
+                                              style: GoogleFonts.inter(
+                                                fontSize: 12.5,
+                                                fontWeight: FontWeight.w600,
+                                                color: const Color(0xFF0F172A),
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                GestureDetector(
+                                  onTap: () {
+                                    HapticFeedback.lightImpact();
+                                    context.push('/taxi/search-location',
+                                        extra: {'focusPickup': false});
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(
+                                          color: const Color(0xFFE2E8F0)),
+                                    ),
+                                    child: const Icon(Iconsax.edit_2,
+                                        size: 15, color: Color(0xFF64748B)),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
 
                         // Vehicle Options List
                         Expanded(
                           child: ListView.builder(
                             controller: scrollController,
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 4),
                             itemCount: taxiState.rideOptions.length,
                             itemBuilder: (context, index) {
                               final option = taxiState.rideOptions[index];
-                              // Provider is the single source of truth for selection
                               final isSelected =
                                   taxiState.selectedOption?.id == option.id;
-                              // Only show discount on the selected option
                               final hasDiscount =
                                   isSelected && taxiState.discountAmount > 0;
                               final finalPrice = hasDiscount
@@ -252,525 +302,234 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen>
                                       .clamp(0.0, double.infinity)
                                   : option.price;
                               final originalPriceStr = hasDiscount
-                                  ? '\u20B9${option.price.toStringAsFixed(0)}'
+                                  ? '₹${option.price.toStringAsFixed(0)}'
                                   : null;
 
-                              // Use user-provided icons with fallback
-                              String seats = '4';
-                              if (option.id.contains('bike')) {
-                                seats = '1';
-                              } else if (option.id.contains('auto')) {
-                                seats = '3';
-                              }
-
-                              return _buildVehicleSelectableItem(
-                                option.title,
-                                '\u20B9${finalPrice.toStringAsFixed(0)}',
-                                seats,
-                                option.subtitle,
-                                option.assetPath,
-                                fallbackIcon: option.icon,
-                                badge: option.tag,
-                                isSelected: isSelected,
+                              return _buildVehicleCard(
+                                option: option,
+                                finalPrice: finalPrice,
                                 originalPriceStr: originalPriceStr,
+                                isSelected: isSelected,
                                 onTap: () {
-                                  // Update provider — no local setState for selection
+                                  HapticFeedback.selectionClick();
                                   ref
                                       .read(taxiProvider.notifier)
                                       .selectOption(option);
-                                  HapticFeedback.selectionClick();
-                                  if (_sheetController.isAttached) {
-                                    _sheetController.animateTo(
-                                      0.85,
-                                      duration:
-                                          const Duration(milliseconds: 300),
-                                      curve: Curves.easeOutCubic,
-                                    );
-                                  }
                                 },
                               );
                             },
                           ),
                         ),
 
-                        // Footer — Payment Method Selection
-                        const Divider(height: 1),
+                        // Payment Method Segmented Toggle
                         Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Payment Method',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                  color: Color(0xFF6B7280),
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              Row(
-                                children: [
-                                  // Cash on Drop button
-                                  Expanded(
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        ref
-                                            .read(taxiProvider.notifier)
-                                            .setPaymentMethod('Cash');
-                                        HapticFeedback.selectionClick();
-                                      },
-                                      child: AnimatedContainer(
-                                        duration:
-                                            const Duration(milliseconds: 200),
-                                        padding: const EdgeInsets.symmetric(
-                                            vertical: 14),
-                                        decoration: BoxDecoration(
-                                          color:
-                                              taxiState.paymentMethod == 'Cash'
-                                                  ? Colors.orange.shade50
-                                                  : Colors.grey.shade50,
-                                          borderRadius:
-                                              BorderRadius.circular(16),
-                                          border: Border.all(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 8),
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF1F5F9),
+                              borderRadius: BorderRadius.circular(16),
+                              border:
+                                  Border.all(color: const Color(0xFFE2E8F0)),
+                            ),
+                            child: Row(
+                              children: [
+                                // Cash on Drop
+                                Expanded(
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      HapticFeedback.selectionClick();
+                                      ref
+                                          .read(taxiProvider.notifier)
+                                          .setPaymentMethod('Cash');
+                                    },
+                                    child: AnimatedContainer(
+                                      duration:
+                                          const Duration(milliseconds: 200),
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 10),
+                                      decoration: BoxDecoration(
+                                        color: taxiState.paymentMethod == 'Cash'
+                                            ? Colors.white
+                                            : Colors.transparent,
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: taxiState.paymentMethod ==
+                                                'Cash'
+                                            ? Border.all(
+                                                color: const Color(0xFFE2E8F0))
+                                            : null,
+                                        boxShadow: taxiState.paymentMethod ==
+                                                'Cash'
+                                            ? [
+                                                BoxShadow(
+                                                  color: Colors.black
+                                                      .withValues(alpha: 0.04),
+                                                  blurRadius: 8,
+                                                  offset: const Offset(0, 2),
+                                                ),
+                                              ]
+                                            : null,
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            Icons.payments_outlined,
+                                            size: 18,
                                             color: taxiState.paymentMethod ==
                                                     'Cash'
-                                                ? Colors.orange.shade400
-                                                : Colors.grey.shade200,
-                                            width: taxiState.paymentMethod ==
-                                                    'Cash'
-                                                ? 2
-                                                : 1,
+                                                ? const Color(0xFF059669)
+                                                : const Color(0xFF64748B),
                                           ),
-                                        ),
-                                        child: Column(
-                                          children: [
-                                            Icon(
-                                              Icons.money_rounded,
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            'Cash on Drop',
+                                            style: GoogleFonts.inter(
+                                              fontSize: 12.5,
+                                              fontWeight:
+                                                  taxiState.paymentMethod ==
+                                                          'Cash'
+                                                      ? FontWeight.w800
+                                                      : FontWeight.w600,
                                               color: taxiState.paymentMethod ==
                                                       'Cash'
-                                                  ? Colors.orange.shade700
-                                                  : Colors.grey,
-                                              size: 28,
+                                                  ? const Color(0xFF0F172A)
+                                                  : const Color(0xFF64748B),
                                             ),
-                                            const SizedBox(height: 6),
-                                            Text(
-                                              'Cash on Drop',
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w700,
-                                                color:
-                                                    taxiState.paymentMethod ==
-                                                            'Cash'
-                                                        ? Colors.orange.shade700
-                                                        : Colors.grey.shade600,
-                                              ),
-                                            ),
-                                            if (taxiState.paymentMethod ==
-                                                'Cash')
-                                              Padding(
-                                                padding: const EdgeInsets.only(
-                                                    top: 4),
-                                                child: Container(
-                                                  padding: const EdgeInsets
-                                                      .symmetric(
-                                                      horizontal: 8,
-                                                      vertical: 2),
-                                                  decoration: BoxDecoration(
-                                                    color:
-                                                        Colors.orange.shade400,
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            10),
-                                                  ),
-                                                  child: const Text('Selected',
-                                                      style: TextStyle(
-                                                          color: Colors.white,
-                                                          fontSize: 10,
-                                                          fontWeight:
-                                                              FontWeight.bold)),
-                                                ),
-                                              ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  // Pay Online (Razorpay) button
-                                  Expanded(
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        ref
-                                            .read(taxiProvider.notifier)
-                                            .setPaymentMethod('Online');
-                                        HapticFeedback.selectionClick();
-                                      },
-                                      child: AnimatedContainer(
-                                        duration:
-                                            const Duration(milliseconds: 200),
-                                        padding: const EdgeInsets.symmetric(
-                                            vertical: 14),
-                                        decoration: BoxDecoration(
-                                          color: taxiState.paymentMethod ==
-                                                  'Online'
-                                              ? AppColors.primaryBlue
-                                                  .withValues(alpha: 0.06)
-                                              : Colors.grey.shade50,
-                                          borderRadius:
-                                              BorderRadius.circular(16),
-                                          border: Border.all(
-                                            color: taxiState.paymentMethod ==
-                                                    'Online'
-                                                ? AppColors.primaryBlue
-                                                : Colors.grey.shade200,
-                                            width: taxiState.paymentMethod ==
-                                                    'Online'
-                                                ? 2
-                                                : 1,
                                           ),
-                                        ),
-                                        child: Column(
-                                          children: [
-                                            Icon(
-                                              Icons.payment_rounded,
-                                              color: taxiState.paymentMethod ==
-                                                      'Online'
-                                                  ? AppColors.primaryBlue
-                                                  : Colors.grey,
-                                              size: 28,
-                                            ),
-                                            const SizedBox(height: 6),
-                                            Text(
-                                              'Pay Online',
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w700,
-                                                color:
-                                                    taxiState.paymentMethod ==
-                                                            'Online'
-                                                        ? AppColors.primaryBlue
-                                                        : Colors.grey.shade600,
-                                              ),
-                                            ),
-                                            Padding(
-                                              padding:
-                                                  const EdgeInsets.only(top: 4),
-                                              child: taxiState.paymentMethod ==
-                                                      'Online'
-                                                  ? Container(
-                                                      padding: const EdgeInsets
-                                                          .symmetric(
-                                                          horizontal: 8,
-                                                          vertical: 2),
-                                                      decoration: BoxDecoration(
-                                                        color: AppColors
-                                                            .primaryBlue,
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(10),
-                                                      ),
-                                                      child: const Text(
-                                                          'Selected',
-                                                          style: TextStyle(
-                                                              color:
-                                                                  Colors.white,
-                                                              fontSize: 10,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .bold)),
-                                                    )
-                                                  : Text('via Razorpay',
-                                                      style: TextStyle(
-                                                          color: Colors
-                                                              .grey.shade400,
-                                                          fontSize: 10,
-                                                          fontWeight:
-                                                              FontWeight.w600)),
-                                            ),
-                                          ],
-                                        ),
+                                        ],
                                       ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                              // Promo / coupons row
-                              const SizedBox(height: 8),
-                              GestureDetector(
-                                onTap: () => _showPromoCodeSheet(context),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 16, vertical: 10),
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey.shade50,
-                                    borderRadius: BorderRadius.circular(12),
-                                    border:
-                                        Border.all(color: Colors.grey.shade200),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      const Icon(Icons.local_offer_outlined,
-                                          size: 18, color: Color(0xFF6366F1)),
-                                      const SizedBox(width: 10),
-                                      const Text('Apply Promo Code',
-                                          style: TextStyle(
-                                              fontWeight: FontWeight.w700,
-                                              fontSize: 13)),
-                                      const Spacer(),
-                                      Icon(Icons.chevron_right_rounded,
-                                          color: Colors.grey.shade400),
-                                    ],
                                   ),
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: 4),
+                                // Pay Online
+                                Expanded(
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      HapticFeedback.selectionClick();
+                                      ref
+                                          .read(taxiProvider.notifier)
+                                          .setPaymentMethod('Online');
+                                    },
+                                    child: AnimatedContainer(
+                                      duration:
+                                          const Duration(milliseconds: 200),
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 10),
+                                      decoration: BoxDecoration(
+                                        color:
+                                            taxiState.paymentMethod == 'Online'
+                                                ? Colors.white
+                                                : Colors.transparent,
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: taxiState.paymentMethod ==
+                                                'Online'
+                                            ? Border.all(
+                                                color: const Color(0xFFE2E8F0))
+                                            : null,
+                                        boxShadow: taxiState.paymentMethod ==
+                                                'Online'
+                                            ? [
+                                                BoxShadow(
+                                                  color: Colors.black
+                                                      .withValues(alpha: 0.04),
+                                                  blurRadius: 8,
+                                                  offset: const Offset(0, 2),
+                                                ),
+                                              ]
+                                            : null,
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            Icons.credit_card_outlined,
+                                            size: 18,
+                                            color: taxiState.paymentMethod ==
+                                                    'Online'
+                                                ? const Color(0xFF006241)
+                                                : const Color(0xFF64748B),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            'Pay Online',
+                                            style: GoogleFonts.inter(
+                                              fontSize: 12.5,
+                                              fontWeight:
+                                                  taxiState.paymentMethod ==
+                                                          'Online'
+                                                      ? FontWeight.w800
+                                                      : FontWeight.w600,
+                                              color: taxiState.paymentMethod ==
+                                                      'Online'
+                                                  ? const Color(0xFF0F172A)
+                                                  : const Color(0xFF64748B),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
 
-                        // Book Button
+                        // Primary CTA: Book Button
                         Padding(
-                          padding: EdgeInsets.fromLTRB(20, 0, 20,
-                              20 + MediaQuery.of(context).padding.bottom),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(32),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.primaryBlue
-                                      .withValues(alpha: 0.3),
-                                  blurRadius: 12,
-                                  offset: const Offset(0, 4),
-                                )
-                              ],
-                            ),
-                            child: ElevatedButton(
-                              onPressed: _isBooking
-                                  ? null
-                                  : () async {
-                                      // Guard: need a selected option
-                                      final selectedOption =
-                                          taxiState.selectedOption;
-                                      if (selectedOption == null) return;
-                                      setState(() => _isBooking = true);
-                                      try {
-                                        ref
-                                            .read(taxiProvider.notifier)
-                                            .selectOption(selectedOption);
-                                        final success = await ref
-                                            .read(taxiProvider.notifier)
-                                            .startSearching();
-                                        if (success) {
-                                          if (context.mounted) {
-                                            // Navigate to live tracking screen
-                                            // (not home — user needs to see driver search)
-                                            context.go('/taxi/tracking');
-                                          }
-                                        } else {
-                                          if (context.mounted) {
-                                            unawaited(showDialog(
-                                              context: context,
-                                              builder: (ctx) => AlertDialog(
-                                                shape: RoundedRectangleBorder(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            24)),
-                                                title: const Row(children: [
-                                                  Icon(
-                                                      Icons
-                                                          .location_off_rounded,
-                                                      color: Colors.orange),
-                                                  SizedBox(width: 12),
-                                                  Expanded(
-                                                      child: Text(
-                                                          'No Drivers Nearby',
-                                                          style: TextStyle(
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w900,
-                                                              fontSize: 18))),
-                                                ]),
-                                                content: const Text(
-                                                  'All drivers in your area are currently offline. You can still book and wait — we\'ll keep searching for 10 minutes and notify you when a driver accepts.',
-                                                  style: TextStyle(
-                                                      fontSize: 14,
-                                                      height: 1.6),
-                                                ),
-                                                actions: [
-                                                  TextButton(
-                                                    onPressed: () =>
-                                                        Navigator.pop(ctx),
-                                                    child: const Text('Cancel',
-                                                        style: TextStyle(
-                                                            color:
-                                                                Colors.grey)),
-                                                  ),
-                                                  TextButton(
-                                                    onPressed: () async {
-                                                      final date =
-                                                          await showDatePicker(
-                                                        context: ctx,
-                                                        initialDate:
-                                                            DateTime.now(),
-                                                        firstDate:
-                                                            DateTime.now(),
-                                                        lastDate: DateTime.now()
-                                                            .add(const Duration(
-                                                                days: 7)),
-                                                      );
-                                                      if (date != null &&
-                                                          ctx.mounted) {
-                                                        final time =
-                                                            await showTimePicker(
-                                                          context: ctx,
-                                                          initialTime:
-                                                              TimeOfDay.now(),
-                                                        );
-                                                        if (time != null &&
-                                                            ctx.mounted) {
-                                                          final scheduledTime =
-                                                              DateTime(
-                                                                  date.year,
-                                                                  date.month,
-                                                                  date.day,
-                                                                  time.hour,
-                                                                  time.minute);
-                                                          try {
-                                                            await ref
-                                                                .read(taxiProvider
-                                                                    .notifier)
-                                                                .scheduleRideForLater(
-                                                                    scheduledTime);
-                                                            if (ctx.mounted) {
-                                                              Navigator.pop(
-                                                                  ctx); // close dialog
-                                                              context.go(
-                                                                  '/main/home'); // Go to home screen
-                                                              ScaffoldMessenger
-                                                                      .of(context)
-                                                                  .showSnackBar(
-                                                                SnackBar(
-                                                                  content: Text(
-                                                                      'Ride scheduled for ${time.format(context)} on ${date.day}/${date.month}'),
-                                                                  backgroundColor:
-                                                                      Colors
-                                                                          .green,
-                                                                ),
-                                                              );
-                                                            }
-                                                          } catch (e) {
-                                                            if (ctx.mounted) {
-                                                              ScaffoldMessenger
-                                                                      .of(context)
-                                                                  .showSnackBar(
-                                                                SnackBar(
-                                                                    content: Text(e
-                                                                        .toString()),
-                                                                    backgroundColor:
-                                                                        AppColors
-                                                                            .dangerRed),
-                                                              );
-                                                            }
-                                                          }
-                                                        }
-                                                      }
-                                                    },
-                                                    child: const Text(
-                                                        'Schedule',
-                                                        style: TextStyle(
-                                                            color: AppColors
-                                                                .primaryBlue,
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .bold)),
-                                                  ),
-                                                  ElevatedButton(
-                                                    onPressed: () {
-                                                      Navigator.pop(ctx);
-                                                      // Navigate to live tracking — user is still searching
-                                                      context
-                                                          .go('/taxi/tracking');
-                                                    },
-                                                    style: ElevatedButton
-                                                        .styleFrom(
-                                                      backgroundColor:
-                                                          AppColors.primaryBlue,
-                                                      foregroundColor:
-                                                          Colors.white,
-                                                      shape:
-                                                          RoundedRectangleBorder(
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          12)),
-                                                    ),
-                                                    child: const Text(
-                                                        'Book Anyway'),
-                                                  ),
-                                                ],
-                                              ),
-                                            ));
-                                          }
-                                        }
-                                      } catch (e) {
-                                        if (context.mounted) {
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(
-                                            SnackBar(
-                                              content: Text(e
-                                                  .toString()
-                                                  .replaceAll(
-                                                      'Exception: ', '')),
-                                              backgroundColor:
-                                                  AppColors.dangerRed,
-                                              behavior:
-                                                  SnackBarBehavior.floating,
-                                            ),
-                                          );
-                                        }
-                                      } finally {
-                                        if (mounted) {
-                                          setState(() => _isBooking = false);
-                                        }
-                                      }
-                                    },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.primaryBlue,
-                                foregroundColor: Colors.white,
-                                minimumSize: const Size(double.infinity, 56),
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(32)),
-                                elevation: 0,
+                          padding: EdgeInsets.fromLTRB(20, 4, 20,
+                              16 + MediaQuery.of(context).padding.bottom),
+                          child: GestureDetector(
+                            onTap: _isBooking
+                                ? null
+                                : () => _handleBookRide(taxiState),
+                            child: Container(
+                              height: 54,
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    Color(0xFF006241),
+                                    Color(0xFF10B981)
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(18),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF006241)
+                                        .withValues(alpha: 0.28),
+                                    blurRadius: 14,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
                               ),
-                              child: _isBooking
-                                  ? const SizedBox(
-                                      width: 22,
-                                      height: 22,
-                                      child: CircularProgressIndicator(
-                                          color: Colors.white, strokeWidth: 3),
-                                    )
-                                  : Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          taxiState.paymentMethod == 'Online'
-                                              ? Icons.payment_rounded
-                                              : Icons.money_rounded,
-                                          size: 20,
+                              child: Center(
+                                child: _isBooking
+                                    ? const SizedBox(
+                                        width: 22,
+                                        height: 22,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 2.5,
                                         ),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          taxiState.paymentMethod == 'Online'
-                                              ? 'Pay & Book ${taxiState.selectedOption?.title ?? ''}'
-                                              : 'Book ${taxiState.selectedOption?.title ?? 'Any'}',
-                                          style: const TextStyle(
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.w900,
-                                              letterSpacing: 0.5),
+                                      )
+                                    : Text(
+                                        'Book ${taxiState.selectedOption?.title ?? 'Ride'}',
+                                        style: GoogleFonts.inter(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w800,
+                                          color: Colors.white,
+                                          letterSpacing: 0.3,
                                         ),
-                                      ],
-                                    ),
+                                      ),
+                              ),
                             ),
                           ),
                         ),
@@ -786,240 +545,268 @@ class _RideOptionsScreenState extends ConsumerState<RideOptionsScreen>
     );
   }
 
-  Widget _buildVehicleSelectableItem(
-      String name, String price, String seats, String eta, String? imagePath,
-      {IconData? fallbackIcon,
-      String? badge,
-      String? originalPriceStr,
-      bool isSelected = false,
-      VoidCallback? onTap}) {
+  Widget _buildVehicleCard({
+    required RideOption option,
+    required double finalPrice,
+    required String? originalPriceStr,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    IconData getVehicleIcon(String id) {
+      if (id.contains('bike')) {
+        return Icons.two_wheeler_rounded;
+      } else if (id.contains('auto')) {
+        return Icons.electric_rickshaw_rounded;
+      }
+      return Iconsax.car;
+    }
+
+    Widget? getTagBadge(String? tag) {
+      if (tag == null || tag.isEmpty) return null;
+      Color bgColor;
+      Color textColor;
+      Color borderColor;
+
+      if (tag == 'Cheapest') {
+        bgColor = const Color(0xFFEFF6FF);
+        textColor = const Color(0xFF2563EB);
+        borderColor = const Color(0xFFBFDBFE);
+      } else if (tag == 'Eco') {
+        bgColor = const Color(0xFFECFDF5);
+        textColor = const Color(0xFF059669);
+        borderColor = const Color(0xFFA7F3D0);
+      } else if (tag == 'Quickest') {
+        bgColor = const Color(0xFFFFFBEB);
+        textColor = const Color(0xFFD97706);
+        borderColor = const Color(0xFFFDE68A);
+      } else {
+        bgColor = const Color(0xFFF1F5F9);
+        textColor = const Color(0xFF475569);
+        borderColor = const Color(0xFFE2E8F0);
+      }
+
+      return Container(
+        margin: const EdgeInsets.only(left: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: borderColor, width: 0.8),
+        ),
+        child: Text(
+          tag,
+          style: GoogleFonts.inter(
+            fontSize: 10.5,
+            fontWeight: FontWeight.w700,
+            color: textColor,
+          ),
+        ),
+      );
+    }
+
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.primaryBlue.withValues(alpha: 0.05)
-              : Colors.white,
+          color: isSelected ? const Color(0xFFF0FDF4) : Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected
-                ? AppColors.primaryBlue
-                : Colors.black.withValues(alpha: 0.05),
-            width: isSelected ? 2 : 1,
+            color:
+                isSelected ? const Color(0xFF006241) : const Color(0xFFE2E8F0),
+            width: isSelected ? 1.8 : 1.0,
           ),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                      color: AppColors.primaryBlue.withValues(alpha: 0.1),
-                      blurRadius: 15,
-                      offset: const Offset(0, 5))
+                    color: const Color(0xFF006241).withValues(alpha: 0.08),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
                 ]
-              : null,
+              : [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.02),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
         ),
         child: Row(
           children: [
-            // Icon Container
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Container(
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? AppColors.primaryBlue.withValues(alpha: 0.1)
-                        : const Color(0xFFF3F4F6),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Center(
-                    child: imagePath != null
-                        ? (imagePath.startsWith('http')
-                            ? Image.network(imagePath,
-                                width: 44,
-                                height: 44,
-                                errorBuilder: (_, __, ___) => Icon(
-                                    fallbackIcon ?? Icons.local_taxi,
-                                    size: 32,
-                                    color: Colors.black45))
-                            : Image.asset(imagePath,
-                                width: 44,
-                                height: 44,
-                                errorBuilder: (_, __, ___) => Icon(
-                                    fallbackIcon ?? Icons.local_taxi,
-                                    size: 32,
-                                    color: Colors.black45)))
-                        : Icon(fallbackIcon ?? Icons.local_taxi,
-                            size: 32,
-                            color: isSelected
-                                ? AppColors.primaryBlue
-                                : Colors.black45),
-                  ),
+            // Left Squircle Vehicle Icon (48x48)
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? const Color(0xFFDCFCE7)
+                    : const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Center(
+                child: Icon(
+                  getVehicleIcon(option.id),
+                  color: isSelected
+                      ? const Color(0xFF006241)
+                      : const Color(0xFF475569),
+                  size: 24,
                 ),
-                if (badge != null)
-                  Positioned(
-                    top: -8,
-                    right: -8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: badge == 'Quickest'
-                            ? AppColors.dangerRed
-                            : AppColors.primaryBlue,
-                        borderRadius: BorderRadius.circular(10),
-                        boxShadow: const [
-                          BoxShadow(color: Colors.black12, blurRadius: 4)
-                        ],
-                      ),
-                      child: Text(
-                        badge,
-                        style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 9,
-                            fontWeight: FontWeight.w800),
-                      ),
-                    ),
-                  ),
-              ],
+              ),
             ),
-            const SizedBox(width: 16),
-            // Details
+            const SizedBox(width: 14),
+
+            // Middle Column: Title, Badge, Subtitle ETA
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      Text(name,
-                          style: const TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.w900)),
-                      const SizedBox(width: 8),
-                      Icon(Icons.person, size: 14, color: Colors.grey[400]),
-                      const SizedBox(width: 2),
-                      Text(seats,
-                          style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold)),
-                      if (badge != null) ...[
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: AppColors.primaryBlue.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            badge,
-                            style: const TextStyle(
-                              color: AppColors.primaryBlueDark,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                      Text(
+                        option.title,
+                        style: GoogleFonts.inter(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFF0F172A),
                         ),
-                      ],
+                      ),
+                      if (getTagBadge(option.tag) != null)
+                        getTagBadge(option.tag)!,
                     ],
                   ),
-                  const SizedBox(height: 4),
-                  Text(eta,
-                      style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500)),
+                  const SizedBox(height: 3),
+                  Text(
+                    option.subtitle.isNotEmpty
+                        ? option.subtitle
+                        : '2 min away • Drop nearby',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: const Color(0xFF64748B),
+                    ),
+                  ),
                 ],
               ),
             ),
-            // Price
+
+            // Right Column: Price Tag
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 if (originalPriceStr != null)
                   Text(
                     originalPriceStr,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey,
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF94A3B8),
                       decoration: TextDecoration.lineThrough,
                     ),
                   ),
                 Text(
-                  price,
-                  style: TextStyle(
-                    fontSize: 18,
+                  '₹${finalPrice.toStringAsFixed(0)}',
+                  style: GoogleFonts.outfit(
+                    fontSize: 19,
                     fontWeight: FontWeight.w900,
-                    color:
-                        originalPriceStr != null ? Colors.green : Colors.black,
+                    color: const Color(0xFF0F172A),
                   ),
                 ),
               ],
             ),
           ],
         ),
-      )
-          .animate(target: isSelected ? 1 : 0)
-          .shimmer(color: Colors.white24)
-          .scale(begin: const Offset(1, 1), end: const Offset(1.02, 1.02)),
+      ),
     );
   }
 
-  void _showPromoCodeSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-          ),
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Apply Promo Code',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Enter code here',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryBlue,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Text('Apply'),
-                  ),
-                ),
-              ],
-            ),
+  Future<void> _handleBookRide(TaxiState taxiState) async {
+    final selectedOption = taxiState.selectedOption;
+    if (selectedOption == null) return;
+
+    await HapticFeedback.mediumImpact();
+    setState(() => _isBooking = true);
+
+    try {
+      ref.read(taxiProvider.notifier).selectOption(selectedOption);
+      final success = await ref.read(taxiProvider.notifier).startSearching();
+      if (success) {
+        if (mounted) {
+          context.go('/taxi/tracking');
+        }
+      } else {
+        if (mounted) {
+          _showNoDriversDialog();
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceAll('Exception: ', '')),
+            backgroundColor: AppColors.dangerRed,
+            behavior: SnackBarBehavior.floating,
           ),
         );
-      },
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isBooking = false);
+      }
+    }
+  }
+
+  void _showNoDriversDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Row(
+          children: [
+            const Icon(Icons.location_off_rounded, color: Colors.orange),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'No Drivers Nearby',
+                style: GoogleFonts.inter(
+                    fontWeight: FontWeight.w800, fontSize: 18),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'All drivers in your area are currently offline. You can still book and wait — we\'ll keep searching for 10 minutes and notify you when a driver accepts.',
+          style: GoogleFonts.inter(fontSize: 13.5, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.inter(
+                  color: const Color(0xFF64748B), fontWeight: FontWeight.w600),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.go('/taxi/tracking');
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF006241),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+            ),
+            child: Text(
+              'Book Anyway',
+              style: GoogleFonts.inter(fontWeight: FontWeight.w700),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

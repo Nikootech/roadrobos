@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:iconsax/iconsax.dart';
 import 'package:go_router/go_router.dart';
-import '../../core/theme/app_colors.dart';
-
 import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/technician/technician_provider.dart';
@@ -26,15 +26,16 @@ class SelectServiceTypeScreen extends ConsumerWidget {
           onTap: () => context.pop(),
           child: const Center(
             child: Icon(Icons.arrow_back_ios_new_rounded,
-                size: 18, color: AppColors.textPrimary),
+                size: 18, color: Color(0xFF0F172A)),
           ),
         ),
-        title: const Text(
+        title: Text(
           'Select Service',
-          style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary),
+          style: GoogleFonts.inter(
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+              color: const Color(0xFF0F172A),
+              letterSpacing: -0.3),
         ),
       ),
       body: SingleChildScrollView(
@@ -43,15 +44,25 @@ class SelectServiceTypeScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Professional Services\nfor your Vehicle',
-                style: TextStyle(
+                style: GoogleFonts.inter(
                   fontSize: 24,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                  height: 1.2,
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFF0F172A),
+                  letterSpacing: -0.5,
+                  height: 1.25,
                 ),
               ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0),
+              const SizedBox(height: 8),
+              Text(
+                'Certified doorstep technicians & genuine OEM spare parts',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: const Color(0xFF64748B),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
               const SizedBox(height: 24),
 
               // Dynamic Service Categories
@@ -72,7 +83,7 @@ class SelectServiceTypeScreen extends ConsumerWidget {
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: filtered.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 16),
+                    separatorBuilder: (_, __) => const SizedBox(height: 14),
                     itemBuilder: (context, index) {
                       final cat = filtered[index];
                       final mapping = _getCategoryMapping(cat.label);
@@ -92,30 +103,64 @@ class SelectServiceTypeScreen extends ConsumerWidget {
                 error: (err, _) => Text('Error: $err'),
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
               _buildEmergencyServiceCard(
                 context,
                 'Emergency Help',
-                'Roadside assistance 24/7',
-                Icons.emergency_rounded,
-                AppColors.dangerRed,
+                'Roadside assistance 24/7 with live GPS dispatch',
+                Iconsax.call_calling,
+                const Color(0xFFE11D48),
                 '/live-tracking',
               ),
               const SizedBox(height: 32),
-              const Text(
+              Text(
                 'Recent Services',
-                style: TextStyle(
+                style: GoogleFonts.inter(
                     fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary),
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF0F172A),
+                    letterSpacing: -0.3),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
 
               // Dynamic Recent Bookings
               recentBookingsAsync.when(
                 data: (bookings) {
                   if (bookings.isEmpty) {
-                    return const Text('No recent services found');
+                    return Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                      ),
+                      child: Column(
+                        children: [
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              border:
+                                  Border.all(color: const Color(0xFFE2E8F0)),
+                            ),
+                            child: const Icon(Iconsax.clock,
+                                size: 20, color: Color(0xFF94A3B8)),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            'No recent services found',
+                            style: GoogleFonts.inter(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF64748B),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
                   }
                   return ListView.builder(
                     shrinkWrap: true,
@@ -149,48 +194,82 @@ class SelectServiceTypeScreen extends ConsumerWidget {
         context.push('/emergency-help');
       },
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.dangerRed.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: AppColors.dangerRed.withValues(alpha: 0.1)),
+          color: const Color(0xFFFFF1F2),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFFFECDD3)),
           boxShadow: [
             BoxShadow(
-                color: color.withValues(alpha: 0.05),
-                blurRadius: 20,
-                offset: const Offset(0, 8)),
+                color: color.withValues(alpha: 0.08),
+                blurRadius: 16,
+                offset: const Offset(0, 4)),
           ],
         ),
         child: Row(
           children: [
             Container(
-              width: 56,
-              height: 56,
+              width: 48,
+              height: 48,
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(16),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFE11D48), Color(0xFFF43F5E)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFE11D48).withValues(alpha: 0.3),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
               ),
-              child: Icon(icon, color: color, size: 28),
+              child: Icon(icon, color: Colors.white, size: 24),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title,
-                      style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary)),
-                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Text(title,
+                          style: GoogleFonts.inter(
+                              fontSize: 15.5,
+                              fontWeight: FontWeight.w800,
+                              color: const Color(0xFF0F172A))),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE11D48).withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          '24/7 SOS',
+                          style: GoogleFonts.inter(
+                            color: const Color(0xFFE11D48),
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 3),
                   Text(desc,
-                      style: const TextStyle(
-                          fontSize: 13, color: AppColors.textSecondary)),
+                      style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: const Color(0xFF64748B),
+                          fontWeight: FontWeight.w500)),
                 ],
               ),
             ),
-            Icon(Icons.arrow_forward_ios_rounded,
-                size: 16, color: color.withValues(alpha: 0.5)),
+            const Icon(Iconsax.arrow_right_3,
+                size: 16, color: Color(0xFFE11D48)),
           ],
         ),
       ),
@@ -201,46 +280,68 @@ class SelectServiceTypeScreen extends ConsumerWidget {
       String title, String desc, IconData icon, Color color, String route) {
     return GestureDetector(
       onTap: () {
+        HapticFeedback.lightImpact();
         ref.read(bookingProvider.notifier).reset();
         ref.read(bookingProvider.notifier).setServiceType(title);
         context.push(route);
       },
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.bgSkyLight,
-          borderRadius: BorderRadius.circular(24),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.02),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Row(
           children: [
             Container(
-              width: 56,
-              height: 56,
+              width: 48,
+              height: 48,
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(16),
+                gradient: LinearGradient(
+                  colors: [color, color.withValues(alpha: 0.8)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: color.withValues(alpha: 0.3),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
               ),
-              child: Icon(icon, color: color, size: 28),
+              child: Icon(icon, color: Colors.white, size: 22),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(title,
-                      style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary)),
-                  const SizedBox(height: 4),
+                      style: GoogleFonts.inter(
+                          fontSize: 15.5,
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFF0F172A))),
+                  const SizedBox(height: 3),
                   Text(desc,
-                      style: const TextStyle(
-                          fontSize: 13, color: AppColors.textSecondary)),
+                      style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: const Color(0xFF64748B),
+                          fontWeight: FontWeight.w500)),
                 ],
               ),
             ),
-            Icon(Icons.arrow_forward_ios_rounded,
-                size: 16, color: AppColors.textMuted.withValues(alpha: 0.5)),
+            const Icon(Iconsax.arrow_right_3,
+                size: 16, color: Color(0xFF94A3B8)),
           ],
         ),
       ),
@@ -249,18 +350,24 @@ class SelectServiceTypeScreen extends ConsumerWidget {
 
   Widget _buildRecentServiceTile(String name, String date, String status) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.5),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Row(
         children: [
-          const CircleAvatar(
-            backgroundColor: AppColors.bgLightGrey,
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF1F5F9),
+              borderRadius: BorderRadius.circular(10),
+            ),
             child:
-                Icon(Icons.history, size: 20, color: AppColors.textSecondary),
+                const Icon(Iconsax.clock, size: 18, color: Color(0xFF64748B)),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -268,19 +375,35 @@ class SelectServiceTypeScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(name,
-                    style: const TextStyle(
-                        fontSize: 14, fontWeight: FontWeight.w600)),
+                    style: GoogleFonts.inter(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF0F172A))),
+                const SizedBox(height: 2),
                 Text(date,
-                    style: const TextStyle(
-                        fontSize: 12, color: AppColors.textSecondary)),
+                    style: GoogleFonts.inter(
+                        fontSize: 11.5,
+                        color: const Color(0xFF64748B),
+                        fontWeight: FontWeight.w500)),
               ],
             ),
           ),
-          Text(status,
-              style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.successGreen)),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: const Color(0xFFECFDF5),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: const Color(0xFFA7F3D0)),
+            ),
+            child: Text(
+              status,
+              style: GoogleFonts.inter(
+                fontSize: 10.5,
+                fontWeight: FontWeight.w800,
+                color: const Color(0xFF059669),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -291,51 +414,51 @@ class SelectServiceTypeScreen extends ConsumerWidget {
       case 'repair':
       case 'service':
         return {
-          'icon': Icons.build_rounded,
-          'color': const Color(0xFF3B82F6),
+          'icon': Iconsax.setting_2,
+          'color': const Color(0xFF0284C7),
           'route': '/select-service'
         };
       case 'rentals':
         return {
-          'icon': Icons.car_rental_rounded,
-          'color': const Color(0xFF8B5CF6),
+          'icon': Iconsax.car,
+          'color': const Color(0xFF006241),
           'route': '/rentals'
         };
       case 'ev service':
       case 'ev bike service':
         return {
-          'icon': Icons.bolt_rounded,
-          'color': const Color(0xFF06B6D4),
+          'icon': Iconsax.flash_1,
+          'color': const Color(0xFF0D9488),
           'route': '/ev-bike-service-booking'
         };
       case 'bike service':
         return {
           'icon': Icons.pedal_bike_rounded,
-          'color': AppColors.primaryBlue,
+          'color': const Color(0xFF006241),
           'route': '/bike-service-booking'
         };
       case 'car service':
         return {
-          'icon': Icons.directions_car_rounded,
-          'color': AppColors.accentOrange,
+          'icon': Iconsax.car,
+          'color': const Color(0xFFEA580C),
           'route': '/car-service-booking'
         };
       case 'water service':
         return {
-          'icon': Icons.local_car_wash_rounded,
-          'color': const Color(0xFF0EA5E9),
+          'icon': Iconsax.drop,
+          'color': const Color(0xFF0284C7),
           'route': '/water-service-booking'
         };
       case 'logistics':
         return {
-          'icon': Icons.local_shipping_rounded,
-          'color': const Color(0xFFF97316),
+          'icon': Iconsax.truck_fast,
+          'color': const Color(0xFFD97706),
           'route': '/delivery-logistics'
         };
       default:
         return {
-          'icon': Icons.category_rounded,
-          'color': AppColors.primaryBlue,
+          'icon': Iconsax.category,
+          'color': const Color(0xFF006241),
           'route': '/select-service'
         };
     }
@@ -354,7 +477,7 @@ class ShimmerRecentServices extends StatelessWidget {
                 height: 60,
                 margin: const EdgeInsets.only(bottom: 12),
                 decoration: BoxDecoration(
-                  color: Colors.grey[200],
+                  color: const Color(0xFFF1F5F9),
                   borderRadius: BorderRadius.circular(16),
                 ),
               )),

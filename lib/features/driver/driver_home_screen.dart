@@ -16,6 +16,7 @@ import '../../core/services/language_service.dart';
 import '../../core/repositories/ride_booking_repository.dart';
 import '../../core/models/ride_booking.dart';
 import 'widgets/instant_cashout_sheet.dart';
+import '../../shared/widgets/kinetic_motion.dart';
 
 class DriverHomeScreen extends ConsumerStatefulWidget {
   const DriverHomeScreen({super.key});
@@ -276,14 +277,12 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                               children: [
                                 Row(
                                   children: [
-                                    Container(
-                                        width: 8,
-                                        height: 8,
-                                        decoration: BoxDecoration(
-                                            color: isOnline
-                                                ? AppColors.successGreen
-                                                : AppColors.textMuted,
-                                            shape: BoxShape.circle)),
+                                    PulseBeacon(
+                                      color: isOnline
+                                          ? AppColors.successGreen
+                                          : AppColors.textMuted,
+                                      size: 8,
+                                    ),
                                     const SizedBox(width: 10),
                                     Text(
                                         isOnline
@@ -305,9 +304,8 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                                           fontWeight: FontWeight.w500)),
                                 ),
                                 const SizedBox(height: 20),
-                                GestureDetector(
+                                ScaleOnTap(
                                   onTap: () {
-                                    HapticFeedback.mediumImpact();
                                     ref
                                         .read(mapStateProvider.notifier)
                                         .toggleOnline();
@@ -366,7 +364,7 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
                         const SizedBox(height: 24),
 
                         // Earnings Card (Premium Redesign)
-                        GestureDetector(
+                        ScaleOnTap(
                           onTap: () =>
                               context.pushReplacement('/driver-earnings'),
                           child: Container(

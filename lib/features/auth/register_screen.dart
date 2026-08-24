@@ -112,12 +112,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.brandGreenBg,
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
             children: [
-              // Top bar
+              // Top bar with transparent logo & back button
               Padding(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -126,62 +126,157 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     GestureDetector(
                       onTap: () => context.go('/auth/login'),
                       child: Container(
-                        width: 42,
-                        height: 42,
+                        width: 40,
+                        height: 40,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: AppColors.bgWhite,
+                          color: const Color(0xFFF1F5F9),
                           border: Border.all(
-                              color:
-                                  AppColors.brandGreen.withValues(alpha: 0.2)),
+                            color: const Color(0xFFE2E8F0),
+                          ),
                         ),
-                        child: const Icon(Icons.arrow_back_ios_new_rounded,
-                            size: 16, color: AppColors.brandGreen),
+                        child: const Icon(
+                          Icons.arrow_back_ios_new_rounded,
+                          size: 16,
+                          color: Color(0xFF0F172A),
+                        ),
                       ),
                     ),
-                    const Expanded(
-                      child: Text(
-                        'Create Account',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary),
+                    Expanded(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Image.asset(
+                            'assets/app_icon.png',
+                            width: 28,
+                            height: 28,
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) =>
+                                Image.asset(
+                              'assets/signin_icon.png',
+                              width: 28,
+                              height: 28,
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const Icon(
+                                Icons.local_shipping_rounded,
+                                color: AppColors.brandGreen,
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Create Account',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF0F172A),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: 42),
+                    const SizedBox(width: 40),
                   ],
                 ),
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
 
               // Header
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      AppStrings.createAccount,
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF0F172A),
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    SizedBox(height: 6),
+                    Text(
+                      AppStrings.registerSubtitle,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Color(0xFF64748B),
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ).animate().fadeIn().slideX(begin: -0.05),
+
+              const SizedBox(height: 20),
+
+              // Modern Visual Role Selector matching RoleSelectionScreen
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      AppStrings.createAccount,
+                      'I am registering as:',
                       style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF475569),
+                        letterSpacing: 0.2,
+                      ),
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      AppStrings.registerSubtitle,
-                      style: TextStyle(
-                          fontSize: 15,
-                          color:
-                              AppColors.textSecondary.withValues(alpha: 0.8)),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildRoleSelectChip(
+                            role: UserRole.customer,
+                            label: 'Customer',
+                            icon: Iconsax.user,
+                            gradient: const [
+                              Color(0xFF006241),
+                              Color(0xFF10B981)
+                            ],
+                            activeColor: const Color(0xFF006241),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: _buildRoleSelectChip(
+                            role: UserRole.driver,
+                            label: 'Driver',
+                            icon: Iconsax.car,
+                            gradient: const [
+                              Color(0xFFEA580C),
+                              Color(0xFFF59E0B)
+                            ],
+                            activeColor: const Color(0xFFEA580C),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: _buildRoleSelectChip(
+                            role: UserRole.technician,
+                            label: 'Tech',
+                            icon: Iconsax.setting_2,
+                            gradient: const [
+                              Color(0xFF0D9488),
+                              Color(0xFF06B6D4)
+                            ],
+                            activeColor: const Color(0xFF0D9488),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ).animate().fadeIn().slideX(begin: -0.05),
+              ),
 
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
 
               // Form
               Padding(
@@ -190,39 +285,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   key: _formKey,
                   child: Column(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        decoration: BoxDecoration(
-                          color: AppColors.bgWhite,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppColors.border),
-                        ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<UserRole>(
-                            value: _selectedRole,
-                            isExpanded: true,
-                            icon: const Icon(Iconsax.arrow_down_1,
-                                color: AppColors.textSecondary),
-                            items: const [
-                              DropdownMenuItem(
-                                  value: UserRole.customer,
-                                  child: Text('I am a Customer')),
-                              DropdownMenuItem(
-                                  value: UserRole.driver,
-                                  child: Text('I am a Rider/Driver')),
-                              DropdownMenuItem(
-                                  value: UserRole.technician,
-                                  child: Text('I am a Technician')),
-                            ],
-                            onChanged: (UserRole? value) {
-                              if (value != null) {
-                                setState(() => _selectedRole = value);
-                              }
-                            },
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
                       CustomTextField(
                         label: AppStrings.fullName,
                         hint: 'Enter your full name',
@@ -340,6 +402,75 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRoleSelectChip({
+    required UserRole role,
+    required String label,
+    required IconData icon,
+    required List<Color> gradient,
+    required Color activeColor,
+  }) {
+    final isSelected = _selectedRole == role;
+
+    return GestureDetector(
+      onTap: () => setState(() => _selectedRole = role),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.white : const Color(0xFFF8FAFC),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? activeColor : const Color(0xFFE2E8F0),
+            width: isSelected ? 2 : 1,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: activeColor.withValues(alpha: 0.18),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : [],
+        ),
+        child: Column(
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: isSelected
+                      ? gradient
+                      : [const Color(0xFFE2E8F0), const Color(0xFFCBD5E1)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Center(
+                child: Icon(
+                  icon,
+                  color: isSelected ? Colors.white : const Color(0xFF64748B),
+                  size: 20,
+                ),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                color: isSelected ? activeColor : const Color(0xFF64748B),
+              ),
+            ),
+          ],
         ),
       ),
     );

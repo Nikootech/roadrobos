@@ -6,10 +6,12 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/live_map_widget.dart';
+import '../../shared/widgets/sos_button.dart';
 import '../../providers/taxi_provider.dart';
 import '../../providers/connectivity_provider.dart';
+import '../profile/sos_provider.dart';
+import '../profile/user_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:share_plus/share_plus.dart';
 
 class LiveTrackingScreen extends ConsumerStatefulWidget {
   const LiveTrackingScreen({super.key});
@@ -221,39 +223,20 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen>
               ),
             ),
 
-          // 6. SOS Button
+          // 6. Karnataka MoRTH & BTP Compliant SOS Safety Button
           if (!isSearching)
             Positioned(
               top: MediaQuery.of(context).padding.top + 16,
               right: 20,
-              child: GestureDetector(
-                onTap: () {
-                  _showSOSBottomSheet(context, taxiState);
+              child: SOSButton.floating(
+                driverName: taxiState.roadroboName,
+                vehicleNumber: taxiState.selectedOption?.title,
+                rideDetails:
+                    'Trip: ${taxiState.pickupAddress ?? "Pickup"} → ${taxiState.dropoffAddress ?? "Dropoff"}',
+                onTrigger: () {
+                  final userId = ref.read(userProvider).user?.id ?? 'demo';
+                  ref.read(sosProvider.notifier).triggerEmergency(userId);
                 },
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: Colors.red,
-                    borderRadius: BorderRadius.circular(30),
-                    boxShadow: const [
-                      BoxShadow(color: Colors.redAccent, blurRadius: 15)
-                    ],
-                  ),
-                  child: const Row(
-                    children: [
-                      Icon(Icons.shield, color: Colors.white, size: 20),
-                      SizedBox(width: 8),
-                      Text('SOS',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16)),
-                    ],
-                  ),
-                ).animate(onPlay: (c) => c.repeat(reverse: true)).scale(
-                    begin: const Offset(0.95, 0.95),
-                    end: const Offset(1.05, 1.05)),
               ),
             ),
         ],
@@ -1029,81 +1012,6 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen>
           ),
         ],
       ),
-    );
-  }
-
-  void _showSOSBottomSheet(BuildContext context, TaxiState state) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.shield, color: Colors.red, size: 64),
-              const SizedBox(height: 16),
-              const Text('Emergency SOS',
-                  style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.black)),
-              const SizedBox(height: 8),
-              const Text('Are you in an emergency? Choose an action below.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey, fontSize: 16)),
-              const SizedBox(height: 32),
-              ElevatedButton(
-                onPressed: () async {
-                  final Uri url = Uri(scheme: 'tel', path: '112');
-                  if (await canLaunchUrl(url)) {
-                    await launchUrl(url);
-                  }
-                  if (context.mounted) context.pop();
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 56),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16)),
-                ),
-                child: const Text('Call Police (112)',
-                    style:
-                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              ),
-              const SizedBox(height: 16),
-              OutlinedButton(
-                onPressed: () async {
-                  final message =
-                      'Emergency! I am in a RoadRobos ride. Driver: ${state.roadroboName}. Vehicle: ${state.selectedOption?.title}. Location: https://maps.google.com/?q=${state.roadroboLocation?.latitude},${state.roadroboLocation?.longitude}';
-                  await Share.share(message);
-                  if (context.mounted) context.pop();
-                },
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.red,
-                  side: const BorderSide(color: Colors.red),
-                  minimumSize: const Size(double.infinity, 56),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16)),
-                ),
-                child: const Text('Share Live Status',
-                    style:
-                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              ),
-              const SizedBox(height: 16),
-              TextButton(
-                onPressed: () => context.pop(),
-                child: const Text('Cancel',
-                    style: TextStyle(color: Colors.grey, fontSize: 16)),
-              ),
-            ],
-          ),
-        );
-      },
     );
   }
 

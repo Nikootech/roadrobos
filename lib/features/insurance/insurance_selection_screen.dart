@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
+import 'package:iconsax/iconsax.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/custom_text_field.dart';
@@ -639,10 +640,9 @@ class _InsuranceSelectionScreenState
   Widget build(BuildContext context) {
     final vehicle = ref.watch(vehicleProvider);
     final insuranceState = ref.watch(insuranceProvider);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.bgDarkCard : AppColors.bgLightSurface,
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -650,40 +650,66 @@ class _InsuranceSelectionScreenState
           onTap: () => context.pop(),
           child: const Center(
             child: Icon(Icons.arrow_back_ios_new_rounded,
-                size: 18, color: AppColors.textPrimary),
+                size: 18, color: Color(0xFF0F172A)),
           ),
         ),
         title: Text(
-          'Bike & Vehicle Insurance',
-          style: GoogleFonts.outfit(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
+          'Vehicle Insurance',
+          style: GoogleFonts.inter(
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
+            color: const Color(0xFF0F172A),
+            letterSpacing: -0.3,
           ),
         ),
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: AppColors.primaryBlue,
-          unselectedLabelColor: AppColors.textSecondary,
-          indicatorColor: AppColors.primaryBlue,
-          indicatorWeight: 3,
-          labelStyle:
-              GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold),
-          unselectedLabelStyle:
-              GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w600),
-          tabs: const [
-            Tab(text: '🛡️ Buy Cover'),
-            Tab(text: '📋 My Policies'),
-            Tab(text: '🔗 Link Offline'),
-          ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(56),
+          child: Container(
+            margin: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+            padding: const EdgeInsets.all(4),
+            height: 46,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF1F5F9),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
+            child: TabBar(
+              controller: _tabController,
+              dividerColor: Colors.transparent,
+              indicator: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              indicatorSize: TabBarIndicatorSize.tab,
+              labelColor: const Color(0xFF0F172A),
+              unselectedLabelColor: const Color(0xFF64748B),
+              labelStyle:
+                  GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w800),
+              unselectedLabelStyle:
+                  GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600),
+              tabs: const [
+                Tab(text: 'Buy Cover'),
+                Tab(text: 'My Policies'),
+                Tab(text: 'Link Policy'),
+              ],
+            ),
+          ),
         ),
       ),
       body: TabBarView(
         controller: _tabController,
         children: [
-          _buildBuyCoverTab(vehicle, isDark),
-          _buildMyPoliciesTab(insuranceState, isDark),
-          _buildLinkPolicyTab(vehicle, isDark),
+          _buildBuyCoverTab(vehicle, false),
+          _buildMyPoliciesTab(insuranceState, false),
+          _buildLinkPolicyTab(vehicle, false),
         ],
       ),
     );
@@ -693,6 +719,15 @@ class _InsuranceSelectionScreenState
   // TAB 1: BUY NEW COVER FLOW
   // ───────────────────────────────────────────────────────────────────────────
   Widget _buildBuyCoverTab(Vehicle vehicle, bool isDark) {
+    final vehicleDisplayName =
+        vehicle.name.isNotEmpty && vehicle.name != 'Loading...'
+            ? vehicle.name
+            : 'My Vehicle';
+    final vehicleDisplayPlate =
+        vehicle.plate.isNotEmpty && vehicle.plate != 'Loading...'
+            ? vehicle.plate
+            : 'KA 05 MN 4821';
+
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: SingleChildScrollView(
@@ -705,14 +740,14 @@ class _InsuranceSelectionScreenState
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFF1E3A8A), Color(0xFF3B82F6)],
+                  colors: [Color(0xFF006241), Color(0xFF10B981)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(22),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF3B82F6).withValues(alpha: 0.25),
+                    color: const Color(0xFF006241).withValues(alpha: 0.25),
                     blurRadius: 16,
                     offset: const Offset(0, 6),
                   ),
@@ -721,17 +756,18 @@ class _InsuranceSelectionScreenState
               child: Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    width: 46,
+                    height: 46,
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.15),
-                      shape: BoxShape.circle,
+                      color: Colors.white.withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                     child: Icon(
                       vehicle.type == 'Car'
-                          ? Icons.directions_car_rounded
+                          ? Iconsax.car
                           : Icons.two_wheeler_rounded,
                       color: Colors.white,
-                      size: 26,
+                      size: 24,
                     ),
                   ),
                   const SizedBox(width: 14),
@@ -740,18 +776,19 @@ class _InsuranceSelectionScreenState
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          vehicle.name,
-                          style: GoogleFonts.outfit(
-                            fontSize: 17,
-                            fontWeight: FontWeight.bold,
+                          vehicleDisplayName,
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
                             color: Colors.white,
                           ),
                         ),
+                        const SizedBox(height: 2),
                         Text(
-                          'Plate: ${vehicle.plate} • Est. IDV: ₹85,000',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.white70,
+                          'Plate: $vehicleDisplayPlate • Est. IDV: ₹85,000',
+                          style: GoogleFonts.inter(
+                            fontSize: 11.5,
+                            color: Colors.white.withValues(alpha: 0.85),
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -760,14 +797,14 @@ class _InsuranceSelectionScreenState
                   ),
                   Container(
                     padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(20),
+                      color: Colors.white.withValues(alpha: 0.22),
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Text(
+                    child: Text(
                       'INSURE NOW',
-                      style: TextStyle(
+                      style: GoogleFonts.inter(
                         color: Colors.white,
                         fontSize: 10,
                         fontWeight: FontWeight.w800,
@@ -787,19 +824,19 @@ class _InsuranceSelectionScreenState
               children: [
                 Text(
                   '1. Select Insurance Plan',
-                  style: GoogleFonts.outfit(
+                  style: GoogleFonts.inter(
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
-                    color:
-                        isDark ? AppColors.textOnDark : AppColors.textPrimary,
+                    color: const Color(0xFF0F172A),
+                    letterSpacing: -0.3,
                   ),
                 ),
-                const Text(
-                  'Yearly Plan',
-                  style: TextStyle(
+                Text(
+                  'Yearly Policy',
+                  style: GoogleFonts.inter(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.primaryBlue,
+                    color: const Color(0xFF006241),
                   ),
                 ),
               ],
@@ -819,37 +856,46 @@ class _InsuranceSelectionScreenState
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.all(18),
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: isSelected
-                        ? plan.color.withValues(alpha: 0.05)
-                        : (isDark ? AppColors.bgDarkCard : Colors.white),
+                    color: isSelected ? const Color(0xFFF0FDF4) : Colors.white,
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
                       color: isSelected
-                          ? plan.color
-                          : (isDark
-                              ? Colors.white12
-                              : AppColors.border.withValues(alpha: 0.7)),
+                          ? const Color(0xFF006241)
+                          : const Color(0xFFE2E8F0),
                       width: isSelected ? 2 : 1,
                     ),
-                    boxShadow: isSelected
-                        ? [
-                            BoxShadow(
-                              color: plan.color.withValues(alpha: 0.12),
-                              blurRadius: 14,
-                              offset: const Offset(0, 4),
-                            )
-                          ]
-                        : null,
+                    boxShadow: [
+                      BoxShadow(
+                        color: isSelected
+                            ? const Color(0xFF006241).withValues(alpha: 0.08)
+                            : Colors.black.withValues(alpha: 0.02),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      )
+                    ],
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(plan.emoji,
-                              style: const TextStyle(fontSize: 22)),
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? const Color(0xFFDCFCE7)
+                                  : const Color(0xFFF1F5F9),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Center(
+                              child: Text(plan.emoji,
+                                  style: const TextStyle(fontSize: 20)),
+                            ),
+                          ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(
@@ -857,32 +903,31 @@ class _InsuranceSelectionScreenState
                               children: [
                                 Row(
                                   children: [
-                                    Text(
-                                      plan.title,
-                                      style: GoogleFonts.outfit(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.bold,
-                                        color: isDark
-                                            ? AppColors.textOnDark
-                                            : AppColors.textPrimary,
+                                    Flexible(
+                                      child: Text(
+                                        plan.title,
+                                        style: GoogleFonts.inter(
+                                          fontSize: 14.5,
+                                          fontWeight: FontWeight.w800,
+                                          color: const Color(0xFF0F172A),
+                                        ),
                                       ),
                                     ),
                                     if (plan.tag.isNotEmpty) ...[
-                                      const SizedBox(width: 8),
+                                      const SizedBox(width: 6),
                                       Container(
                                         padding: const EdgeInsets.symmetric(
                                             horizontal: 6, vertical: 2),
                                         decoration: BoxDecoration(
-                                          color: plan.color
-                                              .withValues(alpha: 0.15),
+                                          color: const Color(0xFFDCFCE7),
                                           borderRadius:
                                               BorderRadius.circular(6),
                                         ),
                                         child: Text(
                                           plan.tag,
-                                          style: TextStyle(
-                                            color: plan.color,
-                                            fontSize: 10,
+                                          style: GoogleFonts.inter(
+                                            color: const Color(0xFF006241),
+                                            fontSize: 9.5,
                                             fontWeight: FontWeight.w800,
                                           ),
                                         ),
@@ -893,55 +938,55 @@ class _InsuranceSelectionScreenState
                                 const SizedBox(height: 2),
                                 Text(
                                   plan.subtitle,
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: isDark
-                                        ? AppColors.textOnDarkMuted
-                                        : AppColors.textSecondary,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 11.5,
+                                    color: const Color(0xFF64748B),
+                                    fontWeight: FontWeight.w500,
                                   ),
                                 ),
                               ],
                             ),
                           ),
+                          const SizedBox(width: 8),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Text(
                                 '₹${plan.basePrice.toStringAsFixed(0)}',
                                 style: GoogleFonts.outfit(
-                                  fontSize: 18,
+                                  fontSize: 17,
                                   fontWeight: FontWeight.w900,
-                                  color: plan.color,
+                                  color: const Color(0xFF006241),
                                 ),
                               ),
-                              const Text(
+                              Text(
                                 '/year',
-                                style: TextStyle(
+                                style: GoogleFonts.inter(
                                     fontSize: 10,
-                                    color: AppColors.textSecondary),
+                                    color: const Color(0xFF94A3B8),
+                                    fontWeight: FontWeight.w500),
                               ),
                             ],
                           ),
                         ],
                       ),
                       if (isSelected) ...[
-                        const Divider(height: 24),
+                        const Divider(height: 20, color: Color(0xFFE2E8F0)),
                         ...plan.benefits.map((b) => Padding(
                               padding: const EdgeInsets.only(bottom: 6),
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Icon(Icons.check_circle_rounded,
-                                      size: 14, color: plan.color),
+                                  const Icon(Icons.check_circle_rounded,
+                                      size: 14, color: Color(0xFF10B981)),
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
                                       b,
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: isDark
-                                            ? AppColors.textOnDarkMuted
-                                            : AppColors.textPrimary,
+                                      style: GoogleFonts.inter(
+                                        fontSize: 11.5,
+                                        color: const Color(0xFF334155),
+                                        fontWeight: FontWeight.w500,
                                         height: 1.3,
                                       ),
                                     ),
@@ -961,10 +1006,11 @@ class _InsuranceSelectionScreenState
             // 3. Recommended Add-ons
             Text(
               '2. Recommended Add-on Protection',
-              style: GoogleFonts.outfit(
+              style: GoogleFonts.inter(
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
-                color: isDark ? AppColors.textOnDark : AppColors.textPrimary,
+                color: const Color(0xFF0F172A),
+                letterSpacing: -0.3,
               ),
             ),
             const SizedBox(height: 12),
@@ -986,14 +1032,12 @@ class _InsuranceSelectionScreenState
                   margin: const EdgeInsets.only(bottom: 10),
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: isChecked
-                        ? AppColors.primaryBlue.withValues(alpha: 0.05)
-                        : (isDark ? AppColors.bgDarkCard : Colors.white),
+                    color: isChecked ? const Color(0xFFF0FDF4) : Colors.white,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
                       color: isChecked
-                          ? AppColors.primaryBlue
-                          : (isDark ? Colors.white12 : AppColors.border),
+                          ? const Color(0xFF006241)
+                          : const Color(0xFFE2E8F0),
                     ),
                   ),
                   child: Row(
@@ -1001,11 +1045,16 @@ class _InsuranceSelectionScreenState
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: AppColors.primaryBlue.withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
+                          color: isChecked
+                              ? const Color(0xFFDCFCE7)
+                              : const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(10),
                         ),
                         child: Icon(addOn.icon,
-                            size: 18, color: AppColors.primaryBlue),
+                            size: 18,
+                            color: isChecked
+                                ? const Color(0xFF006241)
+                                : const Color(0xFF64748B)),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -1014,49 +1063,41 @@ class _InsuranceSelectionScreenState
                           children: [
                             Text(
                               addOn.title,
-                              style: const TextStyle(
+                              style: GoogleFonts.inter(
                                 fontSize: 13,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF0F172A),
                               ),
                             ),
                             Text(
                               addOn.subtitle,
-                              style: const TextStyle(
+                              style: GoogleFonts.inter(
                                 fontSize: 11,
-                                color: AppColors.textSecondary,
+                                color: const Color(0xFF64748B),
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                           ],
                         ),
                       ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            '+₹${addOn.price.toStringAsFixed(0)}',
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primaryBlue,
-                            ),
-                          ),
-                          Checkbox(
-                            value: isChecked,
-                            activeColor: AppColors.primaryBlue,
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(4)),
-                            onChanged: (v) {
-                              _triggerHaptic();
-                              setState(() {
-                                if (v == true) {
-                                  _selectedAddOnIds.add(addOn.id);
-                                } else {
-                                  _selectedAddOnIds.remove(addOn.id);
-                                }
-                              });
-                            },
-                          ),
-                        ],
+                      const SizedBox(width: 8),
+                      Text(
+                        '+₹${addOn.price.toStringAsFixed(0)}',
+                        style: GoogleFonts.outfit(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFF006241),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Icon(
+                        isChecked
+                            ? Icons.check_box_rounded
+                            : Icons.check_box_outline_blank_rounded,
+                        color: isChecked
+                            ? const Color(0xFF006241)
+                            : const Color(0xFFCBD5E1),
+                        size: 22,
                       ),
                     ],
                   ),
@@ -1069,10 +1110,11 @@ class _InsuranceSelectionScreenState
             // 4. Owner & Nominee Details
             Text(
               '3. Policy Owner & Nominee Details',
-              style: GoogleFonts.outfit(
+              style: GoogleFonts.inter(
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
-                color: isDark ? AppColors.textOnDark : AppColors.textPrimary,
+                color: const Color(0xFF0F172A),
+                letterSpacing: -0.3,
               ),
             ),
             const SizedBox(height: 12),
@@ -1080,10 +1122,9 @@ class _InsuranceSelectionScreenState
             Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                color: isDark ? AppColors.bgDarkCard : Colors.white,
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                    color: isDark ? Colors.white12 : AppColors.border),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
               ),
               child: Column(
                 children: [
@@ -1108,9 +1149,9 @@ class _InsuranceSelectionScreenState
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      const Text('Nominee Relation:',
-                          style: TextStyle(
-                              fontSize: 12, fontWeight: FontWeight.bold)),
+                      Text('Nominee Relation:',
+                          style: GoogleFonts.inter(
+                              fontSize: 12, fontWeight: FontWeight.w700)),
                       const SizedBox(width: 12),
                       DropdownButton<String>(
                         value: _nomineeRelation,
@@ -1135,55 +1176,63 @@ class _InsuranceSelectionScreenState
             Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                color: AppColors.bgLightGrey,
+                color: const Color(0xFFF8FAFC),
                 borderRadius: BorderRadius.circular(20),
-                border:
-                    Border.all(color: AppColors.border.withValues(alpha: 0.6)),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
               ),
               child: Column(
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Base Plan Premium:',
-                          style: TextStyle(fontSize: 13)),
+                      Text('Base Plan Premium:',
+                          style: GoogleFonts.inter(
+                              fontSize: 13, color: const Color(0xFF64748B))),
                       Text('₹${_currentBasePrice.toStringAsFixed(0)}',
-                          style: const TextStyle(
-                              fontSize: 13, fontWeight: FontWeight.w600)),
+                          style: GoogleFonts.outfit(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF0F172A))),
                     ],
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 8),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text('Add-ons (${_selectedAddOnIds.length} chosen):',
-                          style: const TextStyle(fontSize: 13)),
+                          style: GoogleFonts.inter(
+                              fontSize: 13, color: const Color(0xFF64748B))),
                       Text('₹${_currentAddOnsTotal.toStringAsFixed(0)}',
-                          style: const TextStyle(
-                              fontSize: 13, fontWeight: FontWeight.w600)),
+                          style: GoogleFonts.outfit(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF0F172A))),
                     ],
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 8),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('GST (18% Govt Taxes):',
-                          style: TextStyle(fontSize: 13)),
+                      Text('GST (18% Govt Taxes):',
+                          style: GoogleFonts.inter(
+                              fontSize: 13, color: const Color(0xFF64748B))),
                       Text('₹${_gstAmount.toStringAsFixed(0)}',
-                          style: const TextStyle(
-                              fontSize: 13, fontWeight: FontWeight.w600)),
+                          style: GoogleFonts.outfit(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF0F172A))),
                     ],
                   ),
-                  const Divider(height: 20),
+                  const Divider(height: 22, color: Color(0xFFE2E8F0)),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
                         'Total Payable:',
-                        style: GoogleFonts.outfit(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
+                        style: GoogleFonts.inter(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFF0F172A),
                         ),
                       ),
                       Text(
@@ -1191,7 +1240,7 @@ class _InsuranceSelectionScreenState
                         style: GoogleFonts.outfit(
                           fontSize: 22,
                           fontWeight: FontWeight.w900,
-                          color: AppColors.primaryBlue,
+                          color: const Color(0xFF006241),
                         ),
                       ),
                     ],
@@ -1203,25 +1252,34 @@ class _InsuranceSelectionScreenState
             const SizedBox(height: 24),
 
             // Buy & Generate Policy Button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _isProcessing ? null : _handleBuyInsurance,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryBlue,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+            GestureDetector(
+              onTap: _isProcessing ? null : _handleBuyInsurance,
+              child: Container(
+                height: 54,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF006241), Color(0xFF10B981)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  elevation: 0,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF006241).withValues(alpha: 0.25),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 child: _isProcessing
-                    ? const SizedBox(
-                        height: 22,
-                        width: 22,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2.5,
+                    ? const Center(
+                        child: SizedBox(
+                          height: 22,
+                          width: 22,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2.5,
+                          ),
                         ),
                       )
                     : Row(
@@ -1232,9 +1290,9 @@ class _InsuranceSelectionScreenState
                           const SizedBox(width: 8),
                           Text(
                             'PAY ₹${_grandTotal.toStringAsFixed(0)} & ISSUE POLICY',
-                            style: const TextStyle(
+                            style: GoogleFonts.inter(
                               color: Colors.white,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w800,
                               fontSize: 14,
                               letterSpacing: 0.5,
                             ),
@@ -1262,42 +1320,66 @@ class _InsuranceSelectionScreenState
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                padding: const EdgeInsets.all(20),
+                width: 64,
+                height: 64,
                 decoration: BoxDecoration(
-                  color: AppColors.primaryBlue.withValues(alpha: 0.08),
-                  shape: BoxShape.circle,
+                  color: const Color(0xFFF0FDF4),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: const Color(0xFFDCFCE7)),
                 ),
-                child: const Icon(Icons.shield_outlined,
-                    size: 48, color: AppColors.primaryBlue),
+                child: const Icon(Iconsax.shield_tick,
+                    size: 32, color: Color(0xFF006241)),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 18),
               Text(
                 'No Active Insurance Found',
-                style: GoogleFonts.outfit(
+                style: GoogleFonts.inter(
                   fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFF0F172A),
                 ),
               ),
               const SizedBox(height: 6),
-              const Text(
+              Text(
                 'Protect your bike or car against accidental damages, theft, and third-party liabilities.',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                style: GoogleFonts.inter(
+                    color: const Color(0xFF64748B),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 24),
-              ElevatedButton.icon(
-                onPressed: () => _tabController.animateTo(0),
-                icon: const Icon(Icons.add_rounded, color: Colors.white),
-                label: const Text('Get Protected Today',
-                    style: TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.bold)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryBlue,
+              GestureDetector(
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  _tabController.animateTo(0);
+                },
+                child: Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14)),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF006241), Color(0xFF10B981)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.add_rounded,
+                          color: Colors.white, size: 18),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Get Protected Today',
+                        style: GoogleFonts.inter(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 13.5),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -1316,19 +1398,16 @@ class _InsuranceSelectionScreenState
         final isActive = daysRemaining > 0;
 
         return Container(
-          margin: const EdgeInsets.only(bottom: 20),
+          margin: const EdgeInsets.only(bottom: 16),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(24),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.15),
-                blurRadius: 18,
-                offset: const Offset(0, 6),
+                color: Colors.black.withValues(alpha: 0.03),
+                blurRadius: 14,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
@@ -1336,7 +1415,7 @@ class _InsuranceSelectionScreenState
             children: [
               // Header
               Padding(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(18),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -1345,15 +1424,15 @@ class _InsuranceSelectionScreenState
                       children: [
                         Row(
                           children: [
-                            const Icon(Icons.verified_user_rounded,
-                                color: AppColors.primaryBlue, size: 20),
+                            const Icon(Iconsax.shield_tick,
+                                color: Color(0xFF006241), size: 20),
                             const SizedBox(width: 8),
                             Text(
                               policy.planTitle,
-                              style: GoogleFonts.outfit(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                              style: GoogleFonts.inter(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w800,
+                                color: const Color(0xFF0F172A),
                               ),
                             ),
                           ],
@@ -1363,18 +1442,22 @@ class _InsuranceSelectionScreenState
                               horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
                             color: isActive
-                                ? AppColors.successGreen.withValues(alpha: 0.2)
-                                : AppColors.dangerRed.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(10),
+                                ? const Color(0xFFECFDF5)
+                                : const Color(0xFFFEF2F2),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                                color: isActive
+                                    ? const Color(0xFFA7F3D0)
+                                    : const Color(0xFFFECDD3)),
                           ),
                           child: Text(
                             isActive ? 'ACTIVE' : 'EXPIRED',
-                            style: TextStyle(
+                            style: GoogleFonts.inter(
                               fontSize: 10,
                               fontWeight: FontWeight.w800,
                               color: isActive
-                                  ? AppColors.successGreen
-                                  : AppColors.dangerRed,
+                                  ? const Color(0xFF059669)
+                                  : const Color(0xFFE11D48),
                             ),
                           ),
                         ),
@@ -1383,47 +1466,51 @@ class _InsuranceSelectionScreenState
                     const SizedBox(height: 6),
                     Text(
                       'Policy #${policy.policyNumber}',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.white70,
-                        fontFamily: 'monospace',
+                      style: GoogleFonts.inter(
+                        fontSize: 11.5,
+                        color: const Color(0xFF64748B),
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const Divider(color: Colors.white12, height: 24),
+                    const Divider(color: Color(0xFFE2E8F0), height: 20),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('VEHICLE',
-                                style: TextStyle(
-                                    color: Colors.white38, fontSize: 10)),
+                            Text('VEHICLE',
+                                style: GoogleFonts.inter(
+                                    color: const Color(0xFF94A3B8),
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700)),
                             const SizedBox(height: 2),
                             Text(
                               '${policy.vehicleName} (${policy.vehiclePlate})',
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13),
+                              style: GoogleFonts.inter(
+                                  color: const Color(0xFF0F172A),
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 12.5),
                             ),
                           ],
                         ),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            const Text('VALIDITY',
-                                style: TextStyle(
-                                    color: Colors.white38, fontSize: 10)),
+                            Text('VALIDITY',
+                                style: GoogleFonts.inter(
+                                    color: const Color(0xFF94A3B8),
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700)),
                             const SizedBox(height: 2),
                             Text(
                               isActive ? '$daysRemaining days left' : 'Expired',
-                              style: TextStyle(
+                              style: GoogleFonts.inter(
                                 color: isActive
-                                    ? AppColors.accentOrange
-                                    : AppColors.dangerRed,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
+                                    ? const Color(0xFFD97706)
+                                    : const Color(0xFFE11D48),
+                                fontWeight: FontWeight.w700,
+                                fontSize: 12.5,
                               ),
                             ),
                           ],
@@ -1437,11 +1524,11 @@ class _InsuranceSelectionScreenState
               // Action Buttons Bar
               Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.05),
-                  borderRadius: const BorderRadius.vertical(
-                    bottom: Radius.circular(24),
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.vertical(
+                    bottom: Radius.circular(22),
                   ),
                 ),
                 child: Row(
@@ -1449,18 +1536,19 @@ class _InsuranceSelectionScreenState
                     Expanded(
                       child: TextButton.icon(
                         onPressed: () => _showInstantClaimSheet(policy),
-                        icon: const Icon(Icons.emergency_share_rounded,
-                            color: AppColors.accentOrange, size: 18),
-                        label: const Text(
+                        icon: const Icon(Iconsax.flash_1,
+                            color: Color(0xFFD97706), size: 16),
+                        label: Text(
                           '1-Tap Claim',
-                          style: TextStyle(
-                              color: AppColors.accentOrange,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13),
+                          style: GoogleFonts.inter(
+                              color: const Color(0xFFD97706),
+                              fontWeight: FontWeight.w800,
+                              fontSize: 12.5),
                         ),
                       ),
                     ),
-                    Container(width: 1, height: 20, color: Colors.white12),
+                    Container(
+                        width: 1, height: 18, color: const Color(0xFFE2E8F0)),
                     Expanded(
                       child: TextButton.icon(
                         onPressed: () {
@@ -1468,18 +1556,18 @@ class _InsuranceSelectionScreenState
                             SnackBar(
                               content: Text(
                                   'Downloading Policy Schedule #${policy.policyNumber}...'),
-                              backgroundColor: AppColors.primaryBlue,
+                              backgroundColor: const Color(0xFF006241),
                             ),
                           );
                         },
-                        icon: const Icon(Icons.download_rounded,
-                            color: Colors.white70, size: 18),
-                        label: const Text(
+                        icon: const Icon(Iconsax.document_download,
+                            color: Color(0xFF475569), size: 16),
+                        label: Text(
                           'Download PDF',
-                          style: TextStyle(
-                              color: Colors.white70,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13),
+                          style: GoogleFonts.inter(
+                              color: const Color(0xFF475569),
+                              fontWeight: FontWeight.w700,
+                              fontSize: 12.5),
                         ),
                       ),
                     ),
@@ -1497,55 +1585,210 @@ class _InsuranceSelectionScreenState
   // TAB 3: LINK EXISTING POLICY
   // ───────────────────────────────────────────────────────────────────────────
   Widget _buildLinkPolicyTab(Vehicle vehicle, bool isDark) {
+    final providers = [
+      'Acko',
+      'ICICI Lombard',
+      'Digit',
+      'HDFC Ergo',
+      'Bajaj Allianz',
+      'Tata AIG',
+    ];
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // 1. 3D Glassmorphic Sync Banner
           Container(
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              color: AppColors.primaryBlue.withValues(alpha: 0.06),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                  color: AppColors.primaryBlue.withValues(alpha: 0.2)),
+              color: const Color(0xFFF0FDF4),
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(color: const Color(0xFFDCFCE7), width: 1.2),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF006241).withValues(alpha: 0.04),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             child: Row(
               children: [
-                const Icon(Icons.info_outline_rounded,
-                    color: AppColors.primaryBlue, size: 24),
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF006241), Color(0xFF10B981)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF006241).withValues(alpha: 0.25),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: const Center(
+                    child: Icon(Iconsax.shield_tick,
+                        color: Colors.white, size: 24),
+                  ),
+                ),
                 const SizedBox(width: 14),
                 Expanded(
-                  child: Text(
-                    'Link your existing third-party insurance from other providers (Acko, HDFC Ergo, ICICI, etc.) to get automated renewal alerts and quick roadside assistance.',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color:
-                          isDark ? AppColors.textOnDark : AppColors.textPrimary,
-                      height: 1.4,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Sync External Coverage',
+                        style: GoogleFonts.inter(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFF0F172A),
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        'Link coverage from Acko, ICICI Lombard, Digit, or HDFC Ergo for 1-tap roadside claims & renewal alerts.',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: const Color(0xFF475569),
+                          height: 1.4,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
           ),
+
           const SizedBox(height: 24),
+
+          // 2. Quick Provider Selection
           Text(
-            'Enter Offline Policy Information',
-            style: GoogleFonts.outfit(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: isDark ? AppColors.textOnDark : AppColors.textPrimary,
+            'Select Provider',
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+              color: const Color(0xFF0F172A),
             ),
           ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: providers.map((provider) {
+              final isSelected =
+                  _linkProviderController.text.trim().toLowerCase() ==
+                      provider.toLowerCase();
+              return GestureDetector(
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  setState(() {
+                    _linkProviderController.text = provider;
+                  });
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? const Color(0xFF006241)
+                        : const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isSelected
+                          ? const Color(0xFF006241)
+                          : const Color(0xFFE2E8F0),
+                    ),
+                    boxShadow: isSelected
+                        ? [
+                            BoxShadow(
+                              color: const Color(0xFF006241)
+                                  .withValues(alpha: 0.2),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: Text(
+                    provider,
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight:
+                          isSelected ? FontWeight.w800 : FontWeight.w600,
+                      color:
+                          isSelected ? Colors.white : const Color(0xFF334155),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+
+          const SizedBox(height: 24),
+
+          // 3. Policy Form Card Container
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Policy Information',
+                style: GoogleFonts.inter(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFF0F172A),
+                  letterSpacing: -0.3,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Iconsax.lock,
+                        size: 12, color: Color(0xFF059669)),
+                    const SizedBox(width: 4),
+                    Text(
+                      '256-bit Encrypted',
+                      style: GoogleFonts.inter(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF059669),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 14),
+
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: isDark ? AppColors.bgDarkCard : Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              border:
-                  Border.all(color: isDark ? Colors.white12 : AppColors.border),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.02),
+                  blurRadius: 14,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             child: Column(
               children: [
@@ -1567,31 +1810,52 @@ class _InsuranceSelectionScreenState
                   hint: 'e.g. POL-9928172901',
                 ),
                 const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _isProcessing ? null : _handleLinkPolicy,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryBlue,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14)),
-                      elevation: 0,
+                GestureDetector(
+                  onTap: _isProcessing ? null : _handleLinkPolicy,
+                  child: Container(
+                    height: 52,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF006241), Color(0xFF10B981)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color:
+                              const Color(0xFF006241).withValues(alpha: 0.25),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                     ),
-                    child: _isProcessing
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                                color: Colors.white, strokeWidth: 2.0),
-                          )
-                        : const Text(
-                            'Link Policy Number',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
+                    child: Center(
+                      child: _isProcessing
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                  color: Colors.white, strokeWidth: 2.0),
+                            )
+                          : Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Iconsax.link,
+                                    color: Colors.white, size: 18),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'LINK POLICY & ENABLE ALERTS',
+                                  style: GoogleFonts.inter(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 13.5,
+                                    letterSpacing: 0.4,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
+                    ),
                   ),
                 ),
               ],

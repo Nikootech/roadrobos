@@ -25,6 +25,7 @@ import 'widgets/role_sections/support_dashboard_section.dart';
 import 'widgets/role_sections/marketing_dashboard_section.dart';
 import 'widgets/role_sections/audit_dashboard_section.dart';
 import 'widgets/role_sections/analytics_chart_section.dart';
+import '../../shared/widgets/kinetic_motion.dart';
 
 /// Admin Dashboard Overview matching modern Executive Fintech aesthetic
 class AdminDashboardScreen extends ConsumerStatefulWidget {
@@ -312,10 +313,10 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                   icon: Iconsax.profile_2user,
                   iconColor: impersonatedRole != null
                       ? AppColors.warningYellow
-                      : const Color(0xFF6366F1),
+                      : const Color(0xFF006241),
                   bgColor: impersonatedRole != null
                       ? AppColors.warningYellow.withValues(alpha: 0.12)
-                      : const Color(0xFF6366F1).withValues(alpha: 0.1),
+                      : const Color(0xFF006241).withValues(alpha: 0.1),
                   title: 'Switch Role & Preview Mode',
                   subtitle: impersonatedRole != null
                       ? 'Previewing as ${impersonatedRole.roleLabel}'
@@ -549,17 +550,12 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                     ),
                   ),
                 ),
-                Positioned(
-                  bottom: 1,
-                  right: 1,
-                  child: Container(
-                    width: 12,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: AppColors.successDark,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 2),
-                    ),
+                const Positioned(
+                  bottom: -2,
+                  right: -2,
+                  child: PulseBeacon(
+                    color: AppColors.successDark,
+                    size: 8,
                   ),
                 ),
               ],

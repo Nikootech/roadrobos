@@ -64,10 +64,14 @@ class TwoFactorAuthService {
         debugPrint(
             'TwoFactorAuthService: TOTP enrolled. factorId=${response.id}');
       }
+      final userEmail =
+          _supabase.auth.currentUser?.email ?? 'user@roadrobos.com';
+      final otpauthUri =
+          'otpauth://totp/RoadRobos:${Uri.encodeComponent(userEmail)}?secret=${totp.secret}&issuer=RoadRobos';
 
       return TotpEnrollmentResult(
         factorId: response.id,
-        qrCodeUri: totp.qrCode,
+        qrCodeUri: otpauthUri,
         secret: totp.secret,
       );
     } catch (e) {

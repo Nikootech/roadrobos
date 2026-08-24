@@ -1,12 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:iconsax/iconsax.dart';
-import '../../core/theme/app_colors.dart';
+import '../../shared/widgets/kinetic_motion.dart';
+import '../../shared/widgets/sos_button.dart';
 
-class HelpCenterScreen extends StatelessWidget {
+class HelpCenterScreen extends StatefulWidget {
   const HelpCenterScreen({super.key});
+
+  @override
+  State<HelpCenterScreen> createState() => _HelpCenterScreenState();
+}
+
+class _HelpCenterScreenState extends State<HelpCenterScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
   static const Map<String, List<Map<String, String>>> _faqData = {
     'Getting Started': [
@@ -79,6 +88,12 @@ class HelpCenterScreen extends StatelessWidget {
     ],
   };
 
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   Future<void> _makeCall() async {
     final Uri launchUri = Uri(
       scheme: 'tel',
@@ -97,57 +112,65 @@ class HelpCenterScreen extends StatelessWidget {
       backgroundColor: Colors.transparent,
       builder: (context) {
         return Container(
-          height: MediaQuery.of(context).size.height * 0.7,
+          height: MediaQuery.of(context).size.height * 0.75,
           decoration: const BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black12,
+                blurRadius: 24,
+                offset: Offset(0, -6),
+              ),
+            ],
           ),
           child: Column(
             children: [
-              // Drag Handle
-              const SizedBox(height: 12),
-              Container(
-                width: 50,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2.5),
+              const SizedBox(height: 14),
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE2E8F0),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
               ),
-              // Header
               Padding(
-                padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 12),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
                       category,
-                      style: const TextStyle(
+                      style: GoogleFonts.outfit(
                         fontSize: 20,
-                        fontWeight: FontWeight.w900,
-                        color: AppColors.textPrimary,
-                        letterSpacing: -0.5,
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF0F172A),
+                        letterSpacing: -0.3,
                       ),
                     ),
                     IconButton(
                       icon: const Icon(Icons.close_rounded,
-                          color: AppColors.textSecondary),
+                          color: Color(0xFF64748B)),
                       onPressed: () => Navigator.pop(context),
                     ),
                   ],
                 ),
               ),
-              const Divider(height: 1),
-              // FAQ List
+              const Divider(height: 1, color: Color(0xFFE2E8F0)),
               Expanded(
                 child: ListView.builder(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                   itemCount: faqs.length,
                   itemBuilder: (context, index) {
                     final faq = faqs[index];
                     return _FAQExpansionTile(
-                        question: faq['q']!, answer: faq['a']!);
+                      question: faq['q']!,
+                      answer: faq['a']!,
+                    );
                   },
                 ),
               ),
@@ -165,139 +188,184 @@ class HelpCenterScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        centerTitle: true,
-        leading: GestureDetector(
-          onTap: () => context.pop(),
-          child: Container(
-            margin: const EdgeInsets.all(10),
-            decoration: const BoxDecoration(
-              color: AppColors.bgLightGrey,
-              shape: BoxShape.circle,
+        scrolledUnderElevation: 0,
+        leading: Center(
+          child: ScaleOnTap(
+            onTap: () => context.pop(),
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF1F5F9),
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: const Icon(Icons.arrow_back_ios_new_rounded,
+                  size: 16, color: Color(0xFF0F172A)),
             ),
-            child: const Icon(Icons.arrow_back_ios_new_rounded,
-                size: 16, color: AppColors.textPrimary),
           ),
         ),
-        title: const Text(
+        title: Text(
           'Help Center',
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w900,
+          style: GoogleFonts.outfit(
             fontSize: 20,
-            letterSpacing: -0.5,
+            fontWeight: FontWeight.w800,
+            color: const Color(0xFF0F172A),
+            letterSpacing: -0.3,
           ),
         ),
+        centerTitle: true,
+        actions: const [
+          Padding(
+            padding: EdgeInsets.only(right: 14),
+            child: SOSButton.headerPill(
+              rideDetails: 'Help Center Safety Support',
+            ),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Search Bar
             Container(
+              height: 52,
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: const Color(0xFFE2E8F0),
+                  width: 1.2,
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.04),
-                    blurRadius: 15,
-                    offset: const Offset(0, 6),
+                    color: Colors.black.withValues(alpha: 0.02),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
                   ),
                 ],
               ),
               child: TextField(
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 15,
+                controller: _searchController,
+                onChanged: (val) => setState(() => _searchQuery = val.trim()),
+                style: GoogleFonts.inter(
+                  fontSize: 14,
                   fontWeight: FontWeight.w600,
+                  color: const Color(0xFF0F172A),
                 ),
                 decoration: InputDecoration(
+                  hintText: 'Search topics, rides, payments...',
+                  hintStyle: GoogleFonts.inter(
+                    color: const Color(0xFF94A3B8),
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w500,
+                  ),
                   prefixIcon: const Icon(Iconsax.search_normal_1,
-                      size: 20, color: Color(0xFF6366F1)),
-                  hintText: 'Search for help...',
-                  hintStyle: const TextStyle(
-                      color: AppColors.textMuted, fontWeight: FontWeight.w500),
-                  filled: true,
-                  fillColor: Colors.white,
-                  contentPadding:
-                      const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    borderSide: BorderSide(
-                        color: AppColors.border.withValues(alpha: 0.8)),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    borderSide: BorderSide(
-                        color: AppColors.border.withValues(alpha: 0.8)),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    borderSide:
-                        const BorderSide(color: Color(0xFF6366F1), width: 1.5),
-                  ),
+                      color: Color(0xFF006241), size: 18),
+                  suffixIcon: _searchQuery.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.close_rounded,
+                              size: 18, color: Color(0xFF64748B)),
+                          onPressed: () {
+                            _searchController.clear();
+                            setState(() => _searchQuery = '');
+                          },
+                        )
+                      : null,
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 14),
                 ),
               ),
-            ).animate().fadeIn(duration: 300.ms).slideY(begin: -0.05),
+            ),
+            const SizedBox(height: 28),
 
-            const SizedBox(height: 32),
-            const Text(
+            // Section Header
+            Text(
               'Popular Categories',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w900,
-                color: AppColors.textPrimary,
-                letterSpacing: -0.5,
+              style: GoogleFonts.inter(
+                fontSize: 17,
+                fontWeight: FontWeight.w800,
+                color: const Color(0xFF0F172A),
+                letterSpacing: -0.3,
               ),
             ),
             const SizedBox(height: 16),
+
+            // 4 React-Style Category Tiles (ZERO PURPLE)
             GridView.count(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               crossAxisCount: 2,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              childAspectRatio: 1.2,
+              crossAxisSpacing: 14,
+              mainAxisSpacing: 14,
+              childAspectRatio: 1.15,
               children: [
                 _buildCategoryCard(
                   context,
                   'Getting Started',
                   Iconsax.flash_1,
-                  [const Color(0xFFFF7E40), const Color(0xFFFF9E66)],
-                  const Color(0xFFFF7E40),
+                  [const Color(0xFFEA580C), const Color(0xFFFB923C)],
                 ),
                 _buildCategoryCard(
                   context,
                   'Booking & Rides',
                   Iconsax.car,
-                  [const Color(0xFF3B82F6), const Color(0xFF1D4ED8)],
-                  const Color(0xFF1D4ED8),
+                  [const Color(0xFF0284C7), const Color(0xFF38BDF8)],
                 ),
                 _buildCategoryCard(
                   context,
                   'Wallet & Billing',
                   Iconsax.wallet_3,
-                  [const Color(0xFF10B981), const Color(0xFF047857)],
-                  const Color(0xFF047857),
+                  [const Color(0xFF006241), const Color(0xFF10B981)],
                 ),
                 _buildCategoryCard(
                   context,
                   'Account Security',
-                  Iconsax.security_safe,
-                  [const Color(0xFF8B5CF6), const Color(0xFF6D28D9)],
-                  const Color(0xFF6D28D9),
+                  Iconsax.shield_tick,
+                  [const Color(0xFF0F172A), const Color(0xFF334155)],
                 ),
               ],
             ),
 
             const SizedBox(height: 32),
+
+            // Direct Support Actions
+            Text(
+              'Direct Support',
+              style: GoogleFonts.inter(
+                fontSize: 17,
+                fontWeight: FontWeight.w800,
+                color: const Color(0xFF0F172A),
+                letterSpacing: -0.3,
+              ),
+            ),
+            const SizedBox(height: 14),
+
+            // Emergency SOS Action (Karnataka 112)
+            _buildActionCard(
+              context,
+              'Emergency SOS (112)',
+              'Namma 112 • Karnataka Safety Hub',
+              Iconsax.shield_security,
+              const Color(0xFFE11D48),
+              showPulse: true,
+              pulseColor: const Color(0xFFE11D48),
+              onTap: () {
+                KarnatakaSafetyHubModal.show(
+                  context,
+                  rideDetails: 'Help Center Safety Escalation',
+                );
+              },
+            ),
+            const SizedBox(height: 12),
             _buildActionCard(
               context,
               'Contact Support',
               'Chat with our team 24/7',
-              Iconsax.message_2,
-              const Color(0xFF6366F1),
+              Iconsax.messages_3,
+              const Color(0xFF006241),
               showPulse: true,
               onTap: () => context.push('/chat'),
             ),
@@ -305,9 +373,9 @@ class HelpCenterScreen extends StatelessWidget {
             _buildActionCard(
               context,
               'Call Support',
-              'Talk to our representative',
+              'Talk to our live representative',
               Iconsax.call,
-              const Color(0xFF10B981),
+              const Color(0xFF0284C7),
               onTap: _makeCall,
             ),
           ],
@@ -321,61 +389,50 @@ class HelpCenterScreen extends StatelessWidget {
     String label,
     IconData icon,
     List<Color> gradientColors,
-    Color shadowColor,
   ) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: shadowColor.withValues(alpha: 0.25),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
+    return ScaleOnTap(
+      onTap: () => _showCategoryFAQ(context, label),
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: gradientColors,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => _showCategoryFAQ(context, label),
-          borderRadius: BorderRadius.circular(24),
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: gradientColors,
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+          borderRadius: BorderRadius.circular(22),
+          boxShadow: [
+            BoxShadow(
+              color: gradientColors.first.withValues(alpha: 0.3),
+              blurRadius: 14,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.22),
+                shape: BoxShape.circle,
               ),
-              borderRadius: BorderRadius.circular(24),
+              child: Icon(icon, color: Colors.white, size: 26),
             ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Icon backing glow
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(icon, color: Colors.white, size: 30),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  label,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w900,
-                    fontSize: 14,
-                    color: Colors.white,
-                    letterSpacing: -0.2,
-                  ),
-                ),
-              ],
+            const SizedBox(height: 10),
+            Text(
+              label,
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w800,
+                fontSize: 13.5,
+                color: Colors.white,
+                letterSpacing: -0.2,
+              ),
             ),
-          ),
+          ],
         ),
       ),
-    ).animate().fadeIn(duration: 400.ms).scale(delay: 50.ms);
+    );
   }
 
   Widget _buildActionCard(
@@ -386,103 +443,79 @@ class HelpCenterScreen extends StatelessWidget {
     Color color, {
     required VoidCallback onTap,
     bool showPulse = false,
+    Color pulseColor = const Color(0xFF10B981),
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
+    return ScaleOnTap(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
           borderRadius: BorderRadius.circular(20),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              border:
-                  Border.all(color: AppColors.border.withValues(alpha: 0.6)),
+          border: Border.all(
+            color: const Color(0xFFE2E8F0),
+            width: 1.2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.02),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
             ),
-            child: Row(
-              children: [
-                // Icon wrapper
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(icon, color: color, size: 22),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.inter(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 15,
+                      color: const Color(0xFF0F172A),
+                    ),
                   ),
-                  child: Icon(icon, color: color, size: 22),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  const SizedBox(height: 3),
+                  Row(
                     children: [
-                      Text(
-                        title,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 15,
-                          color: AppColors.textPrimary,
+                      if (showPulse) ...[
+                        PulseBeacon(
+                          color: pulseColor,
+                          size: 7,
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          if (showPulse) ...[
-                            // Live Pulsing Dot
-                            Container(
-                              width: 8,
-                              height: 8,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFF10B981),
-                                shape: BoxShape.circle,
-                              ),
-                            )
-                                .animate(
-                                    onPlay: (controller) =>
-                                        controller.repeat(reverse: true))
-                                .scale(
-                                    begin: const Offset(0.8, 0.8),
-                                    end: const Offset(1.3, 1.3),
-                                    duration: 800.ms)
-                                .fadeIn(begin: 0.6, duration: 800.ms),
-                            const SizedBox(width: 6),
-                          ],
-                          Text(
-                            subtitle,
-                            style: TextStyle(
-                              color: showPulse
-                                  ? const Color(0xFF059669)
-                                  : AppColors.textSecondary,
-                              fontSize: 12,
-                              fontWeight:
-                                  showPulse ? FontWeight.w700 : FontWeight.w500,
-                            ),
-                          ),
-                        ],
+                        const SizedBox(width: 6),
+                      ],
+                      Text(
+                        subtitle,
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: const Color(0xFF64748B),
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ],
                   ),
-                ),
-                Icon(Icons.arrow_forward_ios_rounded,
-                    size: 16,
-                    color: AppColors.textMuted.withValues(alpha: 0.6)),
-              ],
+                ],
+              ),
             ),
-          ),
+            const Icon(Icons.arrow_forward_ios_rounded,
+                size: 14, color: Color(0xFF94A3B8)),
+          ],
         ),
       ),
-    ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.05);
+    );
   }
 }
 
@@ -490,7 +523,10 @@ class _FAQExpansionTile extends StatefulWidget {
   final String question;
   final String answer;
 
-  const _FAQExpansionTile({required this.question, required this.answer});
+  const _FAQExpansionTile({
+    required this.question,
+    required this.answer,
+  });
 
   @override
   State<_FAQExpansionTile> createState() => _FAQExpansionTileState();
@@ -501,46 +537,44 @@ class _FAQExpansionTileState extends State<_FAQExpansionTile> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(16),
+        color: _isExpanded ? const Color(0xFFF8FAFC) : Colors.white,
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(
           color: _isExpanded
-              ? const Color(0xFF6366F1).withValues(alpha: 0.15)
-              : Colors.transparent,
-          width: 1.5,
+              ? const Color(0xFF006241).withValues(alpha: 0.4)
+              : const Color(0xFFE2E8F0),
+          width: 1.2,
         ),
       ),
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
           onExpansionChanged: (expanded) {
-            setState(() {
-              _isExpanded = expanded;
-            });
+            setState(() => _isExpanded = expanded);
           },
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           title: Text(
             widget.question,
-            style: TextStyle(
+            style: GoogleFonts.inter(
               fontSize: 14,
               fontWeight: FontWeight.w700,
-              color:
-                  _isExpanded ? const Color(0xFF6366F1) : AppColors.textPrimary,
+              color: const Color(0xFF0F172A),
             ),
           ),
-          iconColor: const Color(0xFF6366F1),
-          collapsedIconColor: AppColors.textSecondary,
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: Text(
                 widget.answer,
-                style: const TextStyle(
+                style: GoogleFonts.inter(
                   fontSize: 13,
-                  color: AppColors.textSecondary,
+                  color: const Color(0xFF475569),
                   height: 1.5,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ),
