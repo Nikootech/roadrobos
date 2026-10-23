@@ -12,14 +12,14 @@ class InstantCashoutSheet extends StatefulWidget {
   const InstantCashoutSheet({
     super.key,
     required this.availableBalance,
-    this.defaultUpiId = 'driver.partner@oksbi',
+    this.defaultUpiId = 'Primary Verified Account',
     this.onCashoutSuccess,
   });
 
   static void show(
     BuildContext context, {
     required double availableBalance,
-    String defaultUpiId = 'partner@oksbi',
+    String defaultUpiId = 'Primary Verified Account',
     VoidCallback? onCashoutSuccess,
   }) {
     HapticFeedback.mediumImpact();

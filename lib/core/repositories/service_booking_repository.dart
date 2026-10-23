@@ -62,6 +62,26 @@ class ServiceBookingRepository {
     }
   }
 
+  /// Delete a single service booking from customer history
+  Future<void> deleteServiceBooking(String bookingId) async {
+    try {
+      await _supabase.from('service_bookings').delete().eq('id', bookingId);
+    } catch (e) {
+      await cancelBooking(bookingId);
+    }
+  }
+
+  /// Clear all cancelled service bookings for a customer
+  Future<void> clearCustomerCancelledServices(String customerId) async {
+    try {
+      await _supabase
+          .from('service_bookings')
+          .delete()
+          .eq('customer_id', customerId)
+          .eq('status', 'cancelled');
+    } catch (_) {}
+  }
+
   Stream<ServiceBooking> streamBookingStatus(String bookingId) {
     return _supabase
         .from('service_bookings')

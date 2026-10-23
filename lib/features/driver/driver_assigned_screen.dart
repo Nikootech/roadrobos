@@ -396,26 +396,45 @@ class _DriverAssignedScreenState extends ConsumerState<DriverAssignedScreen> {
   }
 
   Widget _buildPassengerInfo(RideBooking booking, AppUser? passenger) {
+    final passengerName = passenger?.name.isNotEmpty == true ? passenger!.name : 'Passenger';
+    final pic = passenger?.profilePic;
+    final hasProfilePic = pic != null && pic.isNotEmpty;
+
     return Row(
       children: [
         Container(
           width: 52,
           height: 52,
           decoration: BoxDecoration(
-            image: const DecorationImage(
-                image: NetworkImage('https://i.pravatar.cc/150?u=rahul'),
-                fit: BoxFit.cover),
+            color: AppColors.primaryBlue.withValues(alpha: 0.1),
+            image: hasProfilePic
+                ? DecorationImage(
+                    image: NetworkImage(pic),
+                    fit: BoxFit.cover)
+                : null,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
                 color: AppColors.primaryBlue.withValues(alpha: 0.2), width: 2),
           ),
+          child: !hasProfilePic
+              ? Center(
+                  child: Text(
+                    passengerName.isNotEmpty ? passengerName[0].toUpperCase() : 'P',
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.primaryBlue,
+                    ),
+                  ),
+                )
+              : null,
         ),
         const SizedBox(width: 16),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(passenger?.name ?? 'Passenger',
+              Text(passengerName,
                   style: const TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.w800,
@@ -431,7 +450,7 @@ class _DriverAssignedScreenState extends ConsumerState<DriverAssignedScreen> {
                     const Icon(Icons.star_rounded,
                         color: Colors.orange, size: 14),
                     const SizedBox(width: 4),
-                    const Text('4.8 • ',
+                    const Text('5.0 • ',
                         style: TextStyle(
                             fontSize: 12, fontWeight: FontWeight.w600)),
                     Text('${booking.paymentMethod} Payment',
@@ -449,13 +468,22 @@ class _DriverAssignedScreenState extends ConsumerState<DriverAssignedScreen> {
           context.push('/chat', extra: {
             'bookingId': booking.id,
             'receiverId': booking.customerId,
-            'receiverName': passenger?.name ?? 'Passenger',
+            'receiverName': passengerName,
           });
         }),
         const SizedBox(width: 12),
         _buildActionIcon(Iconsax.call, AppColors.successGreen, () async {
-          final phone = passenger?.phone ?? '+919876543210';
-          final uri = Uri(scheme: 'tel', path: phone);
+          final phone = passenger?.phone;
+          if (phone == null || phone.trim().isEmpty) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                    content: Text('Passenger phone number not available')),
+              );
+            }
+            return;
+          }
+          final uri = Uri(scheme: 'tel', path: phone.trim());
           if (await canLaunchUrl(uri)) {
             await launchUrl(uri);
           } else {
@@ -498,22 +526,7 @@ class _DriverAssignedScreenState extends ConsumerState<DriverAssignedScreen> {
     } else if (booking.status == 'started') {
       label = 'COMPLETE TRIP';
       color = AppColors.deepNavy;
-      onPressed = () async {
-        try {
-          await ref
-              .read(driverRepositoryProvider)
-              .updateTripStatus(booking.id, 'completed');
-          if (mounted) context.pop();
-        } catch (e) {
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to complete trip: $e'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      };
+      onPressed = () => _showTripCompletionFareDialog(context, booking);
     }
 
     return CustomButton(
@@ -521,6 +534,156 @@ class _DriverAssignedScreenState extends ConsumerState<DriverAssignedScreen> {
       onPressed: booking.status == 'arrived' ? null : onPressed,
       backgroundColor: color,
     ).animate().scale(delay: 500.ms);
+  }
+
+  Future<void> _showTripCompletionFareDialog(
+      BuildContext context, RideBooking booking) async {
+    final isCash = booking.paymentMethod.toLowerCase().contains('cash');
+    final fareStr = '₹${booking.fare.toStringAsFixed(0)}';
+
+    await showModalBottomSheet(
+      context: context,
+      isDismissible: false,
+      enableDrag: false,
+      backgroundColor: Colors.transparent,
+      builder: (bottomSheetContext) {
+        return Container(
+          padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 44,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.border,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: isCash
+                      ? AppColors.warningAmber.withValues(alpha: 0.15)
+                      : AppColors.successGreen.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  isCash ? Icons.payments_rounded : Icons.check_circle_rounded,
+                  color:
+                      isCash ? AppColors.accentOrange : AppColors.successDark,
+                  size: 34,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                isCash ? 'Collect Cash Payment' : 'Online Payment Received',
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.deepNavy,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                isCash
+                    ? 'Please collect this amount from the rider before finishing the trip.'
+                    : 'The rider has already paid online. Do NOT collect any cash.',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textSecondary,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                decoration: BoxDecoration(
+                  color: AppColors.bgLightGrey,
+                  borderRadius: BorderRadius.circular(18),
+                  border:
+                      Border.all(color: AppColors.border.withValues(alpha: 0.6)),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'TOTAL FARE',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textSecondary,
+                            letterSpacing: 0.8,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          isCash ? 'Cash to collect' : 'Paid via UPI/Card',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: isCash
+                                ? AppColors.accentOrange
+                                : AppColors.successDark,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Text(
+                      fareStr,
+                      style: const TextStyle(
+                        fontSize: 30,
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.deepNavy,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              CustomButton(
+                label:
+                    isCash ? 'CASH COLLECTED • FINISH TRIP' : 'FINISH TRIP',
+                backgroundColor:
+                    isCash ? AppColors.successDark : AppColors.deepNavy,
+                onPressed: () async {
+                  Navigator.of(bottomSheetContext).pop();
+                  try {
+                    await ref
+                        .read(driverRepositoryProvider)
+                        .updateTripStatus(booking.id, 'completed');
+                    await HapticFeedback.mediumImpact();
+                    if (context.mounted) {
+                      context.pop();
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Failed to complete trip: $e'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  }
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   Widget _buildFloatingButton(IconData icon, {VoidCallback? onTap}) {

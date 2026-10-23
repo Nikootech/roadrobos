@@ -249,6 +249,39 @@ class AppUser {
 }
 
 extension UserRoleExtension on UserRole {
+  String get displayName {
+    switch (this) {
+      case UserRole.customer:
+        return 'Customer';
+      case UserRole.driver:
+        return 'Driver / Pilot';
+      case UserRole.technician:
+        return 'Service Technician';
+      case UserRole.superAdmin:
+        return 'Super Admin';
+      case UserRole.founderAdmin:
+        return 'Founder Admin';
+      case UserRole.opsHead:
+        return 'Operations Head';
+      case UserRole.cityManager:
+        return 'City Manager';
+      case UserRole.areaManager:
+        return 'Area Manager';
+      case UserRole.financeManager:
+        return 'Finance Manager';
+      case UserRole.supportManager:
+        return 'Support Manager';
+      case UserRole.marketingAdmin:
+        return 'Marketing Admin';
+      case UserRole.auditor:
+        return 'Auditor';
+      case UserRole.analyst:
+        return 'Data Analyst';
+      case UserRole.admin:
+        return 'Administrator';
+    }
+  }
+
   // -- Role groupings -------------------------------------------------------
 
   bool get isAdmin => [

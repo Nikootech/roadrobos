@@ -26,7 +26,7 @@ class _DriverRideRequestScreenState
   late AnimationController _progressController;
   bool _isProcessing = false;
 
-  static const _timeoutSeconds = 60;
+  static const _timeoutSeconds = 20;
 
   @override
   void initState() {
@@ -37,7 +37,7 @@ class _DriverRideRequestScreenState
         if (!mounted) return;
         unawaited(ref
             .read(rideBookingRepositoryProvider)
-            .autoCancelExpiredSearchingRides(timeoutSeconds: 60));
+            .autoCancelExpiredSearchingRides(timeoutSeconds: 20));
         context.pop();
       });
     Future.delayed(
@@ -75,7 +75,7 @@ class _DriverRideRequestScreenState
     _progressController.stop();
     unawaited(ref
         .read(rideBookingRepositoryProvider)
-        .autoCancelExpiredSearchingRides(timeoutSeconds: 60));
+        .autoCancelExpiredSearchingRides(timeoutSeconds: 20));
     context.pop();
   }
 

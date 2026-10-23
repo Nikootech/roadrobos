@@ -104,44 +104,38 @@ class _SOSButtonState extends State<SOSButton>
     return ScaleOnTap(
       onTap: () => _openSafetyHub(context),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6.5),
         decoration: BoxDecoration(
           color: const Color(0xFFFFF1F2),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: const Color(0xFFFECDD3), width: 1.2),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFE11D48).withValues(alpha: 0.18),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
+              color: const Color(0xFFE11D48).withValues(alpha: 0.16),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 8,
-              height: 8,
-              decoration: const BoxDecoration(
-                color: Color(0xFFE11D48),
-                shape: BoxShape.circle,
-              ),
+            const Icon(
+              Iconsax.shield_security,
+              color: Color(0xFFE11D48),
+              size: 15,
             ).animate(onPlay: (c) => c.repeat(reverse: true)).scale(
-                  begin: const Offset(0.8, 0.8),
-                  end: const Offset(1.3, 1.3),
-                  duration: 800.ms,
+                  begin: const Offset(0.9, 0.9),
+                  end: const Offset(1.15, 1.15),
+                  duration: 900.ms,
                 ),
             const SizedBox(width: 6),
-            const Icon(Iconsax.shield_security,
-                color: Color(0xFFE11D48), size: 15),
-            const SizedBox(width: 5),
             Text(
               widget.label,
               style: GoogleFonts.outfit(
                 color: const Color(0xFFE11D48),
                 fontWeight: FontWeight.w800,
-                fontSize: 12.5,
+                fontSize: 12,
                 letterSpacing: 0.3,
               ),
             ),

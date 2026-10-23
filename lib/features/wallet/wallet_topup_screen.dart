@@ -9,6 +9,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/services/payment_service.dart';
 import '../profile/user_provider.dart';
+import 'wallet_providers.dart';
 
 class WalletTopupScreen extends ConsumerStatefulWidget {
   final double? initialAmount;
@@ -196,9 +197,10 @@ class _WalletTopupScreenState extends ConsumerState<WalletTopupScreen> {
     final userData = ref.read(userProvider).user;
     final userId = userData?.id ?? 'demo';
 
+    String paymentId = '';
     try {
       if (!userId.startsWith('demo')) {
-        await ref
+        paymentId = await ref
             .read(paymentServiceProvider.notifier)
             .startPayment(PaymentDetails(
               bookingId: '00000000-0000-0000-0000-000000000000',
@@ -212,14 +214,18 @@ class _WalletTopupScreenState extends ConsumerState<WalletTopupScreen> {
       } else {
         // Simulated instant payment for demo user
         await Future.delayed(const Duration(milliseconds: 1200));
+        paymentId = 'SIM-PAY-${DateTime.now().millisecondsSinceEpoch}';
       }
+
+      // Immediately refresh providers to ensure live wallet balance updates
+      ref.invalidate(walletProvider);
+      ref.invalidate(walletTransactionsProvider);
+      ref.invalidate(walletTransactionsStreamProvider);
 
       if (!mounted) return;
       setState(() => _isProcessing = false);
 
-      final txnId =
-          'TXN-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}';
-      _showSuccessSheet(amount, txnId);
+      _showSuccessSheet(amount, paymentId);
     } catch (e) {
       if (!mounted) return;
       setState(() => _isProcessing = false);

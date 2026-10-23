@@ -6,11 +6,15 @@
 //   flutter build apk --release --dart-define-from-file=dart_defines/prod.json
 //   flutter build ipa --release --dart-define-from-file=dart_defines/prod.json --no-codesign
 import 'package:flutter/foundation.dart';
+import 'app_flavor.dart';
 
 enum Environment { dev, staging, prod }
 
 class AppConfig {
   static late Environment environment;
+
+  /// Active flavor of the app (customer or partner).
+  static AppFlavor get flavor => AppFlavor.current;
 
   // ── Supabase (client-side safe values) ──────────────────────────────────
   static const supabaseUrl = String.fromEnvironment('SUPABASE_URL');

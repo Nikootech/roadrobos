@@ -6,11 +6,13 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/connectivity_provider.dart';
+import '../profile/user_provider.dart';
 import 'user_bookings_provider.dart';
 import 'package:intl/intl.dart';
 
-/// Bookings Screen - World-Class React Tier-1 Booking Management
-/// Matches Figma Screen [21]: "My Rides History"
+/// Rapido-Style Bookings Screen
+/// Features Rapido category segment pills, signature Route Stepper visualizer,
+/// instant "Book Again" rebook CTA, and Rapido zero-state experience.
 class BookingsScreen extends ConsumerStatefulWidget {
   const BookingsScreen({super.key});
 
@@ -19,7 +21,10 @@ class BookingsScreen extends ConsumerStatefulWidget {
 }
 
 class _BookingsScreenState extends ConsumerState<BookingsScreen> {
-  String _selectedFilter = 'All';
+  // Category tabs: 'All', 'Rides', 'Rentals', 'Services'
+  String _selectedCategory = 'All';
+  // Status filter: 'All', 'Completed', 'Active', 'Cancelled'
+  String _selectedStatus = 'All';
   // Tracks whether the cleanup snackbar has already been shown this session
   bool _cleanupNotified = false;
 
@@ -27,7 +32,7 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
   Widget build(BuildContext context) {
     final bookingsAsync = ref.watch(userBookingsProvider);
 
-    // Watch cleanup provider — auto-cancels stale pending rentals on screen open
+    // Watch cleanup provider — auto-cancels stale pending rentals & unassigned rides
     final cleanupAsync = ref.watch(expiredPendingCleanupProvider);
     cleanupAsync.whenData((result) {
       if (!_cleanupNotified && result.hasActivity && mounted) {
@@ -44,6 +49,7 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
+        scrolledUnderElevation: 0,
         centerTitle: false,
         title: Text(
           'My Bookings',
@@ -55,31 +61,33 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
           ),
         ),
         actions: [
-          GestureDetector(
-            onTap: () {
-              HapticFeedback.lightImpact();
-              _showBookingFilterSheet(context);
-            },
-            child: Container(
-              margin: const EdgeInsets.only(right: 16),
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: const Color(0xFFF8FAFC),
-                shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xFFE2E8F0)),
-              ),
-              child: const Icon(
-                Iconsax.filter,
-                color: Color(0xFF0F172A),
-                size: 18,
-              ),
+          IconButton(
+            tooltip: 'Clear Cancelled & Expired',
+            onPressed: () => _confirmClearCancelled(context),
+            icon: const Icon(
+              Iconsax.trash,
+              color: Color(0xFF64748B),
+              size: 20,
             ),
           ),
+          IconButton(
+            tooltip: 'Refresh',
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              ref.invalidate(userBookingsProvider);
+            },
+            icon: const Icon(
+              Iconsax.refresh,
+              color: Color(0xFF0F172A),
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 6),
         ],
       ),
       body: Column(
         children: [
+          // Offline banner
           if (ref.watch(connectivityProvider).value == true)
             Container(
               width: double.infinity,
@@ -91,7 +99,7 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
                       size: 16, color: Color(0xFFD97706)),
                   const SizedBox(width: 8),
                   Text(
-                    'Viewing offline data - Last updated 5 minutes ago',
+                    'Viewing offline data',
                     style: GoogleFonts.inter(
                       color: const Color(0xFFB45309),
                       fontSize: 12,
@@ -101,249 +109,68 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
                 ],
               ),
             ),
+
+          // Rapido Category Segment Selector
+          _buildCategoryPills(),
+
+          // Status Filter Strip (Compact)
+          _buildStatusChips(),
+
+          // Bookings List or Rapido Empty State
           Expanded(
             child: bookingsAsync.when(
               data: (allBookings) {
                 final bookings = _filterBookings(allBookings);
 
                 if (bookings.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: 72,
-                          height: 72,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(22),
-                            border: Border.all(color: const Color(0xFFE2E8F0)),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.03),
-                                blurRadius: 12,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Iconsax.calendar_remove,
-                            size: 32,
-                            color: Color(0xFF94A3B8),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'No bookings found',
-                          style: GoogleFonts.inter(
-                            color: const Color(0xFF0F172A),
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          _selectedFilter == 'All'
-                              ? 'Your past rides and service bookings will appear here'
-                              : 'No bookings match the selected "$_selectedFilter" filter',
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.inter(
-                            color: const Color(0xFF64748B),
-                            fontSize: 13,
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
+                  return _buildRapidoEmptyState(context);
                 }
 
-                return ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
-                  itemCount: bookings.length,
-                  itemBuilder: (context, index) {
-                    final booking = bookings[index];
-                    final (gradient, icon) =
-                        _getServiceStyle(booking.type, booking.title);
-                    final (
-                      statusTextColor,
-                      statusBg,
-                      statusBorder,
-                      statusLabel
-                    ) = _getStatusStyle(booking.status);
-
-                    return GestureDetector(
-                      onTap: () {
-                        HapticFeedback.lightImpact();
-                        if (booking.type == BookingType.service) {
-                          context.push('/service-booking-detail',
-                              extra: booking.originalObject);
-                        } else if (booking.type == BookingType.ride) {
-                          context.push('/live-tracking',
-                              extra: booking.originalObject);
-                        } else if (booking.type == BookingType.rental) {
-                          context.push('/rental-detail/${booking.id}');
-                        }
-                      },
-                      child: Container(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
-                          boxShadow: [
-                            BoxShadow(
-                              color: gradient.first.withValues(alpha: 0.04),
-                              blurRadius: 10,
-                              offset: const Offset(0, 3),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          children: [
-                            // 3D Squircle Icon Badge with Dual Gradient
-                            Container(
-                              width: 48,
-                              height: 48,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: gradient,
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                                borderRadius: BorderRadius.circular(15),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color:
-                                        gradient.first.withValues(alpha: 0.28),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 3),
-                                  ),
-                                ],
-                              ),
-                              child: Center(
-                                child: Icon(
-                                  icon,
-                                  color: Colors.white,
-                                  size: 22,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 14),
-                            // Booking Title & Details
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    booking.title,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: GoogleFonts.inter(
-                                      fontSize: 14.5,
-                                      fontWeight: FontWeight.w800,
-                                      color: const Color(0xFF0F172A),
-                                      letterSpacing: -0.2,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 3),
-                                  Text(
-                                    booking.subtitle,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: GoogleFonts.inter(
-                                      fontSize: 12,
-                                      color: const Color(0xFF64748B),
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 5),
-                                  Row(
-                                    children: [
-                                      const Icon(
-                                        Iconsax.calendar_1,
-                                        size: 11.5,
-                                        color: Color(0xFF94A3B8),
-                                      ),
-                                      const SizedBox(width: 4.5),
-                                      Text(
-                                        booking.date,
-                                        style: GoogleFonts.inter(
-                                          fontSize: 11,
-                                          color: const Color(0xFF94A3B8),
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            // Price and Status Chip
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  booking.price,
-                                  style: GoogleFonts.outfit(
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.w900,
-                                    color: const Color(0xFF0F172A),
-                                    letterSpacing: -0.3,
-                                  ),
-                                ),
-                                const SizedBox(height: 6),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 8, vertical: 3.5),
-                                  decoration: BoxDecoration(
-                                    color: statusBg,
-                                    borderRadius: BorderRadius.circular(6),
-                                    border: Border.all(color: statusBorder),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Container(
-                                        width: 5,
-                                        height: 5,
-                                        decoration: BoxDecoration(
-                                          color: statusTextColor,
-                                          shape: BoxShape.circle,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 4.5),
-                                      Text(
-                                        statusLabel,
-                                        style: GoogleFonts.inter(
-                                          fontSize: 9,
-                                          fontWeight: FontWeight.w800,
-                                          color: statusTextColor,
-                                          letterSpacing: 0.3,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    )
-                        .animate(delay: Duration(milliseconds: 30 * index))
-                        .fadeIn(duration: 300.ms)
-                        .slideY(begin: 0.05, end: 0);
+                return RefreshIndicator(
+                  color: const Color(0xFF006241),
+                  onRefresh: () async {
+                    ref.invalidate(userBookingsProvider);
                   },
+                  child: ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+                    itemCount: bookings.length,
+                    itemBuilder: (context, index) {
+                      final booking = bookings[index];
+                      return _buildRapidoRideCard(booking, index);
+                    },
+                  ),
                 );
               },
               loading: () => const Center(
                 child: CircularProgressIndicator(color: Color(0xFF006241)),
               ),
-              error: (err, stack) =>
-                  Center(child: Text('Error loading bookings: $err')),
+              error: (err, stack) => Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Iconsax.warning_2,
+                          size: 40, color: Color(0xFFEF4444)),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Unable to load bookings',
+                        style: GoogleFonts.inter(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 16,
+                          color: const Color(0xFF0F172A),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextButton.icon(
+                        onPressed: () => ref.invalidate(userBookingsProvider),
+                        icon: const Icon(Iconsax.refresh, size: 16),
+                        label: const Text('Try Again'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ),
         ],
@@ -351,174 +178,712 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
     );
   }
 
-  List<dynamic> _filterBookings(List<dynamic> all) {
-    if (_selectedFilter == 'All') return all;
-    return all.where((b) {
-      final s = b.status.toString().toLowerCase();
-      if (_selectedFilter == 'Completed') {
-        return s == 'completed' || s == 'paid';
-      } else if (_selectedFilter == 'Active') {
-        return s == 'active' || s == 'in_progress' || s == 'confirmed';
-      } else if (_selectedFilter == 'Pending') {
-        return s == 'payment_pending' || s == 'pending';
-      } else if (_selectedFilter == 'Cancelled') {
-        // cancelled_expired groups under Cancelled filter
-        return s == 'cancelled' || s == 'cancelled_expired';
-      }
-      return true;
-    }).toList();
+  /// Rapido Category Segment Pill Bar
+  Widget _buildCategoryPills() {
+    final categories = [
+      {'label': 'All', 'icon': Iconsax.category},
+      {'label': 'Rides', 'icon': Iconsax.car},
+      {'label': 'Rentals', 'icon': Iconsax.key},
+      {'label': 'Services', 'icon': Iconsax.setting_2},
+    ];
+
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+      child: Row(
+        children: categories.map((cat) {
+          final isSelected = _selectedCategory == cat['label'];
+          return Expanded(
+            child: GestureDetector(
+              onTap: () {
+                HapticFeedback.lightImpact();
+                setState(() => _selectedCategory = cat['label'] as String);
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                margin: const EdgeInsets.symmetric(horizontal: 3),
+                padding: const EdgeInsets.symmetric(vertical: 9),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? const Color(0xFF0F172A)
+                      : const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isSelected
+                        ? const Color(0xFF0F172A)
+                        : const Color(0xFFE2E8F0),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      cat['icon'] as IconData,
+                      size: 14,
+                      color: isSelected ? Colors.white : const Color(0xFF64748B),
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      cat['label'] as String,
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight:
+                            isSelected ? FontWeight.w800 : FontWeight.w600,
+                        color:
+                            isSelected ? Colors.white : const Color(0xFF64748B),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
   }
 
-  void _showBookingFilterSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setSheetState) => Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-          ),
-          padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
+  /// Status Filter Chips
+  Widget _buildStatusChips() {
+    final statuses = ['All', 'Completed', 'Active', 'Cancelled'];
+
+    return Container(
+      width: double.infinity,
+      color: Colors.white,
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        child: Row(
+          children: statuses.map((status) {
+            final isSelected = _selectedStatus == status;
+            return Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: GestureDetector(
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  setState(() => _selectedStatus = status);
+                },
                 child: Container(
-                  width: 40,
-                  height: 4,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE2E8F0),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 18),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Filter Bookings',
-                    style: GoogleFonts.inter(
-                      fontSize: 19,
-                      fontWeight: FontWeight.w800,
-                      color: const Color(0xFF0F172A),
-                      letterSpacing: -0.3,
+                    color: isSelected
+                        ? const Color(0xFFE2E8F0)
+                        : const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: isSelected
+                          ? const Color(0xFF94A3B8)
+                          : const Color(0xFFE2E8F0),
                     ),
-                  ),
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Container(
-                      width: 32,
-                      height: 32,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Color(0xFFF1F5F9),
-                      ),
-                      child: const Icon(Icons.close_rounded,
-                          size: 18, color: Color(0xFF64748B)),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              Text(
-                'STATUS FILTER',
-                style: GoogleFonts.inter(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 11,
-                  color: const Color(0xFF94A3B8),
-                  letterSpacing: 0.8,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  'All',
-                  'Completed',
-                  'Active',
-                  'Pending',
-                  'Cancelled',
-                ].map((f) {
-                  final isSelected = _selectedFilter == f;
-                  return GestureDetector(
-                    onTap: () {
-                      HapticFeedback.lightImpact();
-                      setSheetState(() => _selectedFilter = f);
-                      setState(() {});
-                    },
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 9),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? const Color(0xFFF0FDF4)
-                            : const Color(0xFFF8FAFC),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: isSelected
-                              ? const Color(0xFF006241)
-                              : const Color(0xFFE2E8F0),
-                          width: isSelected ? 1.5 : 1,
-                        ),
-                      ),
-                      child: Text(
-                        f,
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight:
-                              isSelected ? FontWeight.w800 : FontWeight.w600,
-                          color: isSelected
-                              ? const Color(0xFF006241)
-                              : const Color(0xFF64748B),
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 28),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF006241),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    elevation: 0,
                   ),
                   child: Text(
-                    'Apply Filter',
+                    status == 'All' ? 'All Status' : status,
                     style: GoogleFonts.inter(
-                      color: Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
+                      fontSize: 11.5,
+                      fontWeight:
+                          isSelected ? FontWeight.w700 : FontWeight.w500,
+                      color: isSelected
+                          ? const Color(0xFF0F172A)
+                          : const Color(0xFF64748B),
                     ),
                   ),
                 ),
               ),
-            ],
-          ),
+            );
+          }).toList(),
         ),
       ),
     );
   }
 
-  /// Shows a prominent SnackBar informing the user about auto-cancelled bookings
-  /// and wallet refund (if applicable).
+  /// Rapido-Style Ride Card with Route Stepper, Price & Quick Rebook Action
+  Widget _buildRapidoRideCard(UnifiedBookingItem booking, int index) {
+    final (
+      statusTextColor,
+      statusBg,
+      statusBorder,
+      statusLabel,
+    ) = _getStatusStyle(booking.status);
+
+    final pickup = booking.pickupAddress?.isNotEmpty == true
+        ? booking.pickupAddress!
+        : 'Pickup Location';
+    final dropoff = booking.destinationAddress?.isNotEmpty == true
+        ? booking.destinationAddress!
+        : 'Drop-off Location';
+
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        if (booking.type == BookingType.service) {
+          context.push('/service-booking-detail', extra: booking.originalObject);
+        } else if (booking.type == BookingType.ride) {
+          context.push('/live-tracking', extra: booking.originalObject);
+        } else if (booking.type == BookingType.rental) {
+          context.push('/rental-detail/${booking.id}');
+        }
+      },
+      child: Container(
+        margin: const EdgeInsets.only(top: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Top Row: Vehicle Type, Date & Status Chip
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
+              child: Row(
+                children: [
+                  _buildVehicleBadge(booking),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          booking.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                            color: const Color(0xFF0F172A),
+                            letterSpacing: -0.2,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          booking.date,
+                          style: GoogleFonts.inter(
+                            fontSize: 11.5,
+                            color: const Color(0xFF94A3B8),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: statusBg,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: statusBorder),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 5,
+                          height: 5,
+                          decoration: BoxDecoration(
+                            color: statusTextColor,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          statusLabel,
+                          style: GoogleFonts.inter(
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w800,
+                            color: statusTextColor,
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
+
+            // Rapido Signature Route Visualizer
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Stepper Dots & Line
+                  Padding(
+                    padding: const EdgeInsets.only(top: 3),
+                    child: Column(
+                      children: [
+                        // Green Pickup Dot
+                        Container(
+                          width: 10,
+                          height: 10,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF10B981),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        // Dotted Line
+                        Container(
+                          width: 1.5,
+                          height: 28,
+                          margin: const EdgeInsets.symmetric(vertical: 2),
+                          color: const Color(0xFFCBD5E1),
+                        ),
+                        // Red Drop-off Square
+                        Container(
+                          width: 10,
+                          height: 10,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEF4444),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+
+                  // Route Addresses
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          pickup,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.inter(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF1E293B),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          dropoff,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.inter(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF1E293B),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
+
+            // Bottom Action Strip: Fare, Payment & "Book Again" Button
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: const BoxDecoration(
+                color: Color(0xFFFAFAFC),
+                borderRadius: BorderRadius.vertical(bottom: Radius.circular(18)),
+              ),
+              child: Row(
+                children: [
+                  // Fare & Payment Mode
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        booking.price,
+                        style: GoogleFonts.outfit(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w900,
+                          color: const Color(0xFF0F172A),
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+                      Text(
+                        booking.paymentMethod?.isNotEmpty == true
+                            ? booking.paymentMethod!
+                            : 'Paid',
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF64748B),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Spacer(),
+
+                  // Delete / Dismiss Icon Button
+                  IconButton(
+                    onPressed: () =>
+                        _confirmDeleteSingleBooking(context, booking),
+                    tooltip: 'Remove from history',
+                    icon: const Icon(
+                      Iconsax.trash,
+                      size: 17,
+                      color: Color(0xFF94A3B8),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+
+                  // Rapido "Book Again" Action CTA
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      HapticFeedback.mediumImpact();
+                      context.push('/taxi');
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF006241),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 9),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    icon: const Icon(Icons.replay_rounded, size: 15),
+                    label: Text(
+                      'Book Again',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    )
+        .animate(delay: Duration(milliseconds: 25 * index))
+        .fadeIn(duration: 250.ms)
+        .slideY(begin: 0.04, end: 0);
+  }
+
+  /// Vehicle type badge
+  Widget _buildVehicleBadge(UnifiedBookingItem booking) {
+    IconData icon;
+    Color color;
+
+    if (booking.type == BookingType.ride) {
+      final v = (booking.vehicleType ?? '').toLowerCase();
+      if (v.contains('bike') || v.contains('moto')) {
+        icon = Icons.two_wheeler_rounded;
+        color = const Color(0xFFF59E0B);
+      } else if (v.contains('auto')) {
+        icon = Icons.electric_rickshaw_rounded;
+        color = const Color(0xFFEAB308);
+      } else {
+        icon = Iconsax.car;
+        color = const Color(0xFF0284C7);
+      }
+    } else if (booking.type == BookingType.rental) {
+      icon = Iconsax.key;
+      color = const Color(0xFF10B981);
+    } else {
+      icon = Iconsax.setting_2;
+      color = const Color(0xFF8B5CF6);
+    }
+
+    return Container(
+      width: 38,
+      height: 38,
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(11),
+      ),
+      child: Center(
+        child: Icon(icon, color: color, size: 20),
+      ),
+    );
+  }
+
+  /// Rapido-Style Empty State
+  Widget _buildRapidoEmptyState(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 90,
+              height: 90,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF1F5F9),
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: const Center(
+                child: Icon(
+                  Iconsax.car,
+                  size: 44,
+                  color: Color(0xFF006241),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'No Rides Yet',
+              style: GoogleFonts.inter(
+                color: const Color(0xFF0F172A),
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.3,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Ready to move? Book a quick, affordable ride anywhere in the city.',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.inter(
+                color: const Color(0xFF64748B),
+                fontSize: 13,
+                fontWeight: FontWeight.w400,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              height: 46,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  HapticFeedback.mediumImpact();
+                  context.push('/taxi');
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF006241),
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                icon: const Icon(Iconsax.car, size: 18),
+                label: Text(
+                  'Book a Ride Now',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Filters bookings according to selected category & status
+  List<UnifiedBookingItem> _filterBookings(List<UnifiedBookingItem> all) {
+    return all.where((b) {
+      // 1. Category Filter
+      if (_selectedCategory == 'Rides' && b.type != BookingType.ride) {
+        return false;
+      }
+      if (_selectedCategory == 'Rentals' && b.type != BookingType.rental) {
+        return false;
+      }
+      if (_selectedCategory == 'Services' && b.type != BookingType.service) {
+        return false;
+      }
+
+      // 2. Status Filter
+      if (_selectedStatus != 'All') {
+        final s = b.status.toLowerCase();
+        if (_selectedStatus == 'Completed') {
+          if (s != 'completed' && s != 'paid') return false;
+        } else if (_selectedStatus == 'Active') {
+          if (s != 'active' &&
+              s != 'in_progress' &&
+              s != 'in progress' &&
+              s != 'confirmed') {
+            return false;
+          }
+        } else if (_selectedStatus == 'Cancelled') {
+          if (s != 'cancelled' && s != 'cancelled_expired') return false;
+        }
+      }
+
+      return true;
+    }).toList();
+  }
+
+  (Color, Color, Color, String) _getStatusStyle(String status) {
+    switch (status.toLowerCase()) {
+      case 'completed':
+      case 'paid':
+        return (
+          const Color(0xFF047857),
+          const Color(0xFFECFDF5),
+          const Color(0xFFA7F3D0),
+          'COMPLETED',
+        );
+      case 'active':
+      case 'in_progress':
+      case 'in progress':
+      case 'confirmed':
+        return (
+          const Color(0xFF0369A1),
+          const Color(0xFFF0F9FF),
+          const Color(0xFFBAE6FD),
+          'CONFIRMED',
+        );
+      case 'payment_pending':
+      case 'pending':
+        return (
+          const Color(0xFFB45309),
+          const Color(0xFFFFFBEB),
+          const Color(0xFFFDE68A),
+          'PENDING',
+        );
+      case 'cancelled':
+        return (
+          const Color(0xFFB91C1C),
+          const Color(0xFFFEF2F2),
+          const Color(0xFFFECDD3),
+          'CANCELLED',
+        );
+      case 'cancelled_expired':
+        return (
+          const Color(0xFFDC2626),
+          const Color(0xFFFFF1F2),
+          const Color(0xFFFCA5A5),
+          'EXPIRED',
+        );
+      default:
+        return (
+          const Color(0xFF475569),
+          const Color(0xFFF8FAFC),
+          const Color(0xFFE2E8F0),
+          status.toUpperCase(),
+        );
+    }
+  }
+
+  void _confirmDeleteSingleBooking(
+      BuildContext context, UnifiedBookingItem booking) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          'Delete Booking',
+          style: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 18),
+        ),
+        content: Text(
+          'Remove this booking from your history?',
+          style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF64748B)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Cancel',
+                style: GoogleFonts.inter(
+                    color: const Color(0xFF64748B), fontWeight: FontWeight.w600)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await deleteBookingItem(ref, booking);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Booking removed from history'),
+                    backgroundColor: Color(0xFF006241),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFEF4444),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmClearCancelled(BuildContext context) {
+    final userId = ref.read(userProvider).user?.id;
+    if (userId == null) return;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          'Clear Cancelled Bookings',
+          style: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 18),
+        ),
+        content: Text(
+          'Permanently remove all cancelled and expired bookings from your history?',
+          style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF64748B)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Cancel',
+                style: GoogleFonts.inter(
+                    color: const Color(0xFF64748B), fontWeight: FontWeight.w600)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await clearAllCancelledBookings(ref, userId);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Cancelled bookings cleared from history'),
+                    backgroundColor: Color(0xFF006241),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFEF4444),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text('Clear All'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showExpiredCancelledBanner(
       BuildContext context, ExpiredRentalCleanupResult result) {
     final hasRefund = result.hasRefund;
-    final amountStr =
-        NumberFormat.currency(locale: 'en_IN', symbol: '\u20b9', decimalDigits: 0)
-            .format(result.refundedAmount);
+    final amountStr = NumberFormat.currency(
+            locale: 'en_IN', symbol: '\u20b9', decimalDigits: 0)
+        .format(result.refundedAmount);
 
     final content = hasRefund
         ? 'Your ${result.cancelledCount} pending rental(s) expired and were cancelled. '
@@ -527,7 +892,7 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        duration: const Duration(seconds: 6),
+        duration: const Duration(seconds: 5),
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 80),
         backgroundColor: Colors.transparent,
@@ -536,8 +901,8 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: hasRefund
-                ? const Color(0xFF064E3B) // deep green for refund
-                : const Color(0xFF1E293B), // dark slate for simple cancel
+                ? const Color(0xFF064E3B)
+                : const Color(0xFF1E293B),
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
@@ -602,82 +967,5 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
         ),
       ),
     );
-  }
-
-  (List<Color>, IconData) _getServiceStyle(BookingType type, String title) {
-    final t = title.toLowerCase();
-    if (t.contains('taxi') || t.contains('ride') || type == BookingType.ride) {
-      return (
-        const [Color(0xFF0284C7), Color(0xFF38BDF8)],
-        Iconsax.car,
-      );
-    } else if (t.contains('rental') || type == BookingType.rental) {
-      return (
-        const [Color(0xFF006241), Color(0xFF10B981)],
-        Iconsax.key,
-      );
-    } else if (t.contains('delivery') || t.contains('package')) {
-      return (
-        const [Color(0xFF0D9488), Color(0xFF14B8A6)],
-        Iconsax.box_1,
-      );
-    } else {
-      return (
-        const [Color(0xFFD97706), Color(0xFFFBBF24)],
-        Iconsax.setting_2,
-      );
-    }
-  }
-
-  (Color, Color, Color, String) _getStatusStyle(String status) {
-    switch (status.toLowerCase()) {
-      case 'completed':
-      case 'paid':
-        return (
-          const Color(0xFF006241),
-          const Color(0xFFF0FDF4),
-          const Color(0xFF86EFAC),
-          'COMPLETED',
-        );
-      case 'active':
-      case 'in_progress':
-      case 'in progress':
-      case 'confirmed':
-        return (
-          const Color(0xFF0284C7),
-          const Color(0xFFF0F9FF),
-          const Color(0xFFBAE6FD),
-          'CONFIRMED',
-        );
-      case 'payment_pending':
-        return (
-          const Color(0xFFD97706),
-          const Color(0xFFFFFBEB),
-          const Color(0xFFFDE68A),
-          'PENDING',
-        );
-      case 'cancelled':
-        return (
-          const Color(0xFFE11D48),
-          const Color(0xFFFFF1F2),
-          const Color(0xFFFECDD3),
-          'CANCELLED',
-        );
-      // Booking was auto-cancelled because payment window expired
-      case 'cancelled_expired':
-        return (
-          const Color(0xFFDC2626),
-          const Color(0xFFFFF1F2),
-          const Color(0xFFFCA5A5),
-          'EXPIRED',
-        );
-      default:
-        return (
-          const Color(0xFF475569),
-          const Color(0xFFF8FAFC),
-          const Color(0xFFE2E8F0),
-          status.toUpperCase(),
-        );
-    }
   }
 }

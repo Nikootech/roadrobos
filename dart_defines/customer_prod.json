@@ -1,0 +1,12 @@
+{
+  "SUPABASE_URL": "https://hxoncblbripckfuxijav.supabase.co",
+  "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh4b25jYmxicmlwY2tmdXhpamF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwNDc1NzMsImV4cCI6MjA5MTYyMzU3M30.VuJ13qv1rEyJyfdAvpCI_qUvPSQPcZqbluLWWo4loBM",
+  "GOOGLE_CLIENT_ID": "542549978836-l55rm9ftucubic1ibc3domifpgc8ikst.apps.googleusercontent.com",
+  "GOOGLE_SERVER_CLIENT_ID": "542549978836-l55rm9ftucubic1ibc3domifpgc8ikst.apps.googleusercontent.com",
+  "RAZORPAY_KEY_ID": "rzp_live_RmExOlKUjexNBq",
+  "SENTRY_DSN": "",
+  "MAPS_API_KEY": "",
+  "ENV": "prod",
+  "APP_FLAVOR": "customer",
+  "APP_NAME": "RoadRobos"
+}

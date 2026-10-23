@@ -14,6 +14,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../shared/widgets/kinetic_motion.dart';
 import '../../shared/widgets/react_switch.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AccountSettingsScreen extends ConsumerStatefulWidget {
   const AccountSettingsScreen({super.key});
@@ -68,7 +69,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
         messenger.showSnackBar(
           const SnackBar(
             content: Text(
-                'Biometric authentication is not available on this device.'),
+                'Biometric or screen lock is not available on this device.'),
             backgroundColor: AppColors.dangerRed,
             behavior: SnackBarBehavior.floating,
           ),
@@ -76,155 +77,65 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
         return;
       }
 
-      if (!mounted) return;
-      final String? password = await showDialog<String>(
-        context: context,
-        builder: (dialogContext) {
-          final controller = TextEditingController();
-          final isDark = Theme.of(dialogContext).brightness == Brightness.dark;
-          return AlertDialog(
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-            title: Text(
-              'Confirm Password',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: isDark ? AppColors.textOnDark : AppColors.textPrimary,
-              ),
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Please enter your RoadRobos account password to enable biometric login.',
-                  style: TextStyle(
-                    color: isDark
-                        ? AppColors.textOnDarkMuted
-                        : AppColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: controller,
-                  obscureText: true,
-                  style: TextStyle(
-                    color: isDark ? Colors.white : AppColors.textPrimary,
-                  ),
-                  decoration: InputDecoration(
-                    prefixIcon: const Icon(Icons.lock_outline_rounded,
-                        color: AppColors.primaryBlue),
-                    hintText: 'Enter password',
-                    filled: true,
-                    fillColor: isDark
-                        ? const Color(0xFF252B3B)
-                        : AppColors.bgLightGrey,
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide.none),
-                  ),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(dialogContext),
-                child: const Text('CANCEL',
-                    style: TextStyle(
-                        color: AppColors.textMuted,
-                        fontWeight: FontWeight.bold)),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(dialogContext, controller.text),
-                child: const Text('CONFIRM',
-                    style: TextStyle(
-                        color: AppColors.primaryBlue,
-                        fontWeight: FontWeight.bold)),
-              ),
-            ],
-          );
-        },
+      // Verify user directly by asking mobile password / PIN / fingerprint / screen lock
+      final result = await biometricService.authenticateWithResult(
+        localizedReason:
+            'Verify your fingerprint, face, or mobile password to enable biometric login',
       );
 
-      if (password == null || password.isEmpty) {
+      if (result == BiometricAuthResult.notEnrolled ||
+          result == BiometricAuthResult.notSupported) {
+        setState(() => _isBiometricEnabled = false);
+        if (!mounted) return;
+        await _showSetupScreenLockDialog(context);
         return;
       }
 
-      if (!mounted) return;
-      unawaited(showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(child: CircularProgressIndicator()),
-      ));
+      if (result == BiometricAuthResult.success) {
+        final prefs = ref.read(sharedPreferencesProvider);
+        await prefs.setBool('biometric_enabled', true);
 
-      try {
-        final authService = ref.read(authServiceProvider);
         final user = ref.read(userProvider).user;
-        if (user == null) throw Exception('No user profile loaded');
-        final email = user.email;
-        if (email == null || email.isEmpty) {
-          throw Exception('No email associated with this profile');
+        if (user != null && user.email != null && user.email!.isNotEmpty) {
+          await _secureStorage.write(key: 'bio_email', value: user.email!);
         }
 
-        await authService.reauthenticate(email, password);
+        final session = Supabase.instance.client.auth.currentSession;
+        if (session != null && session.refreshToken != null) {
+          await _secureStorage.write(
+              key: 'bio_refresh_token', value: session.refreshToken!);
+        }
 
-        // ── FIX: Trigger biometric prompt FIRST (before writing prefs/storage).
-        // The dismiss of the loading dialog is deferred until AFTER storage writes
-        // complete to prevent the auth state change from routing away mid-write.
-        final authenticated = await biometricService.authenticate(
-          localizedReason: 'Confirm biometric login setup',
+        setState(() => _isBiometricEnabled = true);
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text('Biometric login enabled successfully!'),
+            backgroundColor: AppColors.successGreen,
+            behavior: SnackBarBehavior.floating,
+          ),
         );
-
-        if (authenticated) {
-          // Write credentials to secure storage BEFORE dismissing loading dialog.
-          // This prevents a race condition where Supabase's auth state change
-          // (from reauthenticate) triggers router navigation before writes finish.
-          final prefs = ref.read(sharedPreferencesProvider);
-          await prefs.setBool('biometric_enabled', true);
-          await _secureStorage.write(key: 'bio_email', value: email);
-          await _secureStorage.write(key: 'bio_password', value: password);
-
-          if (mounted) Navigator.pop(context); // Dismiss loading spinner
-          setState(() => _isBiometricEnabled = true);
-          messenger.showSnackBar(
-            const SnackBar(
-              content: Text('Biometric login enabled successfully!'),
-              backgroundColor: AppColors.successGreen,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+      } else {
+        setState(() => _isBiometricEnabled = false);
+        final enrolled = await biometricService.isEnrolled();
+        if (!enrolled) {
+          if (!mounted) return;
+          await _showSetupScreenLockDialog(context);
         } else {
-          if (mounted) Navigator.pop(context); // Dismiss loading spinner
           messenger.showSnackBar(
             const SnackBar(
-              content: Text('Biometric authentication failed.'),
+              content: Text('Verification cancelled or failed.'),
               backgroundColor: AppColors.dangerRed,
               behavior: SnackBarBehavior.floating,
             ),
           );
         }
-      } catch (e) {
-        if (mounted) Navigator.pop(context); // Dismiss loading spinner
-        String errorMsg = e.toString();
-        if (errorMsg.contains('Invalid login credentials') ||
-            errorMsg.contains('invalid_credentials') ||
-            errorMsg.contains('Incorrect password')) {
-          errorMsg =
-              'Incorrect password. Please enter your RoadRobos account password, not your device PIN.';
-        }
-        messenger.showSnackBar(
-          SnackBar(
-            content: Text(errorMsg),
-            backgroundColor: AppColors.dangerRed,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
       }
     } else {
       final prefs = ref.read(sharedPreferencesProvider);
       await prefs.setBool('biometric_enabled', false);
       await _secureStorage.delete(key: 'bio_email');
       await _secureStorage.delete(key: 'bio_password');
+      await _secureStorage.delete(key: 'bio_refresh_token');
 
       setState(() => _isBiometricEnabled = false);
       messenger.showSnackBar(
@@ -234,6 +145,56 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
         ),
       );
     }
+  }
+
+  Future<void> _showSetupScreenLockDialog(BuildContext context) async {
+    await showDialog(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.lock_outline_rounded,
+                color: AppColors.accentOrange, size: 26),
+            SizedBox(width: 10),
+            Expanded(
+              child: Text('Screen Lock Required',
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 18)),
+            ),
+          ],
+        ),
+        content: const Text(
+          'No screen lock, PIN, or biometric is configured on this device.\n\n'
+          'Please set up a Mobile PIN, Pattern, Password, or Fingerprint in your phone Settings first before enabling Biometric Login.',
+          style: TextStyle(fontSize: 14, height: 1.4),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx),
+            child: const Text('CANCEL',
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textMuted)),
+          ),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.pop(dialogCtx);
+              BiometricService.openSecuritySettings();
+            },
+            icon: const Icon(Icons.settings_outlined, size: 16),
+            label: const Text('OPEN SETTINGS'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryBlue,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -836,6 +797,7 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
             'Biometric Login',
             'Enable Fingerprint/FaceID for login',
             gradient: const [Color(0xFF0F172A), Color(0xFF334155)],
+            onTap: () => _toggleBiometric(!_isBiometricEnabled),
             trailing: ReactSwitch(
               value: _isBiometricEnabled,
               onChanged: (val) => _toggleBiometric(val),
@@ -861,7 +823,12 @@ class _AccountSettingsScreenState extends ConsumerState<AccountSettingsScreen> {
         ]),
         const SizedBox(height: 36),
         ScaleOnTap(
-          onTap: () => ref.read(userProvider.notifier).logout(),
+          onTap: () async {
+            await ref.read(userProvider.notifier).logout();
+            if (mounted) {
+              context.go('/auth/login');
+            }
+          },
           child: Container(
             width: double.infinity,
             height: 52,

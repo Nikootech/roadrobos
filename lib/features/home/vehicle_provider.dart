@@ -43,20 +43,17 @@ class AllVehiclesNotifier extends StateNotifier<List<Vehicle>> {
 
   void _subscribeToVehicles(String? userId) {
     _subscription?.cancel();
-    if (userId == null || userId.isEmpty || userId.startsWith('demo_')) {
-      // Fallback dummy for unauthenticated demo state
-      state = [
-        Vehicle(
-            id: 'v1',
-            userId: 'demo',
-            name: 'Honda City',
-            plate: 'MH 04 XY 4321',
-            fuel: 'Petrol',
-            year: 2022,
-            type: 'Car')
-      ];
-      // Auto-select the demo vehicle
-      ref.read(vehicleProvider.notifier).setVehicle(state.first);
+    if (userId == null || userId.isEmpty) {
+      state = [];
+      ref.read(vehicleProvider.notifier).setVehicle(Vehicle(
+            id: '',
+            userId: '',
+            name: 'No Vehicle Added',
+            plate: 'Add vehicle',
+            fuel: '-',
+            year: '-',
+            type: 'Car',
+          ));
       return;
     }
 
@@ -65,11 +62,22 @@ class AllVehiclesNotifier extends StateNotifier<List<Vehicle>> {
       _subscription = repo.getUserVehiclesStream(userId).listen(
         (vehicles) {
           state = vehicles;
-          // Auto-select first vehicle if none selected yet
-          final currentId = ref.read(vehicleProvider).id;
-          if (vehicles.isNotEmpty &&
-              (currentId == 'placeholder' || currentId.isEmpty)) {
-            ref.read(vehicleProvider.notifier).setVehicle(vehicles.first);
+          if (vehicles.isNotEmpty) {
+            final currentId = ref.read(vehicleProvider).id;
+            final isMatch = vehicles.any((v) => v.id == currentId);
+            if (!isMatch || currentId == 'placeholder' || currentId.isEmpty) {
+              ref.read(vehicleProvider.notifier).setVehicle(vehicles.first);
+            }
+          } else {
+            ref.read(vehicleProvider.notifier).setVehicle(Vehicle(
+                  id: '',
+                  userId: userId,
+                  name: 'No Vehicle Added',
+                  plate: 'Add vehicle',
+                  fuel: '-',
+                  year: '-',
+                  type: 'Car',
+                ));
           }
         },
         onError: (e) {

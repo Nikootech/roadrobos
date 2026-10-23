@@ -7,13 +7,18 @@ pluginManagement {
                 properties.load(reader)
             }
         }
-        def flutterSdkPath = properties.getProperty('flutter.sdk')
-        assert flutterSdkPath != null, "flutter.sdk not set in local.properties"
-        return flutterSdkPath
-    }
-    settings.ext.flutterSdkPath = flutterSdkPath()
+        def sdkPath = properties.getProperty('flutter.sdk')
+        if (sdkPath == null || sdkPath.trim().isEmpty()) {
+            sdkPath = System.getenv('FLUTTER_ROOT')
+        }
+        if (sdkPath == null || sdkPath.trim().isEmpty()) {
+            sdkPath = 'E:/flutter'
+        }
+        return new File(sdkPath).toPath().normalize().toString().replace('\\', '/')
+    }()
+    settings.ext.flutterSdkPath = flutterSdkPath
 
-    includeBuild("${settings.ext.flutterSdkPath}/packages/flutter_tools/gradle")
+    includeBuild("$flutterSdkPath/packages/flutter_tools/gradle")
 
     repositories {
         google()

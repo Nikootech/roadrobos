@@ -33,6 +33,27 @@ if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 }
 
+// ═══ Dual App Resolution (Customer vs Partner) ═══
+def isPartnerApp = false
+if (project.hasProperty('target')) {
+    def target = project.property('target')
+    if (target.contains('main_partner')) {
+        isPartnerApp = true
+    }
+}
+if (!isPartnerApp && project.hasProperty('dart-defines')) {
+    try {
+        def rawDefines = project.property('dart-defines')
+        def decoded = new String(rawDefines.decodeBase64(), 'UTF-8')
+        if (decoded.contains('APP_FLAVOR=partner')) {
+            isPartnerApp = true
+        }
+    } catch (Exception ignored) {}
+}
+
+def resolvedApplicationId = isPartnerApp ? "com.roadrobos.partner" : "com.roadrobos.roadrobos"
+def resolvedAppName = isPartnerApp ? "RoadRobos Partner" : "RoadRobos"
+
 android {
     namespace "com.roadrobos.roadrobos"
     compileSdk 36
@@ -53,7 +74,8 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.roadrobos.roadrobos"
+        applicationId resolvedApplicationId
+        resValue "string", "app_name", resolvedAppName
         minSdkVersion flutter.minSdkVersion
         targetSdkVersion 36
         versionCode flutterVersionCode.toInteger()
@@ -86,6 +108,9 @@ android {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            firebaseCrashlytics {
+                mappingFileUploadEnabled false
+            }
         }
     }
 }

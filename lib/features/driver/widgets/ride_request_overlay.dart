@@ -95,10 +95,22 @@ class _RideRequestOverlayState extends State<RideRequestOverlay>
                                             .withValues(alpha: 0.3),
                                         width: 1.5),
                                   ),
-                                  child: const CircleAvatar(
-                                      radius: 26,
-                                      backgroundImage: NetworkImage(
-                                          'https://i.pravatar.cc/150?u=rider')),
+                                  child: CircleAvatar(
+                                    radius: 26,
+                                    backgroundColor: AppColors.primaryBlue
+                                        .withValues(alpha: 0.1),
+                                    child: Text(
+                                      widget.request.riderName.isNotEmpty
+                                          ? widget.request.riderName[0]
+                                              .toUpperCase()
+                                          : 'R',
+                                      style: const TextStyle(
+                                        color: AppColors.primaryBlue,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w900,
+                                      ),
+                                    ),
+                                  ),
                                 ),
                                 const SizedBox(width: 14),
                                 Expanded(

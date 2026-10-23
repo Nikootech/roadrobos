@@ -862,82 +862,89 @@ class _TaxiRideScreenState extends ConsumerState<TaxiRideScreen> {
               ],
             ),
           ),
-        Container(
-          constraints: const BoxConstraints(maxHeight: 250),
-          child: ListView.separated(
-            shrinkWrap: true,
-            physics: const ClampingScrollPhysics(),
-            itemCount: displayList.length,
-            separatorBuilder: (context, index) => Divider(
-              color: isDark ? Colors.grey[800] : Colors.grey[200],
-              height: 1,
-            ),
-            itemBuilder: (context, index) {
-              final suggestion = displayList[index];
-              return ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: isDark ? Colors.grey[800] : Colors.grey[100],
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.location_on_rounded,
-                    color: AppColors.primaryBlue,
-                    size: 20,
-                  ),
-                ),
-                title: Text(
-                  suggestion['name'],
-                  style: GoogleFonts.inter(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                    color: isDark ? Colors.white : AppColors.textPrimary,
-                  ),
-                ),
-                subtitle: Text(
-                  suggestion['address'],
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    color: isDark ? Colors.grey[400] : AppColors.textSecondary,
-                  ),
-                ),
-                onTap: () {
-                  final latLng = LatLng(suggestion['lat'], suggestion['lng']);
-                  final name = suggestion['name'];
+        Column(
+          children: displayList.take(5).map((suggestion) {
+            return InkWell(
+              onTap: () {
+                final latLng = LatLng(suggestion['lat'], suggestion['lng']);
+                final name = suggestion['name'] as String;
 
-                  if (_isPickupSearch) {
-                    pCtrl.text = name;
-                    notifier.setPickup(latLng, name);
-                  } else {
-                    dCtrl.text = name;
-                    notifier.setDropoff(latLng, name);
-                  }
+                if (_isPickupSearch) {
+                  pCtrl.text = name;
+                  notifier.setPickup(latLng, name);
+                } else {
+                  dCtrl.text = name;
+                  notifier.setDropoff(latLng, name);
+                }
 
-                  // Unfocus all fields
-                  FocusScope.of(context).unfocus();
-                  setState(() {
-                    _showSuggestions = false;
-                    _searchQuery = '';
-                  });
-                  final isPickupSet =
-                      _isPickupSearch ? true : (state.pickupLocation != null);
-                  final isDropSet =
-                      !_isPickupSearch ? true : (state.dropoffLocation != null);
-                  final nextStatusIsVehicleSelection = isPickupSet && isDropSet;
+                // Unfocus all fields
+                FocusScope.of(context).unfocus();
+                setState(() {
+                  _showSuggestions = false;
+                  _searchQuery = '';
+                });
+                final isPickupSet =
+                    _isPickupSearch ? true : (state.pickupLocation != null);
+                final isDropSet =
+                    !_isPickupSearch ? true : (state.dropoffLocation != null);
+                final nextStatusIsVehicleSelection = isPickupSet && isDropSet;
 
-                  _sheetController.animateTo(
-                    nextStatusIsVehicleSelection ? 0.88 : 0.48,
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeOut,
-                  );
-                },
-              );
-            },
-          ),
+                _sheetController.animateTo(
+                  nextStatusIsVehicleSelection ? 0.88 : 0.48,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOut,
+                );
+
+                if (nextStatusIsVehicleSelection) {
+                  notifier.updateStatus(RideStatus.vehicleSelection);
+                }
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.grey[800] : Colors.grey[100],
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.location_on_rounded,
+                        color: AppColors.primaryBlue,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            suggestion['name'],
+                            style: GoogleFonts.inter(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                              color: isDark ? Colors.white : AppColors.textPrimary,
+                            ),
+                          ),
+                          Text(
+                            suggestion['address'],
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              color: isDark ? Colors.grey[400] : AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
         ),
       ],
     );

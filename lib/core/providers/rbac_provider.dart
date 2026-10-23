@@ -17,28 +17,6 @@ final permissionsProvider = FutureProvider<Set<String>>((ref) async {
     return await rbacService.getCachedPermissions();
   }
 
-  // Use the demo mock logic if user is a demo user
-  if (userState.isDemo || user.id.startsWith('demo_')) {
-    final Set<String> permissions = {};
-    if ([
-      'super_admin',
-      'founder_admin',
-      'ops_head',
-      'city_manager',
-      'area_manager',
-      'finance_manager',
-      'support_manager',
-      'marketing_admin',
-      'admin'
-    ].contains(user.role.name)) {
-      permissions.add('admin_access');
-    }
-    if (['driver', 'technician'].contains(user.role.name)) {
-      permissions.add('field_staff_access');
-    }
-    return permissions;
-  }
-
   return await rbacService.fetchUserPermissions(user.id);
 });
 

@@ -2,6 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart';
 import '../models/rental_booking.dart';
+import '../extensions/datetime_extensions.dart';
 
 final rentalBookingRepositoryProvider =
     Provider((ref) => RentalBookingRepository());
@@ -70,16 +71,13 @@ class RentalBookingRepository {
     int windowMinutes = 30,
   }) async {
     try {
-      final cutoff = DateTime.now()
-          .subtract(Duration(minutes: windowMinutes))
-          .toUtc()
-          .toIso8601String();
+      final cutoff = DateTime.now().subtract(Duration(minutes: windowMinutes)).utcIso;
 
       final response = await _supabase
           .from('rental_bookings')
           .select()
           .eq('customer_id', customerId)
-          .eq('status', 'payment_pending')
+          .inFilter('status', ['payment_pending', 'pending'])
           .lt('created_at', cutoff);
 
       return response
@@ -89,6 +87,27 @@ class RentalBookingRepository {
       debugPrint('getExpiredPendingRentals error: $e');
       return []; // Non-fatal — don't block bookings screen
     }
+  }
+
+  /// Delete a single rental booking from customer history
+  Future<void> deleteRentalBooking(String bookingId) async {
+    try {
+      await _supabase.from('rental_bookings').delete().eq('id', bookingId);
+    } catch (e) {
+      // Fallback to update status if delete blocked by RLS
+      await updateRentalStatus(bookingId, 'cancelled');
+    }
+  }
+
+  /// Clear all cancelled/expired rental bookings for a customer
+  Future<void> clearCustomerCancelledRentals(String customerId) async {
+    try {
+      await _supabase
+          .from('rental_bookings')
+          .delete()
+          .eq('customer_id', customerId)
+          .inFilter('status', ['cancelled', 'cancelled_expired']);
+    } catch (_) {}
   }
 
   /// Marks each booking in [ids] as `cancelled_expired` and optionally

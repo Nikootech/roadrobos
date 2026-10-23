@@ -450,7 +450,7 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
       const distanceCalc = Distance();
 
       final nearbyDrivers = onlineDrivers.where((driver) {
-        if (driver.currentPosition == null) return false;
+        if (driver.currentPosition == null) return true;
         final double distance = distanceCalc.as(
           LengthUnit.Meter,
           state.pickupLocation!,
@@ -463,9 +463,12 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
       final generatedOtp =
           (1000 + random.nextInt(9000)).toString(); // 4 digit OTP
 
-      final isDemoUser = user.user?.id == null || user.user!.id == 'demo';
-      final custId =
-          isDemoUser ? '00000000-0000-0000-0000-000000000000' : user.user!.id;
+      final currentAppUser = user.user;
+      if (currentAppUser == null || currentAppUser.id.isEmpty) {
+        state = state.copyWith(status: RideStatus.vehicleSelection);
+        throw Exception('Please sign in to confirm and book your ride.');
+      }
+      final custId = currentAppUser.id;
 
       final booking = RideBooking(
         id: '',
@@ -489,15 +492,14 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
         try {
           final paymentService = ref.read(paymentServiceProvider.notifier);
           paymentId = await paymentService.startPayment(PaymentDetails(
-            bookingId:
-                '00000000-0000-0000-0000-000000000000', // Typically generated before payment
+            bookingId: 'pending',
             bookingType: BookingType.ride,
             totalCost: booking.fare,
             userId: custId,
             description:
                 'Taxi Ride - ${state.selectedOption?.title ?? 'Standard'}',
-            contact: user.user?.phone ?? '9999999999',
-            email: user.user?.email ?? 'test@example.com',
+            contact: currentAppUser.phone.isNotEmpty ? currentAppUser.phone : '9999999999',
+            email: currentAppUser.email ?? 'support@roadrobos.com',
           ));
         } catch (e) {
           debugPrint('Razorpay payment failed or was cancelled: $e');
@@ -506,30 +508,27 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
         }
       }
 
-      // 2. Safeguard: Only save to Supabase if we have a real UUID
-      String bookingId = '00000000-0000-0000-0000-000000000000';
-      if (!isDemoUser) {
-        final bookingWithPayment = RideBooking(
-          id: '',
-          customerId: custId,
-          pickupAddress: booking.pickupAddress,
-          destinationAddress: booking.destinationAddress,
-          pickupLat: booking.pickupLat,
-          pickupLng: booking.pickupLng,
-          destLat: booking.destLat,
-          destLng: booking.destLng,
-          fare: booking.fare,
-          otp: booking.otp,
-          createdAt: booking.createdAt,
-          scheduledFor: booking.scheduledFor,
-          paymentMethod: booking.paymentMethod,
-          razorpayPaymentId: state.paymentMethod == 'Online' ? paymentId : null,
-          status: state.paymentMethod == 'Online' ? 'paid' : 'searching',
-        );
-        bookingId = await ref
-            .read(rideBookingRepositoryProvider)
-            .createRideBooking(bookingWithPayment);
-      }
+      // 2. Save directly to Supabase with authenticated user UUID
+      final bookingWithPayment = RideBooking(
+        id: '',
+        customerId: custId,
+        pickupAddress: booking.pickupAddress,
+        destinationAddress: booking.destinationAddress,
+        pickupLat: booking.pickupLat,
+        pickupLng: booking.pickupLng,
+        destLat: booking.destLat,
+        destLng: booking.destLng,
+        fare: booking.fare,
+        otp: booking.otp,
+        createdAt: booking.createdAt,
+        scheduledFor: booking.scheduledFor,
+        paymentMethod: booking.paymentMethod,
+        razorpayPaymentId: state.paymentMethod == 'Online' ? paymentId : null,
+        status: state.paymentMethod == 'Online' ? 'paid' : 'searching',
+      );
+      final bookingId = await ref
+          .read(rideBookingRepositoryProvider)
+          .createRideBooking(bookingWithPayment);
 
       state = state.copyWith(
           rideId: bookingId,
@@ -578,6 +577,8 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
 
       // Sort closest driver first
       nearbyDrivers.sort((a, b) {
+        if (a.currentPosition == null) return 1;
+        if (b.currentPosition == null) return -1;
         final distA = distanceCalc.as(
             LengthUnit.Meter, state.pickupLocation!, a.currentPosition!);
         final distB = distanceCalc.as(
@@ -617,11 +618,10 @@ class TaxiNotifier extends StateNotifier<TaxiState> {
 
       // 90-second search timeout
       _searchTimeoutTimer?.cancel();
-      _searchTimeoutTimer = Timer(const Duration(seconds: 90), () {
+      _searchTimeoutTimer = Timer(const Duration(seconds: 90), () async {
         if (state.status == RideStatus.booked) {
-          _cancelBookingOnBackend();
-          state = state.copyWith(status: RideStatus.idle);
-          debugPrint('TaxiProvider: Driver search timed out after 90s');
+          debugPrint('TaxiProvider: Driver search timed out after 90s — auto-cancelling');
+          await cancelAndRefund();
         }
       });
 

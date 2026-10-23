@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
 import '../../core/theme/app_colors.dart';
-import '../../shared/widgets/bottom_nav_bar.dart';
 import '../../core/repositories/ride_booking_repository.dart';
+import '../../core/repositories/ratings_repository.dart';
 import '../../core/models/ride_booking.dart';
 import '../../features/profile/user_provider.dart';
+import 'providers/driver_state_provider.dart';
 
-/// Driver Rides Screen showing My Rides History (Driver View) from Supabase
+/// Driver Rides Screen showing Ratings & My Rides History (Rapido Captain Standard)
 class DriverRidesScreen extends ConsumerStatefulWidget {
   const DriverRidesScreen({super.key});
 
@@ -63,6 +63,13 @@ class _DriverRidesScreenState extends ConsumerState<DriverRidesScreen> {
     final cancelledRides =
         _rides.where((r) => r.status == 'cancelled').toList();
 
+    final user = ref.watch(userProvider).user;
+    final ratingAsync = ref.watch(partnerRatingProvider(user?.id ?? ''));
+    final ratingData = ratingAsync.value;
+    final avgRating = ratingData?['avg_score']?.toString() ?? '5.0';
+    final earningsAsync = ref.watch(earningsProvider);
+    final acceptanceRate = earningsAsync.value?.acceptanceRate ?? '100%';
+
     return DefaultTabController(
       length: 2,
       child: Scaffold(
@@ -73,7 +80,7 @@ class _DriverRidesScreenState extends ConsumerState<DriverRidesScreen> {
           automaticallyImplyLeading: false,
           centerTitle: false,
           title: const Text(
-            'My Rides',
+            'Ratings & Rides',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.w800,
@@ -150,8 +157,13 @@ class _DriverRidesScreenState extends ConsumerState<DriverRidesScreen> {
                       ),
                     ),
                   )
-                : TabBarView(
+                : Column(
                     children: [
+                      _buildCaptainScorecard(
+                          avgRating, acceptanceRate, completedRides.length),
+                      Expanded(
+                        child: TabBarView(
+                          children: [
                       // Completed Tab
                       completedRides.isEmpty
                           ? const Center(child: Text('No completed rides.'))
@@ -162,10 +174,14 @@ class _DriverRidesScreenState extends ConsumerState<DriverRidesScreen> {
                                 final r = completedRides[index];
                                 final timeStr =
                                     "${r.createdAt.day}/${r.createdAt.month}/${r.createdAt.year} ${r.createdAt.hour.toString().padLeft(2, '0')}:${r.createdAt.minute.toString().padLeft(2, '0')}";
+                                final prefix = r.customerId.length >= 4
+                                    ? r.customerId.substring(0, 4).toUpperCase()
+                                    : (r.customerId.isNotEmpty
+                                        ? r.customerId.toUpperCase()
+                                        : 'USER');
                                 return _buildPremiumRideCard(
                                   context,
-                                  passenger:
-                                      'Customer ${r.customerId.substring(0, 4).toUpperCase()}',
+                                  passenger: 'Customer $prefix',
                                   date: timeStr,
                                   fare: '₹${r.fare.toStringAsFixed(2)}',
                                   status: 'COMPLETED',
@@ -186,10 +202,14 @@ class _DriverRidesScreenState extends ConsumerState<DriverRidesScreen> {
                                 final r = cancelledRides[index];
                                 final timeStr =
                                     "${r.createdAt.day}/${r.createdAt.month}/${r.createdAt.year} ${r.createdAt.hour.toString().padLeft(2, '0')}:${r.createdAt.minute.toString().padLeft(2, '0')}";
+                                final prefix = r.customerId.length >= 4
+                                    ? r.customerId.substring(0, 4).toUpperCase()
+                                    : (r.customerId.isNotEmpty
+                                        ? r.customerId.toUpperCase()
+                                        : 'USER');
                                 return _buildPremiumRideCard(
                                   context,
-                                  passenger:
-                                      'Customer ${r.customerId.substring(0, 4).toUpperCase()}',
+                                  passenger: 'Customer $prefix',
                                   date: timeStr,
                                   fare: '₹${r.fare.toStringAsFixed(2)}',
                                   status: 'CANCELLED',
@@ -201,30 +221,91 @@ class _DriverRidesScreenState extends ConsumerState<DriverRidesScreen> {
                             ).animate().fadeIn(duration: 400.ms),
                     ],
                   ),
-        bottomNavigationBar: CustomBottomNavBar(
-          currentIndex: 2,
-          items: const [
-            NavItemData(
-                icon: Iconsax.home, activeIcon: Iconsax.home5, label: 'Home'),
-            NavItemData(
-                icon: Iconsax.wallet,
-                activeIcon: Iconsax.wallet5,
-                label: 'Earnings'),
-            NavItemData(
-                icon: Iconsax.star,
-                activeIcon: Iconsax.star5,
-                label: 'Ratings'),
-            NavItemData(
-                icon: Iconsax.user, activeIcon: Iconsax.user, label: 'Account'),
-          ],
-          onTap: (index) {
-            if (index == 0) context.pushReplacement('/driver-home');
-            if (index == 1) context.pushReplacement('/driver-earnings');
-            if (index == 2) return;
-            if (index == 3) context.pushReplacement('/driver-profile');
-          },
-        ),
+                ),
+              ],
+            ),
       ),
+    );
+  }
+
+  Widget _buildCaptainScorecard(
+      String rating, String acceptanceRate, int totalCompleted) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildScoreItem(
+            icon: Icons.star_rounded,
+            iconColor: Colors.amber,
+            value: rating,
+            label: 'Rating',
+          ),
+          Container(width: 1, height: 36, color: AppColors.border),
+          _buildScoreItem(
+            icon: Icons.check_circle_rounded,
+            iconColor: AppColors.successGreen,
+            value: acceptanceRate,
+            label: 'Acceptance',
+          ),
+          Container(width: 1, height: 36, color: AppColors.border),
+          _buildScoreItem(
+            icon: Icons.two_wheeler_rounded,
+            iconColor: AppColors.primaryBlue,
+            value: '$totalCompleted',
+            label: 'Completed',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildScoreItem({
+    required IconData icon,
+    required Color iconColor,
+    required String value,
+    required String label,
+  }) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: iconColor, size: 16),
+            const SizedBox(width: 4),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: AppColors.deepNavy,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 11,
+            color: AppColors.textSecondary,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
     );
   }
 

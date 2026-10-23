@@ -5,6 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/theme/app_colors.dart';
 import '../../core/models/user_role.dart';
 import '../../core/providers/theme_provider.dart';
 import '../../core/services/biometric_service.dart';
@@ -24,6 +27,10 @@ class UnifiedSettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _UnifiedSettingsScreenState extends ConsumerState<UnifiedSettingsScreen> {
+  static const _secureStorage = FlutterSecureStorage(
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+    iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
+  );
   bool _isBiometricEnabled = false;
   bool _isLoggingOut = false;
 
@@ -45,35 +52,136 @@ class _UnifiedSettingsScreenState extends ConsumerState<UnifiedSettingsScreen> {
     final biometricService = ref.read(biometricServiceProvider);
 
     if (value) {
-      final available = await biometricService.isAvailable();
-      if (!available) {
+      final result = await biometricService.authenticateWithResult(
+        localizedReason:
+            'Verify your fingerprint, face, or mobile password to enable biometric login',
+      );
+
+      if (result == BiometricAuthResult.notEnrolled ||
+          result == BiometricAuthResult.notSupported) {
+        setState(() => _isBiometricEnabled = false);
+        if (!mounted) return;
+        await _showSetupScreenLockDialog(context);
+        return;
+      }
+
+      if (result == BiometricAuthResult.success) {
+        final prefs = ref.read(sharedPreferencesProvider);
+        await prefs.setBool('biometric_enabled', true);
+
+        final user = ref.read(userProvider).user;
+        if (user != null && user.email != null && user.email!.isNotEmpty) {
+          await _secureStorage.write(key: 'bio_email', value: user.email!);
+        }
+
+        final session = Supabase.instance.client.auth.currentSession;
+        if (session != null && session.refreshToken != null) {
+          await _secureStorage.write(
+              key: 'bio_refresh_token', value: session.refreshToken!);
+        }
+
+        setState(() => _isBiometricEnabled = true);
         messenger.showSnackBar(
           SnackBar(
             content: Text(
-              'Biometric authentication is not available on this device.',
+              'Biometric login enabled successfully!',
               style: GoogleFonts.inter(fontWeight: FontWeight.w600),
             ),
-            backgroundColor: const Color(0xFFE11D48),
+            backgroundColor: const Color(0xFF006241),
             behavior: SnackBarBehavior.floating,
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
-        return;
+      } else {
+        setState(() => _isBiometricEnabled = false);
+        final enrolled = await biometricService.isEnrolled();
+        if (!enrolled) {
+          if (!mounted) return;
+          await _showSetupScreenLockDialog(context);
+        } else {
+          messenger.showSnackBar(
+            SnackBar(
+              content: Text(
+                'Verification cancelled or failed.',
+                style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+              ),
+              backgroundColor: const Color(0xFFE11D48),
+              behavior: SnackBarBehavior.floating,
+              shape:
+                  RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          );
+        }
       }
-    }
-    final prefs = ref.read(sharedPreferencesProvider);
-    await prefs.setBool('biometric_enabled', value);
-    setState(() => _isBiometricEnabled = value);
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(
-          value ? 'Biometric login enabled.' : 'Biometric login disabled.',
-          style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+    } else {
+      final prefs = ref.read(sharedPreferencesProvider);
+      await prefs.setBool('biometric_enabled', false);
+      await _secureStorage.delete(key: 'bio_email');
+      await _secureStorage.delete(key: 'bio_password');
+      await _secureStorage.delete(key: 'bio_refresh_token');
+
+      setState(() => _isBiometricEnabled = false);
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            'Biometric login disabled.',
+            style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+          ),
+          backgroundColor: const Color(0xFF64748B),
+          behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
-        backgroundColor: const Color(0xFF006241),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      );
+    }
+  }
+
+  Future<void> _showSetupScreenLockDialog(BuildContext context) async {
+    await showDialog(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.lock_outline_rounded,
+                color: AppColors.accentOrange, size: 26),
+            SizedBox(width: 10),
+            Expanded(
+              child: Text('Screen Lock Required',
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 18)),
+            ),
+          ],
+        ),
+        content: const Text(
+          'No screen lock, PIN, or biometric is configured on this device.\n\n'
+          'Please set up a Mobile PIN, Pattern, Password, or Fingerprint in your phone Settings first before enabling Biometric Login.',
+          style: TextStyle(fontSize: 14, height: 1.4),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogCtx),
+            child: const Text('CANCEL',
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textMuted)),
+          ),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.pop(dialogCtx);
+              BiometricService.openSecuritySettings();
+            },
+            icon: const Icon(Icons.settings_outlined, size: 16),
+            label: const Text('OPEN SETTINGS'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryBlue,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -118,6 +226,9 @@ class _UnifiedSettingsScreenState extends ConsumerState<UnifiedSettingsScreen> {
     if (confirmed == true && mounted) {
       setState(() => _isLoggingOut = true);
       await ref.read(userProvider.notifier).logout();
+      if (mounted) {
+        context.go('/auth/login');
+      }
     }
   }
 
@@ -683,49 +794,53 @@ class _UnifiedSettingsScreenState extends ConsumerState<UnifiedSettingsScreen> {
     required bool value,
     required ValueChanged<bool> onChanged,
   }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      child: Row(
-        children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
+    return InkWell(
+      onTap: () => onChanged(!value),
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: color, size: 18),
             ),
-            child: Icon(icon, color: color, size: 18),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: GoogleFonts.outfit(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF0F172A),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.outfit(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF0F172A),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 1),
-                Text(
-                  subtitle,
-                  style: GoogleFonts.inter(
-                    fontSize: 11.5,
-                    color: const Color(0xFF64748B),
-                    fontWeight: FontWeight.w500,
+                  const SizedBox(height: 1),
+                  Text(
+                    subtitle,
+                    style: GoogleFonts.inter(
+                      fontSize: 11.5,
+                      color: const Color(0xFF64748B),
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          ReactSwitch(
-            value: value,
-            onChanged: onChanged,
-          ),
-        ],
+            ReactSwitch(
+              value: value,
+              onChanged: onChanged,
+            ),
+          ],
+        ),
       ),
     );
   }

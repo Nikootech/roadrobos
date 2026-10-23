@@ -22,8 +22,8 @@ class LiveTrackingScreen extends ConsumerStatefulWidget {
 
 class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen>
     with SingleTickerProviderStateMixin {
-  // 10-minute countdown (600 seconds)
-  static const int _searchDurationSeconds = 600;
+  // 90-second search countdown
+  static const int _searchDurationSeconds = 90;
   int _remainingSeconds = _searchDurationSeconds;
   Timer? _countdownTimer;
 
@@ -46,7 +46,8 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen>
           _remainingSeconds--;
         } else {
           timer.cancel();
-          // Time's up – the provider handles the actual cancel
+          // Time's up — auto cancel booking on backend and refund
+          ref.read(taxiProvider.notifier).cancelAndRefund();
         }
       });
     });
@@ -389,7 +390,7 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen>
                     const SizedBox(height: 12),
 
                     Text(
-                      'We\'re searching nearby drivers.\nWill auto-cancel if none available in 10 min.',
+                      'We\'re searching nearby drivers.\nWill auto-cancel if none available in 90 seconds.',
                       textAlign: TextAlign.center,
                       style: GoogleFonts.outfit(
                         fontSize: 14,
@@ -471,7 +472,7 @@ class _LiveTrackingScreenState extends ConsumerState<LiveTrackingScreen>
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
-                              'If you cancel or no driver is found within 10 minutes, your payment will be automatically refunded.',
+                              'If you cancel or no driver is found within 90 seconds, your payment will be automatically refunded.',
                               style: GoogleFonts.outfit(
                                 fontSize: 13,
                                 color: Colors.blue.shade700,

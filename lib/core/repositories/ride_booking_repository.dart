@@ -108,18 +108,47 @@ class RideBookingRepository {
     }).eq('id', bookingId);
   }
 
-  /// Auto-cancels any searching ride that was requested more than [timeoutSeconds] ago
-  /// and was never accepted by a driver.
-  Future<int> autoCancelExpiredSearchingRides({int timeoutSeconds = 90}) async {
+  /// Delete a single ride booking from customer history
+  Future<void> deleteBooking(String bookingId) async {
+    try {
+      await _supabase.from('ride_bookings').delete().eq('id', bookingId);
+    } catch (e) {
+      // If RLS prevents hard delete, soft cancel
+      await cancelBooking(bookingId);
+    }
+  }
+
+  /// Clear all cancelled/stale ride bookings for a customer
+  Future<void> clearCustomerCancelledRides(String customerId) async {
+    try {
+      await _supabase
+          .from('ride_bookings')
+          .delete()
+          .eq('customer_id', customerId)
+          .eq('status', 'cancelled');
+    } catch (_) {}
+  }
+
+  /// Auto-cancels any unassigned ride that was requested more than [timeoutSeconds] ago
+  /// and was never accepted by a driver (driver_id is null).
+  Future<int> autoCancelExpiredSearchingRides(
+      {String? customerId, int timeoutSeconds = 90}) async {
     try {
       final DateTime now = DateTime.now().toUtc();
       final cutoff = now.subtract(Duration(seconds: timeoutSeconds)).utcIso;
-      final staleRides = await _supabase
+
+      var query = _supabase
           .from('ride_bookings')
           .select('id')
-          .eq('status', 'searching')
+          .isFilter('driver_id', null)
+          .inFilter('status', ['searching', 'paid', 'pending'])
           .lt('created_at', cutoff);
 
+      if (customerId != null && customerId.isNotEmpty) {
+        query = query.eq('customer_id', customerId);
+      }
+
+      final staleRides = await query;
       if (staleRides.isEmpty) return 0;
 
       final ids = staleRides.map((r) => r['id'].toString()).toList();
@@ -129,8 +158,7 @@ class RideBookingRepository {
             'status': 'cancelled',
             'cancelled_at': DateTime.now().toUtc().toIso8601String(),
           })
-          .inFilter('id', ids)
-          .eq('status', 'searching');
+          .inFilter('id', ids);
 
       return ids.length;
     } catch (_) {

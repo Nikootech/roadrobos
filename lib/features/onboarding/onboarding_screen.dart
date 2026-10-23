@@ -9,6 +9,9 @@ import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/services/local_storage_service.dart';
+import '../../core/config/app_config.dart';
+import '../../core/config/app_flavor.dart';
+import '../../core/models/user_role.dart';
 
 /// Onboarding Screen - Modern 3-slide PageView with real-time app hero illustrations:
 /// Slide 1: Secure & Easy Payments (3D Smart Card & Security Badges)
@@ -61,6 +64,19 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     super.dispose();
   }
 
+  Future<void> _finishOnboarding() async {
+    final router = GoRouter.of(context);
+    await ref.read(localStorageServiceProvider).setOnboardingComplete();
+    if (AppConfig.flavor == AppFlavor.partner) {
+      router.go('/partner/welcome');
+    } else {
+      await ref
+          .read(localStorageServiceProvider)
+          .setSelectedRole(UserRole.customer.name);
+      router.go('/auth/login');
+    }
+  }
+
   void _onNext() async {
     if (_currentPage < 2) {
       await _pageController.nextPage(
@@ -68,9 +84,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         curve: Curves.easeInOutCubic,
       );
     } else {
-      final router = GoRouter.of(context);
-      await ref.read(localStorageServiceProvider).setOnboardingComplete();
-      router.go('/auth/role-selection');
+      await _finishOnboarding();
     }
   }
 
@@ -126,13 +140,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
                   // Skip Button
                   GestureDetector(
-                    onTap: () async {
-                      final router = GoRouter.of(context);
-                      await ref
-                          .read(localStorageServiceProvider)
-                          .setOnboardingComplete();
-                      router.go('/auth/role-selection');
-                    },
+                    onTap: () => _finishOnboarding(),
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 14,

@@ -48,11 +48,10 @@ class DriverBankWithdrawalScreen extends ConsumerStatefulWidget {
 
 class _DriverBankWithdrawalScreenState
     extends ConsumerState<DriverBankWithdrawalScreen> {
-  final TextEditingController _amountController =
-      TextEditingController(text: '5000');
+  final TextEditingController _amountController = TextEditingController();
   bool _isProcessing = false;
-  String _selectedBankName = 'HDFC Bank';
-  String _selectedBankAcc = '**** 1234';
+  String _selectedBankName = '';
+  String _selectedBankAcc = '';
   Stream<List<DriverBankAccount>>? _banksStream;
   String? _userId;
   final List<String> _deletedAccountIds = [];

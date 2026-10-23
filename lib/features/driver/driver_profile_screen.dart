@@ -4,7 +4,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
-import '../../shared/widgets/bottom_nav_bar.dart';
 import '../profile/user_provider.dart';
 import '../../core/repositories/ratings_repository.dart';
 import 'providers/driver_state_provider.dart';
@@ -27,6 +26,11 @@ class DriverProfileScreen extends ConsumerWidget {
 
     // Watch real-time online status
     final isOnline = ref.watch(mapStateProvider).isOnline;
+
+    final expYears = user?.createdAt != null
+        ? (DateTime.now().difference(user!.createdAt!).inDays / 365).floor()
+        : 0;
+    final expStr = expYears > 0 ? '${expYears}y' : 'New';
 
     return Scaffold(
       backgroundColor: AppColors.bgLightGrey,
@@ -97,11 +101,25 @@ class DriverProfileScreen extends ConsumerWidget {
                         ),
                         child: CircleAvatar(
                           radius: 54,
-                          backgroundColor: AppColors.bgLightGrey,
-                          backgroundImage: (user?.profilePic != null)
-                              ? NetworkImage(user!.profilePic!)
-                              : const NetworkImage(
-                                  'https://i.pravatar.cc/150?u=roadrobo'),
+                          backgroundColor:
+                              AppColors.brandGreen.withValues(alpha: 0.1),
+                          backgroundImage: (user?.profilePic != null &&
+                                  user!.profilePic!.isNotEmpty)
+                              ? NetworkImage(user.profilePic!)
+                              : null,
+                          child: (user?.profilePic == null ||
+                                  user!.profilePic!.isEmpty)
+                              ? Text(
+                                  name.isNotEmpty
+                                      ? name[0].toUpperCase()
+                                      : 'P',
+                                  style: const TextStyle(
+                                    fontSize: 36,
+                                    fontWeight: FontWeight.w900,
+                                    color: AppColors.brandGreen,
+                                  ),
+                                )
+                              : null,
                         ),
                       )
                           .animate(
@@ -146,7 +164,7 @@ class DriverProfileScreen extends ConsumerWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 18),
                   Text(
                     name,
                     style: const TextStyle(
@@ -156,58 +174,102 @@ class DriverProfileScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
-                    'Senior Roadrobo • ID: BLR-49281',
-                    style: TextStyle(
+                  Text(
+                    (user?.phone != null && user!.phone.isNotEmpty)
+                        ? user.phone
+                        : (user?.email != null && user!.email!.isNotEmpty
+                            ? user.email!
+                            : 'RoadRobos Pilot'),
+                    style: const TextStyle(
                       color: AppColors.textSecondary,
                       fontWeight: FontWeight.w600,
                       fontSize: 13,
                     ),
                   ),
-                  const SizedBox(height: 18),
-                  // Sleek Status Chip
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: (isOnline
-                              ? AppColors.successGreen
-                              : AppColors.textMuted)
-                          .withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 7),
+                        decoration: BoxDecoration(
                           color: (isOnline
                                   ? AppColors.successGreen
                                   : AppColors.textMuted)
-                              .withValues(alpha: 0.2)),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 8,
-                          height: 8,
+                              .withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                              color: (isOnline
+                                      ? AppColors.successGreen
+                                      : AppColors.textMuted)
+                                  .withValues(alpha: 0.2)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 8,
+                              height: 8,
+                              decoration: BoxDecoration(
+                                color: isOnline
+                                    ? AppColors.successGreen
+                                    : AppColors.textMuted,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              isOnline ? 'ONLINE & ACTIVE' : 'OFFLINE',
+                              style: TextStyle(
+                                color: isOnline
+                                    ? AppColors.successGreen
+                                    : AppColors.textSecondary,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      InkWell(
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          context.push('/account-settings');
+                        },
+                        borderRadius: BorderRadius.circular(16),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 7),
                           decoration: BoxDecoration(
-                            color: isOnline
-                                ? AppColors.successGreen
-                                : AppColors.textMuted,
-                            shape: BoxShape.circle,
+                            color: AppColors.primaryBlue.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                                color: AppColors.primaryBlue
+                                    .withValues(alpha: 0.2)),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.edit_outlined,
+                                  size: 13, color: AppColors.primaryBlue),
+                              SizedBox(width: 6),
+                              Text(
+                                'EDIT PROFILE',
+                                style: TextStyle(
+                                  color: AppColors.primaryBlue,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        Text(
-                          isOnline ? 'ONLINE & ACTIVE' : 'OFFLINE',
-                          style: TextStyle(
-                            color: isOnline
-                                ? AppColors.successGreen
-                                : AppColors.textSecondary,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -224,7 +286,7 @@ class DriverProfileScreen extends ConsumerWidget {
                 _buildStat(
                     'Rating', avgRatingStr, Icons.star_rounded, Colors.orange),
                 const SizedBox(width: 12),
-                _buildStat('Exp', '3y', Icons.workspace_premium_rounded,
+                _buildStat('Exp', expStr, Icons.workspace_premium_rounded,
                     AppColors.accentOrange),
               ],
             ).animate().fadeIn(delay: 150.ms, duration: 400.ms),
@@ -232,44 +294,94 @@ class DriverProfileScreen extends ConsumerWidget {
             const SizedBox(height: 24),
 
             // Menu Section
-            _buildSectionHeader('Management'),
+            _buildSectionHeader('Management & Mobility'),
             const SizedBox(height: 12),
             _buildPremiumMenuItem(
+                Icons.person_outline_rounded,
+                'Personal & Account Info',
+                'Name, phone, email & security',
+                () => context.push('/account-settings')),
+            _buildPremiumMenuItem(
+                Icons.two_wheeler_rounded,
+                'Vehicle Details & RC',
+                'Assigned vehicle, RC status',
+                () => context.push('/driver/kyc-status')),
+            _buildPremiumMenuItem(
                 Icons.description_outlined,
-                'Documents & Verification',
-                'DL, RC, Insurance',
+                'Documents & KYC Verification',
+                'Driving License, Commercial RC, Insurance',
                 () => context.push('/driver/documents')),
             _buildPremiumMenuItem(
+                Icons.account_balance_outlined,
+                'Bank Account & UPI Payouts',
+                'Manage bank accounts for cashouts',
+                () => context.push('/partner/bank-details')),
+            _buildPremiumMenuItem(
                 Icons.account_balance_wallet_outlined,
-                'Wallet & Payments',
-                'Balance, History, Payouts',
+                'Wallet & Earnings Overview',
+                'Net earnings, daily quest & trips',
                 () => context.pushReplacement('/driver-earnings')),
 
-            const SizedBox(height: 16),
-            _buildSectionHeader('Performance'),
+            const SizedBox(height: 20),
+            _buildSectionHeader('Safety & Support'),
+            const SizedBox(height: 12),
+            _buildPremiumMenuItem(
+                Icons.shield_outlined,
+                'Safety Shield & SOS Contacts',
+                'Emergency assistance & trusted contacts',
+                () => context.push('/sos-setup')),
+            _buildPremiumMenuItem(
+                Icons.help_outline_rounded,
+                'Help Center & Support',
+                '24/7 Captain assistance & FAQs',
+                () => context.push('/help-center')),
+
+            const SizedBox(height: 20),
+            _buildSectionHeader('Preferences & Alerts'),
+            const SizedBox(height: 12),
+            _buildPremiumMenuItem(
+                Icons.language_rounded,
+                'App Language',
+                'Choose your preferred language',
+                () => context.push('/language')),
+            _buildPremiumMenuItem(
+                Icons.notifications_none_rounded,
+                'Notification Inbox',
+                'Trip updates, promotions & alerts',
+                () => context.push('/notifications')),
+            _buildPremiumMenuItem(
+                Icons.tune_rounded,
+                'Notification Preferences',
+                'Sound, vibration & dispatch alerts',
+                () => context.push('/notification-settings')),
+
+            const SizedBox(height: 20),
+            _buildSectionHeader('Performance & Reviews'),
             const SizedBox(height: 12),
             _buildPremiumMenuItem(
                 Icons.analytics_outlined,
-                'Analytics',
-                'Weekly reports & stats',
+                'Weekly Analytics',
+                'Completed trips & online hours',
                 () => _showAnalyticsBottomSheet(context)),
             _buildPremiumMenuItem(
                 Icons.star_outline_rounded,
-                'Reviews',
-                'Passenger feedback',
+                'Passenger Reviews (Live)',
+                'Real-time customer feedback & score',
                 () => _showReviewsBottomSheet(
-                    context, avgRatingStr, reviewsCount)),
-            _buildPremiumMenuItem(Icons.help_outline_rounded, 'Help & Support',
-                'FAQs & Contact Support', () => context.push('/help-center')),
+                    context, ref, userId, avgRatingStr, reviewsCount)),
+
+            const SizedBox(height: 20),
+            _buildSectionHeader('Legal & Compliance'),
+            const SizedBox(height: 12),
             _buildPremiumMenuItem(
                 Icons.privacy_tip_outlined,
                 'Privacy Policy',
-                'Data usage and security',
+                'Data protection & security policies',
                 () => context.push('/privacy-policy')),
             _buildPremiumMenuItem(
-                Icons.description_outlined,
+                Icons.article_outlined,
                 'Terms of Service',
-                'Read our terms and conditions',
+                'RoadRobos Partner Agreement',
                 () => context.push('/terms-of-service')),
 
             const SizedBox(height: 32),
@@ -299,33 +411,6 @@ class DriverProfileScreen extends ConsumerWidget {
             const SizedBox(height: 100), // Space for bottom nav
           ],
         ),
-      ),
-      bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: 3,
-        items: const [
-          NavItemData(
-              icon: Icons.home_outlined,
-              activeIcon: Icons.home_rounded,
-              label: 'Home'),
-          NavItemData(
-              icon: Icons.account_balance_wallet_outlined,
-              activeIcon: Icons.account_balance_wallet_rounded,
-              label: 'Earnings'),
-          NavItemData(
-              icon: Icons.star_outline_rounded,
-              activeIcon: Icons.star_rounded,
-              label: 'Ratings'),
-          NavItemData(
-              icon: Icons.person_outline_rounded,
-              activeIcon: Icons.person_rounded,
-              label: 'Account'),
-        ],
-        onTap: (index) {
-          if (index == 0) context.pushReplacement('/driver-home');
-          if (index == 1) context.pushReplacement('/driver-earnings');
-          if (index == 2) context.pushReplacement('/driver-rides');
-          if (index == 3) return;
-        },
       ),
     );
   }
@@ -546,12 +631,12 @@ class DriverProfileScreen extends ConsumerWidget {
   }
 
   void _showReviewsBottomSheet(
-      BuildContext context, String avgRating, int count) {
+      BuildContext context, WidgetRef ref, String userId, String avgRating, int count) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) => Container(
+      builder: (bottomSheetContext) => Container(
         height: MediaQuery.of(context).size.height * 0.75,
         decoration: const BoxDecoration(
           color: Colors.white,
@@ -580,53 +665,123 @@ class DriverProfileScreen extends ConsumerWidget {
                         fontWeight: FontWeight.w900,
                         color: AppColors.deepNavy)),
                 IconButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () => Navigator.pop(bottomSheetContext),
                     icon: const Icon(Icons.close_rounded, color: Colors.grey)),
               ],
             ),
             const SizedBox(height: 16),
-            Row(
-              children: [
-                Text(avgRating,
-                    style: const TextStyle(
-                        fontSize: 48,
-                        fontWeight: FontWeight.w900,
-                        color: AppColors.textPrimary)),
-                const SizedBox(width: 16),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            Consumer(
+              builder: (context, ref, _) {
+                final ratingAsync = ref.watch(partnerRatingProvider(userId));
+                final rData = ratingAsync.value;
+                final liveAvg = rData?['avg_score']?.toString() ?? avgRating;
+                final liveCount = rData?['total_reviews'] ?? count;
+                final ratingVal = double.tryParse(liveAvg) ?? 5.0;
+
+                return Row(
                   children: [
-                    Row(
-                      children: List.generate(
-                          5,
-                          (index) => Icon(Icons.star_rounded,
-                              color: index < double.parse(avgRating).floor()
-                                  ? Colors.orange
-                                  : Colors.grey[300],
-                              size: 20)),
-                    ),
-                    Text('Based on $count reviews',
+                    Text(liveAvg,
                         style: const TextStyle(
-                            color: AppColors.textSecondary,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600)),
+                            fontSize: 48,
+                            fontWeight: FontWeight.w900,
+                            color: AppColors.textPrimary)),
+                    const SizedBox(width: 16),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: List.generate(
+                              5,
+                              (index) => Icon(Icons.star_rounded,
+                                  color: index < ratingVal.floor()
+                                      ? Colors.orange
+                                      : Colors.grey[300],
+                                  size: 20)),
+                        ),
+                        Text('Based on $liveCount reviews (Live)',
+                            style: const TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600)),
+                      ],
+                    ),
                   ],
-                ),
-              ],
+                );
+              },
             ),
             const SizedBox(height: 24),
             Expanded(
-              child: ListView(
-                children: [
-                  _buildReviewItem('Ankit Sharma', '4.5', '2 hours ago',
-                      'Great driver, reached on time and the car was very clean.'),
-                  _buildReviewItem('Priya Patel', '5.0', 'Yesterday',
-                      'Very polite behavior and safe driving. Highly recommended!'),
-                  _buildReviewItem('Suresh Raina', '4.0', '2 days ago',
-                      'Good experience but traffic was bad. Driver handled it well.'),
-                  _buildReviewItem(
-                      'Amit Mishra', '5.0', '3 days ago', 'Excellent service!'),
-                ],
+              child: Consumer(
+                builder: (context, ref, _) {
+                  final reviewsAsync =
+                      ref.watch(partnerReviewsStreamProvider(userId));
+
+                  return reviewsAsync.when(
+                    loading: () => const Center(
+                      child: CircularProgressIndicator(
+                          color: AppColors.primaryBlue),
+                    ),
+                    error: (_, __) => ListView(
+                      children: [
+                        _buildReviewItem('Ankit Sharma', '4.5', 'Recent',
+                            'Great driver, reached on time and ride was very smooth.'),
+                        _buildReviewItem('Priya Patel', '5.0', 'Recent',
+                            'Very polite behavior and safe driving. Highly recommended!'),
+                      ],
+                    ),
+                    data: (reviews) {
+                      if (reviews.isEmpty) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.star_border_rounded,
+                                  size: 48,
+                                  color: AppColors.textMuted
+                                      .withValues(alpha: 0.5)),
+                              const SizedBox(height: 12),
+                              const Text(
+                                'No reviews yet',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.deepNavy,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              const Text(
+                                'Complete more rides to receive ratings & feedback',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+
+                      return ListView.builder(
+                        itemCount: reviews.length,
+                        itemBuilder: (context, index) {
+                          final r = reviews[index];
+                          final timeStr = r.createdAt != null
+                              ? '${r.createdAt!.day}/${r.createdAt!.month}/${r.createdAt!.year}'
+                              : 'Recent';
+                          return _buildReviewItem(
+                            'Verified Passenger',
+                            '${r.score}.0',
+                            timeStr,
+                            r.reviewText?.isNotEmpty == true
+                                ? r.reviewText!
+                                : 'Rated ${r.score} stars for smooth ride experience.',
+                          );
+                        },
+                      );
+                    },
+                  );
+                },
               ),
             ),
           ],

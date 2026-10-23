@@ -12,7 +12,7 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
-        android:label="RoAdRoBos"
+        android:label="@string/app_name"
         android:name="${applicationName}"
         android:resizeableActivity="true"
         android:icon="@mipmap/launcher_icon">
@@ -49,6 +49,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="com.roadrobos.app" android:host="login-callback" />
+                <data android:scheme="com.roadrobos.partner" android:host="login-callback" />
             </intent-filter>
         </activity>
         

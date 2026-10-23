@@ -10,7 +10,6 @@ import '../../core/theme/app_colors.dart';
 import '../../core/repositories/ride_booking_repository.dart';
 import '../../core/models/ride_booking.dart';
 import '../../features/profile/user_provider.dart';
-import '../../shared/widgets/bottom_nav_bar.dart';
 import 'providers/driver_state_provider.dart';
 import 'driver_earnings_report_screen.dart';
 
@@ -203,6 +202,8 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 24, vertical: 32),
                     children: [
+                      _buildDailyIncentiveCard(_rides.length),
+                      const SizedBox(height: 28),
                       const Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -302,27 +303,6 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen> {
                   ),
           )
         ],
-      ),
-      bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: 1,
-        items: const [
-          NavItemData(
-              icon: Iconsax.home, activeIcon: Iconsax.home5, label: 'Home'),
-          NavItemData(
-              icon: Iconsax.wallet,
-              activeIcon: Iconsax.wallet5,
-              label: 'Earnings'),
-          NavItemData(
-              icon: Iconsax.star, activeIcon: Iconsax.star5, label: 'Ratings'),
-          NavItemData(
-              icon: Iconsax.user, activeIcon: Iconsax.user, label: 'Account'),
-        ],
-        onTap: (index) {
-          if (index == 0) context.pushReplacement('/driver-home');
-          if (index == 1) return;
-          if (index == 2) context.pushReplacement('/driver-rides');
-          if (index == 3) context.pushReplacement('/driver-profile');
-        },
       ),
     );
   }
@@ -460,5 +440,139 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen> {
         ),
       ),
     ).animate().fadeIn().slideX(begin: 0.05, end: 0);
+  }
+
+  Widget _buildDailyIncentiveCard(int completedCount) {
+    const targetCount = 5;
+    final progress = (completedCount / targetCount).clamp(0.0, 1.0);
+    final isUnlocked = completedCount >= targetCount;
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isUnlocked
+              ? AppColors.brandGreenMid.withValues(alpha: 0.4)
+              : AppColors.border.withValues(alpha: 0.7),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: isUnlocked
+                      ? AppColors.brandGreenBg
+                      : AppColors.accentOrange.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  isUnlocked
+                      ? Icons.emoji_events_rounded
+                      : Icons.military_tech_rounded,
+                  color: isUnlocked
+                      ? AppColors.brandGreenMid
+                      : AppColors.accentOrange,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isUnlocked
+                          ? '🎉 Daily Incentive Unlocked!'
+                          : 'Daily Quest: Earn ₹150 Bonus',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.deepNavy,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      isUnlocked
+                          ? '₹150 bonus credited to your wallet'
+                          : 'Complete 5 trips today to unlock ₹150 bonus',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: isUnlocked
+                      ? AppColors.brandGreenMid
+                      : AppColors.bgLightGrey,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  isUnlocked ? 'EARNED' : '₹150',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: isUnlocked ? Colors.white : AppColors.deepNavy,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(
+              value: progress,
+              backgroundColor: AppColors.bgLightGrey,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                isUnlocked ? AppColors.brandGreenMid : AppColors.accentOrange,
+              ),
+              minHeight: 8,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '$completedCount of $targetCount trips completed',
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              Text(
+                '${(progress * 100).toInt()}%',
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.deepNavy,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }

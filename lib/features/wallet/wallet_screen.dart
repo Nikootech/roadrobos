@@ -11,10 +11,28 @@ import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 import '../../core/services/biometric_service.dart';
 import '../../core/services/notification_service.dart';
+import '../../core/repositories/wallet_repository.dart';
+import '../profile/user_provider.dart';
 
 /// Wallet & Transactions Screen matching Figma Screen [7]
-class WalletScreen extends ConsumerWidget {
+class WalletScreen extends ConsumerStatefulWidget {
   const WalletScreen({super.key});
+
+  @override
+  ConsumerState<WalletScreen> createState() => _WalletScreenState();
+}
+
+class _WalletScreenState extends ConsumerState<WalletScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final user = ref.read(userProvider).user;
+      if (user != null) {
+        ref.read(walletRepositoryProvider).reconcilePendingPayments(user.id);
+      }
+    });
+  }
 
   List<double> _computeRunningBalances(
       List<WalletTransaction> transactions, double currentBalance) {
@@ -35,19 +53,32 @@ class WalletScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final walletAsync = ref.watch(walletProvider);
+    final transactionsStreamAsync = ref.watch(walletTransactionsStreamProvider);
     final transactionsState = ref.watch(walletTransactionsProvider);
     final currentBalance = walletAsync.value?.balance ?? 0.0;
 
+    final activeTransactions = transactionsStreamAsync.value != null &&
+            transactionsStreamAsync.value!.isNotEmpty
+        ? transactionsStreamAsync.value!
+        : transactionsState.transactions;
+
     final runningBalances =
-        _computeRunningBalances(transactionsState.transactions, currentBalance);
+        _computeRunningBalances(activeTransactions, currentBalance);
 
     return Scaffold(
       backgroundColor: Colors.white,
       body: RefreshIndicator(
         onRefresh: () async {
+          final user = ref.read(userProvider).user;
+          if (user != null) {
+            await ref
+                .read(walletRepositoryProvider)
+                .reconcilePendingPayments(user.id);
+          }
           ref.invalidate(walletProvider);
+          ref.invalidate(walletTransactionsStreamProvider);
           await ref.read(walletTransactionsProvider.notifier).loadInitial();
         },
         color: AppColors.primaryBlue,
@@ -113,10 +144,7 @@ class WalletScreen extends ConsumerWidget {
                             alignment: Alignment.centerLeft,
                             child: walletAsync.when(
                               data: (wallet) {
-                                final bal =
-                                    (wallet != null && wallet.balance > 0)
-                                        ? wallet.balance
-                                        : 1250.0;
+                                final bal = wallet?.balance ?? 0.0;
                                 return Text(
                                   NumberFormat.simpleCurrency(name: 'INR')
                                       .format(bal),
@@ -135,7 +163,7 @@ class WalletScreen extends ConsumerWidget {
                               ),
                               error: (_, __) => Text(
                                 NumberFormat.simpleCurrency(name: 'INR')
-                                    .format(1250.0),
+                                    .format(0.0),
                                 style: GoogleFonts.outfit(
                                   fontSize: 42,
                                   fontWeight: FontWeight.w800,
@@ -254,12 +282,13 @@ class WalletScreen extends ConsumerWidget {
                     const SizedBox(height: 16),
 
                     // Transaction List, Paginated and Stateful
-                    if (transactionsState.isInitialLoading)
+                    if (transactionsState.isInitialLoading &&
+                        activeTransactions.isEmpty)
                       _buildShimmerSkeleton()
                     else if (currentBalance == 0.0 &&
-                        transactionsState.transactions.isEmpty)
+                        activeTransactions.isEmpty)
                       _buildEmptyState(context)
-                    else if (transactionsState.transactions.isEmpty)
+                    else if (activeTransactions.isEmpty)
                       Center(
                         child: Padding(
                           padding: const EdgeInsets.symmetric(vertical: 40),
@@ -275,11 +304,13 @@ class WalletScreen extends ConsumerWidget {
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         padding: EdgeInsets.zero,
-                        itemCount: transactionsState.transactions.length,
+                        itemCount: activeTransactions.length,
                         separatorBuilder: (_, __) => const SizedBox(height: 16),
                         itemBuilder: (context, index) {
-                          final t = transactionsState.transactions[index];
-                          final runningBal = runningBalances[index];
+                          final t = activeTransactions[index];
+                          final runningBal = index < runningBalances.length
+                              ? runningBalances[index]
+                              : 0.0;
                           return _buildTransactionCard({
                             'title': t.description,
                             'subtitle': t.type == TransactionType.credit

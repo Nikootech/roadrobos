@@ -87,9 +87,43 @@ final ratingsRepositoryProvider = Provider<RatingsRepository>((ref) {
   return RatingsRepository();
 });
 
-final partnerRatingProvider =
-    FutureProvider.family<Map<String, dynamic>?, String>(
-        (ref, partnerId) async {
-  final repo = ref.read(ratingsRepositoryProvider);
-  return repo.getPartnerRating(partnerId);
+final partnerReviewsStreamProvider =
+    StreamProvider.family<List<RatingModel>, String>((ref, partnerId) {
+  if (partnerId.isEmpty) return Stream.value([]);
+  return Supabase.instance.client
+      .from('ratings')
+      .stream(primaryKey: ['id'])
+      .eq('reviewee_id', partnerId)
+      .map((list) {
+        final reviews = list.map((json) => RatingModel.fromJson(json)).toList();
+        reviews.sort((a, b) =>
+            (b.createdAt ?? DateTime.now()).compareTo(a.createdAt ?? DateTime.now()));
+        return reviews;
+      });
 });
+
+final partnerRatingProvider =
+    StreamProvider.family<Map<String, dynamic>?, String>((ref, partnerId) {
+  if (partnerId.isEmpty) {
+    return Stream.value({'avg_score': '5.0', 'total_reviews': 0});
+  }
+
+  return Supabase.instance.client
+      .from('ratings')
+      .stream(primaryKey: ['id'])
+      .eq('reviewee_id', partnerId)
+      .map((list) {
+        if (list.isEmpty) {
+          return {'avg_score': '5.0', 'total_reviews': 0};
+        }
+        final reviews = list.map((json) => RatingModel.fromJson(json)).toList();
+        final total = reviews.length;
+        final sum = reviews.fold<int>(0, (acc, r) => acc + r.score);
+        final avg = (sum / total).toStringAsFixed(1);
+        return {
+          'avg_score': avg,
+          'total_reviews': total,
+        };
+      });
+});
+

@@ -80,64 +80,38 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Explore Services',
-                          style: GoogleFonts.outfit(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w800,
-                            color: const Color(0xFF0F172A),
-                            letterSpacing: -0.5,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Explore Services',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.outfit(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w800,
+                              color: const Color(0xFF0F172A),
+                              letterSpacing: -0.5,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Find certified experts for your vehicle',
-                          style: GoogleFonts.inter(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w500,
-                            color: const Color(0xFF64748B),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Find certified experts for your vehicle',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.inter(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w500,
+                              color: const Color(0xFF64748B),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 9, vertical: 4.5),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF0FDF4),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: const Color(0xFFDCFCE7)),
-                          ),
-                          child: Row(
-                            children: [
-                              const PulseBeacon(
-                                color: Color(0xFF006241),
-                                size: 7,
-                              ),
-                              const SizedBox(width: 5),
-                              Text(
-                                'ONLINE',
-                                style: GoogleFonts.inter(
-                                  fontSize: 9.5,
-                                  fontWeight: FontWeight.w800,
-                                  color: const Color(0xFF006241),
-                                  letterSpacing: 0.4,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        const SOSButton.headerPill(
-                          rideDetails: 'Explore Services Catalog',
-                        ),
-                      ],
+                    const SizedBox(width: 12),
+                    const SOSButton.headerPill(
+                      rideDetails: 'Explore Services Catalog',
                     ),
                   ],
                 ),

@@ -42,25 +42,35 @@ class RideBooking {
   factory RideBooking.fromMap(Map<String, dynamic> map, String documentId) {
     return RideBooking(
       id: documentId,
-      customerId: map['customer_id'] ?? '',
-      driverId: map['driver_id'],
-      pickupAddress: map['pickup_address'] ?? '',
-      destinationAddress: map['destination_address'] ?? '',
-      pickupLat: (map['pickup_lat'] ?? 0.0).toDouble(),
-      pickupLng: (map['pickup_lng'] ?? 0.0).toDouble(),
-      destLat: (map['dest_lat'] ?? 0.0).toDouble(),
-      destLng: (map['dest_lng'] ?? 0.0).toDouble(),
-      status: map['status'] ?? 'searching',
-      fare: (map['fare'] ?? 0.0).toDouble(),
-      vehicleType: map['vehicle_type'],
+      customerId: map['customer_id']?.toString() ?? '',
+      driverId: map['driver_id']?.toString(),
+      pickupAddress: map['pickup_address']?.toString() ?? '',
+      destinationAddress: map['destination_address']?.toString() ?? '',
+      pickupLat: (map['pickup_lat'] as num?)?.toDouble() ??
+          double.tryParse(map['pickup_lat']?.toString() ?? '') ??
+          0.0,
+      pickupLng: (map['pickup_lng'] as num?)?.toDouble() ??
+          double.tryParse(map['pickup_lng']?.toString() ?? '') ??
+          0.0,
+      destLat: (map['dest_lat'] as num?)?.toDouble() ??
+          double.tryParse(map['dest_lat']?.toString() ?? '') ??
+          0.0,
+      destLng: (map['dest_lng'] as num?)?.toDouble() ??
+          double.tryParse(map['dest_lng']?.toString() ?? '') ??
+          0.0,
+      status: map['status']?.toString() ?? 'searching',
+      fare: (map['fare'] as num?)?.toDouble() ??
+          double.tryParse(map['fare']?.toString() ?? '') ??
+          0.0,
+      vehicleType: map['vehicle_type']?.toString(),
       otp: map['otp']?.toString(),
-      paymentMethod: map['payment_method'] ?? 'Cash',
-      razorpayPaymentId: map['razorpay_payment_id'],
+      paymentMethod: map['payment_method']?.toString() ?? 'Cash',
+      razorpayPaymentId: map['razorpay_payment_id']?.toString(),
       createdAt: map['created_at'] != null
-          ? DateTime.parse(map['created_at'])
+          ? (DateTime.tryParse(map['created_at'].toString()) ?? DateTime.now())
           : DateTime.now(),
       scheduledFor: map['scheduled_for'] != null
-          ? DateTime.parse(map['scheduled_for'])
+          ? DateTime.tryParse(map['scheduled_for'].toString())
           : null,
     );
   }

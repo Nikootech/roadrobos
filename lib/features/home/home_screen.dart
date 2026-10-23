@@ -659,8 +659,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget _buildGreetingSection(WidgetRef ref) {
     final selectedVehicle = ref.watch(vehicleProvider);
     final allVehicles = ref.watch(allVehiclesProvider);
-    final hasVehicle =
-        allVehicles.isNotEmpty && selectedVehicle.id != 'placeholder';
+    final hasVehicle = allVehicles.isNotEmpty &&
+        selectedVehicle.id != 'placeholder' &&
+        selectedVehicle.id.isNotEmpty;
 
     // If no vehicles registered, show an "Add Vehicle" prompt card
     if (!hasVehicle) {
@@ -1019,9 +1020,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             const SizedBox(height: 6),
             walletAsync.when(
               data: (wallet) {
-                final balance = (wallet != null && wallet.balance > 0)
-                    ? wallet.balance
-                    : 1250.00;
+                final balance = wallet?.balance ?? 0.00;
                 return Row(
                   crossAxisAlignment: CrossAxisAlignment.baseline,
                   textBaseline: TextBaseline.alphabetic,
@@ -1057,7 +1056,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           fontWeight: FontWeight.w600,
                           color: const Color(0xFF0F172A))),
                   Text(
-                    '1250.00',
+                    '0.00',
                     style: GoogleFonts.outfit(
                         fontSize: 32,
                         fontWeight: FontWeight.w900,
@@ -1072,21 +1071,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               children: [
                 _buildStatItem(
                     'Points',
-                    ((ref.watch(userProvider.select((s) => s.points))) > 0
-                            ? ref.watch(userProvider.select((s) => s.points))
-                            : 450)
-                        .toString(),
+                    ref.watch(userProvider.select((s) => s.points)).toString(),
                     Iconsax.star1,
                     const Color(0xFFF59E0B),
                     const Color(0xFFFFFBEB)),
                 const SizedBox(width: 12),
                 _buildStatItem(
                     'Rides',
-                    ((ref.watch(userProvider.select((s) => s.totalRides))) > 0
-                            ? ref
-                                .watch(userProvider.select((s) => s.totalRides))
-                            : 12)
-                        .toString(),
+                    ref.watch(userProvider.select((s) => s.totalRides)).toString(),
                     Iconsax.car,
                     const Color(0xFF006241),
                     const Color(0xFFF0FDF4)),

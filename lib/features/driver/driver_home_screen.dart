@@ -1,23 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:latlong2/latlong.dart';
 
-import '../../core/theme/app_colors.dart';
-import '../../shared/widgets/bottom_nav_bar.dart';
-import '../../shared/widgets/responsive_utils.dart';
 import 'providers/driver_state_provider.dart';
-import '../../features/delivery/driver_delivery_panel.dart';
 import '../chat/providers/chat_providers.dart';
 import '../../features/profile/user_provider.dart';
-import '../../core/services/language_service.dart';
-import '../../core/repositories/ride_booking_repository.dart';
-import '../../core/models/ride_booking.dart';
 import 'widgets/instant_cashout_sheet.dart';
-import '../../shared/widgets/kinetic_motion.dart';
+import 'widgets/rapido_slide_to_online.dart';
+import 'widgets/rapido_map_cockpit.dart';
+import 'widgets/rapido_incentive_card.dart';
+import '../../core/repositories/ratings_repository.dart';
 
+/// Rapido Captain Cockpit Home Screen
+/// Full-screen high-contrast dark cockpit with live GPS map,
+/// swipe-to-online switch, live address banner, and incentive quests.
 class DriverHomeScreen extends ConsumerStatefulWidget {
   const DriverHomeScreen({super.key});
 
@@ -26,46 +25,30 @@ class DriverHomeScreen extends ConsumerStatefulWidget {
 }
 
 class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
-  List<RideBooking> _recentRides = [];
-  bool _isLoadingRides = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchRecentRides();
-  }
-
-  Future<void> _fetchRecentRides() async {
-    try {
-      final user = ref.read(userProvider);
-      final driverId = user.user?.id ?? 'demo';
-      final rides = await ref
-          .read(rideBookingRepositoryProvider)
-          .getPagedDriverRides(driverId, limit: 1);
-      if (mounted) {
-        setState(() {
-          _recentRides = rides;
-          _isLoadingRides = false;
-        });
-      }
-    } catch (_) {
-      if (mounted) {
-        setState(() {
-          _isLoadingRides = false;
-        });
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final earningsAsync = ref.watch(earningsProvider);
-    final isOnline = ref.watch(mapStateProvider).isOnline;
+    final mapState = ref.watch(mapStateProvider);
+    final isOnline = mapState.isOnline;
     final userAsync = ref.watch(userProvider);
-    final driverName = userAsync.user?.name ?? 'Driver';
+    final driverName = userAsync.user?.name ?? 'Captain';
     final profileUrl = userAsync.user?.profilePic;
-    final l10n = ref.watch(l10nProvider);
+    final currentDriverAsync = ref.watch(currentDriverProvider);
+    final ratingAsync = ref.watch(partnerRatingProvider(userAsync.user?.id ?? ''));
+    final avgRating = ratingAsync.value?['avg_score']?.toString() ?? '5.0';
 
+    final driver = currentDriverAsync.value;
+    final vehicleDisplay = (driver != null &&
+            driver.vehicleModel.isNotEmpty &&
+            driver.vehiclePlate.isNotEmpty)
+        ? '${driver.vehicleModel} • ${driver.vehiclePlate}'
+        : (driver != null && driver.vehicleModel.isNotEmpty
+            ? driver.vehicleModel
+            : (driver != null && driver.vehiclePlate.isNotEmpty
+                ? driver.vehiclePlate
+                : 'Vehicle Pending Verification'));
+
+    // Listen for incoming ride dispatch requests in real-time
     ref.listen(rideRequestsProvider, (previous, next) {
       if (isOnline &&
           next.hasValue &&
@@ -81,827 +64,579 @@ class _DriverHomeScreenState extends ConsumerState<DriverHomeScreen> {
       }
     });
 
+    final driverLocation = LatLng(mapState.lat, mapState.lng);
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFF121212), // Rapido Dark Cockpit Canvas
       body: SafeArea(
-        child: Stack(
+        child: Column(
           children: [
-            Column(
-              children: [
-                // Header (Profile & Notification)
-                Padding(
-                  padding:
-                      ResponsiveLayout.responsivePadding(context, vertical: 20),
-                  child: Row(
-                    children: [
-                      InkWell(
-                        onTap: () {
-                          HapticFeedback.lightImpact();
-                          context.pushReplacement('/driver-profile');
-                        },
-                        borderRadius: BorderRadius.circular(12),
-                        child: Row(
+            // ==========================================
+            // 1. TOP CAPTAIN HEADER BAR
+            // ==========================================
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              color: const Color(0xFF1E1E24),
+              child: Row(
+                children: [
+                  // Profile Avatar + Gold Star Badge
+                  GestureDetector(
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                      context.push('/driver-profile');
+                    },
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: const Color(0xFF2A2A32),
+                            border: Border.all(
+                              color: const Color(0xFFF59E0B),
+                              width: 2,
+                            ),
+                            image: (profileUrl != null && profileUrl.isNotEmpty)
+                                ? DecorationImage(
+                                    image: NetworkImage(profileUrl),
+                                    fit: BoxFit.cover,
+                                  )
+                                : null,
+                          ),
+                          child: (profileUrl == null || profileUrl.isEmpty)
+                              ? Center(
+                                  child: Text(
+                                    driverName.isNotEmpty
+                                        ? driverName[0].toUpperCase()
+                                        : 'C',
+                                    style: const TextStyle(
+                                      color: Color(0xFFF59E0B),
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                )
+                              : null,
+                        ),
+                        Positioned(
+                          bottom: -4,
+                          right: -4,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 4, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF59E0B),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.star_rounded,
+                                    size: 10, color: Color(0xFF121212)),
+                                Text(
+                                  avgRating,
+                                  style: const TextStyle(
+                                    color: Color(0xFF121212),
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(width: 12),
+
+                  // Pilot Name & Vehicle Class
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
                           children: [
+                            Flexible(
+                              child: Text(
+                                driverName.toUpperCase(),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 0.5,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
                             Container(
-                              width: 48,
-                              height: 48,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                    color: AppColors.primaryBlue
-                                        .withValues(alpha: 0.1),
-                                    width: 2),
-                                image: DecorationImage(
-                                  image: NetworkImage(profileUrl ??
-                                      'https://i.pravatar.cc/150?u=driver'),
-                                  fit: BoxFit.cover,
+                                color: const Color(0xFFF59E0B)
+                                    .withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: const Text(
+                                'CAPTAIN',
+                                style: TextStyle(
+                                  color: Color(0xFFF59E0B),
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 0.5,
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 14),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(l10n.greeting.toUpperCase(),
-                                    style: TextStyle(
-                                        fontSize:
-                                            ResponsiveLayout.responsiveFontSize(
-                                                context, 10),
-                                        fontWeight: FontWeight.w800,
-                                        color: AppColors.textSecondary,
-                                        letterSpacing: 1)),
-                                Text(driverName,
-                                    style: TextStyle(
-                                        fontSize:
-                                            ResponsiveLayout.responsiveFontSize(
-                                                context, 17),
-                                        fontWeight: FontWeight.w900,
-                                        color: AppColors.deepNavy,
-                                        letterSpacing: -0.5)),
-                              ],
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          vehicleDisplay,
+                          style: const TextStyle(
+                            color: Colors.white54,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Today's Earnings Quick Pill
+                  earningsAsync.maybeWhen(
+                    data: (earnings) => GestureDetector(
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        context.push('/driver-earnings');
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: const Color(0xFF10B981).withValues(alpha: 0.4),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text(
+                              '₹',
+                              style: TextStyle(
+                                color: Color(0xFF10B981),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            Text(
+                              '${earnings.todayEarnings.toInt()}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '(${earnings.totalRides})',
+                              style: const TextStyle(
+                                color: Colors.white54,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                           ],
                         ),
                       ),
-                      const Spacer(),
-                      Consumer(
-                        builder: (context, ref, child) {
-                          final unreadCountAsync =
-                              ref.watch(unreadMessagesCountProvider);
-                          final count = unreadCountAsync.value ?? 0;
-                          return Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: const BoxDecoration(
-                                color: AppColors.bgLightGrey,
-                                shape: BoxShape.circle),
-                            child: InkWell(
-                              onTap: () {
-                                HapticFeedback.lightImpact();
-                              },
-                              child: Stack(
-                                children: [
-                                  const Icon(Icons.chat_bubble_outline_rounded,
-                                      color: AppColors.deepNavy, size: 24),
-                                  if (count > 0)
-                                    Positioned(
-                                      top: 0,
-                                      right: 0,
-                                      child: Container(
-                                        padding: const EdgeInsets.all(2),
-                                        decoration: const BoxDecoration(
-                                            color: AppColors.dangerRed,
-                                            shape: BoxShape.circle,
-                                            border: Border(
-                                                bottom: BorderSide(
-                                                    color: Colors.white,
-                                                    width: 2))),
-                                        child: Text(
-                                          count > 9 ? '9+' : count.toString(),
-                                          style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 8,
-                                              fontWeight: FontWeight.bold),
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                          );
+                    ),
+                    orElse: () => const SizedBox.shrink(),
+                  ),
+
+                  const SizedBox(width: 8),
+
+                  // Unread Messages / Chat
+                  Consumer(
+                    builder: (context, ref, child) {
+                      final count =
+                          ref.watch(unreadMessagesCountProvider).value ?? 0;
+                      return GestureDetector(
+                        onTap: () {
+                          HapticFeedback.lightImpact();
                         },
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: const BoxDecoration(
-                            color: AppColors.bgLightGrey,
-                            shape: BoxShape.circle),
-                        child: InkWell(
-                          onTap: () {
-                            HapticFeedback.lightImpact();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content:
-                                      Text('You have no new notifications'),
-                                  behavior: SnackBarBehavior.floating),
-                            );
-                          },
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: const BoxDecoration(
+                            color: Colors.white12,
+                            shape: BoxShape.circle,
+                          ),
                           child: Stack(
                             children: [
-                              const Icon(Iconsax.notification,
-                                  color: AppColors.deepNavy, size: 24),
-                              Positioned(
-                                top: 0,
-                                right: 0,
-                                child: Container(
-                                  width: 8,
-                                  height: 8,
-                                  decoration: const BoxDecoration(
-                                      color: AppColors.dangerRed,
+                              const Icon(Icons.chat_bubble_outline_rounded,
+                                  color: Colors.white, size: 18),
+                              if (count > 0)
+                                Positioned(
+                                  top: 0,
+                                  right: 0,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(2),
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFFEF4444),
                                       shape: BoxShape.circle,
-                                      border: Border(
-                                          bottom: BorderSide(
-                                              color: Colors.white, width: 2))),
+                                    ),
+                                    child: Text(
+                                      '$count',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 7,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
                                 ),
-                              ),
                             ],
                           ),
                         ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+
+            // ==========================================
+            // 2. LIVE MAP COCKPIT CANVAS
+            // ==========================================
+            Expanded(
+              flex: 4,
+              child: Stack(
+                children: [
+                  RapidoMapCockpit(
+                    driverLocation: driverLocation,
+                    isOnline: isOnline,
+                    onRecenter: () {
+                      ref
+                          .read(mapStateProvider.notifier)
+                          .fetchDeviceLocation();
+                    },
+                  ),
+
+                  // Prominent Slide-to-Online Widget Anchored Floating Over Map
+                  Positioned(
+                    left: 16,
+                    right: 16,
+                    bottom: 16,
+                    child: RapidoSlideToOnline(
+                      isOnline: isOnline,
+                      presentAddress: mapState.currentAddress,
+                      isFetchingAddress: mapState.isFetchingAddress,
+                      onToggle: (targetOnline) {
+                        ref
+                            .read(mapStateProvider.notifier)
+                            .toggleOnline();
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // ==========================================
+            // 3. EXPANDABLE CAPTAIN DASHBOARD & QUESTS
+            // ==========================================
+            Expanded(
+              flex: 3,
+              child: Container(
+                color: const Color(0xFF121212),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Present Address Live Beacon Bar
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1E1E24),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: isOnline
+                                ? const Color(0xFF10B981).withValues(alpha: 0.4)
+                                : Colors.white12,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.location_on_rounded,
+                              size: 18,
+                              color: isOnline
+                                  ? const Color(0xFF10B981)
+                                  : const Color(0xFFF59E0B),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                isOnline
+                                    ? (mapState.currentAddress.isNotEmpty
+                                        ? mapState.currentAddress
+                                        : 'Detecting GPS location...')
+                                    : 'Go online to start receiving rides',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                HapticFeedback.lightImpact();
+                                ref
+                                    .read(mapStateProvider.notifier)
+                                    .fetchDeviceLocation();
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: const BoxDecoration(
+                                  color: Colors.white12,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.refresh_rounded,
+                                    size: 14, color: Colors.white70),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 14),
+
+                      // Quick Stats Cockpit Row (Gross, Online Time, Acceptance)
+                      earningsAsync.maybeWhen(
+                        data: (earnings) => Row(
+                          children: [
+                            Expanded(
+                              child: _buildCockpitStatCard(
+                                title: 'TODAY GROSS',
+                                value: '₹${earnings.todayEarnings.toInt()}',
+                                subtitle: '${earnings.totalRides} rides',
+                                valueColor: const Color(0xFF10B981),
+                                icon: Iconsax.wallet_3,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: _buildCockpitStatCard(
+                                title: 'ONLINE HOURS',
+                                value: earnings.onlineTime,
+                                subtitle: isOnline ? 'Active' : 'Paused',
+                                valueColor: const Color(0xFFF59E0B),
+                                icon: Iconsax.clock,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: _buildCockpitStatCard(
+                                title: 'ACCEPTANCE',
+                                value: earnings.acceptanceRate,
+                                subtitle: 'Top Captain',
+                                valueColor: Colors.white,
+                                icon: Iconsax.like_1,
+                              ),
+                            ),
+                          ],
+                        ),
+                        orElse: () => const SizedBox.shrink(),
+                      ),
+
+                      const SizedBox(height: 14),
+
+                      // Rapido Incentive Quest Milestone Card
+                      RapidoIncentiveCard(
+                        completedTrips: earningsAsync.value?.totalRides ?? 0,
+                      ),
+
+                      const SizedBox(height: 14),
+
+                      // Rapido Quick Actions Grid
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildQuickActionBtn(
+                              title: 'Instant Cashout',
+                              subtitle: 'UPI Transfer',
+                              icon: Iconsax.money_send,
+                              iconColor: const Color(0xFF10B981),
+                              onTap: () {
+                                final balance =
+                                    earningsAsync.value?.todayEarnings ?? 0.0;
+                                InstantCashoutSheet.show(
+                                  context,
+                                  availableBalance: balance,
+                                  defaultUpiId: (userAsync.user?.phone != null &&
+                                          userAsync.user!.phone.isNotEmpty)
+                                      ? '${userAsync.user!.phone}@upi'
+                                      : 'Primary Verified Account',
+                                );
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: _buildQuickActionBtn(
+                              title: 'Surge Heatmap',
+                              subtitle: 'View Hotspots',
+                              icon: Iconsax.map_1,
+                              iconColor: const Color(0xFFF59E0B),
+                              onTap: () {
+                                context.push('/demand-map');
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: _buildQuickActionBtn(
+                              title: 'Safety SOS',
+                              subtitle: '24x7 Support',
+                              icon: Icons.shield_rounded,
+                              iconColor: const Color(0xFFEF4444),
+                              onTap: () {
+                                context.push('/sos-setup');
+                              },
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
-
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: ResponsiveLayout.responsivePadding(context),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Map Status Card
-                        Container(
-                          width: double.infinity,
-                          constraints: BoxConstraints(
-                            minHeight:
-                                ResponsiveLayout.responsiveHeight(context, 28),
-                          ),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(32),
-                            image: const DecorationImage(
-                              image: NetworkImage(
-                                  'https://static-maps.yandex.ru/1.x/?lang=en_US&ll=77.5946,12.9716&size=450,450&z=13&l=map&pt=77.5946,12.9716,pm2rdm'),
-                              fit: BoxFit.cover,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.05),
-                                  blurRadius: 20,
-                                  offset: const Offset(0, 10))
-                            ],
-                          ),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(32),
-                              gradient: LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [
-                                  Colors.black.withValues(alpha: 0.2),
-                                  Colors.black.withValues(alpha: 0.5)
-                                ],
-                              ),
-                            ),
-                            padding: const EdgeInsets.all(24),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                Row(
-                                  children: [
-                                    PulseBeacon(
-                                      color: isOnline
-                                          ? AppColors.successGreen
-                                          : AppColors.textMuted,
-                                      size: 8,
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Text(
-                                        isOnline
-                                            ? 'Currently Online'
-                                            : 'Currently Offline',
-                                        style: const TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.w700,
-                                            fontSize: 13)),
-                                  ],
-                                ),
-                                const SizedBox(height: 6),
-                                const Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Text('Go online to receive rides',
-                                      style: TextStyle(
-                                          color: Colors.white70,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w500)),
-                                ),
-                                const SizedBox(height: 20),
-                                ScaleOnTap(
-                                  onTap: () {
-                                    ref
-                                        .read(mapStateProvider.notifier)
-                                        .toggleOnline();
-                                  },
-                                  child: Container(
-                                    height: 56,
-                                    width: double.infinity,
-                                    decoration: BoxDecoration(
-                                      color: isOnline
-                                          ? AppColors.dangerRed
-                                          : AppColors.successGreen,
-                                      borderRadius: BorderRadius.circular(20),
-                                      boxShadow: [
-                                        BoxShadow(
-                                            color: (isOnline
-                                                    ? AppColors.dangerRed
-                                                    : AppColors.successGreen)
-                                                .withValues(alpha: 0.3),
-                                            blurRadius: 15,
-                                            offset: const Offset(0, 6))
-                                      ],
-                                    ),
-                                    child: Center(
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Icon(
-                                              isOnline
-                                                  ? Icons
-                                                      .power_settings_new_rounded
-                                                  : Iconsax.flash,
-                                              color: Colors.white,
-                                              size: 22),
-                                          const SizedBox(width: 12),
-                                          Text(
-                                            isOnline
-                                                ? 'GO OFFLINE'
-                                                : 'GO ONLINE',
-                                            style: const TextStyle(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.w900,
-                                                fontSize: 16,
-                                                letterSpacing: 0.5),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 24),
-
-                        // Earnings Card (Premium Redesign)
-                        ScaleOnTap(
-                          onTap: () =>
-                              context.pushReplacement('/driver-earnings'),
-                          child: Container(
-                            clipBehavior: Clip.antiAlias,
-                            padding: const EdgeInsets.all(28),
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  Color(0xFF2563EB),
-                                  Color(0xFF3B82F6),
-                                  Color(0xFF1E40AF)
-                                ],
-                                stops: [0.0, 0.4, 1.0],
-                              ),
-                              borderRadius: BorderRadius.circular(32),
-                              boxShadow: [
-                                BoxShadow(
-                                    color: const Color(0xFF2563EB)
-                                        .withValues(alpha: 0.35),
-                                    blurRadius: 25,
-                                    offset: const Offset(0, 12))
-                              ],
-                            ),
-                            child: Stack(
-                              children: [
-                                Positioned(
-                                  right: -20,
-                                  bottom: -20,
-                                  child: Opacity(
-                                    opacity: 0.1,
-                                    child: Transform.rotate(
-                                        angle: -0.2,
-                                        child: const Icon(Iconsax.wallet,
-                                            size: 140, color: Colors.white)),
-                                  ),
-                                ),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        const Text('Earnings Today',
-                                            style: TextStyle(
-                                                color: Colors.white70,
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.w700,
-                                                letterSpacing: 0.2)),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 10, vertical: 4),
-                                          decoration: BoxDecoration(
-                                              color: Colors.white
-                                                  .withValues(alpha: 0.2),
-                                              borderRadius:
-                                                  BorderRadius.circular(20)),
-                                          child: const Row(
-                                            children: [
-                                              Icon(Icons.trending_up_rounded,
-                                                  color: Colors.white,
-                                                  size: 12),
-                                              SizedBox(width: 4),
-                                              Text('+12%',
-                                                  style: TextStyle(
-                                                      color: Colors.white,
-                                                      fontSize: 11,
-                                                      fontWeight:
-                                                          FontWeight.w800)),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 12),
-                                    earningsAsync.when(
-                                      data: (earnings) => Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          FittedBox(
-                                            fit: BoxFit.scaleDown,
-                                            alignment: Alignment.centerLeft,
-                                            child: Row(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.end,
-                                              children: [
-                                                const Padding(
-                                                    padding: EdgeInsets.only(
-                                                        bottom: 8.0),
-                                                    child: Text('₹',
-                                                        style: TextStyle(
-                                                            color: Colors.white,
-                                                            fontSize: 24,
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .w900))),
-                                                const SizedBox(width: 4),
-                                                Text(
-                                                    '${earnings.todayEarnings.toInt()}',
-                                                    style: TextStyle(
-                                                        color: Colors.white,
-                                                        fontSize: ResponsiveLayout
-                                                            .responsiveFontSize(
-                                                                context, 48),
-                                                        fontWeight:
-                                                            FontWeight.w900,
-                                                        letterSpacing: -1.5)),
-                                                const Padding(
-                                                    padding: EdgeInsets.only(
-                                                        bottom: 8.0),
-                                                    child: Text('.50',
-                                                        style: TextStyle(
-                                                            color:
-                                                                Colors.white70,
-                                                            fontSize: 22,
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .w800))),
-                                              ],
-                                            ),
-                                          ),
-                                          const SizedBox(height: 32),
-                                          Row(
-                                            children: [
-                                              _buildMiniStat(
-                                                  Iconsax.car,
-                                                  earnings.totalRides
-                                                      .toString(),
-                                                  'RIDES'),
-                                              Container(
-                                                  width: 1,
-                                                  height: 24,
-                                                  color: Colors.white24,
-                                                  margin: const EdgeInsets
-                                                      .symmetric(
-                                                      horizontal: 20)),
-                                              _buildMiniStat(
-                                                  Iconsax.timer_1,
-                                                  earnings.onlineTime,
-                                                  'ONLINE'),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                      loading: () =>
-                                          const CircularProgressIndicator(
-                                              color: Colors.white),
-                                      error: (e, _) => const Text('Error',
-                                          style:
-                                              TextStyle(color: Colors.white)),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        )
-                            .animate()
-                            .fadeIn(delay: 100.ms)
-                            .slideX(begin: 0.1, end: 0),
-
-                        const SizedBox(height: 20),
-
-                        // Daily Milestone & Incentive Ring
-                        Container(
-                          padding: const EdgeInsets.all(18),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(color: const Color(0xFFE2E8F0)),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.03),
-                                blurRadius: 12,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  SizedBox(
-                                    width: 52,
-                                    height: 52,
-                                    child: CircularProgressIndicator(
-                                      value: 0.7,
-                                      strokeWidth: 5,
-                                      backgroundColor: const Color(0xFFF97316)
-                                          .withValues(alpha: 0.15),
-                                      valueColor:
-                                          const AlwaysStoppedAnimation<Color>(
-                                              Color(0xFFF97316)),
-                                    ),
-                                  ),
-                                  const Text(
-                                    '7/10',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w900,
-                                      color: Color(0xFFF97316),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        const Text(
-                                          'Daily Goal • ₹500 Bonus',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w800,
-                                            color: AppColors.deepNavy,
-                                          ),
-                                        ),
-                                        const Spacer(),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 6, vertical: 2),
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xFFF97316)
-                                                .withValues(alpha: 0.1),
-                                            borderRadius:
-                                                BorderRadius.circular(6),
-                                          ),
-                                          child: const Text(
-                                            '3 Left',
-                                            style: TextStyle(
-                                              fontSize: 10,
-                                              fontWeight: FontWeight.bold,
-                                              color: Color(0xFFF97316),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 4),
-                                    const Text(
-                                      'Complete 3 more rides before midnight to unlock payout bonus.',
-                                      style: TextStyle(
-                                          fontSize: 11,
-                                          color: AppColors.textSecondary),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                            .animate()
-                            .fadeIn(delay: 150.ms)
-                            .slideY(begin: 0.08, end: 0),
-
-                        const SizedBox(height: 28),
-
-                        // Quick Actions
-                        Text('Quick Actions',
-                            style: TextStyle(
-                                fontSize: ResponsiveLayout.responsiveFontSize(
-                                    context, 18),
-                                fontWeight: FontWeight.w900,
-                                color: AppColors.deepNavy)),
-                        const SizedBox(height: 20),
-                        GridView.count(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          crossAxisCount:
-                              ResponsiveLayout.isTablet(context) ? 4 : 2,
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
-                          childAspectRatio: 1.4,
-                          children: [
-                            _buildQuickAction('Incentives', Iconsax.gift,
-                                const Color(0xFFF97316), () {
-                              showDialog(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: const Text('My Incentives'),
-                                  content: const Text(
-                                      'Complete 5 more rides today to earn an extra ₹500!'),
-                                  actions: [
-                                    TextButton(
-                                        onPressed: () => Navigator.pop(context),
-                                        child: const Text('Got it'))
-                                  ],
-                                ),
-                              );
-                            }),
-                            _buildQuickAction(
-                                'Fast Cashout',
-                                Iconsax.empty_wallet_tick,
-                                const Color(0xFF10B981), () {
-                              InstantCashoutSheet.show(
-                                context,
-                                availableBalance: 2450.0,
-                                defaultUpiId: 'driver.partner@oksbi',
-                              );
-                            }),
-                            _buildQuickAction('Wallet', Iconsax.wallet,
-                                const Color(0xFF8B5CF6), () {
-                              context.push('/driver-bank-withdrawal');
-                            }),
-                            _buildQuickAction(
-                                'Help Center',
-                                Iconsax.message_question,
-                                const Color(0xFF3B82F6), () {
-                              context.push('/help-center');
-                            }),
-                            _buildQuickAction('High Demand', Iconsax.direct_up,
-                                const Color(0xFFEC4899), () {
-                              showDialog(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: const Text('High Demand Zones'),
-                                  content: const Text(
-                                      'Hot Zones: Koramangala, Indiranagar.\nSurge pricing active (+1.5x). Head there to earn more.'),
-                                  actions: [
-                                    TextButton(
-                                        onPressed: () => Navigator.pop(context),
-                                        child: const Text('Close'))
-                                  ],
-                                ),
-                              );
-                            }),
-                          ],
-                        ),
-
-                        const SizedBox(height: 32),
-
-                        // Recent Rides
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text('Recent Rides',
-                                style: TextStyle(
-                                    fontSize:
-                                        ResponsiveLayout.responsiveFontSize(
-                                            context, 18),
-                                    fontWeight: FontWeight.w900,
-                                    color: AppColors.deepNavy)),
-                            TextButton(
-                              onPressed: () =>
-                                  context.pushReplacement('/driver-rides'),
-                              child: const Text('View All',
-                                  style: TextStyle(
-                                      color: AppColors.primaryBlue,
-                                      fontWeight: FontWeight.w800,
-                                      fontSize: 13)),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        if (_isLoadingRides)
-                          const Center(child: CircularProgressIndicator())
-                        else if (_recentRides.isEmpty)
-                          const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 20),
-                            child: Center(
-                              child: Text(
-                                'No recent rides found',
-                                style: TextStyle(color: Colors.grey),
-                              ),
-                            ),
-                          )
-                        else ...[
-                          _buildRecentRide(
-                            '${_recentRides.first.pickupAddress.split(',').first} to ${_recentRides.first.destinationAddress.split(',').first}',
-                            "${_recentRides.first.createdAt.day}/${_recentRides.first.createdAt.month} ${_recentRides.first.createdAt.hour}:${_recentRides.first.createdAt.minute.toString().padLeft(2, '0')}",
-                            '₹${_recentRides.first.fare.toStringAsFixed(2)}',
-                            _recentRides.first.status.toUpperCase(),
-                          ),
-                        ],
-                        const SizedBox(height: 100),
-                      ],
-                    ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.1),
-                  ),
-                ),
-              ],
-            ),
-
-            // ── Delivery request / active delivery panel ──
-            if (isOnline)
-              const Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: DriverDeliveryPanel(),
               ),
+            ),
           ],
         ),
-      ),
-      bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: 0,
-        items: const [
-          NavItemData(
-              icon: Iconsax.home, activeIcon: Iconsax.home5, label: 'Home'),
-          NavItemData(
-              icon: Iconsax.wallet,
-              activeIcon: Iconsax.wallet5,
-              label: 'Earnings'),
-          NavItemData(
-              icon: Iconsax.star, activeIcon: Iconsax.star5, label: 'Ratings'),
-          NavItemData(
-              icon: Iconsax.user, activeIcon: Iconsax.user, label: 'Account'),
-        ],
-        onTap: (index) {
-          if (index == 0) return;
-          if (index == 1) context.pushReplacement('/driver-earnings');
-          if (index == 2) context.pushReplacement('/driver-rides');
-          if (index == 3) context.pushReplacement('/driver-profile');
-        },
       ),
     );
   }
 
-  Widget _buildMiniStat(IconData icon, String value, String label) {
-    return Row(
-      children: [
-        Icon(icon, color: Colors.white70, size: 14),
-        const SizedBox(width: 8),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(value,
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w900)),
-            Text(label,
-                style: const TextStyle(
+  Widget _buildCockpitStatCard({
+    required String title,
+    required String value,
+    required String subtitle,
+    required Color valueColor,
+    required IconData icon,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E1E24),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
                     color: Colors.white54,
-                    fontSize: 10,
+                    fontSize: 8.5,
                     fontWeight: FontWeight.w800,
-                    letterSpacing: 0.5)),
-          ],
-        ),
-      ],
+                    letterSpacing: 0.3,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Icon(icon, size: 12, color: Colors.white38),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: TextStyle(
+              color: valueColor,
+              fontSize: 16,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            subtitle,
+            style: const TextStyle(
+              color: Colors.white54,
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildQuickAction(
-      String title, IconData icon, Color color, VoidCallback onTap) {
+  Widget _buildQuickActionBtn({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color iconColor,
+    required VoidCallback onTap,
+  }) {
     return GestureDetector(
       onTap: () {
         HapticFeedback.lightImpact();
         onTap();
       },
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
-          boxShadow: [
-            BoxShadow(
-                color: Colors.black.withValues(alpha: 0.02),
-                blurRadius: 10,
-                offset: const Offset(0, 4))
-          ],
+          color: const Color(0xFF1E1E24),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: Colors.white12),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12)),
-              child: Icon(icon, color: color, size: 20),
+                color: iconColor.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: iconColor, size: 16),
             ),
-            Text(title,
-                style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary)),
+            const SizedBox(height: 8),
+            Text(
+              title,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            Text(
+              subtitle,
+              style: const TextStyle(
+                color: Colors.white54,
+                fontSize: 9,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildRecentRide(
-      String title, String time, String amount, String status) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: const BoxDecoration(
-                color: AppColors.bgLightGrey, shape: BoxShape.circle),
-            child: const Icon(Iconsax.car, color: AppColors.deepNavy, size: 20),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child:
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(title,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 14,
-                      color: AppColors.textPrimary)),
-              Text(time,
-                  style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500)),
-            ]),
-          ),
-          Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-            Text(amount,
-                style: const TextStyle(
-                    fontWeight: FontWeight.w900,
-                    color: AppColors.deepNavy,
-                    fontSize: 14)),
-            Text(status,
-                style: const TextStyle(
-                    color: AppColors.successGreen,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800)),
-          ]),
-        ],
       ),
     );
   }

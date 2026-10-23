@@ -14,13 +14,9 @@ import '../../core/services/notification_service.dart';
 import '../../core/services/local_storage_service.dart';
 import '../../core/extensions/datetime_extensions.dart';
 import '../../core/services/two_factor_auth_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-// ── Compile-time demo-mode gate (mirrors app_router.dart) ─────────────────────
-// Demo mode is ONLY active when both kDebugMode is true AND
-// --dart-define=DEMO_MODE_ENABLED=true is passed at build time.
-// In release builds this constant evaluates to false at compile time.
-const bool _demoModeEnabled =
-    kDebugMode && bool.fromEnvironment('DEMO_MODE_ENABLED');
 
 // Helper: map a loaded user's role to their home route
 String _homeRouteForUser(AppUser user) {
@@ -133,10 +129,6 @@ class UserNotifier extends StateNotifier<UserState> {
 
     _authSubscription =
         _authService.authStateChanges.listen((sb.User? sbUser) async {
-      // If we are in demo mode, ignore null auth states.
-      // Guard: demo mode is compile-time gated; always false in release builds.
-      if (_demoModeEnabled && state.isDemo && sbUser == null) return;
-
       if (sbUser == null) {
         // ignore: unawaited_futures
         _profileSubscription?.cancel();
@@ -158,10 +150,6 @@ class UserNotifier extends StateNotifier<UserState> {
   }
 
   void _setupRealtimeListener(String uid) {
-    // Skip realtime setup for demo users (demo IDs are only valid in debug mode).
-    // In release builds _demoModeEnabled is false so this guard never applies.
-    if (_demoModeEnabled && uid.startsWith('demo_')) return;
-
     _profileSubscription?.cancel();
     _profileSubscription =
         _userRepository.getUserStream(uid).listen((updatedUser) async {
@@ -217,6 +205,11 @@ class UserNotifier extends StateNotifier<UserState> {
         }
       }
     });
+  }
+
+  /// Sets an active local user state directly (used for mobile partner direct access)
+  void setLocalUser(AppUser user) {
+    state = state.copyWith(user: user, isLoading: false, isDemo: true);
   }
 
   Future<bool> _checkDeviceSession(AppUser user) async {
@@ -310,7 +303,7 @@ class UserNotifier extends StateNotifier<UserState> {
     }
     try {
       final currentSupabaseUser = _authService.currentUser;
-      final isDemoId = uid.startsWith('demo_');
+      const isDemoId = false;
 
       if (kDebugMode) {
         debugPrint('UserNotifier: Fetching user profile from repository...');
@@ -522,17 +515,17 @@ class UserNotifier extends StateNotifier<UserState> {
 
         final newUser = AppUser(
           id: uid,
-          name: isDemoId ? 'Demo User' : oauthName,
-          phone: isDemoId ? '9876543210' : (currentSupabaseUser?.phone ?? ''),
-          email: isDemoId ? 'demo@roadrobos.com' : currentSupabaseUser?.email,
+          name: oauthName,
+          phone: currentSupabaseUser?.phone ?? '',
+          email: currentSupabaseUser?.email,
           role: selectedRole,
           isApproved: (selectedRole != UserRole.technician &&
               selectedRole != UserRole.admin),
-          profilePic: isDemoId ? '' : (oauthPic ?? ''),
+          profilePic: oauthPic ?? '',
         );
 
-        // ONLY save to Supabase if NOT a demo user
-        if (!isDemoId) {
+        // Save to Supabase
+        if (true) {
           if (kDebugMode) {
             debugPrint(
                 'UserNotifier: Saving new user profile to database: ${newUser.toMap()}');
@@ -633,11 +626,8 @@ class UserNotifier extends StateNotifier<UserState> {
       debugPrint(
           'Updating Profile: [Name: ${updatedUser.name}, Phone: ${updatedUser.phone}, Email: ${updatedUser.email}]');
 
-      // Safeguard: Do not attempt database write for Demo Users
-      if (!state.isDemo) {
-        await _userRepository.saveUser(updatedUser);
-        debugPrint('Profile saved to database successfully.');
-      }
+      await _userRepository.saveUser(updatedUser);
+      debugPrint('Profile saved to database successfully.');
 
       state = state.copyWith(user: updatedUser, isLoading: false);
     } catch (e) {
@@ -660,14 +650,11 @@ class UserNotifier extends StateNotifier<UserState> {
         },
       );
 
-      // Safeguard: Do not attempt database write for Demo Users
-      if (!state.isDemo) {
-        await _userRepository.updateField(
-          currentAppUser.id,
-          'notification_preferences',
-          updatedUser.notificationPreferences,
-        );
-      }
+      await _userRepository.updateField(
+        currentAppUser.id,
+        'notification_preferences',
+        updatedUser.notificationPreferences,
+      );
 
       state = state.copyWith(user: updatedUser, isLoading: false);
     } catch (e) {
@@ -686,7 +673,27 @@ class UserNotifier extends StateNotifier<UserState> {
   }
 
   Future<void> logout() async {
-    await _authService.signOut();
+    final prefs = await SharedPreferences.getInstance();
+    final isBiometricEnabled = prefs.getBool('biometric_enabled') ?? false;
+
+    if (isBiometricEnabled) {
+      final currentSession = sb.Supabase.instance.client.auth.currentSession;
+      if (currentSession?.refreshToken != null) {
+        const secureStorage = FlutterSecureStorage(
+          aOptions: AndroidOptions(encryptedSharedPreferences: true),
+          iOptions:
+              IOSOptions(accessibility: KeychainAccessibility.first_unlock),
+        );
+        await secureStorage.write(
+            key: 'bio_refresh_token', value: currentSession!.refreshToken!);
+        final email = currentSession.user.email ?? state.user?.email;
+        if (email != null && email.isNotEmpty) {
+          await secureStorage.write(key: 'bio_email', value: email);
+        }
+      }
+    }
+
+    await _authService.signOut(preserveBiometricSession: isBiometricEnabled);
     final storage = _ref.read(localStorageServiceProvider);
     // Clear the cached home route so the next user doesn't get a stale redirect
     unawaited(storage.clearLastHomeRoute());
@@ -704,12 +711,10 @@ class UserNotifier extends StateNotifier<UserState> {
 
     state = state.copyWith(isLoading: true);
     try {
-      if (!state.isDemo) {
-        await _userRepository.updateField(
-            currentAppUser.id, 'deletion_requested', true);
-        await _userRepository.updateField(
-            currentAppUser.id, 'deletion_requested_at', DateTime.now().utcIso);
-      }
+      await _userRepository.updateField(
+          currentAppUser.id, 'deletion_requested', true);
+      await _userRepository.updateField(
+          currentAppUser.id, 'deletion_requested_at', DateTime.now().utcIso);
       await logout();
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -723,11 +728,6 @@ class UserNotifier extends StateNotifier<UserState> {
   Future<void> enable2FA() async {
     final uid = state.user?.id;
     if (uid == null) return;
-    if (state.isDemo) {
-      state = state.copyWith(mfaEnabled: true);
-      debugPrint('UserNotifier: 2FA enabled for demo user $uid');
-      return;
-    }
     try {
       await _ref
           .read(twoFactorAuthServiceProvider)
@@ -744,11 +744,6 @@ class UserNotifier extends StateNotifier<UserState> {
   Future<void> disable2FA() async {
     final uid = state.user?.id;
     if (uid == null) return;
-    if (state.isDemo) {
-      state = state.copyWith(mfaEnabled: false);
-      debugPrint('UserNotifier: 2FA disabled for demo user $uid');
-      return;
-    }
     try {
       await _ref
           .read(twoFactorAuthServiceProvider)

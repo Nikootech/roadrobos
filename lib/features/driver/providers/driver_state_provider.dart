@@ -1,8 +1,10 @@
 // IMPORTANT: All StreamSubscription fields must be cancelled in dispose/onDispose.
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:async';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:geolocator/geolocator.dart';
 import '../../../core/repositories/driver_repository.dart';
 import '../../../features/profile/user_provider.dart';
 import '../../../core/models/driver_model.dart';
@@ -10,8 +12,18 @@ import '../../../core/models/ride_booking.dart';
 import '../../../core/models/user_role.dart';
 import '../../../core/repositories/user_repository.dart';
 import '../../../core/services/notification_service.dart';
+import '../../../core/services/osm_maps_service.dart';
+import 'package:latlong2/latlong.dart';
 
 enum VerificationStatus { pending, approved, rejected }
+
+// Current Driver Model Provider (Stream-based)
+final currentDriverProvider = StreamProvider<DriverModel?>((ref) {
+  final user = ref.watch(userProvider);
+  final uid = user.user?.id;
+  if (uid == null || uid.isEmpty) return Stream.value(null);
+  return ref.watch(driverRepositoryProvider).watchDriver(uid);
+});
 
 // Verification Status Provider (Stream-based)
 final verificationProvider = StreamProvider<VerificationStatus>((ref) {
@@ -53,7 +65,7 @@ final verificationActionProvider =
   return VerificationActionNotifier(ref);
 });
 
-// Mock Earnings Provider (Rewired to real driver stats)
+// Production Driver Earnings Provider (Dynamic database stats)
 class DriverEarnings {
   final double todayEarnings;
   final double weeklyEarnings;
@@ -120,15 +132,20 @@ class RideRequest {
 final rideRequestsProvider = StreamProvider<List<RideRequest>>((ref) {
   return ref.watch(driverRepositoryProvider).watchPendingRides().map((rides) {
     return rides
-        .map((r) => RideRequest(
-              id: r.id,
-              riderName: 'Customer ${r.customerId.substring(0, 4)}',
-              distance: 'Calculating...',
-              fare: r.fare,
-              rating: 4.8,
-              pickup: r.pickupAddress,
-              dropoff: r.destinationAddress,
-            ))
+        .map((r) {
+          final prefix = r.customerId.length >= 4
+              ? r.customerId.substring(0, 4)
+              : (r.customerId.isNotEmpty ? r.customerId : 'User');
+          return RideRequest(
+            id: r.id,
+            riderName: 'Customer $prefix',
+            distance: 'Calculating...',
+            fare: r.fare,
+            rating: 4.8,
+            pickup: r.pickupAddress,
+            dropoff: r.destinationAddress,
+          );
+        })
         .toList();
   });
 });
@@ -185,19 +202,35 @@ final rideRequestsActionProvider =
   return RideRequestsActionNotifier(ref);
 });
 
-// Mock Map State Provider (Rewired to online status)
+// Map State Provider (Rewired to real-time location and reverse geocoded address)
 class MapState {
   final double lat;
   final double lng;
   final bool isOnline;
+  final String currentAddress;
+  final bool isFetchingAddress;
 
-  MapState({required this.lat, required this.lng, required this.isOnline});
+  MapState({
+    required this.lat,
+    required this.lng,
+    required this.isOnline,
+    this.currentAddress = 'Detecting current address...',
+    this.isFetchingAddress = false,
+  });
 
-  MapState copyWith({double? lat, double? lng, bool? isOnline}) {
+  MapState copyWith({
+    double? lat,
+    double? lng,
+    bool? isOnline,
+    String? currentAddress,
+    bool? isFetchingAddress,
+  }) {
     return MapState(
       lat: lat ?? this.lat,
       lng: lng ?? this.lng,
       isOnline: isOnline ?? this.isOnline,
+      currentAddress: currentAddress ?? this.currentAddress,
+      isFetchingAddress: isFetchingAddress ?? this.isFetchingAddress,
     );
   }
 }
@@ -207,7 +240,12 @@ class MapStateNotifier extends StateNotifier<MapState> {
   StreamSubscription? _driverSubscription;
 
   MapStateNotifier(this.ref)
-      : super(MapState(lat: 12.9716, lng: 77.5946, isOnline: false)) {
+      : super(MapState(
+          lat: 12.9716,
+          lng: 77.5946,
+          isOnline: false,
+          currentAddress: 'Bangalore, Karnataka',
+        )) {
     _init();
   }
 
@@ -220,13 +258,84 @@ class MapStateNotifier extends StateNotifier<MapState> {
         .watchDriver(driverId)
         .listen((driver) {
       if (driver != null && mounted) {
+        final newLat = driver.currentPosition?.latitude ?? state.lat;
+        final newLng = driver.currentPosition?.longitude ?? state.lng;
+        final posChanged = (newLat != state.lat || newLng != state.lng);
         state = state.copyWith(
           isOnline: driver.isOnline,
-          lat: driver.currentPosition?.latitude,
-          lng: driver.currentPosition?.longitude,
+          lat: newLat,
+          lng: newLng,
         );
+        if (posChanged || state.currentAddress == 'Bangalore, Karnataka') {
+          reverseGeocodeAddress(newLat, newLng);
+        }
       }
     });
+
+    fetchDeviceLocation();
+  }
+
+  Future<void> fetchDeviceLocation() async {
+    try {
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        await reverseGeocodeAddress(state.lat, state.lng);
+        return;
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied ||
+            permission == LocationPermission.deniedForever) {
+          await reverseGeocodeAddress(state.lat, state.lng);
+          return;
+        }
+      }
+
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 8),
+      );
+
+      if (mounted) {
+        state = state.copyWith(lat: position.latitude, lng: position.longitude);
+        await reverseGeocodeAddress(position.latitude, position.longitude);
+      }
+    } catch (e) {
+      debugPrint('Error fetching device position: $e');
+      if (mounted) {
+        await reverseGeocodeAddress(state.lat, state.lng);
+      }
+    }
+  }
+
+  Future<void> reverseGeocodeAddress(double lat, double lng) async {
+    if (!mounted) return;
+    state = state.copyWith(isFetchingAddress: true);
+    try {
+      final address = await OSMMapsService().getAddressFromCoords(LatLng(lat, lng));
+      if (mounted) {
+        if (address != null && address.trim().isNotEmpty) {
+          state = state.copyWith(
+            currentAddress: address.trim(),
+            isFetchingAddress: false,
+          );
+        } else {
+          state = state.copyWith(
+            currentAddress: '${lat.toStringAsFixed(4)}, ${lng.toStringAsFixed(4)}',
+            isFetchingAddress: false,
+          );
+        }
+      }
+    } catch (_) {
+      if (mounted) {
+        state = state.copyWith(
+          currentAddress: '${lat.toStringAsFixed(4)}, ${lng.toStringAsFixed(4)}',
+          isFetchingAddress: false,
+        );
+      }
+    }
   }
 
   @override
@@ -237,19 +346,26 @@ class MapStateNotifier extends StateNotifier<MapState> {
 
   Future<void> toggleOnline() async {
     final user = ref.read(userProvider);
+    final driverId = user.user?.id ?? 'demo';
 
     final newStatus = !state.isOnline;
-    await ref
-        .read(driverRepositoryProvider)
-        .updateOnlineStatus(user.user?.id ?? 'demo', newStatus);
 
     if (newStatus) {
-      // Sync FCM token when going online
+      await fetchDeviceLocation();
+    }
+
+    await ref.read(driverRepositoryProvider).updateOnlineStatus(
+          driverId,
+          newStatus,
+          position: LatLng(state.lat, state.lng),
+        );
+
+    if (newStatus) {
       final token = await ref.read(notificationServiceProvider).getToken();
       if (token != null) {
         await ref
             .read(driverRepositoryProvider)
-            .updateFcmToken(user.user?.id ?? 'demo', token);
+            .updateFcmToken(driverId, token);
       }
     }
 

@@ -21,6 +21,7 @@ class CustomBottomNavBar extends StatelessWidget {
   final List<NavItemData> items;
   final Color? activeColor;
   final Color? inactiveColor;
+  final Color? backgroundColor;
 
   const CustomBottomNavBar({
     super.key,
@@ -29,19 +30,25 @@ class CustomBottomNavBar extends StatelessWidget {
     required this.items,
     this.activeColor,
     this.inactiveColor,
+    this.backgroundColor,
   });
 
   @override
   Widget build(BuildContext context) {
     final effectiveActiveColor = activeColor ?? const Color(0xFF006241);
     final effectiveInactiveColor = inactiveColor ?? const Color(0xFF94A3B8);
+    final effectiveBgColor = backgroundColor ?? Colors.white;
+    final isDark = effectiveBgColor.computeLuminance() < 0.2;
     final bottomPadding = MediaQuery.paddingOf(context).bottom;
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: const Border(
-          top: BorderSide(color: Color(0xFFE2E8F0), width: 1.2),
+        color: effectiveBgColor,
+        border: Border(
+          top: BorderSide(
+            color: isDark ? const Color(0xFF27272A) : const Color(0xFFE2E8F0),
+            width: 1.2,
+          ),
         ),
         boxShadow: [
           BoxShadow(
@@ -82,7 +89,7 @@ class CustomBottomNavBar extends StatelessWidget {
                         const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
                     decoration: BoxDecoration(
                       color: isActive
-                          ? const Color(0xFF006241).withValues(alpha: 0.12)
+                          ? effectiveActiveColor.withValues(alpha: 0.15)
                           : Colors.transparent,
                       borderRadius: BorderRadius.circular(16),
                     ),

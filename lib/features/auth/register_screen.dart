@@ -14,7 +14,9 @@ import '../../core/repositories/user_repository.dart';
 import '../../core/repositories/driver_repository.dart';
 import '../../navigation/nav_helpers.dart';
 import '../../core/config/app_config.dart';
+import '../../core/config/app_flavor.dart';
 import '../../core/services/local_storage_service.dart';
+import '../profile/user_provider.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -40,6 +42,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   Future<void> _loadSelectedRole() async {
+    if (AppConfig.flavor == AppFlavor.customer) {
+      if (mounted) {
+        setState(() {
+          _selectedRole = UserRole.customer;
+        });
+      }
+      return;
+    }
     final savedRoleName =
         await ref.read(localStorageServiceProvider).getSelectedRole();
     if (savedRoleName != null) {
@@ -47,9 +57,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         (e) => e.name == savedRoleName,
         orElse: () => UserRole.customer,
       );
-      setState(() {
-        _selectedRole = role;
-      });
+      if (mounted) {
+        setState(() {
+          _selectedRole = role;
+        });
+      }
     }
   }
 
@@ -81,7 +93,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             phone: _phoneController.text.trim(),
             email: _emailController.text.trim(),
             role: _selectedRole,
-            isApproved: _selectedRole != UserRole.technician,
+            kycStatus: 'approved',
             createdAt: DateTime.now(),
           );
           await ref.read(userRepositoryProvider).saveUser(appUser);
@@ -92,10 +104,37 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   uid: user.id,
                   name: _nameController.text.trim(),
                   phone: _phoneController.text.trim(),
-                  vehicleModel: 'Pending Update',
-                  chassisNumber: 'Pending Update',
-                  licenseNumber: 'Pending Update',
+                  vehicleModel: 'Partner Vehicle',
+                  chassisNumber:
+                      'RRB-${user.id.substring(0, 6).toUpperCase()}',
+                  licenseNumber: 'DL-PARTNER-ACTIVE',
                 );
+          }
+
+          // If session is null (due to email confirm setting), attempt immediate signIn
+          if (response.session == null) {
+            try {
+              await ref.read(authServiceProvider).signInWithEmail(
+                    _emailController.text.trim(),
+                    _passwordController.text.trim(),
+                  );
+            } catch (_) {}
+          }
+
+          if (AppFlavor.current.isPartner) {
+            await ref
+                .read(localStorageServiceProvider)
+                .setSelectedRole(_selectedRole.name);
+            ref.read(userProvider.notifier).setLocalUser(appUser);
+            await ref.read(userProvider.notifier).fetchUserProfile(user.id);
+            if (!mounted) return;
+            setState(() => _isLoading = false);
+            if (_selectedRole == UserRole.technician) {
+              context.go('/tech-dashboard');
+            } else {
+              context.go('/driver-home');
+            }
+            return;
           }
 
           if (!mounted) return;

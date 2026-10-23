@@ -7,6 +7,9 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/services/local_storage_service.dart';
 import '../../navigation/nav_helpers.dart';
+import '../../core/config/app_config.dart';
+import '../../core/config/app_flavor.dart';
+import '../../core/models/user_role.dart';
 
 class RoleSelectionScreen extends ConsumerStatefulWidget {
   const RoleSelectionScreen({super.key});
@@ -18,6 +21,21 @@ class RoleSelectionScreen extends ConsumerStatefulWidget {
 
 class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen> {
   String? _selectedRole;
+
+  @override
+  void initState() {
+    super.initState();
+    if (AppConfig.flavor == AppFlavor.customer) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        await ref
+            .read(localStorageServiceProvider)
+            .setSelectedRole(UserRole.customer.name);
+        if (mounted) {
+          NavHelpers.go(context, '/auth/login');
+        }
+      });
+    }
+  }
 
   void _onRoleSelected(String role) {
     setState(() {

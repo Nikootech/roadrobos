@@ -10,10 +10,14 @@ import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'rbac_service.dart';
 
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../main.dart' show navigatorKey;
+import '../../navigation/customer_router.dart' show customerRootNavigatorKey;
 import '../security/secure_token_storage.dart';
 import '../security/auth_rate_limiter.dart';
 import 'package:go_router/go_router.dart';
+import '../network/supabase_http_client.dart';
+import '../config/app_flavor.dart';
 
 part 'auth_service.g.dart';
 
@@ -42,7 +46,9 @@ class AuthNotifier extends _$AuthNotifier {
         if (data.event == sb.AuthChangeEvent.passwordRecovery) {
           ref.read(passwordRecoveryProvider.notifier).state = true;
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            navigatorKey.currentContext?.go('/reset-password');
+            final ctx = customerRootNavigatorKey.currentContext ??
+                navigatorKey.currentContext;
+            ctx?.go('/reset-password');
           });
           return;
         }
@@ -56,9 +62,41 @@ class AuthNotifier extends _$AuthNotifier {
           );
           state = const AsyncData(null);
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            navigatorKey.currentContext?.go('/auth/login');
+            final ctx = customerRootNavigatorKey.currentContext ??
+                navigatorKey.currentContext;
+            ctx?.go('/auth/login');
           });
           return;
+        }
+
+        // ── Keep biometric refresh token fresh on token rotation or sign-in ──
+        if (data.session?.refreshToken != null &&
+            (data.event == sb.AuthChangeEvent.tokenRefreshed ||
+                data.event == sb.AuthChangeEvent.signedIn)) {
+          unawaited(() async {
+            try {
+              final prefs = await SharedPreferences.getInstance();
+              if (prefs.getBool('biometric_enabled') ?? false) {
+                const storage = FlutterSecureStorage(
+                  aOptions: AndroidOptions(encryptedSharedPreferences: true),
+                  iOptions: IOSOptions(
+                      accessibility: KeychainAccessibility.first_unlock),
+                );
+                await storage.write(
+                  key: 'bio_refresh_token',
+                  value: data.session!.refreshToken!,
+                );
+                final email = data.session!.user.email;
+                if (email != null && email.isNotEmpty) {
+                  await storage.write(key: 'bio_email', value: email);
+                }
+              }
+            } catch (e) {
+              if (kDebugMode) {
+                debugPrint('AuthNotifier: Failed to cache bio_refresh_token: $e');
+              }
+            }
+          }());
         }
 
         state = AsyncData(data.session?.user);
@@ -122,11 +160,25 @@ class AuthService {
 
   // --- Email/Password Authentication ---
 
+  /// Calls the backend confirm_user RPC to confirm an email address without browser links
+  Future<void> confirmEmailLocally(String email) async {
+    try {
+      await _supabase.rpc('confirm_user', params: {'p_email': email});
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('confirmEmailLocally failed: $e');
+      }
+    }
+  }
+
   Future<sb.AuthResponse> signUpWithEmail(String email, String password) async {
-    return await _supabase.auth.signUp(
+    final res = await _supabase.auth.signUp(
       email: email,
       password: password,
     );
+    // Auto-confirm immediately to bypass browser email link requirement
+    await confirmEmailLocally(email);
+    return res;
   }
 
   Future<sb.AuthResponse> signInWithEmail(String email, String password) async {
@@ -154,6 +206,20 @@ class AuthService {
         }
       }
       return response;
+    } on sb.AuthException catch (e) {
+      if (e.message.toLowerCase().contains('email not confirmed') ||
+          e.statusCode == '400') {
+        try {
+          await confirmEmailLocally(email);
+          final retryResponse = await _supabase.auth.signInWithPassword(
+            email: email,
+            password: password,
+          );
+          AuthRateLimiter.reset(email);
+          return retryResponse;
+        } catch (_) {}
+      }
+      rethrow;
     } catch (e) {
       rethrow;
     }
@@ -218,171 +284,213 @@ class AuthService {
         );
       }
 
-      // Mobile: use native Google Sign-In (shows in-app account picker)
-      final googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) {
-        // User cancelled the sign-in
-        return false;
-      }
-
-      final googleAuth = await googleUser.authentication;
-      final idToken = googleAuth.idToken;
-      final accessToken = googleAuth.accessToken;
-
-      if (idToken == null) {
-        throw Exception('Google Sign-In failed: No ID token received.');
-      }
-
-      // Exchange Google tokens with Supabase
-      await _supabase.auth.signInWithIdToken(
-        provider: sb.OAuthProvider.google,
-        idToken: idToken,
-        accessToken: accessToken,
-      );
-
-      // Fetch and sync profile details from Google Account
-      final currentUser = _supabase.auth.currentUser;
-      if (currentUser != null) {
-        final googlePhotoUrl = googleUser.photoUrl;
-        final googleName = googleUser.displayName;
-
-        // 1. Update Supabase Auth metadata
-        final Map<String, dynamic> metadata =
-            Map<String, dynamic>.from(currentUser.userMetadata ?? {});
-        bool needsMetaUpdate = false;
-        if (googlePhotoUrl != null && metadata['avatar_url'] == null) {
-          metadata['avatar_url'] = googlePhotoUrl;
-          needsMetaUpdate = true;
-        }
-        if (googleName != null && metadata['full_name'] == null) {
-          metadata['full_name'] = googleName;
-          needsMetaUpdate = true;
+      // Mobile: First attempt native Google Sign-In
+      try {
+        final googleUser = await _googleSignIn.signIn();
+        if (googleUser == null) {
+          // User intentionally closed/cancelled the picker
+          return false;
         }
 
-        if (needsMetaUpdate) {
-          try {
-            await _supabase.auth.updateUser(
-              sb.UserAttributes(data: metadata),
-            );
-          } catch (e) {
-            if (kDebugMode) {
-              debugPrint('Google Sign-In: Failed to update auth metadata: $e');
-            }
-          }
+        final googleAuth = await googleUser.authentication;
+        final idToken = googleAuth.idToken;
+        final accessToken = googleAuth.accessToken;
+
+        if (idToken == null) {
+          throw Exception('Google Sign-In failed: No ID token received.');
         }
 
-        // 2. Direct database profiles table sync (to bypass delay or edge cases)
-        try {
-          final profileResponse = await _supabase
-              .from('profiles')
-              .select('profile_pic, name, role')
-              .eq('id', currentUser.id)
-              .maybeSingle();
+        // Exchange Google tokens with Supabase
+        await _supabase.auth.signInWithIdToken(
+          provider: sb.OAuthProvider.google,
+          idToken: idToken,
+          accessToken: accessToken,
+        );
 
-          final prefs = await SharedPreferences.getInstance();
-          // SECURITY: Only use the locally saved role if it was EXPLICITLY set
-          // during THIS login session (i.e. the user just picked it on the
-          // role-selection screen). If it is null the previous user's role was
-          // cleared on logout — fall back to 'customer' so the new user is
-          // never assigned the wrong role by accident.
-          final savedRoleName = prefs.getString('selected_role') ?? 'customer';
-          final isApproved = savedRoleName != 'technician';
-
-          if (profileResponse != null) {
-            final existingPic = profileResponse['profile_pic'] as String?;
-            final existingName = profileResponse['name'] as String?;
-            final existingRole = profileResponse['role'] as String?;
-
-            final dbUpdates = <String, dynamic>{};
-            if ((existingPic == null || existingPic.isEmpty) &&
-                googlePhotoUrl != null) {
-              dbUpdates['profile_pic'] = googlePhotoUrl;
-            }
-            if ((existingName == null ||
-                    existingName.isEmpty ||
-                    existingName == 'New User') &&
-                googleName != null) {
-              dbUpdates['name'] = googleName;
-            }
-            if (existingRole == null) {
-              dbUpdates['role'] = savedRoleName;
-              dbUpdates['is_approved'] = isApproved;
-            }
-
-            if (dbUpdates.isNotEmpty) {
-              await _supabase
-                  .from('profiles')
-                  .update(dbUpdates)
-                  .eq('id', currentUser.id);
-            }
-
-            // If their role is driver, ensure driver record exists
-            final effectiveRole = existingRole ?? savedRoleName;
-            if (effectiveRole == 'driver') {
-              try {
-                await _supabase.from('drivers').upsert({
-                  'id': currentUser.id,
-                  'name': googleName ?? existingName ?? 'New Driver',
-                  'phone': currentUser.phone ?? '',
-                  'vehicle_model': 'Pending Update',
-                  'chassis_number': 'Pending Update',
-                  'license_number': 'Pending Update',
-                  'approval_status': 'approved',
-                  'is_online': false,
-                  'today_earnings': 0.0,
-                  'created_at': DateTime.now().toUtc().toIso8601String(),
-                });
-              } catch (e) {
-                if (kDebugMode) {
-                  debugPrint(
-                      'Google Sign-In: Failed to sync driver record: $e');
-                }
-              }
-            }
-          } else {
-            // First time Google Sign-In, profile does not exist yet
-            await _supabase.from('profiles').insert({
-              'id': currentUser.id,
-              'name': googleName ?? 'New User',
-              'email': currentUser.email,
-              'profile_pic': googlePhotoUrl,
-              'role': savedRoleName,
-              'is_approved': isApproved,
-            });
-
-            if (savedRoleName == 'driver') {
-              try {
-                await _supabase.from('drivers').upsert({
-                  'id': currentUser.id,
-                  'name': googleName ?? 'New Driver',
-                  'phone': currentUser.phone ?? '',
-                  'vehicle_model': 'Pending Update',
-                  'chassis_number': 'Pending Update',
-                  'license_number': 'Pending Update',
-                  'approval_status': 'approved',
-                  'is_online': false,
-                  'today_earnings': 0.0,
-                  'created_at': DateTime.now().toUtc().toIso8601String(),
-                });
-              } catch (e) {
-                if (kDebugMode) {
-                  debugPrint(
-                      'Google Sign-In: Failed to create driver record: $e');
-                }
-              }
-            }
-          }
-        } catch (e) {
+        // Fetch and sync profile details from Google Account
+        await _syncGoogleProfile(googleUser);
+        return true;
+      } catch (nativeErr) {
+        final errStr = nativeErr.toString().toLowerCase();
+        // If user explicitly cancelled, do not trigger fallback browser
+        if (errStr.contains('canceled') ||
+            errStr.contains('cancelled') ||
+            errStr.contains('sign_in_canceled') ||
+            errStr.contains('sign_in_cancelled') ||
+            errStr.contains('12501')) {
           if (kDebugMode) {
-            debugPrint('Google Sign-In: Failed to sync database profile: $e');
+            debugPrint('Google Sign-In cancelled by user.');
           }
+          return false;
         }
-      }
 
-      return true;
+        // On mobile for Partner App, avoid launching an external browser
+        // since browser-based OAuth requires web-based user verification.
+        if (!kIsWeb && AppFlavor.current.isPartner) {
+          if (kDebugMode) {
+            debugPrint(
+                'Partner App: Suppressing external browser OAuth. Native error: $nativeErr');
+          }
+          throw Exception(
+              'Google Sign-In failed on mobile ($nativeErr). Please sign in directly with Email or 1-Tap Partner Access.');
+        }
+
+        if (kDebugMode) {
+          debugPrint(
+              'Native Google Sign-In error ($nativeErr). Falling back to Supabase OAuth browser flow...');
+        }
+
+        // Fallback: Use Supabase Google OAuth which works seamlessly across packages & custom tabs
+        final redirectUrl = AppFlavor.current.isPartner
+            ? 'com.roadrobos.partner://login-callback'
+            : 'com.roadrobos.app://login-callback';
+
+        return await _supabase.auth.signInWithOAuth(
+          sb.OAuthProvider.google,
+          redirectTo: redirectUrl,
+          queryParams: {'prompt': 'select_account'},
+        );
+      }
     } catch (e) {
       if (kDebugMode) debugPrint('Google Sign-In Error: $e');
       rethrow;
+    }
+  }
+
+  /// Syncs Google profile details to Supabase Auth and the database profiles table
+  Future<void> _syncGoogleProfile(GoogleSignInAccount googleUser) async {
+    final currentUser = _supabase.auth.currentUser;
+    if (currentUser == null) return;
+
+    final googlePhotoUrl = googleUser.photoUrl;
+    final googleName = googleUser.displayName;
+
+    // 1. Update Supabase Auth metadata
+    final Map<String, dynamic> metadata =
+        Map<String, dynamic>.from(currentUser.userMetadata ?? {});
+    bool needsMetaUpdate = false;
+    if (googlePhotoUrl != null && metadata['avatar_url'] == null) {
+      metadata['avatar_url'] = googlePhotoUrl;
+      needsMetaUpdate = true;
+    }
+    if (googleName != null && metadata['full_name'] == null) {
+      metadata['full_name'] = googleName;
+      needsMetaUpdate = true;
+    }
+
+    if (needsMetaUpdate) {
+      try {
+        await _supabase.auth.updateUser(
+          sb.UserAttributes(data: metadata),
+        );
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('Google Sign-In: Failed to update auth metadata: $e');
+        }
+      }
+    }
+
+    // 2. Direct database profiles table sync
+    try {
+      final profileResponse = await _supabase
+          .from('profiles')
+          .select('profile_pic, name, role')
+          .eq('id', currentUser.id)
+          .maybeSingle();
+
+      final prefs = await SharedPreferences.getInstance();
+      // SECURITY & FLAVOR ROLE AWARENESS:
+      // If partner app, default new user role to 'driver', not 'customer'
+      final defaultRole = AppFlavor.current.isPartner ? 'driver' : 'customer';
+      final savedRoleName = prefs.getString('selected_role') ?? defaultRole;
+      final isApproved = savedRoleName != 'technician';
+
+      if (profileResponse != null) {
+        final existingPic = profileResponse['profile_pic'] as String?;
+        final existingName = profileResponse['name'] as String?;
+        final existingRole = profileResponse['role'] as String?;
+
+        final dbUpdates = <String, dynamic>{};
+        if ((existingPic == null || existingPic.isEmpty) &&
+            googlePhotoUrl != null) {
+          dbUpdates['profile_pic'] = googlePhotoUrl;
+        }
+        if ((existingName == null ||
+                existingName.isEmpty ||
+                existingName == 'New User') &&
+            googleName != null) {
+          dbUpdates['name'] = googleName;
+        }
+        if (existingRole == null) {
+          dbUpdates['role'] = savedRoleName;
+          dbUpdates['is_approved'] = isApproved;
+        }
+
+        if (dbUpdates.isNotEmpty) {
+          await _supabase
+              .from('profiles')
+              .update(dbUpdates)
+              .eq('id', currentUser.id);
+        }
+
+        // If their role is driver, ensure driver record exists
+        final effectiveRole = existingRole ?? savedRoleName;
+        if (effectiveRole == 'driver') {
+          try {
+            await _supabase.from('drivers').upsert({
+              'id': currentUser.id,
+              'name': googleName ?? existingName ?? 'New Driver',
+              'phone': currentUser.phone ?? '',
+              'vehicle_model': 'Pending Update',
+              'chassis_number': 'Pending Update',
+              'license_number': 'Pending Update',
+              'approval_status': 'approved',
+              'is_online': false,
+              'today_earnings': 0.0,
+              'created_at': DateTime.now().toUtc().toIso8601String(),
+            });
+          } catch (e) {
+            if (kDebugMode) {
+              debugPrint('Google Sign-In: Failed to sync driver record: $e');
+            }
+          }
+        }
+      } else {
+        // First time Google Sign-In, profile does not exist yet
+        await _supabase.from('profiles').insert({
+          'id': currentUser.id,
+          'name': googleName ?? 'New User',
+          'email': currentUser.email,
+          'profile_pic': googlePhotoUrl,
+          'role': savedRoleName,
+          'is_approved': isApproved,
+        });
+
+        if (savedRoleName == 'driver') {
+          try {
+            await _supabase.from('drivers').upsert({
+              'id': currentUser.id,
+              'name': googleName ?? 'New Driver',
+              'phone': currentUser.phone ?? '',
+              'vehicle_model': 'Pending Update',
+              'chassis_number': 'Pending Update',
+              'license_number': 'Pending Update',
+              'approval_status': 'approved',
+              'is_online': false,
+              'today_earnings': 0.0,
+              'created_at': DateTime.now().toUtc().toIso8601String(),
+            });
+          } catch (e) {
+            if (kDebugMode) {
+              debugPrint('Google Sign-In: Failed to create driver record: $e');
+            }
+          }
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('Google Sign-In: Failed to sync database profile: $e');
+      }
     }
   }
 
@@ -405,7 +513,7 @@ class AuthService {
 
   // --- Sign Out ---
 
-  Future<void> signOut() async {
+  Future<void> signOut({bool preserveBiometricSession = false}) async {
     // Clear RBAC permissions cache before signing out.
     try {
       await RbacService(_supabase).clearCache();
@@ -415,6 +523,19 @@ class AuthService {
       }
     }
     if (!kIsWeb) await _googleSignIn.signOut();
-    await _supabase.auth.signOut();
+    if (preserveBiometricSession) {
+      // Local sign-out ONLY:
+      // Intercepts the remote /logout network call so the refresh token remains active in Supabase backend,
+      // while clearing the session from in-memory and local client storage so the user can re-authenticate via Biometrics.
+      SupabaseHttpClient.suppressRemoteLogout = true;
+      try {
+        await _supabase.auth.signOut();
+      } finally {
+        SupabaseHttpClient.suppressRemoteLogout = false;
+      }
+    } else {
+      // Global sign-out: revokes the session on the backend
+      await _supabase.auth.signOut(scope: sb.SignOutScope.global);
+    }
   }
 }

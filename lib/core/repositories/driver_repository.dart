@@ -25,13 +25,31 @@ class DriverRepository {
             : null);
   }
 
-  /// Toggle driver online/offline status
-  Future<void> updateOnlineStatus(String uid, bool isOnline) async {
+  /// Fetch a specific driver's profile once
+  Future<DriverModel?> getDriver(String uid) async {
     try {
-      await _supabase.from('drivers').update({
+      if (uid.isEmpty || uid == 'demo') return null;
+      final res =
+          await _supabase.from('drivers').select().eq('id', uid).maybeSingle();
+      if (res == null) return null;
+      return DriverModel.fromMap(res, res['id'].toString());
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Toggle driver online/offline status
+  Future<void> updateOnlineStatus(String uid, bool isOnline, {LatLng? position}) async {
+    try {
+      final updateData = <String, dynamic>{
         'is_online': isOnline,
         'last_active': DateTime.now().utcIso,
-      }).eq('id', uid);
+      };
+      if (position != null) {
+        updateData['lat'] = position.latitude;
+        updateData['lng'] = position.longitude;
+      }
+      await _supabase.from('drivers').update(updateData).eq('id', uid);
     } catch (e) {
       throw Exception('Failed to update online status: $e');
     }
@@ -61,6 +79,9 @@ class DriverRepository {
 
       return allOnline.where((d) {
         final model = d.vehicleModel.toLowerCase();
+        if (model.contains('pending') || model.isEmpty || model.contains('all')) {
+          return true;
+        }
         if (vehicleTypeId.contains('auto')) {
           return model.contains('auto') ||
               model.contains('rickshaw') ||

@@ -1,7 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
-import 'l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
@@ -10,25 +8,21 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'firebase_options.dart';
-import 'core/theme/app_theme.dart';
 import 'core/config/app_config.dart';
 import 'navigation/app_router.dart';
-import 'features/rentals/rental_providers.dart';
-import 'shared/widgets/rental_completion_dialog.dart';
-import 'shared/widgets/role_changed_dialog.dart';
-import 'features/profile/user_provider.dart';
-import 'shared/widgets/error_screen.dart';
 import 'core/providers/theme_provider.dart';
 import 'core/services/notification_service.dart';
-import 'core/services/payment_service.dart';
 import 'core/services/pricing_service.dart';
 import 'core/security/jailbreak_guard.dart';
 import 'core/security/encrypted_column.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'core/utils/app_debugger.dart';
 import 'shared/widgets/startup_error_app.dart';
+import 'core/config/app_flavor.dart';
+import 'app_customer.dart';
 import 'core/services/background_service.dart';
 import 'core/theme/system_ui_service.dart';
+import 'core/network/supabase_http_client.dart';
 
 import 'package:flutter/foundation.dart';
 
@@ -121,6 +115,7 @@ void main() {
               await Supabase.initialize(
                 url: AppConfig.supabaseUrl,
                 anonKey: AppConfig.supabaseAnonKey,
+                httpClient: SupabaseHttpClient(),
                 debug: kDebugMode,
               ).timeout(const Duration(seconds: 15));
               AppDebugger.logStep('Supabase', 'SUCCESS');
@@ -166,6 +161,7 @@ void main() {
         overrides: [
           sharedPreferencesProvider.overrideWithValue(prefsValue),
           jailbreakProvider.overrideWithValue(isCompromised),
+          appFlavorProvider.overrideWithValue(AppFlavor.customer),
         ],
       );
 
@@ -261,103 +257,12 @@ void main() {
 
 // ── App widget ────────────────────────────────────────────────────────────────
 
-class RoadRobosApp extends ConsumerWidget {
+class RoadRobosApp extends StatelessWidget {
   const RoadRobosApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final router = ref.watch(routerProvider);
-    // Watch the persisted theme preference (SharedPrefs-backed).
-    // Defaults to ThemeMode.system so the OS preference is respected.
-    final themeMode = ref.watch(themeModeProvider);
-
-    // Global listener for rental completion dialog
-    ref.listen(activeRentalProvider, (previous, next) {
-      if (next?.status == RentalStatus.completed &&
-          previous?.status != RentalStatus.completed) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          final ctx = rootNavigatorKey.currentContext;
-          if (ctx != null && ctx.mounted) {
-            _showCompletionDialog(ctx, ref, next!.vehicle['name'] ?? 'Vehicle');
-          }
-        });
-      }
-    });
-
-    // Global listener for in-app role change notification
-    ref.listen<UserState>(userProvider, (previous, next) {
-      if (next.showRoleChangedPrompt &&
-          (previous == null || !previous.showRoleChangedPrompt) &&
-          next.pendingNewRole != null) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          final ctx = rootNavigatorKey.currentContext;
-          if (ctx != null && ctx.mounted) {
-            RoleChangedDialog.show(ctx, next.pendingNewRole!);
-          }
-        });
-      }
-    });
-
-    return MaterialApp.router(
-      scaffoldMessengerKey: scaffoldMessengerKey,
-      title: 'RoadRobos',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode:
-          themeMode, // Previously hardcoded ThemeMode.light — now Riverpod-driven
-      routerConfig: router,
-      localizationsDelegates: const [
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: const [Locale('en')],
-      builder: (context, child) {
-        ErrorWidget.builder = (FlutterErrorDetails details) =>
-            GlobalErrorScreen(errorDetails: details);
-        return child!;
-      },
-    );
-  }
-
-  void _showCompletionDialog(
-      BuildContext context, WidgetRef ref, String vehicleName) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => RentalCompletionDialog(
-        vehicleName: vehicleName,
-        onCompletePayment: () async {
-          final activeRental = ref.read(activeRentalProvider);
-          if (activeRental == null) return;
-          final priceStr = activeRental.vehicle['price']?.toString() ?? '150';
-          final hourly =
-              double.tryParse(priceStr.replaceAll(RegExp(r'[^0-9.]'), '')) ??
-                  150.0;
-          final totalCost = hourly *
-              (activeRental.duration.inHours > 0
-                  ? activeRental.duration.inHours
-                  : 1);
-          final paymentService = ref.read(paymentServiceProvider.notifier);
-          try {
-            await ref.read(activeRentalProvider.notifier).completePayment(
-                  totalCost: totalCost,
-                  paymentService: paymentService,
-                );
-            if (context.mounted) Navigator.pop(context);
-          } catch (e) {
-            if (kDebugMode) debugPrint('Payment failed: $e');
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(e.toString())),
-              );
-            }
-          }
-        },
-        onReschedule: () => Navigator.pop(context),
-      ),
-    );
+  Widget build(BuildContext context) {
+    return const CustomerApp();
   }
 }
+

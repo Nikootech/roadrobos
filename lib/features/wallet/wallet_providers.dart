@@ -114,3 +114,12 @@ final walletTransactionsProvider =
   final repository = ref.watch(walletRepositoryProvider);
   return WalletTransactionsNotifier(repository, user?.id);
 });
+
+final walletTransactionsStreamProvider =
+    StreamProvider<List<WalletTransaction>>((ref) {
+  final user = ref.watch(userProvider).user;
+  if (user == null) return Stream.value([]);
+
+  return ref.watch(walletRepositoryProvider).streamTransactions(user.id);
+});
+

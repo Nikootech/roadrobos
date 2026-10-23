@@ -46,14 +46,24 @@ class DriverModel {
     return DriverModel(
       id: id,
       isOnline: map['is_online'] ?? map['isOnline'] ?? false,
-      todayEarnings:
-          (map['today_earnings'] ?? map['todayEarnings'] ?? 0.0).toDouble(),
-      weeklyEarnings:
-          (map['weekly_earnings'] ?? map['weeklyEarnings'] ?? 0.0).toDouble(),
-      totalRides: map['total_rides'] ?? map['totalRides'] ?? 0,
-      weeklyRides: map['weekly_rides'] ?? map['weeklyRides'] ?? 0,
-      acceptanceRate: map['acceptance_rate'] ?? map['acceptanceRate'] ?? '100%',
-      onlineTime: map['online_time'] ?? map['onlineTime'] ?? '0h 0m',
+      todayEarnings: (map['today_earnings'] as num?)?.toDouble() ??
+          double.tryParse(map['today_earnings']?.toString() ?? '') ??
+          (map['todayEarnings'] as num?)?.toDouble() ??
+          0.0,
+      weeklyEarnings: (map['weekly_earnings'] as num?)?.toDouble() ??
+          double.tryParse(map['weekly_earnings']?.toString() ?? '') ??
+          (map['weeklyEarnings'] as num?)?.toDouble() ??
+          0.0,
+      totalRides: (map['total_rides'] as num?)?.toInt() ??
+          int.tryParse(map['total_rides']?.toString() ?? '') ??
+          (map['totalRides'] as num?)?.toInt() ??
+          0,
+      weeklyRides: (map['weekly_rides'] as num?)?.toInt() ??
+          int.tryParse(map['weekly_rides']?.toString() ?? '') ??
+          (map['weeklyRides'] as num?)?.toInt() ??
+          0,
+      acceptanceRate: map['acceptance_rate']?.toString() ?? map['acceptanceRate']?.toString() ?? '100%',
+      onlineTime: map['online_time']?.toString() ?? map['onlineTime']?.toString() ?? '0h 0m',
       approvalStatus: DriverApprovalStatus.values.firstWhere(
         (e) =>
             e.toString().split('.').last ==
@@ -62,7 +72,12 @@ class DriverModel {
       ),
       currentPosition: map['lat'] != null && map['lng'] != null
           ? LatLng(
-              (map['lat'] as num).toDouble(), (map['lng'] as num).toDouble())
+              (map['lat'] as num?)?.toDouble() ??
+                  double.tryParse(map['lat'].toString()) ??
+                  0.0,
+              (map['lng'] as num?)?.toDouble() ??
+                  double.tryParse(map['lng'].toString()) ??
+                  0.0)
           : null,
       fcmToken: map['fcm_token'] ?? map['fcmToken'],
       vehicleModel: map['vehicle_model'] ?? map['vehicleModel'] ?? '',

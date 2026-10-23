@@ -3,7 +3,13 @@
 class DeeplinkValidator {
   DeeplinkValidator._();
 
-  static const _allowedSchemes = {'roadrobos', 'https', 'http'};
+  static const _allowedSchemes = {
+    'roadrobos',
+    'com.roadrobos.app',
+    'com.roadrobos.partner',
+    'https',
+    'http',
+  };
 
   /// Extract the host portion from the SUPABASE_URL env var.
   /// e.g. "https://YOUR_PROJECT_ID.supabase.co" → "YOUR_PROJECT_ID.supabase.co"
@@ -46,7 +52,7 @@ class DeeplinkValidator {
     }
 
     // 3. OAuth callback: must have a non-trivial code param
-    if (uri.path == '/login-callback') {
+    if (uri.path == '/login-callback' || uri.host == 'login-callback') {
       final code = uri.queryParameters['code'] ??
           uri.fragment; // PKCE uses fragment on some platforms
       if (code.length < 10) return false;

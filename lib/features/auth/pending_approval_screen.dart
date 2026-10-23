@@ -8,6 +8,8 @@ import '../../core/theme/app_colors.dart';
 import '../profile/user_provider.dart';
 import '../../shared/widgets/custom_button.dart';
 import '../../navigation/nav_helpers.dart';
+import '../../core/config/app_config.dart';
+import '../../core/config/app_flavor.dart';
 
 class PendingApprovalScreen extends ConsumerStatefulWidget {
   const PendingApprovalScreen({super.key});
@@ -58,7 +60,14 @@ class _PendingApprovalScreenState extends ConsumerState<PendingApprovalScreen> {
   Future<void> _handleLogout() async {
     await ref.read(userProvider.notifier).logout();
     if (mounted) {
-      NavHelpers.go(context, '/auth/role-selection');
+      NavHelpers.go(
+        context,
+        AppConfig.flavor == AppFlavor.customer
+            ? '/auth/login'
+            : (AppConfig.flavor == AppFlavor.partner
+                ? '/partner/welcome'
+                : '/auth/role-selection'),
+      );
     }
   }
 
